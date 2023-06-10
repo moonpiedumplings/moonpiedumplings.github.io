@@ -1,0 +1,26 @@
+--- a/local/bin/vncserver   2023-06-05 15:13:04.119718166 -0700
++++ b/local/bin/vncserver    2023-06-05 15:13:26.641364635 -0700
+@@ -1173,12 +1173,12 @@
+   $KasmVNC::Users::logger = $logger;
+   $KasmVNC::Config::logger = $logger;
+
+-  $vncSystemConfigDir = "/etc/kasmvnc";
++  $vncSystemConfigDir = "$ENV{NIXETC}/kasmvnc";
+   if ($ENV{KASMVNC_DEVELOPMENT}) {
+     $vncDefaultsConfig = "/src/unix/kasmvnc_defaults.yaml";
+     $vncSystemConfig = "/src/unix/kasmvnc.yaml";
+   } else {
+-    $vncDefaultsConfig = "/usr/share/kasmvnc/kasmvnc_defaults.yaml";
++    $vncDefaultsConfig = $ENV{'VNCDEFAULTS'};
+     $vncSystemConfig = "$vncSystemConfigDir/kasmvnc.yaml";
+   }
+
+@@ -2635,7 +2635,7 @@
+
+ sub LocalSelectDePath {
+   my $dirname = dirname($0);
+-  "$dirname/../builder/startup/deb/select-de.sh";
++  $ENV{'SELECTDE'};
+ }
+
+ sub IsDryRun {

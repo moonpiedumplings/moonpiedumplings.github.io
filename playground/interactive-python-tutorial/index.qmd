@@ -1,0 +1,97 @@
+---
+title: "Experiments with Running python in the browser"
+date: "2023-5-22"
+categories: [python]
+execute:
+  freeze: auto
+
+header-includes:  <script src="https://lucademenego99.github.io/icp-bundle/base/full.iife.js"></script><link rel="stylesheet" href="https://pyscript.net/latest/pyscript.css" /><script defer src="https://pyscript.net/latest/pyscript.js"></script><script src="https://modularizer.github.io/pyprez/pyprez.js"></script>
+---
+
+My goal is an in browser python editor I can embed into a blog.
+
+Code is ran client side, so don't try to crash any server or anything like that.
+
+```{=html}
+<div class="col fragment" data-fragment-index="2"
+                        style="height: min(30vw, 60vh); margin: min(1vw, 2vh)">
+                        <python-editor contenteditable="true" theme="dark" code="elements = [39,12,18,85,72,10,2,18]
+
+print('Unsorted list is\n', elements)
+
+# Sort the list (with bubblesort)
+for n in range(len(elements)-1, 0, -1):
+  for i in range(n):
+    if elements[i] > elements[i+1]:
+      elements[i], elements[i+1] = elements[i+1], elements[i]
+
+print('\nSorted list is\n', elements)" />
+                    </div>
+```
+
+
+Awww, the input function doesn't seem to work. 
+
+
+Shift + enter/return to evaluate code of the below. 
+
+```{=html}
+<py-repl></py-repl>
+```
+
+This kinda works, but also has issues. Input fucntion still doesn't work. 
+
+
+Shift + enter/return to evaluate below.  Or double click.
+
+```{=html}
+<pyprez-editor>
+   import numpy as np
+   np.random.rand(5)
+</pyprez-editor>
+```
+
+This is cool, but the code isn't editable. It just resets itself for some reason. 
+
+
+Maybe this will work? 
+
+
+::: {.column-body-outset}
+
+```{=html}
+<div id="livecodes-p6y2nroaetk" data-height="500">
+  <span>Open the project <a href="https://livecodes.io/?x=id/sigh8eg62zv" target="_blank">Untitled Project</a> in <a href="https://livecodes.io/" target="_blank">LiveCodes</a></span>
+</div>
+
+<script src="https://livecodes.io/sdk/livecodes.umd.js"></script>
+<script>
+  const options = {
+    appUrl: 'https://dev.livecodes.io/',
+    params: {
+      autoupdate: false,
+      console: "full"
+      },
+    "config": {
+      "tools": {
+        "status": "full"
+      }
+    },
+    "import": "id/sigh8eg62zv",
+    "loading": "eager"
+  };
+  livecodes.createPlayground("#livecodes-p6y2nroaetk", options);
+</script>
+```
+```{=html}
+<div class="livecodes" style="height: 300px; border: 1px solid black; border-radius: 5px;" data-options='{appUrl: "https://dev.livecodes.io/",params: {autoupdate: false, console: "full"},"config":{"activeEditor":"script","tools":{"status":"full"}},"loading":"eager"}'>
+<pre data-lang="html"></pre>
+<pre data-lang="css"></pre>
+<pre data-lang="pyodide">yeet = input(&#34;test&#34;)
+
+print(yeet)</pre>
+</div>
+<script defer src="https://livecodes.io/sdk/livecodes.umd.js" data-prefill></script>
+
+```
+:::

@@ -1,0 +1,78 @@
+---
+aliases:
+- /aws/docker/ec2/linux/2022/09/30/cockpitsetup
+categories:
+- aws
+- ec2
+- docker
+- linux
+date: '2022-09-30'
+description: cockpit is a gui to manage linux servers.
+layout: post
+tags:
+- AWS
+- Linux
+title: Setting up cockpit
+toc: true
+
+---
+
+# What is cockpit (and similar softwares)
+
+Amazon lets us have free servers via EC2. The typical way to manage servers is either by sshing in, or using the cloud shell that Amazon (and Oracle) give. However, there are alternative ways to manage servers. One extremely popular example is pteradactyl, a webpage based gui to manage game (usually minecraft). It lets you download game servers as docker containers, run them, stop them, and maybe manage some basic settings, All the things a casual who just wants video games may need. But when I created a free Oracle server, I wanted something more. By this point, I was an experienced linux user, and I wanted more advanced features. So I searched for a more advanced server management tool, like people use on real servers, and I found cockpit. 
+
+Cockpit comes with many benefits. The two things I really like however, are that it's terminal is not laggy at all, unlike the amazon ec2 cloud terminal, and it also offers a gui to manage docker containers. 
+
+# The installation process
+
+The installation process is simple:
+
+`sudo apt install cockpit`
+
+To start the server, run:
+
+`sudo systemctl enable --now cockpit`
+
+This sets the cockpit server to start on boot, and it starts it now. 
+
+However, the firewall must open ports to allow the cockpit server through. This opens the default ports for the cockpit server. It should be noted that not every version fo linux uses ufw as a firewall, some use other firewalls with different management commands. 
+
+`sudo ufw allow 9090`
+
+Another important thing is to set the password for the default "ubuntu" user account so that you can login to cockpit.
+
+`sudo passwd ubuntu` 
+
+It will ask for the new password twice, not showing what you are typing. 
+
+Reboot the computer for the server to start properly, however, this won't work as the virtual private cloud must have its ports open. I had to do this when I set up cockpit on my Oracle server, so I knew the gist of the steps. 
+
+
+
+# Opening EC2's VPC ports (Also necessary if you want to host servers on ports other than 22, 80, or 443)
+
+First, go to your EC2 vps, where you would normally click connect from, and click on the link under vpc:
+
+![](ourinstanceannotation.png)
+
+
+This should bring you up to a screen like this:
+
+![](vpstosecuritytab.png)
+
+Click the security tab, bringing you to a screen like this:
+
+![](vpcpagesecurityannotate.png)
+
+And then click on security groups, bringing you to a screen like this:
+
+![](toeditinboundrules.png)
+
+And then click on the "edit inbound rules"
+
+Finally, you should get something like this:
+
+![](editinginboundrules.png )
+
+Add an item that matches what I have in the third row. That opens the port to allow cockpits server to escape. You may also need to use this page to open other ports if you are hosting servers on nonstandard ports. 
+
