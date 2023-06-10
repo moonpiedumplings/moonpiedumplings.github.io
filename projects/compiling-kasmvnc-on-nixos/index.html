@@ -1,0 +1,888 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.3.361">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="dcterms.date" content="2023-05-02">
+
+<title>Jeffrey Fonseca’s site - Compiling KasmVNC on NixOS</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<script src="../../site_libs/quarto-html/quarto.js"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="dark">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 20,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+
+<link rel="stylesheet" href="../../styles.css">
+</head>
+
+<body class="nav-fixed">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg navbar-dark ">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container">
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">Jeffrey Fonseca’s site</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../index.html" rel="" target="">
+ <span class="menu-text">Home</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../projects.html" rel="" target="">
+ <span class="menu-text">Projects</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../blog.html" rel="" target="">
+ <span class="menu-text">My Blog</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../playground.html" rel="" target="">
+ <span class="menu-text">Playground</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../guides.html" rel="" target="">
+ <span class="menu-text">Guides</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../about.html" rel="" target="">
+ <span class="menu-text">About</span></a>
+  </li>  
+</ul>
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/moonpiedumplings" rel="" target=""><i class="bi bi-github" role="img">
+</i> 
+ <span class="menu-text"></span></a>
+  </li>  
+</ul>
+            <div class="quarto-navbar-tools">
+</div>
+          </div> <!-- /navcollapse -->
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#what-is-this" id="toc-what-is-this" class="nav-link active" data-scroll-target="#what-is-this">What is this?</a></li>
+  <li><a href="#nixos-build-system" id="toc-nixos-build-system" class="nav-link" data-scroll-target="#nixos-build-system">Nixos Build System</a></li>
+  <li><a href="#kasmvncs-build-system" id="toc-kasmvncs-build-system" class="nav-link" data-scroll-target="#kasmvncs-build-system">KasmVNC’s Build System</a></li>
+  <li><a href="#the-easy-way" id="toc-the-easy-way" class="nav-link" data-scroll-target="#the-easy-way">The easy way</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Compiling KasmVNC on NixOS</h1>
+  <div class="quarto-categories">
+    <div class="quarto-category">linux</div>
+    <div class="quarto-category">devops</div>
+    <div class="quarto-category">nix</div>
+    <div class="quarto-category">kasm</div>
+  </div>
+  </div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">May 2, 2023</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+</header>
+
+<p>This is a living document, for the time being. Rather than a complete blogpost, this is a tracker of my progress, as well as a quick reference I can come back to.</p>
+<section id="what-is-this" class="level1">
+<h1>What is this?</h1>
+<p>Kasmweb is a software to create remote desktops, that exist within docker containers, and allow users to access them, all from a browser based GUI.</p>
+<p>Kasmvnc is the VNC server part of kasm web, a custom fork of previous existing features, enhanced with more performance, and most importantly, a web native setup. Incompatible with existing VNC protocols, the only way to access Kasmvnc is through the http/https serive it offers, the web based VNC ui.</p>
+<p>KasmVNC is an amazing piece of software, but development for it is not truly, fully public. This is present in their build system. Their build system is a series of bash scripts, that call docker containers, which call more bash scripts, to finally compile the software, and package it, all in one.</p>
+<p>As part of the scripts they have to compile kasm, lots of static linking happens. They do this because not all distros package the most updated, performant versions of the libraries that kasmvnc uses.</p>
+<p>But Nixos, the distro I want to package KasmVNC for, does. In addition to that, it is completely incompatible with the hacked together build system that kasm uses. In order to package KasmVNC for Nixos, I must reverse engineer their build system, and bit by bit, port it to NixOS.</p>
+</section>
+<section id="nixos-build-system" class="level1">
+<h1>Nixos Build System</h1>
+<p>How the nixos build system works. I will do later, but here I will document, step by step, how nixos builds a package.</p>
+</section>
+<section id="kasmvncs-build-system" class="level1">
+<h1>KasmVNC’s Build System</h1>
+<p>Reverse engineering KasmVNC’s build system.</p>
+<p>The below is what I neeed for the compiliation commands to work. I don’t know where Kasm runs these commands, or similar equivalents, this is just what I’ve figured out.</p>
+<p>Perhaps I need to only run <code>make</code> in the KasmVNC/unix directory?</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode default code-overflow-wrap code-with-copy"><code class="sourceCode default"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>git clone https://github.com/TigerVNC/tigervnc</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>cd tigervnc</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>git clone https://github.com/kasmtech/KasmVNC</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>cd KasmVNC</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>cp ..vncserver .vncserver # this sets up build environment. I will still need to check if every single one of these things are necessary, but this works for now</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>The build script can be found <a href="https://github.com/kasmtech/KasmVNC/blob/4d3a9b749adfcf89bde0b970c1c37481c92d585b/builder/build.sh#L63">here</a></p>
+<p>But from this build script, I don’t think all of it is necessary. Below, I will extract what commands are actually needed, from all the fluff, cruft, and hacks.</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode default code-overflow-wrap code-with-copy"><code class="sourceCode default"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>cmake -D CMAKE_BUILD_TYPE=RelWithDebInfo . -DBUILD_VIEWER:BOOL=OFF \</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  -DENABLE_GNUTLS:BOOL=OFF</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>make</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Builds end up in <code>KasmVNC/unix/</code></p>
+<p>Except the preliminary builds don’t work. They error:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode default code-overflow-wrap code-with-copy"><code class="sourceCode default"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>~/vscode/tigervnc/KasmVNC/unix master ?1 ❯ ./vncserver </span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>Can't locate List/MoreUtils.pm in @INC (you may need to install the List::MoreUtils module) (@INC contains: /usr/lib/perl5/5.36/site_perl /usr/share/perl5/site_perl /usr/lib/perl5/5.36/vendor_perl /usr/share/perl5/vendor_perl /usr/lib/perl5/5.36/core_perl /usr/share/perl5/core_perl) at ./vncserver line 38.</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>BEGIN failed--compilation aborted at ./vncserver line 38.</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>The above is probably because a perl library is missing. After attempting to install the missing library using <code>pacman -S perl-list-moreutils</code> I get a different error.</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode default code-overflow-wrap code-with-copy"><code class="sourceCode default"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>~/vscode/tigervnc/KasmVNC/unix master ?1 ❯ ./vncserver </span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>Can't locate KasmVNC/CliOption.pm in @INC (you may need to install the KasmVNC::CliOption module) (@INC contains: /usr/lib/perl5/5.36/site_perl /usr/share/perl5/site_perl /usr/lib/perl5/5.36/vendor_perl /usr/share/perl5/vendor_perl /usr/lib/perl5/5.36/core_perl /usr/share/perl5/core_perl) at ./vncserver line 42.</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>BEGIN failed--compilation aborted at ./vncserver line 42.</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Obviously, this won’t work. I must figure out why KasmVNC pacakges perl packages, where it puts them by default, and how to package them for Nix.</p>
+<p>Alright, the vncserver command appears to be in the git repo, and rather than being a binary, it is a perl wrapper script to start an xvnc server. from the script:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode perl code-overflow-wrap code-with-copy"><code class="sourceCode perl"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">use</span> <span class="fu">KasmVNC::CliOption</span>;</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="fu">use</span> <span class="fu">KasmVNC::ConfigKey</span>;</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="fu">use</span> <span class="fu">KasmVNC::PatternValidator</span>;</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="fu">use</span> <span class="fu">KasmVNC::EnumValidator</span>;</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="fu">use</span> <span class="fu">KasmVNC::Config</span>;</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="fu">use</span> <span class="fu">KasmVNC::Users</span>;</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="fu">use</span> <span class="fu">KasmVNC::TextOption</span>;</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a><span class="fu">use</span> <span class="fu">KasmVNC::TextUI</span>;</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a><span class="fu">use</span> <span class="fu">KasmVNC::Utils</span>;</span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a><span class="fu">use</span> <span class="fu">KasmVNC::Logger</span>;</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>These perl modules/libraries can be found in <code>KasmVNC/unix/KasmVNC</code></p>
+<p>So that is what is necessary for the vncserver script to run. But is this script really necessary? Based on the names of the perl libraries, this script might not be adding any core functionalities to kasmvnc, only things like additional command line options, or loggers.</p>
+<p>I need to find where this script runs kasmvnc, and also where the actual kasmvnc binary is.</p>
+<p>I think their fork of xvnc is located in <code>KasmVNC/unix/xserver/hw/vnc/xvnc.c</code>.</p>
+<p>But I get compilation errors:</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode default code-overflow-wrap code-with-copy"><code class="sourceCode default"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>[nix-shell:~/vscode/tigervnc/KasmVNC]$ make </span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>[  3%] Built target os</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>[ 13%] Built target rdr</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>[ 30%] Built target network</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>[ 31%] Built target Xregion</span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>[ 78%] Built target rfb</span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>[ 80%] Built target tx</span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>[ 81%] Built target unixcommon</span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>[ 81%] Linking CXX executable vncconfig</span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>/nix/store/178vvank67pg2ckr5ic5gmdkm3ri72f3-binutils-2.39/bin/ld: cannot find -lturbojpeg: No such file or directory</span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>collect2: error: ld returned 1 exit status</span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>make[2]: *** [unix/vncconfig/CMakeFiles/vncconfig.dir/build.make:157: unix/vncconfig/vncconfig] Error 1</span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>make[1]: *** [CMakeFiles/Makefile2:610: unix/vncconfig/CMakeFiles/vncconfig.dir/all] Error 2</span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>make: *** [Makefile:136: all] Error 2</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>I don’t know why this happens. For those who don’t know, make pretty much calls a set of scripts, called Makefiles. I will need to find where in these scripts, the error commands are run.</p>
+<p>Weirdly, I can’t reproduce outside of the build script:</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode default code-overflow-wrap code-with-copy"><code class="sourceCode default"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>~/vscode/tigervnc/KasmVNC master ?1 ❯ ld -lsdsakdfj</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>ld: cannot find -lsdsakdfj: No such file or directory</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>~/vscode/tigervnc/KasmVNC master ?1 ❯ ld -lturbojpeg</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>ld: warning: cannot find entry symbol _start; not setting start address</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>~/vscode/tigervnc/KasmVNC master ?2 ❯ ld -ljpeg     </span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>ld: warning: cannot find entry symbol _start; not setting start address</span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>~/vscode/tigervnc/KasmVNC master ?2 ❯ ld -ljpeg-turbo</span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>ld: cannot find -ljpeg-turbo: No such file or directory</span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>~/vscode/tigervnc/KasmVNC master ?1 ❯ </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>I suspect the make scripts have some hacks that change working directory, or otherwise hide my installation of libjpeg.</p>
+<p>When commenting out the part of the <code>KasmVNC/Cmakelists.txt</code> file that appears to be related to libjpeg, the error when I run <code>make</code> changes.</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode default code-overflow-wrap code-with-copy"><code class="sourceCode default"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>[ 95%] Building CXX object unix/vncconfig/CMakeFiles/vncconfig.dir/vncconfig.cxx.o</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>/home/moonpie/vscode/tigervnc/KasmVNC/vncviewer/Surface.cxx:23:10: fatal error: FL/Fl_RGB_Image.H: No such file or directory</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>   23 | #include &lt;FL/Fl_RGB_Image.H&gt;</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>      |          ^~~~~~~~~~~~~~~~~~~</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>compilation terminated.</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>make[2]: *** [tests/CMakeFiles/fbperf.dir/build.make:104: tests/CMakeFiles/fbperf.dir/__/vncviewer/Surface.cxx.o] Error 1</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>make[2]: *** Waiting for unfinished jobs....</span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>/home/moonpie/vscode/tigervnc/KasmVNC/vncviewer/Surface_X11.cxx:26:10: fatal error: FL/Fl_RGB_Image.H: No such file or directory</span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>   26 | #include &lt;FL/Fl_RGB_Image.H&gt;</span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>      |          ^~~~~~~~~~~~~~~~~~~</span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>compilation terminated.</span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>make[2]: *** [tests/CMakeFiles/fbperf.dir/build.make:118: tests/CMakeFiles/fbperf.dir/__/vncviewer/Surface_X11.cxx.o] Error 1</span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>/home/moonpie/vscode/tigervnc/KasmVNC/vncviewer/PlatformPixelBuffer.cxx:31:10: fatal error: FL/Fl.H: No such file or directory</span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>   31 | #include &lt;FL/Fl.H&gt;</span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a>      |          ^~~~~~~~~</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>This is probably missing libraries.</p>
+<p>After installing fltk (<code>pacman -S fltk</code>), this error goes away, and I get a new, even harder to comprehend error.</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode default code-overflow-wrap code-with-copy"><code class="sourceCode default"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>[ 97%] Building CXX object tests/CMakeFiles/decperf.dir/decperf.cxx.o</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>/home/moonpie/vscode/tigervnc/KasmVNC/vncviewer/PlatformPixelBuffer.cxx: In constructor ‘PlatformPixelBuffer::PlatformPixelBuffer(int, int)’:</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>/home/moonpie/vscode/tigervnc/KasmVNC/vncviewer/PlatformPixelBuffer.cxx:64:29: error: ‘uint8_t’ was not declared in this scope</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>   64 |   setBuffer(width, height, (uint8_t*)xim-&gt;data,</span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>      |                             ^~~~~~~</span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>/home/moonpie/vscode/tigervnc/KasmVNC/vncviewer/PlatformPixelBuffer.cxx:38:1: note: ‘uint8_t’ is defined in header ‘&lt;cstdint&gt;’; did you forget to ‘#include &lt;cstdint&gt;’?</span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>   37 | #include "PlatformPixelBuffer.h"</span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>  +++ |+#include &lt;cstdint&gt;</span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>   38 | </span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>/home/moonpie/vscode/tigervnc/KasmVNC/vncviewer/PlatformPixelBuffer.cxx:64:37: error: expected primary-expression before ‘)’ token</span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>   64 |   setBuffer(width, height, (uint8_t*)xim-&gt;data,</span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a>      |                                     ^</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>I suspect I have the wrong version of the tigervnc source code/libraries. I will need to investigate where Kasm’s build system downloads these vncviewer libraries from.</p>
+<p>After editing the errored file, to include the library:</p>
+<p>Within <code>KasmVNC/vncviewer/PlatformPixelBuffer.cxx</code>:</p>
+<pre class="{C++}"><code>
+#include &lt;cstdint&gt;
+</code></pre>
+<p>I get a different error.</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode default code-overflow-wrap code-with-copy"><code class="sourceCode default"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>[ 94%] Building CXX object tests/CMakeFiles/fbperf.dir/__/vncviewer/PlatformPixelBuffer.cxx.o</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>/home/moonpie/vscode/tigervnc/KasmVNC/vncviewer/PlatformPixelBuffer.cxx: In constructor ‘PlatformPixelBuffer::PlatformPixelBuffer(int, int)’:</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>/home/moonpie/vscode/tigervnc/KasmVNC/vncviewer/PlatformPixelBuffer.cxx:66:3: error: ‘setBuffer’ was not declared in this scope; did you mean ‘setbuffer’?</span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>   66 |   setBuffer(width, height, (uint8_t*)xim-&gt;d﻿tion. </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>I think it’s likely that I have the wrong version of tigervnc or something. I will try to see how Kasm’s build scripts set this up.</p>
+<p>Okay, I will attempt to create a visual graph, documenting each step of KasmVNC’s build system, to build an ubuntu package. I will have hyperlinks to each of the scripts/dockerfiles, or other pieces of the github repo. Currently still working on figuring out how to use Graphviz.</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-1-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-1" role="tab" aria-controls="tabset-1-1" aria-selected="true">Entry</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-1-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-2" role="tab" aria-controls="tabset-1-2" aria-selected="false">build-tarball</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-1-3-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-3" role="tab" aria-controls="tabset-1-3" aria-selected="false">BuildWWW</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-1-4-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-4" role="tab" aria-controls="tabset-1-4" aria-selected="false">dockerfile.ubuntu.build</a></li></ul>
+<div class="tab-content">
+<div id="tabset-1-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-1-1-tab">
+<div class="cell">
+<div class="cell-output-display">
+<div>
+<div>
+<svg width="672" height="480" viewbox="0.00 0.00 374.68 199.20" xmlns="http://www.w3.org/2000/svg" xlink="http://www.w3.org/1999/xlink" style="; max-width: none; max-height: none">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 195.2)"> <polygon fill="white" stroke="transparent" points="-4,4 -4,-195.2 370.68,-195.2 370.68,4 -4,4"></polygon> <!-- Entry --> <g id="node1" class="node">
+<title>
+Entry
+</title>
+<g id="a_node1"><a href="https://github.com/kasmtech/KasmVNC/tree/master/builder" title="Entry.\n Starts out at KasmVNC/builder"> <polygon fill="none" stroke="black" points="280.99,-191 85.69,-191 85.69,-149.8 280.99,-149.8 280.99,-191"></polygon> <text text-anchor="middle" x="183.34" y="-174.6" font-family="Times,serif" font-size="14.00">Entry.</text> <text text-anchor="middle" x="183.34" y="-157.8" font-family="Times,serif" font-size="14.00"> Starts out at KasmVNC/builder</text> </a> </g> </g> <!-- BuildPackage --> <g id="node2" class="node">
+<title>
+BuildPackage
+</title>
+<g id="a_node2"><a href="https://github.com/kasmtech/KasmVNC/blob/master/builder/build-package" title="I will run the 'builder/build-package ubuntu bionic' command. \n This isn't the only command available, but for an example."> <polygon fill="none" stroke="black" points="366.53,-113.4 0.16,-113.4 0.16,-72.2 366.53,-72.2 366.53,-113.4"></polygon> <text text-anchor="middle" x="183.34" y="-97" font-family="Times,serif" font-size="14.00">I will run the ‘builder/build-package ubuntu bionic’ command. </text> <text text-anchor="middle" x="183.34" y="-80.2" font-family="Times,serif" font-size="14.00"> This isn’t the only command available, but for an example.</text> </a> </g> </g> <!-- Entry&#45;&gt;BuildPackage --> <g id="edge1" class="edge">
+<title>
+Entry-&gt;BuildPackage
+</title>
+<path fill="none" stroke="black" d="M183.34,-149.54C183.34,-141.64 183.34,-132.38 183.34,-123.7"></path> <polygon fill="black" stroke="black" points="186.84,-123.53 183.34,-113.53 179.84,-123.53 186.84,-123.53"></polygon> </g> <!-- BuildTarball --> <g id="node3" class="node">
+<title>
+BuildTarball
+</title>
+<g id="a_node3"><a href="https://github.com/kasmtech/KasmVNC/blob/master/builder/build-tarball" title="build-tarball ubuntu bionic"> <polygon fill="none" stroke="black" points="266.42,-36 100.26,-36 100.26,0 266.42,0 266.42,-36"></polygon> <text text-anchor="middle" x="183.34" y="-13.8" font-family="Times,serif" font-size="14.00">build-tarball ubuntu bionic</text> </a> </g> </g> <!-- BuildPackage&#45;&gt;BuildTarball --> <g id="edge2" class="edge">
+<title>
+BuildPackage-&gt;BuildTarball
+</title>
+<path fill="none" stroke="black" d="M183.34,-71.91C183.34,-64.09 183.34,-54.99 183.34,-46.56"></path> <polygon fill="black" stroke="black" points="186.84,-46.39 183.34,-36.39 179.84,-46.39 186.84,-46.39"></polygon> </g> </g>
+</svg>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div id="tabset-1-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-1-2-tab">
+<div class="cell">
+<div class="cell-output-display">
+<div>
+<div>
+<svg width="672" height="480" viewbox="0.00 0.00 304.33 271.20" xmlns="http://www.w3.org/2000/svg" xlink="http://www.w3.org/1999/xlink" style="; max-width: none; max-height: none">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 267.2)">
+<title>
+BuildTarball
+</title>
+<polygon fill="white" stroke="transparent" points="-4,4 -4,-267.2 300.33,-267.2 300.33,4 -4,4"></polygon> <!-- www --> <g id="node1" class="node">
+<title>
+www
+</title>
+<g id="a_node1"><a href="https://github.com/kasmtech/KasmVNC/blob/master/builder/dockerfile.www.build" title="if some condition, then \n build and run dockerfile.www.build"> <polygon fill="none" stroke="black" points="258.18,-191 38.15,-191 38.15,-149.8 258.18,-149.8 258.18,-191"></polygon> <text text-anchor="middle" x="148.16" y="-174.6" font-family="Times,serif" font-size="14.00">if some condition, then </text> <text text-anchor="middle" x="148.16" y="-157.8" font-family="Times,serif" font-size="14.00"> build and run dockerfile.www.build</text> </a> </g> </g> <!-- dockerbuild --> <g id="node4" class="node">
+<title>
+dockerbuild
+</title>
+<g id="a_node4"><a href="https://github.com/kasmtech/KasmVNC/blob/master/builder/dockerfile.ubuntu_bionic.build" title="Build and run the appropiate Dockerfile, \n which in this case dockerfile.ubuntu_bionic.build"> <polygon fill="none" stroke="black" points="296.49,-113.4 -0.16,-113.4 -0.16,-72.2 296.49,-72.2 296.49,-113.4"></polygon> <text text-anchor="middle" x="148.16" y="-97" font-family="Times,serif" font-size="14.00">Build and run the appropiate Dockerfile, </text> <text text-anchor="middle" x="148.16" y="-80.2" font-family="Times,serif" font-size="14.00"> which in this case dockerfile.ubuntu_bionic.build</text> </a> </g> </g> <!-- www&#45;&gt;dockerbuild --> <g id="edge2" class="edge">
+<title>
+www-&gt;dockerbuild
+</title>
+<path fill="none" stroke="black" d="M148.16,-149.54C148.16,-141.64 148.16,-132.38 148.16,-123.7"></path> <polygon fill="black" stroke="black" points="151.66,-123.53 148.16,-113.53 144.66,-123.53 151.66,-123.53"></polygon> </g> <!-- incomplete --> <g id="node2" class="node">
+<title>
+incomplete
+</title>
+<polygon fill="none" stroke="black" points="230.82,-36 65.5,-36 65.5,0 230.82,0 230.82,-36"></polygon> <text text-anchor="middle" x="148.16" y="-13.8" font-family="Times,serif" font-size="14.00">???, currrently in progress.</text> </g> <!-- BuildTarball --> <g id="node3" class="node">
+<title>
+BuildTarball
+</title>
+<g id="a_node3"><a href="https://github.com/kasmtech/KasmVNC/blob/master/builder/build-tarball" title="build-tarball"> <polygon fill="none" stroke="black" points="190.86,-263.2 105.46,-263.2 105.46,-227.2 190.86,-227.2 190.86,-263.2"></polygon> <text text-anchor="middle" x="148.16" y="-241" font-family="Times,serif" font-size="14.00">build-tarball</text> </a> </g> </g> <!-- BuildTarball&#45;&gt;www --> <g id="edge1" class="edge">
+<title>
+BuildTarball-&gt;www
+</title>
+<path fill="none" stroke="black" d="M148.16,-226.95C148.16,-219.29 148.16,-210.06 148.16,-201.34"></path> <polygon fill="black" stroke="black" points="151.66,-201.1 148.16,-191.1 144.66,-201.1 151.66,-201.1"></polygon> </g> <!-- dockerbuild&#45;&gt;incomplete --> <g id="edge3" class="edge">
+<title>
+dockerbuild-&gt;incomplete
+</title>
+<path fill="none" stroke="black" d="M148.16,-71.91C148.16,-64.09 148.16,-54.99 148.16,-46.56"></path> <polygon fill="black" stroke="black" points="151.66,-46.39 148.16,-36.39 144.66,-46.39 151.66,-46.39"></polygon> </g> </g>
+</svg>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div id="tabset-1-3" class="tab-pane" role="tabpanel" aria-labelledby="tabset-1-3-tab">
+<div class="cell">
+<div class="cell-output-display">
+<div>
+<div>
+<svg width="672" height="480" viewbox="0.00 0.00 249.30 332.00" xmlns="http://www.w3.org/2000/svg" xlink="http://www.w3.org/1999/xlink" style="; max-width: none; max-height: none">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 328)">
+<title>
+BuildWWW
+</title>
+<polygon fill="white" stroke="transparent" points="-4,4 -4,-328 245.3,-328 245.3,4 -4,4"></polygon> <!-- buildwwwsh --> <g id="node1" class="node">
+<title>
+buildwwwsh
+</title>
+<g id="a_node1"><a href="https://github.com/kasmtech/KasmVNC/blob/master/builder/build_www.sh" title="ENTRYPOINT [ &quot;/src/build_www.sh&quot; ]"> <polygon fill="none" stroke="black" points="241.45,-36 -0.15,-36 -0.15,0 241.45,0 241.45,-36"></polygon> <text text-anchor="middle" x="120.65" y="-13.8" font-family="Times,serif" font-size="14.00">ENTRYPOINT [ “/src/build_www.sh” ]</text> </a> </g> </g> <!-- COPY kasmweb/ /src/www/ --> <g id="node2" class="node">
+<title>
+COPY kasmweb/ /src/www/
+</title>
+<polygon fill="none" stroke="black" points="208.58,-324 32.71,-324 32.71,-288 208.58,-288 208.58,-324"></polygon> <text text-anchor="middle" x="120.65" y="-301.8" font-family="Times,serif" font-size="14.00">COPY kasmweb/ /src/www/</text> </g> <!-- COPY builder/build_www.sh /src/ --> <g id="node3" class="node">
+<title>
+COPY builder/build_www.sh /src/
+</title>
+<polygon fill="none" stroke="black" points="225.7,-252 15.6,-252 15.6,-216 225.7,-216 225.7,-252"></polygon> <text text-anchor="middle" x="120.65" y="-229.8" font-family="Times,serif" font-size="14.00">COPY builder/build_www.sh /src/</text> </g> <!-- COPY kasmweb/ /src/www/&#45;&gt;COPY builder/build_www.sh /src/ --> <g id="edge1" class="edge">
+<title>
+COPY kasmweb/ /src/www/-&gt;COPY builder/build_www.sh /src/
+</title>
+<path fill="none" stroke="black" d="M120.65,-287.7C120.65,-279.98 120.65,-270.71 120.65,-262.11"></path> <polygon fill="black" stroke="black" points="124.15,-262.1 120.65,-252.1 117.15,-262.1 124.15,-262.1"></polygon> </g> <!-- WORKDIR /src/www --> <g id="node4" class="node">
+<title>
+WORKDIR /src/www
+</title>
+<polygon fill="none" stroke="black" points="190.97,-180 50.33,-180 50.33,-144 190.97,-144 190.97,-180"></polygon> <text text-anchor="middle" x="120.65" y="-157.8" font-family="Times,serif" font-size="14.00">WORKDIR /src/www</text> </g> <!-- COPY builder/build_www.sh /src/&#45;&gt;WORKDIR /src/www --> <g id="edge2" class="edge">
+<title>
+COPY builder/build_www.sh /src/-&gt;WORKDIR /src/www
+</title>
+<path fill="none" stroke="black" d="M120.65,-215.7C120.65,-207.98 120.65,-198.71 120.65,-190.11"></path> <polygon fill="black" stroke="black" points="124.15,-190.1 120.65,-180.1 117.15,-190.1 124.15,-190.1"></polygon> </g> <!-- RUN npm install --> <g id="node5" class="node">
+<title>
+RUN npm install
+</title>
+<polygon fill="none" stroke="black" points="176.32,-108 64.98,-108 64.98,-72 176.32,-72 176.32,-108"></polygon> <text text-anchor="middle" x="120.65" y="-85.8" font-family="Times,serif" font-size="14.00">RUN npm install</text> </g> <!-- WORKDIR /src/www&#45;&gt;RUN npm install --> <g id="edge3" class="edge">
+<title>
+WORKDIR /src/www-&gt;RUN npm install
+</title>
+<path fill="none" stroke="black" d="M120.65,-143.7C120.65,-135.98 120.65,-126.71 120.65,-118.11"></path> <polygon fill="black" stroke="black" points="124.15,-118.1 120.65,-108.1 117.15,-118.1 124.15,-118.1"></polygon> </g> <!-- RUN npm install&#45;&gt;buildwwwsh --> <g id="edge4" class="edge">
+<title>
+RUN npm install-&gt;buildwwwsh
+</title>
+<path fill="none" stroke="black" d="M120.65,-71.7C120.65,-63.98 120.65,-54.71 120.65,-46.11"></path> <polygon fill="black" stroke="black" points="124.15,-46.1 120.65,-36.1 117.15,-46.1 124.15,-46.1"></polygon> </g> </g>
+</svg>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div id="tabset-1-4" class="tab-pane" role="tabpanel" aria-labelledby="tabset-1-4-tab">
+<div class="cell">
+<div class="cell-output-display">
+<div>
+<div>
+<svg width="672" height="480" viewbox="0.00 0.00 319.09 348.80" xmlns="http://www.w3.org/2000/svg" xlink="http://www.w3.org/1999/xlink" style="; max-width: none; max-height: none">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 344.8)">
+<title>
+BuildonUbuntu
+</title>
+<polygon fill="white" stroke="transparent" points="-4,4 -4,-344.8 315.09,-344.8 315.09,4 -4,4"></polygon> <!-- Entry --> <g id="node1" class="node">
+<title>
+Entry
+</title>
+<polygon fill="none" stroke="black" points="296.83,-340.6 14.26,-340.6 14.26,-299.4 296.83,-299.4 296.83,-340.6"></polygon> <text text-anchor="middle" x="155.55" y="-324.2" font-family="Times,serif" font-size="14.00">Entry here.</text> <text text-anchor="middle" x="155.55" y="-307.4" font-family="Times,serif" font-size="14.00">This entire phase happens in a docker container</text> </g> <!-- devpendencies --> <g id="node2" class="node">
+<title>
+devpendencies
+</title>
+<polygon fill="none" stroke="black" points="239,-263 72.09,-263 72.09,-221.8 239,-221.8 239,-263"></polygon> <text text-anchor="middle" x="155.55" y="-246.6" font-family="Times,serif" font-size="14.00">Install some dependencies.</text> <text text-anchor="middle" x="155.55" y="-229.8" font-family="Times,serif" font-size="14.00">Notably, tightvncserver</text> </g> <!-- Entry&#45;&gt;devpendencies --> <g id="edge1" class="edge">
+<title>
+Entry-&gt;devpendencies
+</title>
+<path fill="none" stroke="black" d="M155.55,-299.14C155.55,-291.24 155.55,-281.98 155.55,-273.3"></path> <polygon fill="black" stroke="black" points="159.05,-273.13 155.55,-263.13 152.05,-273.13 159.05,-273.13"></polygon> </g> <!-- Makeinstalls --> <g id="node3" class="node">
+<title>
+Makeinstalls
+</title>
+<g id="a_node3"><a href="https://github.com/kasmtech/KasmVNC/tree/master/builder/scripts" title="build and install webp and libjpeg turbo"> <polygon fill="none" stroke="black" points="275.23,-185.6 35.86,-185.6 35.86,-149.6 275.23,-149.6 275.23,-185.6"></polygon> <text text-anchor="middle" x="155.55" y="-163.4" font-family="Times,serif" font-size="14.00">build and install webp and libjpeg turbo</text> </a> </g> </g> <!-- devpendencies&#45;&gt;Makeinstalls --> <g id="edge2" class="edge">
+<title>
+devpendencies-&gt;Makeinstalls
+</title>
+<path fill="none" stroke="black" d="M155.55,-221.51C155.55,-213.69 155.55,-204.59 155.55,-196.16"></path> <polygon fill="black" stroke="black" points="159.05,-195.99 155.55,-185.99 152.05,-195.99 159.05,-195.99"></polygon> </g> <!-- Install some more libs --> <g id="node5" class="node">
+<title>
+Install some more libs
+</title>
+<polygon fill="none" stroke="black" points="225.58,-113.6 85.51,-113.6 85.51,-77.6 225.58,-77.6 225.58,-113.6"></polygon> <text text-anchor="middle" x="155.55" y="-91.4" font-family="Times,serif" font-size="14.00">Install some more libs</text> </g> <!-- Makeinstalls&#45;&gt;Install some more libs --> <g id="edge3" class="edge">
+<title>
+Makeinstalls-&gt;Install some more libs
+</title>
+<path fill="none" stroke="black" d="M155.55,-149.3C155.55,-141.58 155.55,-132.31 155.55,-123.71"></path> <polygon fill="black" stroke="black" points="159.05,-123.7 155.55,-113.7 152.05,-123.7 159.05,-123.7"></polygon> </g> <!-- buildsh --> <g id="node4" class="node">
+<title>
+buildsh
+</title>
+<g id="a_node4"><a href="https://github.com/kasmtech/KasmVNC/blob/master/builder/build.sh" title="build.sh\n This is the command the built docker container runs"> <polygon fill="none" stroke="black" points="311.14,-41.4 -0.05,-41.4 -0.05,-0.2 311.14,-0.2 311.14,-41.4"></polygon> <text text-anchor="middle" x="155.55" y="-25" font-family="Times,serif" font-size="14.00">build.sh</text> <text text-anchor="middle" x="155.55" y="-8.2" font-family="Times,serif" font-size="14.00"> This is the command the built docker container runs</text> </a> </g> </g> <!-- Install some more libs&#45;&gt;buildsh --> <g id="edge4" class="edge">
+<title>
+Install some more libs-&gt;buildsh
+</title>
+<path fill="none" stroke="black" d="M155.55,-77.35C155.55,-69.69 155.55,-60.46 155.55,-51.74"></path> <polygon fill="black" stroke="black" points="159.05,-51.5 155.55,-41.5 152.05,-51.5 159.05,-51.5"></polygon> </g> </g>
+</svg>
+</div>
+</div>
+</div>
+</div>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-1-contents" aria-controls="callout-1" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Note about dependencies install
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-1" class="callout-1-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>For some reason they use multiple build phases for the same step of installing packages. In addition to that, they don’t clean the apt cache between build stages.</p>
+</div>
+</div>
+</div>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-2-contents" aria-controls="callout-2" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Note about webp and libjpeg-turbo
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-2" class="callout-2-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>They make and install — in the build dockerfile. I will end up skipping this step, as nix packages these, but why do they do that?</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<p>I will expand on this, and organize it further. But based on these beginnings, kasmvnc appears to be a perl script that either starts a sepreate webserver or serves a webserver (if there is a perl native way to do this?), which appears to be based on novnc, while it also starts the vnc server, which is based on tigervnc.</p>
+<p>However, I am still confused about one thing: Where does it download the vnc server source code.</p>
+</section>
+<section id="the-easy-way" class="level1">
+<h1>The easy way</h1>
+<p>After I packaged quarto, I realized that I can actually package the kasmvnc binary using nix. I have decided to do this for now.</p>
+<p>Here is first attempt for this. Now, kasmvnc’s packaging system is weird, in that they do not offer a binary tarball for their packages. So, I have decided to convert their alpine package into something I can use, because based on a cursory look into all the packages, it seems to be the easiest to package for Nix/Nixos.</p>
+<details>
+<summary>
+First try!
+</summary>
+<div class="sourceCode" id="cb12"><pre class="sourceCode nix code-fold-true code-with-copy"><code class="sourceCode nix"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="op">{</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>    <span class="va">stdenv</span><span class="op">,</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>    <span class="va">lib</span><span class="op">,</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>    <span class="va">fetchurl</span><span class="op">,</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>    <span class="va">makeWrapper</span><span class="op">,</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a><span class="op">}</span> :</span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>stdenv.mkDerivation <span class="kw">rec</span> <span class="op">{</span></span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>  <span class="va">pname</span> <span class="op">=</span> <span class="st">"kasmvnc"</span><span class="op">;</span></span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>  <span class="va">version</span> <span class="op">=</span> <span class="st">"1.1.0"</span><span class="op">;</span></span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a>  <span class="va">src</span> <span class="op">=</span> fetchurl <span class="op">{</span></span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a>    <span class="va">url</span> <span class="op">=</span> <span class="st">"https://github.com/kasmtech/KasmVNC/releases/download/v</span><span class="sc">${</span>version<span class="sc">}</span><span class="st">/kasmvnc.alpine_317_x86_64.tgz"</span><span class="op">;</span></span>
+<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a>    <span class="va">sha256</span> <span class="op">=</span> <span class="st">"sha256-j/3PUwBd8XygBKYfFdAwN15cwxDPf3vbEwbLy1laxSU="</span><span class="op">;</span></span>
+<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a>  <span class="op">};</span></span>
+<span id="cb12-15"><a href="#cb12-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-16"><a href="#cb12-16" aria-hidden="true" tabindex="-1"></a>  <span class="va">nativeBuildInputs</span> <span class="op">=</span> <span class="op">[</span></span>
+<span id="cb12-17"><a href="#cb12-17" aria-hidden="true" tabindex="-1"></a>  <span class="op">];</span></span>
+<span id="cb12-18"><a href="#cb12-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-19"><a href="#cb12-19" aria-hidden="true" tabindex="-1"></a>  <span class="va">patches</span> <span class="op">=</span> <span class="op">[</span></span>
+<span id="cb12-20"><a href="#cb12-20" aria-hidden="true" tabindex="-1"></a>  <span class="op">];</span></span>
+<span id="cb12-21"><a href="#cb12-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-22"><a href="#cb12-22" aria-hidden="true" tabindex="-1"></a>  <span class="va">postPatch</span> <span class="op">=</span> <span class="st">''</span></span>
+<span id="cb12-23"><a href="#cb12-23" aria-hidden="true" tabindex="-1"></a><span class="st">  ''</span><span class="op">;</span></span>
+<span id="cb12-24"><a href="#cb12-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-25"><a href="#cb12-25" aria-hidden="true" tabindex="-1"></a>  <span class="va">dontStrip</span> <span class="op">=</span> <span class="cn">true</span><span class="op">;</span></span>
+<span id="cb12-26"><a href="#cb12-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-27"><a href="#cb12-27" aria-hidden="true" tabindex="-1"></a>  <span class="va">preFixup</span> <span class="op">=</span> <span class="st">''</span></span>
+<span id="cb12-28"><a href="#cb12-28" aria-hidden="true" tabindex="-1"></a><span class="st">  ''</span><span class="op">;</span></span>
+<span id="cb12-29"><a href="#cb12-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-30"><a href="#cb12-30" aria-hidden="true" tabindex="-1"></a>  <span class="va">installPhase</span> <span class="op">=</span> <span class="st">''</span></span>
+<span id="cb12-31"><a href="#cb12-31" aria-hidden="true" tabindex="-1"></a><span class="st">      runHook preInstall</span></span>
+<span id="cb12-32"><a href="#cb12-32" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-33"><a href="#cb12-33" aria-hidden="true" tabindex="-1"></a><span class="st">      mkdir -p $out/bin $out/share $out/man $out/etc $out/lib</span></span>
+<span id="cb12-34"><a href="#cb12-34" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-35"><a href="#cb12-35" aria-hidden="true" tabindex="-1"></a><span class="st">      echo here</span></span>
+<span id="cb12-36"><a href="#cb12-36" aria-hidden="true" tabindex="-1"></a><span class="st">      ls</span></span>
+<span id="cb12-37"><a href="#cb12-37" aria-hidden="true" tabindex="-1"></a><span class="st">      ls local/bin</span></span>
+<span id="cb12-38"><a href="#cb12-38" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-39"><a href="#cb12-39" aria-hidden="true" tabindex="-1"></a><span class="st">      mv local/etc/* $out/etc</span></span>
+<span id="cb12-40"><a href="#cb12-40" aria-hidden="true" tabindex="-1"></a><span class="st">      mv local/share/* $out/share</span></span>
+<span id="cb12-41"><a href="#cb12-41" aria-hidden="true" tabindex="-1"></a><span class="st">      mv local/man/* $out/man</span></span>
+<span id="cb12-42"><a href="#cb12-42" aria-hidden="true" tabindex="-1"></a><span class="st">      mv local/lib/* $out/lib</span></span>
+<span id="cb12-43"><a href="#cb12-43" aria-hidden="true" tabindex="-1"></a><span class="st">      mv local/bin/* $out/bin</span></span>
+<span id="cb12-44"><a href="#cb12-44" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-45"><a href="#cb12-45" aria-hidden="true" tabindex="-1"></a><span class="st">      runHook preInstall</span></span>
+<span id="cb12-46"><a href="#cb12-46" aria-hidden="true" tabindex="-1"></a><span class="st">  ''</span><span class="op">;</span></span>
+<span id="cb12-47"><a href="#cb12-47" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-48"><a href="#cb12-48" aria-hidden="true" tabindex="-1"></a>  <span class="va">meta</span> <span class="op">=</span> <span class="kw">with</span> lib<span class="op">;</span> <span class="op">{</span></span>
+<span id="cb12-49"><a href="#cb12-49" aria-hidden="true" tabindex="-1"></a>    <span class="va">description</span> <span class="op">=</span> <span class="st">"Kasmvnc"</span><span class="op">;</span></span>
+<span id="cb12-50"><a href="#cb12-50" aria-hidden="true" tabindex="-1"></a>    <span class="va">longDescription</span> <span class="op">=</span> <span class="st">''</span></span>
+<span id="cb12-51"><a href="#cb12-51" aria-hidden="true" tabindex="-1"></a><span class="st">        Long description here</span></span>
+<span id="cb12-52"><a href="#cb12-52" aria-hidden="true" tabindex="-1"></a><span class="st">    ''</span><span class="op">;</span></span>
+<span id="cb12-53"><a href="#cb12-53" aria-hidden="true" tabindex="-1"></a>    <span class="va">homepage</span> <span class="op">=</span> <span class="st">""</span><span class="op">;</span></span>
+<span id="cb12-54"><a href="#cb12-54" aria-hidden="true" tabindex="-1"></a>    <span class="va">changelog</span> <span class="op">=</span> <span class="st">"https://github.com/kasmtech/KasmVNC/releases/tag/v</span><span class="sc">${</span>version<span class="sc">}</span><span class="st">"</span><span class="op">;</span></span>
+<span id="cb12-55"><a href="#cb12-55" aria-hidden="true" tabindex="-1"></a>    <span class="va">license</span> <span class="op">=</span> licenses.gpl2Plus<span class="op">;</span></span>
+<span id="cb12-56"><a href="#cb12-56" aria-hidden="true" tabindex="-1"></a>    <span class="va">maintainers</span> <span class="op">=</span> <span class="kw">with</span> maintainers<span class="op">;</span> <span class="op">[</span> moonpiedumplings <span class="op">];</span></span>
+<span id="cb12-57"><a href="#cb12-57" aria-hidden="true" tabindex="-1"></a>    <span class="va">platforms</span> <span class="op">=</span> <span class="op">[</span> <span class="st">"x86_64-linux"</span> <span class="op">];</span></span>
+<span id="cb12-58"><a href="#cb12-58" aria-hidden="true" tabindex="-1"></a>    <span class="va">sourceProvenance</span> <span class="op">=</span> <span class="kw">with</span> sourceTypes<span class="op">;</span> <span class="op">[</span> binaryNativeCode binaryBytecode <span class="op">];</span></span>
+<span id="cb12-59"><a href="#cb12-59" aria-hidden="true" tabindex="-1"></a>  <span class="op">};</span></span>
+<span id="cb12-60"><a href="#cb12-60" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<p>This is my first attempt at a derivation. I’ve converted this one from the quarto derivation I built, which is also on my blog.</p>
+<p>I’m installing it using a simple <code>shell.nix</code>, that uses the nix <code>callPackage</code> function to build the kasmvnc nix package, and make it available in my current shell.</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode nix code-overflow-wrap code-with-copy"><code class="sourceCode nix"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>    <span class="va">pkgs</span> <span class="op">=</span> <span class="bu">import</span> &lt;nixpkgs&gt; <span class="op">{};</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>    <span class="va">kasmvnc</span> <span class="op">=</span> pkgs.callPackage <span class="ss">./kasmvnctest.nix</span> <span class="op">{};</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a><span class="kw">in</span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>    pkgs.mkShell <span class="op">{</span></span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>        <span class="va">packages</span> <span class="op">=</span> <span class="op">[</span> kasmvnc <span class="op">];</span></span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>To run kasmvnc, I run the <code>vncserver</code> command.</p>
+<p>However, I get an error.</p>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    text: function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  function tippyHover(el, contentFn) {
+    const config = {
+      allowHTML: true,
+      content: contentFn,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start'
+    };
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+</div> <!-- /content -->
+
+
+
+</body></html>

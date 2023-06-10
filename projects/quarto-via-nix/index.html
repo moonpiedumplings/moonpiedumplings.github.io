@@ -1,0 +1,1244 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.3.361">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="dcterms.date" content="2023-06-01">
+
+<title>Jeffrey Fonseca’s site - Packaging quarto using nix</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<script src="../../site_libs/quarto-html/quarto.js"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="dark">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 20,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+
+<link rel="stylesheet" href="../../styles.css">
+</head>
+
+<body class="nav-fixed">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg navbar-dark ">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container">
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">Jeffrey Fonseca’s site</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../index.html" rel="" target="">
+ <span class="menu-text">Home</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../projects.html" rel="" target="">
+ <span class="menu-text">Projects</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../blog.html" rel="" target="">
+ <span class="menu-text">My Blog</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../playground.html" rel="" target="">
+ <span class="menu-text">Playground</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../guides.html" rel="" target="">
+ <span class="menu-text">Guides</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../about.html" rel="" target="">
+ <span class="menu-text">About</span></a>
+  </li>  
+</ul>
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/moonpiedumplings" rel="" target=""><i class="bi bi-github" role="img">
+</i> 
+ <span class="menu-text"></span></a>
+  </li>  
+</ul>
+            <div class="quarto-navbar-tools">
+</div>
+          </div> <!-- /navcollapse -->
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#what-is-quarto" id="toc-what-is-quarto" class="nav-link active" data-scroll-target="#what-is-quarto">What is quarto?</a></li>
+  <li><a href="#what-is-nix" id="toc-what-is-nix" class="nav-link" data-scroll-target="#what-is-nix">What is nix?</a></li>
+  <li><a href="#using-nix" id="toc-using-nix" class="nav-link" data-scroll-target="#using-nix">Using Nix</a></li>
+  <li><a href="#packaging-quarto" id="toc-packaging-quarto" class="nav-link" data-scroll-target="#packaging-quarto">Packaging quarto</a></li>
+  <li><a href="#conclusion-and-how-to-use" id="toc-conclusion-and-how-to-use" class="nav-link" data-scroll-target="#conclusion-and-how-to-use">Conclusion and How to Use</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Packaging quarto using nix</h1>
+  <div class="quarto-categories">
+    <div class="quarto-category">nix</div>
+    <div class="quarto-category">quarto</div>
+  </div>
+  </div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">June 1, 2023</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+</header>
+
+<p>Skip to the conclusion if you want to know how to use the efforts of my hard work.</p>
+<section id="what-is-quarto" class="level1">
+<h1>What is quarto?</h1>
+<p>To explain quarto, I first have to explain jupyter notebooks, and quarto’s predecessor, fastpages.</p>
+<p><a href="https://github.com/fastai/fastpages">Fastpages</a> is a blogging platform built on jekyll, a static site generator. Static sites are websites that do not connect to a backend server, the user’s browser does all the rendering. Static site generators do all the hard work of creating these, by converting a very human readable format, like markdown, to pretty looking html, which is what browsers render.</p>
+<p>Fastpages adds onto the features of jekyll, by adding support for jupyter notebooks. Jupyter is a technology that allows users to combine code, multimedia, and text into a single document, for any purposes that one might use it. It’s usually popular for data science, as code is used to generate diagrams, but I really like it for testing snippets of code, as you can have multiple pieces of code in one document, and then run and debug them independently of eachother. Fastpagess can convert all of this, even automatically running code and creating any interactive elements, and then putting it all up on the internet as a static site.</p>
+<p>Fastpages is also deprecated. On the github page, which is archived, it recommends you switch to quarto.</p>
+<p>Quarto adds more features on top of fastpages, while also removing some features. Fastpages is primarily designed for blogging, whereas quarto also has support for generating books, pdf’s, and websites.</p>
+<p>However, quarto lacks some features, as it uses it’s own static site generator, rather than jekyll. The biggest and most noticable one, is the Liquid template language that my computer science teacher uses to dynamically render his schedule page.</p>
+<p>But for my purposes, quarto works fine. This blogpost you are reading, was generated using quarto.</p>
+</section>
+<section id="what-is-nix" class="level1">
+<h1>What is nix?</h1>
+<p>Nix is multiple things. Nix is a linux distribution, an package repository, a package manager, a programming language, and a configuration as code system.</p>
+<p>Right now, I am trying to use it as a package manager — specifically, to give myself the quarto tool.</p>
+<p>I’ve selected nix because it focuses on reproducible builds, across Mac, and Linux and x86_64, and arm64. This enables a multitude of devices to get packages with an identical configuration to me.</p>
+</section>
+<section id="using-nix" class="level1">
+<h1>Using Nix</h1>
+<div class="sourceCode" id="cb1"><pre class="sourceCode nix code-overflow-wrap code-with-copy"><code class="sourceCode nix"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="op">{</span> <span class="va">pkgs</span> <span class="op">?</span> <span class="bu">import</span> &lt;nixpkgs&gt; <span class="op">{}</span> <span class="op">}</span> :</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>    pkgs.mkShell <span class="op">{</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>        <span class="va">packages</span> <span class="op">=</span> <span class="kw">with</span> pkgs<span class="op">;</span> <span class="op">[</span> python310Full quarto jupyter pandoc deno <span class="op">];</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>This is a sample <code>shell.nix</code> file. If you run the <code>nix-shell</code> command line tool while in the same working directory, or using the filename as an argument, it will use this bit of nix code to create an shell environment for you.</p>
+<p>Nix is a functional programming langauge. Unlike a language like python or java, where everything is an object, in nix, everything is a function. The colon <code>:</code> declares the arguments for a function. The <code>?</code> declares a default argument for the variable, pkgs, to be used in the function. This is important, because without this declarion, the program does now know where to get packages from.</p>
+<p>The above shell.nix works great. However, it installs an older version of quarto, 1.2, as only an older version of quarto is packaged in the nixpkgs repository. I want the newest version, 1.3.</p>
+<p>Here is the code used to create the quarto package, called a derivation:</p>
+<details>
+<summary>
+Show derivation
+</summary>
+<div class="sourceCode" id="cb2"><pre class="sourceCode nix code-overflow-wrap code-with-copy"><code class="sourceCode nix"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="op">{</span> <span class="va">stdenv</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="op">,</span> <span class="va">lib</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="op">,</span> <span class="va">pandoc</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="op">,</span> <span class="va">esbuild</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="op">,</span> <span class="va">deno</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="op">,</span> <span class="va">fetchurl</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="op">,</span> <span class="va">nodePackages</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="op">,</span> <span class="va">rWrapper</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="op">,</span> <span class="va">rPackages</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="op">,</span> <span class="va">extraRPackages</span> <span class="op">?</span> <span class="op">[]</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a><span class="op">,</span> <span class="va">makeWrapper</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a><span class="op">,</span> <span class="va">python3</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a><span class="op">,</span> <span class="va">extraPythonPackages</span> <span class="op">?</span> <span class="va">ps</span><span class="op">:</span> <span class="kw">with</span> ps<span class="op">;</span> <span class="op">[]</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a><span class="op">}</span>:</span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>stdenv.mkDerivation <span class="kw">rec</span> <span class="op">{</span></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>  <span class="va">pname</span> <span class="op">=</span> <span class="st">"quarto"</span><span class="op">;</span></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>  <span class="va">version</span> <span class="op">=</span> <span class="st">"1.2.475"</span><span class="op">;</span></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>  <span class="va">src</span> <span class="op">=</span> fetchurl <span class="op">{</span></span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>    <span class="va">url</span> <span class="op">=</span> <span class="st">"https://github.com/quarto-dev/quarto-cli/releases/download/v</span><span class="sc">${</span>version<span class="sc">}</span><span class="st">/quarto-</span><span class="sc">${</span>version<span class="sc">}</span><span class="st">-linux-amd64.tar.gz"</span><span class="op">;</span></span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>    <span class="va">sha256</span> <span class="op">=</span> <span class="st">"sha256-oyKjDlTKt2fIzirOqgNRrpuM7buNCG5mmgIztPa28rY="</span><span class="op">;</span></span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>  <span class="op">};</span></span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a>  <span class="va">nativeBuildInputs</span> <span class="op">=</span> <span class="op">[</span></span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a>    makeWrapper</span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a>  <span class="op">];</span></span>
+<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a>  <span class="va">patches</span> <span class="op">=</span> <span class="op">[</span></span>
+<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a>    <span class="ss">./fix-deno-path.patch</span></span>
+<span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a>  <span class="op">];</span></span>
+<span id="cb2-32"><a href="#cb2-32" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-33"><a href="#cb2-33" aria-hidden="true" tabindex="-1"></a>  <span class="va">postPatch</span> <span class="op">=</span> <span class="st">''</span></span>
+<span id="cb2-34"><a href="#cb2-34" aria-hidden="true" tabindex="-1"></a><span class="st">    # Compat for Deno &gt;=1.26</span></span>
+<span id="cb2-35"><a href="#cb2-35" aria-hidden="true" tabindex="-1"></a><span class="st">    substituteInPlace bin/quarto.js \</span></span>
+<span id="cb2-36"><a href="#cb2-36" aria-hidden="true" tabindex="-1"></a><span class="st">      --replace 'Deno.setRaw(stdin.rid, ' 'Deno.stdin.setRaw(' \</span></span>
+<span id="cb2-37"><a href="#cb2-37" aria-hidden="true" tabindex="-1"></a><span class="st">      --replace 'Deno.setRaw(Deno.stdin.rid, ' 'Deno.stdin.setRaw('</span></span>
+<span id="cb2-38"><a href="#cb2-38" aria-hidden="true" tabindex="-1"></a><span class="st">  ''</span><span class="op">;</span></span>
+<span id="cb2-39"><a href="#cb2-39" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-40"><a href="#cb2-40" aria-hidden="true" tabindex="-1"></a>  <span class="va">dontStrip</span> <span class="op">=</span> <span class="cn">true</span><span class="op">;</span></span>
+<span id="cb2-41"><a href="#cb2-41" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-42"><a href="#cb2-42" aria-hidden="true" tabindex="-1"></a>  <span class="va">preFixup</span> <span class="op">=</span> <span class="st">''</span></span>
+<span id="cb2-43"><a href="#cb2-43" aria-hidden="true" tabindex="-1"></a><span class="st">    wrapProgram $out/bin/quarto \</span></span>
+<span id="cb2-44"><a href="#cb2-44" aria-hidden="true" tabindex="-1"></a><span class="st">      --prefix PATH : </span><span class="sc">${</span>lib.makeBinPath <span class="op">[</span> deno <span class="op">]</span><span class="sc">}</span><span class="st"> \</span></span>
+<span id="cb2-45"><a href="#cb2-45" aria-hidden="true" tabindex="-1"></a><span class="st">      --prefix QUARTO_PANDOC : </span><span class="sc">${</span>pandoc<span class="sc">}</span><span class="st">/bin/pandoc \</span></span>
+<span id="cb2-46"><a href="#cb2-46" aria-hidden="true" tabindex="-1"></a><span class="st">      --prefix QUARTO_ESBUILD : </span><span class="sc">${</span>esbuild<span class="sc">}</span><span class="st">/bin/esbuild \</span></span>
+<span id="cb2-47"><a href="#cb2-47" aria-hidden="true" tabindex="-1"></a><span class="st">      --prefix QUARTO_DART_SASS : </span><span class="sc">${</span>nodePackages.sass<span class="sc">}</span><span class="st">/bin/sass \</span></span>
+<span id="cb2-48"><a href="#cb2-48" aria-hidden="true" tabindex="-1"></a><span class="st">      --prefix QUARTO_R : </span><span class="sc">${</span>rWrapper.override <span class="op">{</span> <span class="va">packages</span> <span class="op">=</span> <span class="op">[</span> rPackages.rmarkdown <span class="op">]</span> <span class="op">++</span> extraRPackages<span class="op">;</span> <span class="op">}</span><span class="sc">}</span><span class="st">/bin/R \</span></span>
+<span id="cb2-49"><a href="#cb2-49" aria-hidden="true" tabindex="-1"></a><span class="st">      --prefix QUARTO_PYTHON : </span><span class="sc">${</span>python3.withPackages <span class="op">(</span><span class="va">ps</span><span class="op">:</span> <span class="kw">with</span> ps<span class="op">;</span> <span class="op">[</span> jupyter ipython <span class="op">]</span> <span class="op">++</span> <span class="op">(</span>extraPythonPackages ps<span class="op">))</span><span class="sc">}</span><span class="st">/bin/python3</span></span>
+<span id="cb2-50"><a href="#cb2-50" aria-hidden="true" tabindex="-1"></a><span class="st">  ''</span><span class="op">;</span></span>
+<span id="cb2-51"><a href="#cb2-51" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-52"><a href="#cb2-52" aria-hidden="true" tabindex="-1"></a>  <span class="va">installPhase</span> <span class="op">=</span> <span class="st">''</span></span>
+<span id="cb2-53"><a href="#cb2-53" aria-hidden="true" tabindex="-1"></a><span class="st">      runHook preInstall</span></span>
+<span id="cb2-54"><a href="#cb2-54" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-55"><a href="#cb2-55" aria-hidden="true" tabindex="-1"></a><span class="st">      mkdir -p $out/bin $out/share</span></span>
+<span id="cb2-56"><a href="#cb2-56" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-57"><a href="#cb2-57" aria-hidden="true" tabindex="-1"></a><span class="st">      rm -r bin/tools</span></span>
+<span id="cb2-58"><a href="#cb2-58" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-59"><a href="#cb2-59" aria-hidden="true" tabindex="-1"></a><span class="st">      mv bin/* $out/bin</span></span>
+<span id="cb2-60"><a href="#cb2-60" aria-hidden="true" tabindex="-1"></a><span class="st">      mv share/* $out/share</span></span>
+<span id="cb2-61"><a href="#cb2-61" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-62"><a href="#cb2-62" aria-hidden="true" tabindex="-1"></a><span class="st">      runHook preInstall</span></span>
+<span id="cb2-63"><a href="#cb2-63" aria-hidden="true" tabindex="-1"></a><span class="st">  ''</span><span class="op">;</span></span>
+<span id="cb2-64"><a href="#cb2-64" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-65"><a href="#cb2-65" aria-hidden="true" tabindex="-1"></a>  <span class="va">meta</span> <span class="op">=</span> <span class="kw">with</span> lib<span class="op">;</span> <span class="op">{</span></span>
+<span id="cb2-66"><a href="#cb2-66" aria-hidden="true" tabindex="-1"></a>    <span class="va">description</span> <span class="op">=</span> <span class="st">"Open-source scientific and technical publishing system built on Pandoc"</span><span class="op">;</span></span>
+<span id="cb2-67"><a href="#cb2-67" aria-hidden="true" tabindex="-1"></a>    <span class="va">longDescription</span> <span class="op">=</span> <span class="st">''</span></span>
+<span id="cb2-68"><a href="#cb2-68" aria-hidden="true" tabindex="-1"></a><span class="st">        Quarto is an open-source scientific and technical publishing system built on Pandoc.</span></span>
+<span id="cb2-69"><a href="#cb2-69" aria-hidden="true" tabindex="-1"></a><span class="st">        Quarto documents are authored using markdown, an easy to write plain text format.</span></span>
+<span id="cb2-70"><a href="#cb2-70" aria-hidden="true" tabindex="-1"></a><span class="st">    ''</span><span class="op">;</span></span>
+<span id="cb2-71"><a href="#cb2-71" aria-hidden="true" tabindex="-1"></a>    <span class="va">homepage</span> <span class="op">=</span> <span class="st">"https://quarto.org/"</span><span class="op">;</span></span>
+<span id="cb2-72"><a href="#cb2-72" aria-hidden="true" tabindex="-1"></a>    <span class="va">changelog</span> <span class="op">=</span> <span class="st">"https://github.com/quarto-dev/quarto-cli/releases/tag/v</span><span class="sc">${</span>version<span class="sc">}</span><span class="st">"</span><span class="op">;</span></span>
+<span id="cb2-73"><a href="#cb2-73" aria-hidden="true" tabindex="-1"></a>    <span class="va">license</span> <span class="op">=</span> licenses.gpl2Plus<span class="op">;</span></span>
+<span id="cb2-74"><a href="#cb2-74" aria-hidden="true" tabindex="-1"></a>    <span class="va">maintainers</span> <span class="op">=</span> <span class="kw">with</span> maintainers<span class="op">;</span> <span class="op">[</span> mrtarantoga <span class="op">];</span></span>
+<span id="cb2-75"><a href="#cb2-75" aria-hidden="true" tabindex="-1"></a>    <span class="va">platforms</span> <span class="op">=</span> <span class="op">[</span> <span class="st">"x86_64-linux"</span> <span class="op">];</span></span>
+<span id="cb2-76"><a href="#cb2-76" aria-hidden="true" tabindex="-1"></a>    <span class="va">sourceProvenance</span> <span class="op">=</span> <span class="kw">with</span> sourceTypes<span class="op">;</span> <span class="op">[</span> binaryNativeCode binaryBytecode <span class="op">];</span></span>
+<span id="cb2-77"><a href="#cb2-77" aria-hidden="true" tabindex="-1"></a>  <span class="op">};</span></span>
+<span id="cb2-78"><a href="#cb2-78" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<p>I don’t want to bore you with details, but in short, it downloads an older version of quarto than the newest.</p>
+</section>
+<section id="packaging-quarto" class="level1">
+<h1>Packaging quarto</h1>
+<p>Nix is very poorly documented. The recommended way of getting help with nix is to ask for help on the discord. So that is what I did. The first thing I asked was how to get a newer version of quarto:</p>
+<p>I started out by asking how to update the version of the quarto package. I started out to do so on my own, by cloning the nixpkgs github repo, and attempting to build nixpkgs, but I couldn’t figure out how to build it at first, which is when I asked.</p>
+<p><img src="./quartodiscord/firstask.png" class="img-fluid"></p>
+<p>Which didn’t work, because I did not want to download the whole nixpkgs. I wanted to store the nix derivation to build. The answer: use an ovveride:</p>
+<p>I was then told to use the overrideAttrs function, which overrides specific attributes, essentially variables, of the derivation, another type of function, used to build the program.</p>
+<p>My first attempt was not too good.</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode nix code-overflow-wrap code-with-copy"><code class="sourceCode nix"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="op">{</span> <span class="va">pkgs</span> <span class="op">?</span> <span class="bu">import</span> &lt;nixpkgs&gt; <span class="op">{}</span> <span class="op">}</span> :</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> </span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="va">quarto</span> <span class="op">=</span> pkgs.quarto.overrideAttrs <span class="op">(</span><span class="va">oldAttrs</span><span class="op">:</span> <span class="kw">rec</span> <span class="op">{</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>            <span class="va">version</span> <span class="op">=</span> <span class="st">"1.3.361"</span><span class="op">;</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>        <span class="op">});</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="kw">in</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>    pkgs.mkShell <span class="op">{</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>        <span class="va">packages</span> <span class="op">=</span> <span class="kw">with</span> pkgs<span class="op">;</span> <span class="op">[</span> python310Full quarto jupyter pandoc deno mkpasswd <span class="op">];</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>A simple shell.nix that replaced the <code>version</code> attribute of quarto. I shared this excitedly, thinking I had figured this out on my own, only to be told that this change was purely cosmetic, and the new version of quarto wasn’t actually installed. And they were right.</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode default code-overflow-wrap code-with-copy"><code class="sourceCode default"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>[nix-shell:~/vscode/quartotest]$ which quarto</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>/nix/store/9qy0kpll3r755c6i0717405dilhffdrd-quarto-1.3.361/bin/quarto</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>It looks right, until you check deeper:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode default code-overflow-wrap code-with-copy"><code class="sourceCode default"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>[nix-shell:~/vscode/quartotest]$ quarto --version</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>1.2.475</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>So a deeper override was needed. I needed to override the <code>src</code> attribute, which determines where to download the files used to package the application.</p>
+<details>
+<summary>
+Second attempt!
+</summary>
+<div class="sourceCode" id="cb6"><pre class="sourceCode nix code-overflow-wrap code-with-copy"><code class="sourceCode nix"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="op">{</span> <span class="va">pkgs</span> <span class="op">?</span> <span class="bu">import</span> &lt;nixpkgs&gt; <span class="op">{}</span> <span class="op">}</span> :</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> </span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="va">quarto</span> <span class="op">=</span> pkgs.quarto.overrideAttrs <span class="op">(</span><span class="va">oldAttrs</span><span class="op">:</span> <span class="kw">rec</span> <span class="op">{</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>            <span class="va">version</span> <span class="op">=</span> <span class="st">"1.3.361"</span><span class="op">;</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>            <span class="va">src</span> <span class="op">=</span> fetchurl <span class="op">{</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>    <span class="va">url</span> <span class="op">=</span> <span class="st">"https://github.com/quarto-dev/quarto-cli/releases/download/v</span><span class="sc">${</span>version<span class="sc">}</span><span class="st">/quarto-</span><span class="sc">${</span>version<span class="sc">}</span><span class="st">-linux-amd64.tar.gz"</span><span class="op">;</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>    <span class="va">sha256</span> <span class="op">=</span> <span class="st">"sha256-VEYUEI4xzQPXlyTbCThAW2npBCZNPDJ5x2cWnkNz7RE="</span><span class="op">;</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>  <span class="op">};</span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>        <span class="op">});</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a><span class="kw">in</span></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>    pkgs.mkShell <span class="op">{</span></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>        <span class="va">packages</span> <span class="op">=</span> <span class="kw">with</span> pkgs<span class="op">;</span> <span class="op">[</span> python310Full quarto jupyter pandoc deno mkpasswd <span class="op">];</span></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<p>But this errored as well.</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode default code-overflow-wrap code-with-copy"><code class="sourceCode default"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>~/vscode/quartotest master !4 ?1 ❯ nix-shell                                                                                                                         2m 56s</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>error: undefined variable 'fetchurl'</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>       at /home/moonpie/vscode/quartotest/shell.nix:5:19:</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>            4|             version = "1.3.361";</span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>            5|             src = fetchurl {</span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>             |                   ^</span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>            6|     url = "https://github.com/quarto-dev/quarto-cli/releases/download/v${version}/quarto-${version}-lin</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>I was confused? Why did this error? I had copied exactly what was in the derivation used to build the package?</p>
+<p>Later, I figured out why. When a package is built, the dependencies are declared in the beginning of the package:</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode nix code-overflow-wrap code-with-copy"><code class="sourceCode nix"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="op">{</span> </span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  <span class="va">Dependencies_Here</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="op">}</span> : stdenv.mkDerivation.restofpackage</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>In nix, every single thing is a function. When creation a function in nix, the curly brackets before the function declare the arguments that the function will take:</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode nix code-overflow-wrap code-with-copy"><code class="sourceCode nix"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>function = <span class="op">{</span><span class="va">arg1</span><span class="op">,</span> <span class="va">arg2</span><span class="op">}</span> : functionhere</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>But when creating a package, this syntax plays another role. The arguments of the function act as a dependency list, by declaring what packages are necessary to build the derivation. This prevents the build from being tainted by anything that is not explicitly declared. However, because overrides are not the same as derivations, they act differently.</p>
+<p>But to get around this error when using the override function:</p>
+<details>
+<summary>
+Success!
+</summary>
+<div class="sourceCode" id="cb10"><pre class="sourceCode nix code-overflow-wrap code-with-copy"><code class="sourceCode nix"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="op">{</span> <span class="va">pkgs</span> <span class="op">?</span> <span class="bu">import</span> &lt;nixpkgs&gt; <span class="op">{}</span> <span class="op">}</span> :</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> </span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="va">quarto</span> <span class="op">=</span> pkgs.quarto.overrideAttrs <span class="op">(</span><span class="va">oldAttrs</span><span class="op">:</span> <span class="kw">rec</span> <span class="op">{</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>            <span class="va">version</span> <span class="op">=</span> <span class="st">"1.3.361"</span><span class="op">;</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>            <span class="va">src</span> <span class="op">=</span> pkgs.fetchurl <span class="op">{</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>    <span class="va">url</span> <span class="op">=</span> <span class="st">"https://github.com/quarto-dev/quarto-cli/releases/download/v</span><span class="sc">${</span>version<span class="sc">}</span><span class="st">/quarto-</span><span class="sc">${</span>version<span class="sc">}</span><span class="st">-linux-amd64.tar.gz"</span><span class="op">;</span></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>    <span class="va">sha256</span> <span class="op">=</span> <span class="st">"sha256-vvnrIUhjsBXkJJ6VFsotRxkuccYOGQstIlSNWIY5nuE="</span><span class="op">;</span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>  <span class="op">};</span></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>        <span class="op">});</span></span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a><span class="kw">in</span></span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>    pkgs.mkShell <span class="op">{</span></span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>        <span class="va">packages</span> <span class="op">=</span> <span class="kw">with</span> pkgs<span class="op">;</span> <span class="op">[</span> python310Full quarto jupyter pandoc deno mkpasswd <span class="op">];</span></span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<p>And it worked:</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode default code-overflow-wrap code-with-copy"><code class="sourceCode default"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>[nix-shell:/tmp/test]$ quarto --version</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>1.3.361</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Except it didn’t. When I actually tried to render my project:</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode default code-overflow-wrap code-with-copy"><code class="sourceCode default"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>[nix-shell:~/vscode/quartotest]$ quarto render</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>[1/4] about.qmd</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>Could not find data file templates/styles.citations.html</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Since this file couldn’t be found on my system, I tried to find it on the internet.</p>
+<p>And find it I did, in the data-files section of the <a href="https://hackage.haskell.org/package/pandoc-3.1/pandoc.cabal">information about the pandoc 3.1 package</a></p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode default code-overflow-wrap code-with-copy"><code class="sourceCode default"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>data-files:</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>                 -- templates</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>                 data/templates/styles.html</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>                 data/templates/styles.citations.html</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>First, I checked what version of the pandoc that Nix had in their repositories. They only had 2.1.9, which was too old for the version of quarto I had.</p>
+<p>But just in case, <a href="https://github.com/quarto-dev/quarto-cli/discussions/5754">I asked on the github discussions page for quarto</a>. And yes, quarto 1.3, the version I wanted, did require pandoc 3.0, which nix did not have packaged.</p>
+<p>Except it did, although the package wasn’t in the dependencies. So I first tried to install it independently, using the <code>nix-shell -p package tool</code></p>
+<details>
+<summary>
+Except I got an error
+</summary>
+<div class="sourceCode" id="cb14"><pre class="sourceCode default code-overflow-wrap code-with-copy"><code class="sourceCode default"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>~/vscode/test ❯ nix-shell -p haskellPackages.pandoc_3_1_2</span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>this derivation will be built:</span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>  /nix/store/63pnk32wsdczfk3nkl071w9y69yy5wmi-pandoc-3.1.2.drv</span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>building '/nix/store/63pnk32wsdczfk3nkl071w9y69yy5wmi-pandoc-3.1.2.drv'...</span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>setupCompilerEnvironmentPhase</span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>Build with /nix/store/4wjl91hrizxghwqy18a1337gq2y9mh40-ghc-9.2.7.</span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>unpacking sources</span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a>unpacking source archive /nix/store/7ncxphrr3nff9jb3j4w9ksl6ggznqhm6-pandoc-3.1.2.tar.gz</span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a>source root is pandoc-3.1.2</span>
+<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a>setting SOURCE_DATE_EPOCH to timestamp 1000000000 of file pandoc-3.1.2/xml-light/Text/Pandoc/XML/Light/Types.hs</span>
+<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a>patching sources</span>
+<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a>compileBuildDriverPhase</span>
+<span id="cb14-13"><a href="#cb14-13" aria-hidden="true" tabindex="-1"></a>setupCompileFlags: -package-db=/build/tmp.yaRUozaznX/setup-package.conf.d -j16 +RTS -A64M -RTS -threaded -rtsopts</span>
+<span id="cb14-14"><a href="#cb14-14" aria-hidden="true" tabindex="-1"></a>[1 of 1] Compiling Main             ( /nix/store/4mdp8nhyfddh7bllbi7xszz7k9955n79-Setup.hs, /build/tmp.yaRUozaznX/Main.o )</span>
+<span id="cb14-15"><a href="#cb14-15" aria-hidden="true" tabindex="-1"></a>Linking Setup ...</span>
+<span id="cb14-16"><a href="#cb14-16" aria-hidden="true" tabindex="-1"></a>configuring</span>
+<span id="cb14-17"><a href="#cb14-17" aria-hidden="true" tabindex="-1"></a>configureFlags: --verbose --prefix=/nix/store/7983f3r6gpgvf17dn1k2c05wma708xdn-pandoc-3.1.2 --libdir=$prefix/lib/$compiler --libsubdir=$abi/$libname --datadir=/nix/store/zdc55i48g6hpbwckiwk6s6iraf30hh99-pandoc-3.1.2-data/share/ghc-9.2.7 --with-gcc=gcc --package-db=/build/tmp.yaRUozaznX/package.conf.d --ghc-options=-j16 +RTS -A64M -RTS --disable-split-objs --enable-library-profiling --profiling-detail=exported-functions --disable-profiling --enable-shared --disable-coverage --enable-static --disable-executable-dynamic --enable-tests --disable-benchmarks --enable-library-vanilla --disable-library-for-ghci --ghc-option=-split-sections -f-trypandoc --extra-lib-dirs=/nix/store/4g9phbpakh51bbw2n391vipz9r5z56kw-ncurses-6.4/lib --extra-lib-dirs=/nix/store/mnq0hqsqivdbaqzmzc287l0z9zw8dp15-libffi-3.4.4/lib --extra-lib-dirs=/nix/store/0ssnwyy41aynhav7jr4dz1y01lfzi86f-gmp-with-cxx-6.2.1/lib</span>
+<span id="cb14-18"><a href="#cb14-18" aria-hidden="true" tabindex="-1"></a>Using Parsec parser</span>
+<span id="cb14-19"><a href="#cb14-19" aria-hidden="true" tabindex="-1"></a>Configuring pandoc-3.1.2...</span>
+<span id="cb14-20"><a href="#cb14-20" aria-hidden="true" tabindex="-1"></a>Setup: Encountered missing or private dependencies:</span>
+<span id="cb14-21"><a href="#cb14-21" aria-hidden="true" tabindex="-1"></a>doctemplates &gt;=0.11 &amp;&amp; &lt;0.12,</span>
+<span id="cb14-22"><a href="#cb14-22" aria-hidden="true" tabindex="-1"></a>gridtables &gt;=0.1 &amp;&amp; &lt;0.2,</span>
+<span id="cb14-23"><a href="#cb14-23" aria-hidden="true" tabindex="-1"></a>jira-wiki-markup &gt;=1.5.1 &amp;&amp; &lt;1.6,</span>
+<span id="cb14-24"><a href="#cb14-24" aria-hidden="true" tabindex="-1"></a>mime-types &gt;=0.1.1 &amp;&amp; &lt;0.2,</span>
+<span id="cb14-25"><a href="#cb14-25" aria-hidden="true" tabindex="-1"></a>pandoc-types &gt;=1.23 &amp;&amp; &lt;1.24,</span>
+<span id="cb14-26"><a href="#cb14-26" aria-hidden="true" tabindex="-1"></a>texmath &gt;=0.12.7 &amp;&amp; &lt;0.13</span>
+<span id="cb14-27"><a href="#cb14-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-28"><a href="#cb14-28" aria-hidden="true" tabindex="-1"></a>error: builder for '/nix/store/63pnk32wsdczfk3nkl071w9y69yy5wmi-pandoc-3.1.2.drv' failed with exit code 1</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<p>Except all the dependencies that the error message wanted, existed in nixpkgs.</p>
+<p>Here’s <a href="https://search.nixos.org/packages?channel=22.11&amp;show=haskellPackages.doctemplates_0_10_0_2&amp;from=0&amp;size=50&amp;sort=relevance&amp;type=packages&amp;query=doctemplates">doctemplates</a></p>
+<p>Here’s <a href="https://search.nixos.org/packages?channel=22.11&amp;show=haskellPackages.doctemplates_0_10_0_2&amp;from=0&amp;size=50&amp;sort=relevance&amp;type=packages&amp;query=doctemplates">gridtables</a></p>
+<p>And so on. It was like, even though pandoc required these packages, it couldn’t see them. They all had the format packagename_version, as opposed to simply packagename, which would be an older package.</p>
+<p>So I asked on discord, again.</p>
+<p><img src="./quartodiscord/pandocnobbzintro.png" class="img-fluid"></p>
+<p>This one user, NobbZ, helps people so much that people joke that he <em>is</em> the documentation.</p>
+<p>I tried their solution, and it didn’t work. Apparently, this solution was designed for the newer feature of nix, flakes, which I wasn’t using.</p>
+<p>But with some adjustment, I managed to figure out how to use the <code>override</code> feature on my own, with the same solution that NobbZ sent me seconds later:</p>
+<details>
+<summary>
+Trying to get override working
+</summary>
+<div class="sourceCode" id="cb15"><pre class="sourceCode nix code-overflow-wrap code-with-copy"><code class="sourceCode nix"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="op">{</span> <span class="va">pkgs</span> <span class="op">?</span> <span class="bu">import</span> &lt;nixpkgs&gt; <span class="op">{}</span> <span class="op">}</span> :</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>    <span class="va">quarto</span> <span class="op">=</span> pkgs.quarto.overrideAttrs <span class="op">(</span><span class="va">oldAttrs</span><span class="op">:</span> <span class="kw">rec</span> <span class="op">{</span></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>        <span class="va">version</span> <span class="op">=</span> <span class="st">"1.3.361"</span><span class="op">;</span></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>        <span class="va">src</span> <span class="op">=</span> pkgs.fetchurl <span class="op">{</span></span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>            <span class="va">url</span> <span class="op">=</span> <span class="st">"https://github.com/quarto-dev/quarto-cli/releases/download/v</span><span class="sc">${</span>version<span class="sc">}</span><span class="st">/quarto-</span><span class="sc">${</span>version<span class="sc">}</span><span class="st">-linux-amd64.tar.gz"</span><span class="op">;</span></span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>            <span class="va">sha256</span> <span class="op">=</span> <span class="st">"sha256-vvnrIUhjsBXkJJ6VFsotRxkuccYOGQstIlSNWIY5nuE="</span><span class="op">;</span></span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>        <span class="op">};</span></span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a>    <span class="op">});</span></span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a>   <span class="co">/* pandoc = pkgs.haskellPackages.callCabal2nix "pandoc" (fetchTarball {</span></span>
+<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a><span class="co">        url = "https://github.com/jgm/pandoc/archive/refs/tags/3.1.2.tar.gz";</span></span>
+<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a><span class="co">        sha256 = "1h928w4ghbxg5whq7d9nkrfll2abvmbkc45adfgv35rfhcpkiiv9";</span></span>
+<span id="cb15-13"><a href="#cb15-13" aria-hidden="true" tabindex="-1"></a><span class="co">    }) {};*/</span></span>
+<span id="cb15-14"><a href="#cb15-14" aria-hidden="true" tabindex="-1"></a>    <span class="va">doctemplates</span> <span class="op">=</span> pkgs.haskellPackages.doctemplates_0_11<span class="op">;</span></span>
+<span id="cb15-15"><a href="#cb15-15" aria-hidden="true" tabindex="-1"></a>    <span class="va">gridtables</span> <span class="op">=</span> pkgs.haskellPackages.gridtables_0_1_0_0<span class="op">;</span></span>
+<span id="cb15-16"><a href="#cb15-16" aria-hidden="true" tabindex="-1"></a>    <span class="va">jira-wiki-markup</span> <span class="op">=</span> pkgs.haskellPackages.jira<span class="op">-</span>wiki<span class="op">-</span>markup_1_5_1<span class="op">;</span></span>
+<span id="cb15-17"><a href="#cb15-17" aria-hidden="true" tabindex="-1"></a>    <span class="va">mime-types</span> <span class="op">=</span> pkgs.haskellPackages.mime<span class="op">-</span>types_0_1_1_0<span class="op">;</span></span>
+<span id="cb15-18"><a href="#cb15-18" aria-hidden="true" tabindex="-1"></a>    <span class="va">pandoc-types</span> <span class="op">=</span> pkgs.haskellPackages.pandoc<span class="op">-</span>types_1_23<span class="op">;</span></span>
+<span id="cb15-19"><a href="#cb15-19" aria-hidden="true" tabindex="-1"></a>    <span class="va">texmath</span> <span class="op">=</span> pkgs.haskellPackages.texmath_0_12_7_1<span class="op">;</span></span>
+<span id="cb15-20"><a href="#cb15-20" aria-hidden="true" tabindex="-1"></a>    <span class="va">pandoc</span> <span class="op">=</span> pkgs.haskellPackages.pandoc_3_1_2.override <span class="op">{</span><span class="kw">inherit</span> doctemplates gridtables jira-wiki-markup mime-types pandoc-types texmath<span class="op">;};</span></span>
+<span id="cb15-21"><a href="#cb15-21" aria-hidden="true" tabindex="-1"></a><span class="kw">in</span></span>
+<span id="cb15-22"><a href="#cb15-22" aria-hidden="true" tabindex="-1"></a>    pkgs.mkShell <span class="op">{</span></span>
+<span id="cb15-23"><a href="#cb15-23" aria-hidden="true" tabindex="-1"></a>        <span class="va">packages</span> <span class="op">=</span> <span class="kw">with</span> pkgs<span class="op">;</span> <span class="op">[</span> python310Full quarto jupyter pandoc deno mkpasswd <span class="op">];</span></span>
+<span id="cb15-24"><a href="#cb15-24" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<p>Except this errors:</p>
+<div class="sourceCode" id="cb16"><pre class="sourceCode default code-overflow-wrap code-with-copy"><code class="sourceCode default"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>Warning:</span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>    This package indirectly depends on multiple versions of the same package. This is very likely to cause a compile failure.</span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>      package http-client (http-client-0.7.13.1-52kzOBAMbxmJrzoQZgatPf) requires mime-types-0.1.0.9-Gdz1G1mhqziCfo3C8KZHz7</span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>      package pandoc (pandoc-3.1.2) requires mime-types-0.1.1.0-4FUch8wD40c6kQtGdyJOSM</span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>      package texmath (texmath-0.12.7.1-BbrGid5okuSI4hfeGBAcF8) requires pandoc-types-1.22.2.1-1cCcarshT2W3DaxppqWytd</span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>      package commonmark-pandoc (commonmark-pandoc-0.2.1.3-OwUzhyyJ0cDzxfYXzbAci) requires pandoc-types-1.22.2.1-1cCcarshT2W3DaxppqWytd</span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a>      package citeproc (citeproc-0.8.1-LP74PTBZCEoHiNCfXfUYdM) requires pandoc-types-1.22.2.1-1cCcarshT2W3DaxppqWytd</span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a>      package pandoc (pandoc-3.1.2) requires pandoc-types-1.23-AC7tSm0fcRIGMZsmro9kaK</span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a>      package pandoc (pandoc-3.1.2) requires pandoc-types-1.23-AC7tSm0fcRIGMZsmro9kaK</span>
+<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a>** abort because of serious configure-time warning from Cabal</span>
+<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a>error: builder for '/nix/store/ibawyigbdn9bs1gs9hc0mgzqraqfxhy0-pandoc-3.1.2.drv' failed with exit code 1</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Essentially, a dependency error. Doctemplates also required a package that wasn’t under the default of <code>packagename</code>, but rather <code>packagename_version</code>.</p>
+<p>Another user proceeded to chime in with their solution:</p>
+<details>
+<summary>
+See cdepillabout’s solution
+</summary>
+<div class="sourceCode" id="cb17"><pre class="sourceCode nix code-overflow-wrap code-with-copy"><code class="sourceCode nix"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>  <span class="va">pkgs</span> <span class="op">=</span> <span class="bu">import</span> &lt;nixpkgs&gt; <span class="op">{};</span></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>  <span class="va">pandoc</span> <span class="op">=</span> pkgs.haskellPackages.pandoc_3_1_2.overrideScope <span class="op">(</span><span class="va">hfinal</span><span class="op">:</span> <span class="va">hprev</span><span class="op">:</span> <span class="op">{</span></span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>    <span class="va">doctemplates</span> <span class="op">=</span> hprev.doctemplates_0_11<span class="op">;</span></span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>    <span class="va">gridtables</span> <span class="op">=</span> hprev.gridtables_0_1_0_0<span class="op">;</span></span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>    <span class="va">jira-wiki-markup</span> <span class="op">=</span> hprev.jira<span class="op">-</span>wiki<span class="op">-</span>markup_1_5_1<span class="op">;</span></span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a>    <span class="va">mime-types</span> <span class="op">=</span> hprev.mime<span class="op">-</span>types_0_1_1_0<span class="op">;</span></span>
+<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a>    <span class="va">pandoc-types</span> <span class="op">=</span> hprev.pandoc<span class="op">-</span>types_1_23<span class="op">;</span></span>
+<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a>    <span class="va">texmath</span> <span class="op">=</span> hprev.texmath_0_12_7_1<span class="op">;</span></span>
+<span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a>  <span class="op">});</span></span>
+<span id="cb17-12"><a href="#cb17-12" aria-hidden="true" tabindex="-1"></a><span class="kw">in</span></span>
+<span id="cb17-13"><a href="#cb17-13" aria-hidden="true" tabindex="-1"></a>  pkgs.mkShell <span class="op">{</span></span>
+<span id="cb17-14"><a href="#cb17-14" aria-hidden="true" tabindex="-1"></a>    <span class="va">packages</span> <span class="op">=</span> <span class="op">[</span>pandoc<span class="op">];</span></span>
+<span id="cb17-15"><a href="#cb17-15" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<p>And this worked! Except it didn’t.</p>
+<div class="sourceCode" id="cb18"><pre class="sourceCode default code-overflow-wrap code-with-copy"><code class="sourceCode default"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>[nix-shell:~/vscode/quartotest]$ pandoc</span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>bash: pandoc: command not found</span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>[nix-shell:~/vscode/quartotest]$ which pandoc</span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>which: no pandoc in (/nix/store/kbcrs84s1x8yd5bp1nq6q6ihda8nd2lp-bash-interactive-5.2-p15/bin:/nix/store/a9q4y7vw1fgs990bs5mpd3p50mc0iz27-python3-3.10.11/bin:/nix/store/nh8iz5l2zn5nbk19qxdw575a5fhfcajw-quarto-1.3.361/bin:/nix/store/ar2lzr4kr4pi1zgx3w8hl6fkny3bql53-python3.10-notebook-6.5.2/bin:/nix/store/ai5lxg5vzjsfk9zkyn65ndq81na2mm5c-python3.10-babel-2.12.1/bin:/nix/store/95cxzy2hpizr23343b8bskl4yacf4b3l-python3-3.10.11/bin:/nix/store/5ii8sm9yh01ny05bl1wjdv6pkdjb8bw0-python3.10-jupyter-core-5.2.0/bin:/nix/store/pkgr71n4dy7h9lp00paf6k3llfa95ig0-python3.10-Send2Trash-1.8.1b0/bin:/nix/store/x1kk4hlx0zl12igvr6v0pk2cq2720fbh-python3.10-jupyter_client-8.0.3/bin:/nix/store/9icvaw0dgk7258m564xlh513nz6xis1m-python3.10-nbformat-5.7.3/bin:/nix/store/6svh49hf9pq5hwavgyb642v5a0pjnn4a-python3.10-jsonschema-4.17.3/bin:/nix/store/15jn0r39wg0ripjzjfxj9arcv53qxck9-python3.10-nbclassic-0.5.2/bin:/nix/store/jjy30kw6pw2mq54ig6lrm84ds91a9snf-python3.10-ipython-8.11.0/bin:/nix/store</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Apparently, in pandoc 3.0, the binary and the library have been split into two seperate packages. In nixpkgs, the library can be found in the haskellPackages.pandoc_3_1_2, and the binary can be found in haskellPackages.pandoc-cli.</p>
+<div class="sourceCode" id="cb19"><pre class="sourceCode default code-overflow-wrap code-with-copy"><code class="sourceCode default"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>nix-shell -p haskellPackages.pandoc-cli</span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>Setup: Encountered missing or private dependencies:</span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>doctemplates &gt;=0.11 &amp;&amp; &lt;0.12, pandoc &gt;=3.0</span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>...</span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>error: builder for '/nix/store/hzzqnffj08r9qc0xi3b4ydi7w91dn4m0-pandoc-server-0.1.drv' failed with exit code 1</span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a>error: 1 dependencies of derivation '/nix/store/arbq7vgw539xyd4l0y5x3jyhhra30v91-pandoc-cli-0.1.1.drv' failed to build</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>The pandoc-cli package is broken, for the exact same error that the pandoc library won’t compile for.</p>
+<details>
+<summary>
+So I try my own override:
+</summary>
+<div class="sourceCode" id="cb20"><pre class="sourceCode nix code-overflow-wrap code-with-copy"><code class="sourceCode nix"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="op">{</span> <span class="va">pkgs</span> <span class="op">?</span> <span class="bu">import</span> &lt;nixpkgs&gt; <span class="op">{}</span> <span class="op">}</span> :</span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span></span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>    <span class="va">quarto</span> <span class="op">=</span> pkgs.quarto.overrideAttrs <span class="op">(</span><span class="va">oldAttrs</span><span class="op">:</span> <span class="kw">rec</span> <span class="op">{</span></span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>        <span class="va">version</span> <span class="op">=</span> <span class="st">"1.3.361"</span><span class="op">;</span></span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>        <span class="va">src</span> <span class="op">=</span> pkgs.fetchurl <span class="op">{</span></span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a>            <span class="va">url</span> <span class="op">=</span> <span class="st">"https://github.com/quarto-dev/quarto-cli/releases/download/v</span><span class="sc">${</span>version<span class="sc">}</span><span class="st">/quarto-</span><span class="sc">${</span>version<span class="sc">}</span><span class="st">-linux-amd64.tar.gz"</span><span class="op">;</span></span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a>            <span class="va">sha256</span> <span class="op">=</span> <span class="st">"sha256-vvnrIUhjsBXkJJ6VFsotRxkuccYOGQstIlSNWIY5nuE="</span><span class="op">;</span></span>
+<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a>        <span class="op">};</span></span>
+<span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a>    <span class="op">});</span></span>
+<span id="cb20-10"><a href="#cb20-10" aria-hidden="true" tabindex="-1"></a>    <span class="va">pandoc</span> <span class="op">=</span> pkgs.haskellPackages.pandoc_3_1_2.overrideScope <span class="op">(</span><span class="va">hfinal</span><span class="op">:</span> <span class="va">hprev</span><span class="op">:</span> <span class="op">{</span></span>
+<span id="cb20-11"><a href="#cb20-11" aria-hidden="true" tabindex="-1"></a>        <span class="va">doctemplates</span> <span class="op">=</span> hprev.doctemplates_0_11<span class="op">;</span></span>
+<span id="cb20-12"><a href="#cb20-12" aria-hidden="true" tabindex="-1"></a>        <span class="va">gridtables</span> <span class="op">=</span> hprev.gridtables_0_1_0_0<span class="op">;</span></span>
+<span id="cb20-13"><a href="#cb20-13" aria-hidden="true" tabindex="-1"></a>        <span class="va">jira-wiki-markup</span> <span class="op">=</span> hprev.jira<span class="op">-</span>wiki<span class="op">-</span>markup_1_5_1<span class="op">;</span></span>
+<span id="cb20-14"><a href="#cb20-14" aria-hidden="true" tabindex="-1"></a>        <span class="va">mime-types</span> <span class="op">=</span> hprev.mime<span class="op">-</span>types_0_1_1_0<span class="op">;</span></span>
+<span id="cb20-15"><a href="#cb20-15" aria-hidden="true" tabindex="-1"></a>        <span class="va">pandoc-types</span> <span class="op">=</span> hprev.pandoc<span class="op">-</span>types_1_23<span class="op">;</span></span>
+<span id="cb20-16"><a href="#cb20-16" aria-hidden="true" tabindex="-1"></a>        <span class="va">texmath</span> <span class="op">=</span> hprev.texmath_0_12_7_1<span class="op">;</span></span>
+<span id="cb20-17"><a href="#cb20-17" aria-hidden="true" tabindex="-1"></a>      <span class="op">});</span></span>
+<span id="cb20-18"><a href="#cb20-18" aria-hidden="true" tabindex="-1"></a>    <span class="va">pandoc-cli</span> <span class="op">=</span> pkgs.haskellPackages.pandoc<span class="op">-</span>cli.overrideScope <span class="op">(</span><span class="va">hfinal</span><span class="op">:</span> <span class="va">hprev</span><span class="op">:</span> <span class="op">{</span></span>
+<span id="cb20-19"><a href="#cb20-19" aria-hidden="true" tabindex="-1"></a>        <span class="va">hslua-core</span> <span class="op">=</span> hprev.hslua<span class="op">-</span>core_2_3_1<span class="op">;</span></span>
+<span id="cb20-20"><a href="#cb20-20" aria-hidden="true" tabindex="-1"></a>        <span class="va">lua</span> <span class="op">=</span> hprev.lua_2_3_1<span class="op">;</span></span>
+<span id="cb20-21"><a href="#cb20-21" aria-hidden="true" tabindex="-1"></a>    <span class="op">});</span></span>
+<span id="cb20-22"><a href="#cb20-22" aria-hidden="true" tabindex="-1"></a><span class="kw">in</span></span>
+<span id="cb20-23"><a href="#cb20-23" aria-hidden="true" tabindex="-1"></a>    pkgs.mkShell <span class="op">{</span></span>
+<span id="cb20-24"><a href="#cb20-24" aria-hidden="true" tabindex="-1"></a>        <span class="va">packages</span> <span class="op">=</span> <span class="op">[</span> pkgs.python310Full quarto pkgs.jupyter pandoc pandoc-cli pkgs.deno <span class="op">];</span></span>
+<span id="cb20-25"><a href="#cb20-25" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<p>But this also errors:</p>
+<details>
+<summary>
+Show error
+</summary>
+<div class="sourceCode" id="cb21"><pre class="sourceCode default code-overflow-wrap code-with-copy"><code class="sourceCode default"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>Using Parsec parser</span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>Configuring tasty-hslua-1.0.2...</span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>Setup: Encountered missing or private dependencies:</span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>hslua-core &gt;=2.0 &amp;&amp; &lt;2.3</span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a>error: builder for '/nix/store/nmhz8xnc24xw86q573v515n3q8m9l0y5-tasty-hslua-1.0.2.drv' failed with exit code 1</span>
+<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a>error: 1 dependencies of derivation '/nix/store/8q4ni7s2am50xbbbkcdjk85szyvq3jk8-hslua-2.2.1.drv' failed to build</span>
+<span id="cb21-9"><a href="#cb21-9" aria-hidden="true" tabindex="-1"></a>error: 1 dependencies of derivation '/nix/store/hcysycpqkqv4kd3qmkwzyi7pkaqszqyy-hslua-marshalling-2.2.1.drv' failed to build</span>
+<span id="cb21-10"><a href="#cb21-10" aria-hidden="true" tabindex="-1"></a>error: 1 dependencies of derivation '/nix/store/h4c32n03d305njipsiw4rzc8rq52l2bc-hslua-packaging-2.2.1.drv' failed to build</span>
+<span id="cb21-11"><a href="#cb21-11" aria-hidden="true" tabindex="-1"></a>error: 1 dependencies of derivation '/nix/store/y655vw1bdq8a9j818k16y7228nlsf86y-hslua-cli-1.4.1.drv' failed to build</span>
+<span id="cb21-12"><a href="#cb21-12" aria-hidden="true" tabindex="-1"></a>error: 1 dependencies of derivation '/nix/store/xkkp4cj1yfwjpczc6k7y08gxdqdbfh4n-pandoc-2.19.2.drv' failed to build</span>
+<span id="cb21-13"><a href="#cb21-13" aria-hidden="true" tabindex="-1"></a>error: 1 dependencies of derivation '/nix/store/sc44mnc1ngxfxi7h3f6qrrvnvldla4w3-pandoc-cli-0.1.1.drv' failed to build</span>
+<span id="cb21-14"><a href="#cb21-14" aria-hidden="true" tabindex="-1"></a>~/vscode/quartotest master !4 ?9 ❯                                                                                        </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<p>But the hslua-core version I want was packaged in nixpkgs, similar to doctemplates, or gridtables. So I did a further override.</p>
+<details open="">
+<summary>
+Show/hide
+</summary>
+<div class="sourceCode" id="cb22"><pre class="sourceCode nix code-overflow-wrap code-with-copy"><code class="sourceCode nix"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="op">{</span> <span class="va">pkgs</span> <span class="op">?</span> <span class="bu">import</span> &lt;nixpkgs&gt; <span class="op">{}</span> <span class="op">}</span> :</span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span></span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>    <span class="va">quarto</span> <span class="op">=</span> pkgs.quarto.overrideAttrs <span class="op">(</span><span class="va">oldAttrs</span><span class="op">:</span> <span class="kw">rec</span> <span class="op">{</span></span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>        <span class="va">version</span> <span class="op">=</span> <span class="st">"1.3.361"</span><span class="op">;</span></span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a>        <span class="va">src</span> <span class="op">=</span> pkgs.fetchurl <span class="op">{</span></span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a>            <span class="va">url</span> <span class="op">=</span> <span class="st">"https://github.com/quarto-dev/quarto-cli/releases/download/v</span><span class="sc">${</span>version<span class="sc">}</span><span class="st">/quarto-</span><span class="sc">${</span>version<span class="sc">}</span><span class="st">-linux-amd64.tar.gz"</span><span class="op">;</span></span>
+<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a>            <span class="va">sha256</span> <span class="op">=</span> <span class="st">"sha256-vvnrIUhjsBXkJJ6VFsotRxkuccYOGQstIlSNWIY5nuE="</span><span class="op">;</span></span>
+<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a>        <span class="op">};</span></span>
+<span id="cb22-9"><a href="#cb22-9" aria-hidden="true" tabindex="-1"></a>    <span class="op">});</span></span>
+<span id="cb22-10"><a href="#cb22-10" aria-hidden="true" tabindex="-1"></a>    <span class="va">pandoc</span> <span class="op">=</span> pkgs.haskellPackages.pandoc_3_1_2.overrideScope <span class="op">(</span><span class="va">hfinal</span><span class="op">:</span> <span class="va">hprev</span><span class="op">:</span> <span class="op">{</span></span>
+<span id="cb22-11"><a href="#cb22-11" aria-hidden="true" tabindex="-1"></a>        <span class="va">doctemplates</span> <span class="op">=</span> hprev.doctemplates_0_11<span class="op">;</span></span>
+<span id="cb22-12"><a href="#cb22-12" aria-hidden="true" tabindex="-1"></a>        <span class="va">gridtables</span> <span class="op">=</span> hprev.gridtables_0_1_0_0<span class="op">;</span></span>
+<span id="cb22-13"><a href="#cb22-13" aria-hidden="true" tabindex="-1"></a>        <span class="va">jira-wiki-markup</span> <span class="op">=</span> hprev.jira<span class="op">-</span>wiki<span class="op">-</span>markup_1_5_1<span class="op">;</span></span>
+<span id="cb22-14"><a href="#cb22-14" aria-hidden="true" tabindex="-1"></a>        <span class="va">mime-types</span> <span class="op">=</span> hprev.mime<span class="op">-</span>types_0_1_1_0<span class="op">;</span></span>
+<span id="cb22-15"><a href="#cb22-15" aria-hidden="true" tabindex="-1"></a>        <span class="va">pandoc-types</span> <span class="op">=</span> hprev.pandoc<span class="op">-</span>types_1_23<span class="op">;</span></span>
+<span id="cb22-16"><a href="#cb22-16" aria-hidden="true" tabindex="-1"></a>        <span class="va">texmath</span> <span class="op">=</span> hprev.texmath_0_12_7_1<span class="op">;</span></span>
+<span id="cb22-17"><a href="#cb22-17" aria-hidden="true" tabindex="-1"></a>        <span class="va">tasty-hslua</span> <span class="op">=</span> hprev.tasty<span class="op">-</span>hslua_1_1_0<span class="op">;</span></span>
+<span id="cb22-18"><a href="#cb22-18" aria-hidden="true" tabindex="-1"></a>        <span class="va">hslua-marshalling</span> <span class="op">=</span> hprev.hslua<span class="op">-</span>marshalling_2_3_0<span class="op">;</span></span>
+<span id="cb22-19"><a href="#cb22-19" aria-hidden="true" tabindex="-1"></a>        <span class="va">hslua-aeson</span> <span class="op">=</span> hprev.hslua<span class="op">-</span>aeson_2_3_0_1<span class="op">;</span></span>
+<span id="cb22-20"><a href="#cb22-20" aria-hidden="true" tabindex="-1"></a>        <span class="va">hslua</span> <span class="op">=</span> hprev.hslua_2_3_0<span class="op">;</span></span>
+<span id="cb22-21"><a href="#cb22-21" aria-hidden="true" tabindex="-1"></a>      <span class="op">});</span></span>
+<span id="cb22-22"><a href="#cb22-22" aria-hidden="true" tabindex="-1"></a>    <span class="va">pandoc-cli</span> <span class="op">=</span> pkgs.haskellPackages.pandoc<span class="op">-</span>cli.overrideScope <span class="op">(</span><span class="va">hfinal</span><span class="op">:</span> <span class="va">hprev</span><span class="op">:</span> <span class="op">{</span></span>
+<span id="cb22-23"><a href="#cb22-23" aria-hidden="true" tabindex="-1"></a>        <span class="va">hslua-core</span> <span class="op">=</span> hprev.hslua<span class="op">-</span>core_2_3_1<span class="op">;</span></span>
+<span id="cb22-24"><a href="#cb22-24" aria-hidden="true" tabindex="-1"></a>        <span class="va">lua</span> <span class="op">=</span> hprev.lua_2_3_1<span class="op">;</span></span>
+<span id="cb22-25"><a href="#cb22-25" aria-hidden="true" tabindex="-1"></a>        <span class="va">tasty-hslua</span> <span class="op">=</span> hprev.tasty<span class="op">-</span>hslua_1_1_0<span class="op">;</span></span>
+<span id="cb22-26"><a href="#cb22-26" aria-hidden="true" tabindex="-1"></a>        <span class="va">hslua-marshalling</span> <span class="op">=</span> hprev.hslua<span class="op">-</span>marshalling_2_3_0<span class="op">;</span></span>
+<span id="cb22-27"><a href="#cb22-27" aria-hidden="true" tabindex="-1"></a>        <span class="va">hslua-aeson</span> <span class="op">=</span> hprev.hslua<span class="op">-</span>aeson_2_3_0_1<span class="op">;</span></span>
+<span id="cb22-28"><a href="#cb22-28" aria-hidden="true" tabindex="-1"></a>        <span class="va">hslua</span> <span class="op">=</span> hprev.hslua_2_3_0<span class="op">;</span></span>
+<span id="cb22-29"><a href="#cb22-29" aria-hidden="true" tabindex="-1"></a>    <span class="op">});</span></span>
+<span id="cb22-30"><a href="#cb22-30" aria-hidden="true" tabindex="-1"></a><span class="kw">in</span></span>
+<span id="cb22-31"><a href="#cb22-31" aria-hidden="true" tabindex="-1"></a>    pkgs.mkShell <span class="op">{</span></span>
+<span id="cb22-32"><a href="#cb22-32" aria-hidden="true" tabindex="-1"></a>        <span class="va">packages</span> <span class="op">=</span> <span class="op">[</span> pkgs.python310Full quarto pkgs.jupyter pandoc pandoc-cli pkgs.deno <span class="op">];</span></span>
+<span id="cb22-33"><a href="#cb22-33" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<p>Which still errors:</p>
+<div class="sourceCode" id="cb23"><pre class="sourceCode default code-overflow-wrap code-with-copy"><code class="sourceCode default"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>Using Parsec parser</span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>Configuring hslua-typing-0.1.0...</span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>Setup: Encountered missing or private dependencies:</span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a>hslua-core &gt;=2.3 &amp;&amp; &lt;2.4, hslua-marshalling &gt;=2.3 &amp;&amp; &lt;2.4</span>
+<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a>error: builder for '/nix/store/kbmfxjy0ycwwg6r6zsp9q9v1pfkmggnw-hslua-typing-0.1.0.drv' failed with exit code 1</span>
+<span id="cb23-8"><a href="#cb23-8" aria-hidden="true" tabindex="-1"></a>error: 1 dependencies of derivation '/nix/store/nj4smnyrkaf52qx98r1wa0r1gdnjbwxk-hslua-2.3.0.drv' failed to build</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>I quickly realized, that the updated set of haskell packages in nixpkgs, is broken all the way down. I found a relevant <a href="https://github.com/NixOS/nixpkgs/issues/221165">github issue</a>. In this issue, somene had modified the derivation of the haskellPackages, to get pandoc-cli to work.</p>
+<p>I used their fork of nixpkgs to give myself pandoc-cli.</p>
+<div class="sourceCode" id="cb24"><pre class="sourceCode default code-overflow-wrap code-with-copy"><code class="sourceCode default"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>~/vscode/quartotest master +3 !1 ❯ nix-shell -p haskellPackages.pandoc-cli -I nixpkgs=https://github.com/seam345/nixpkgs/archive/89e6e477c8357a087e863db562d2fa8d9fe5ba29.tar.gz</span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>[nix-shell:~/vscode/quartotest]$ pandoc --version</span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>pandoc 3.1</span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a>Features: +server +lua</span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a>Scripting engine: Lua 5.4</span>
+<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a>User data directory: /home/moonpie/.local/share/pandoc</span>
+<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a>Copyright (C) 2006-2023 John MacFarlane. Web:  https://pandoc.org</span>
+<span id="cb24-8"><a href="#cb24-8" aria-hidden="true" tabindex="-1"></a>This is free software; see the source for copying conditions. There is no</span>
+<span id="cb24-9"><a href="#cb24-9" aria-hidden="true" tabindex="-1"></a>warranty, not even for merchantability or fitness for a particular purpose.</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>This actually worked, and I got pandoc-cli with the 3.0 version of pandoc. However, I couldn’t get quarto to use pandoc-cli rather than the normal pandoc version, so quarto still wasn’t working.</p>
+<p>Later, cdepillabout chimed in again. Here is their solution:</p>
+<details open="">
+<summary>
+Show/hide
+</summary>
+<div class="sourceCode" id="cb25"><pre class="sourceCode nix code-overflow-wrap code-with-copy"><code class="sourceCode nix"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span></span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>  <span class="va">nixpkgs-src</span> <span class="op">=</span> <span class="bu">fetchTarball</span> <span class="op">{</span></span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>    <span class="co"># nixpkgs-unstable as of 2023-05-31</span></span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a>    <span class="va">url</span> <span class="op">=</span> <span class="st">"https://github.com/NixOS/nixpkgs/archive/58c85835512b0db938600b6fe13cc3e3dc4b364e.tar.gz"</span><span class="op">;</span></span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a>    <span class="va">sha256</span> <span class="op">=</span> <span class="st">"0bkhaiaczj25s6hji2k9pm248jhfbiaqcfcsfk92bbi7kgzzzpif"</span><span class="op">;</span></span>
+<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a>  <span class="op">};</span></span>
+<span id="cb25-7"><a href="#cb25-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-8"><a href="#cb25-8" aria-hidden="true" tabindex="-1"></a>  <span class="va">my-overlay</span> <span class="op">=</span> <span class="va">final</span><span class="op">:</span> <span class="va">prev</span><span class="op">:</span> <span class="op">{</span></span>
+<span id="cb25-9"><a href="#cb25-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-10"><a href="#cb25-10" aria-hidden="true" tabindex="-1"></a>    <span class="va">pandoc_1_3</span> <span class="op">=</span></span>
+<span id="cb25-11"><a href="#cb25-11" aria-hidden="true" tabindex="-1"></a>      <span class="kw">let</span></span>
+<span id="cb25-12"><a href="#cb25-12" aria-hidden="true" tabindex="-1"></a>        <span class="va">inherit</span> (<span class="va">final</span>.<span class="va">haskell</span>.<span class="va">lib</span>.<span class="va">compose</span>) <span class="va">disableCabalFlag</span> <span class="va">markUnbroken</span>;</span>
+<span id="cb25-13"><a href="#cb25-13" aria-hidden="true" tabindex="-1"></a>      <span class="kw">in</span></span>
+<span id="cb25-14"><a href="#cb25-14" aria-hidden="true" tabindex="-1"></a>      final.lib.pipe</span>
+<span id="cb25-15"><a href="#cb25-15" aria-hidden="true" tabindex="-1"></a>        final.haskellPackages.pandoc<span class="op">-</span>cli</span>
+<span id="cb25-16"><a href="#cb25-16" aria-hidden="true" tabindex="-1"></a>        <span class="op">[</span></span>
+<span id="cb25-17"><a href="#cb25-17" aria-hidden="true" tabindex="-1"></a>          markUnbroken</span>
+<span id="cb25-18"><a href="#cb25-18" aria-hidden="true" tabindex="-1"></a>          <span class="op">(</span>disableCabalFlag <span class="st">"lua"</span><span class="op">)</span></span>
+<span id="cb25-19"><a href="#cb25-19" aria-hidden="true" tabindex="-1"></a>          <span class="op">(</span><span class="va">p</span><span class="op">:</span> p.overrideScope <span class="op">(</span><span class="va">hfinal</span><span class="op">:</span> <span class="va">hprev</span><span class="op">:</span> <span class="op">{</span></span>
+<span id="cb25-20"><a href="#cb25-20" aria-hidden="true" tabindex="-1"></a>            <span class="va">doctemplates</span> <span class="op">=</span> hprev.doctemplates_0_11<span class="op">;</span></span>
+<span id="cb25-21"><a href="#cb25-21" aria-hidden="true" tabindex="-1"></a>            <span class="va">gridtables</span> <span class="op">=</span> hprev.gridtables_0_1_0_0<span class="op">;</span></span>
+<span id="cb25-22"><a href="#cb25-22" aria-hidden="true" tabindex="-1"></a>            <span class="va">hslua-cli</span> <span class="op">=</span> <span class="cn">null</span><span class="op">;</span></span>
+<span id="cb25-23"><a href="#cb25-23" aria-hidden="true" tabindex="-1"></a>            <span class="va">jira-wiki-markup</span> <span class="op">=</span> hprev.jira<span class="op">-</span>wiki<span class="op">-</span>markup_1_5_1<span class="op">;</span></span>
+<span id="cb25-24"><a href="#cb25-24" aria-hidden="true" tabindex="-1"></a>            <span class="va">mime-types</span> <span class="op">=</span> hprev.mime<span class="op">-</span>types_0_1_1_0<span class="op">;</span></span>
+<span id="cb25-25"><a href="#cb25-25" aria-hidden="true" tabindex="-1"></a>            <span class="va">pandoc</span> <span class="op">=</span> hprev.pandoc_3_1_2<span class="op">;</span></span>
+<span id="cb25-26"><a href="#cb25-26" aria-hidden="true" tabindex="-1"></a>            <span class="va">pandoc-lua-engine</span> <span class="op">=</span> <span class="cn">null</span><span class="op">;</span></span>
+<span id="cb25-27"><a href="#cb25-27" aria-hidden="true" tabindex="-1"></a>            <span class="va">pandoc-server</span> <span class="op">=</span> markUnbroken hprev.pandoc<span class="op">-</span>server<span class="op">;</span></span>
+<span id="cb25-28"><a href="#cb25-28" aria-hidden="true" tabindex="-1"></a>            <span class="va">pandoc-types</span> <span class="op">=</span> hprev.pandoc<span class="op">-</span>types_1_23<span class="op">;</span></span>
+<span id="cb25-29"><a href="#cb25-29" aria-hidden="true" tabindex="-1"></a>            <span class="va">texmath</span> <span class="op">=</span> hprev.texmath_0_12_7_1<span class="op">;</span></span>
+<span id="cb25-30"><a href="#cb25-30" aria-hidden="true" tabindex="-1"></a>          <span class="op">}))</span></span>
+<span id="cb25-31"><a href="#cb25-31" aria-hidden="true" tabindex="-1"></a>        <span class="op">];</span></span>
+<span id="cb25-32"><a href="#cb25-32" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-33"><a href="#cb25-33" aria-hidden="true" tabindex="-1"></a>    <span class="va">quarto_1_3</span> <span class="op">=</span></span>
+<span id="cb25-34"><a href="#cb25-34" aria-hidden="true" tabindex="-1"></a>      <span class="kw">let</span></span>
+<span id="cb25-35"><a href="#cb25-35" aria-hidden="true" tabindex="-1"></a>        <span class="va">quarto-version</span> <span class="op">=</span> <span class="st">"1.3.361"</span><span class="op">;</span></span>
+<span id="cb25-36"><a href="#cb25-36" aria-hidden="true" tabindex="-1"></a>      <span class="kw">in</span></span>
+<span id="cb25-37"><a href="#cb25-37" aria-hidden="true" tabindex="-1"></a>      <span class="op">(</span>final.quarto.override <span class="op">{</span> <span class="va">pandoc</span> <span class="op">=</span> final.pandoc_1_3<span class="op">;</span> <span class="op">})</span>.overrideAttrs <span class="op">(</span><span class="va">oldAttrs</span><span class="op">:</span> <span class="op">{</span></span>
+<span id="cb25-38"><a href="#cb25-38" aria-hidden="true" tabindex="-1"></a>        <span class="va">version</span> <span class="op">=</span> quarto<span class="op">-</span>version<span class="op">;</span></span>
+<span id="cb25-39"><a href="#cb25-39" aria-hidden="true" tabindex="-1"></a>        <span class="va">src</span> <span class="op">=</span> final.fetchurl <span class="op">{</span></span>
+<span id="cb25-40"><a href="#cb25-40" aria-hidden="true" tabindex="-1"></a>          <span class="va">url</span> <span class="op">=</span> <span class="st">"https://github.com/quarto-dev/quarto-cli/releases/download/v</span><span class="sc">${</span>quarto<span class="op">-</span>version<span class="sc">}</span><span class="st">/quarto-</span><span class="sc">${</span>quarto<span class="op">-</span>version<span class="sc">}</span><span class="st">-linux-amd64.tar.gz"</span><span class="op">;</span></span>
+<span id="cb25-41"><a href="#cb25-41" aria-hidden="true" tabindex="-1"></a>          <span class="va">sha256</span> <span class="op">=</span> <span class="st">"sha256-vvnrIUhjsBXkJJ6VFsotRxkuccYOGQstIlSNWIY5nuE="</span><span class="op">;</span></span>
+<span id="cb25-42"><a href="#cb25-42" aria-hidden="true" tabindex="-1"></a>        <span class="op">};</span></span>
+<span id="cb25-43"><a href="#cb25-43" aria-hidden="true" tabindex="-1"></a>      <span class="op">});</span></span>
+<span id="cb25-44"><a href="#cb25-44" aria-hidden="true" tabindex="-1"></a>  <span class="op">};</span></span>
+<span id="cb25-45"><a href="#cb25-45" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-46"><a href="#cb25-46" aria-hidden="true" tabindex="-1"></a>  <span class="va">pkgs</span> <span class="op">=</span> <span class="bu">import</span> nixpkgs<span class="op">-</span>src <span class="op">{</span> <span class="va">overlays</span> <span class="op">=</span> <span class="op">[</span> my-overlay <span class="op">];</span> <span class="op">};</span></span>
+<span id="cb25-47"><a href="#cb25-47" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-48"><a href="#cb25-48" aria-hidden="true" tabindex="-1"></a><span class="kw">in</span></span>
+<span id="cb25-49"><a href="#cb25-49" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-50"><a href="#cb25-50" aria-hidden="true" tabindex="-1"></a>pkgs.quarto_1_3</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<p>Although I modified it a bit, to be</p>
+<div class="sourceCode" id="cb26"><pre class="sourceCode nix code-overflow-wrap code-with-copy"><code class="sourceCode nix"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a>...</span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>in</span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>pkgs.mkShell <span class="op">{</span></span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a>  <span class="va">packages</span> <span class="op">=</span> <span class="op">[</span>pkgs.quarto_1_3<span class="op">];</span></span>
+<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Because it is the mkShell package that creates the shell environment.</p>
+<p>This solution works, and gets me quarto 1.3, and also replaces the default dependency of quarto, on pandoc 2.1.9, with one on pandoc-cli.</p>
+<div class="sourceCode" id="cb27"><pre class="sourceCode default code-overflow-wrap code-with-copy"><code class="sourceCode default"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>[nix-shell:~/vscode/quartotest]$ quarto pandoc --version</span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>pandoc 3.1.2</span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>Features: +server -lua</span>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a>Scripting engine: none</span>
+<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a>User data directory: /home/moonpie/.local/share/pandoc</span>
+<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a>Copyright (C) 2006-2023 John MacFarlane. Web:  https://pandoc.org</span>
+<span id="cb27-7"><a href="#cb27-7" aria-hidden="true" tabindex="-1"></a>This is free software; see the source for copying conditions. There is no</span>
+<span id="cb27-8"><a href="#cb27-8" aria-hidden="true" tabindex="-1"></a>warranty, not even for merchantability or fitness for a particular purpose.</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>However, it has a caveat. It compiles pandoc without lua support, as those packages where the ones that were broken in nixpkgs.</p>
+<p>But apparently, quarto needs lua suppport.</p>
+<div class="sourceCode" id="cb28"><pre class="sourceCode default code-overflow-wrap code-with-copy"><code class="sourceCode default"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a>[nix-shell:~/vscode/quartotest]$ quarto render</span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>[1/9] about.qmd</span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a>This version of pandoc has been compiled without Lua support.</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>So yeah. That doesn’t work.</p>
+<p>But meanwhile, the quarto team responded to a question I asked on their github discussion page. I had asked if quarto requires either the pandoc binary, or the pandoc library.</p>
+<p>They replied, and said that a pandoc binary, is actually included inside the tarball and the packages they have created. As part of the build system, the package is fairly self reliant, not needing much in terms of external dependencies.</p>
+<p>So that’s what I did.</p>
+<p>I modified the derivation so that it uses the built in pandoc, rather than replacing it with an external one.</p>
+<details open="">
+<summary>
+Show/hide
+</summary>
+<div class="sourceCode" id="cb29"><pre class="sourceCode nix code-overflow-wrap code-with-copy"><code class="sourceCode nix"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a><span class="op">{</span> <span class="va">pkgs</span> <span class="op">?</span> <span class="bu">import</span> &lt;nixpkgs&gt; <span class="op">{}</span> <span class="op">}</span> :</span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> </span>
+<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a>    <span class="va">pandoc</span> <span class="op">=</span> <span class="cn">null</span><span class="op">;</span></span>
+<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-6"><a href="#cb29-6" aria-hidden="true" tabindex="-1"></a>    <span class="va">extraRPackages</span> <span class="op">=</span> <span class="op">[];</span></span>
+<span id="cb29-7"><a href="#cb29-7" aria-hidden="true" tabindex="-1"></a>    <span class="va">extraPythonPackages</span> <span class="op">=</span> <span class="va">ps</span><span class="op">:</span> <span class="kw">with</span> ps<span class="op">;</span> <span class="op">[];</span></span>
+<span id="cb29-8"><a href="#cb29-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-9"><a href="#cb29-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-10"><a href="#cb29-10" aria-hidden="true" tabindex="-1"></a>    <span class="va">quarto</span> <span class="op">=</span> <span class="op">(</span>pkgs.quarto.overrideAttrs <span class="op">(</span><span class="va">oldAttrs</span><span class="op">:</span> <span class="kw">rec</span> <span class="op">{</span></span>
+<span id="cb29-11"><a href="#cb29-11" aria-hidden="true" tabindex="-1"></a>        <span class="va">version</span> <span class="op">=</span> <span class="st">"1.3.361"</span><span class="op">;</span></span>
+<span id="cb29-12"><a href="#cb29-12" aria-hidden="true" tabindex="-1"></a>        <span class="va">src</span> <span class="op">=</span> pkgs.fetchurl <span class="op">{</span></span>
+<span id="cb29-13"><a href="#cb29-13" aria-hidden="true" tabindex="-1"></a>            <span class="va">url</span> <span class="op">=</span> <span class="st">"https://github.com/quarto-dev/quarto-cli/releases/download/v</span><span class="sc">${</span>version<span class="sc">}</span><span class="st">/quarto-</span><span class="sc">${</span>version<span class="sc">}</span><span class="st">-linux-amd64.tar.gz"</span><span class="op">;</span></span>
+<span id="cb29-14"><a href="#cb29-14" aria-hidden="true" tabindex="-1"></a>            <span class="va">sha256</span> <span class="op">=</span> <span class="st">"sha256-vvnrIUhjsBXkJJ6VFsotRxkuccYOGQstIlSNWIY5nuE="</span><span class="op">;</span></span>
+<span id="cb29-15"><a href="#cb29-15" aria-hidden="true" tabindex="-1"></a>        <span class="op">};</span></span>
+<span id="cb29-16"><a href="#cb29-16" aria-hidden="true" tabindex="-1"></a>        <span class="va">patches</span> <span class="op">=</span> <span class="op">[];</span></span>
+<span id="cb29-17"><a href="#cb29-17" aria-hidden="true" tabindex="-1"></a>        <span class="va">preFixup</span> <span class="op">=</span> <span class="st">''</span></span>
+<span id="cb29-18"><a href="#cb29-18" aria-hidden="true" tabindex="-1"></a><span class="st">            wrapProgram $out/bin/quarto \</span></span>
+<span id="cb29-19"><a href="#cb29-19" aria-hidden="true" tabindex="-1"></a><span class="st">            --prefix PATH : </span><span class="sc">${</span>pkgs.lib.makeBinPath <span class="op">[</span> pkgs.deno <span class="op">]</span><span class="sc">}</span><span class="st"> \</span></span>
+<span id="cb29-20"><a href="#cb29-20" aria-hidden="true" tabindex="-1"></a><span class="st">            --prefix QUARTO_PANDOC : $out/bin/tools/pandoc \</span></span>
+<span id="cb29-21"><a href="#cb29-21" aria-hidden="true" tabindex="-1"></a><span class="st">            --prefix QUARTO_ESBUILD : </span><span class="sc">${</span>pkgs.esbuild<span class="sc">}</span><span class="st">/bin/esbuild \</span></span>
+<span id="cb29-22"><a href="#cb29-22" aria-hidden="true" tabindex="-1"></a><span class="st">            --prefix QUARTO_DART_SASS : </span><span class="sc">${</span>pkgs.nodePackages.sass<span class="sc">}</span><span class="st">/bin/sass \</span></span>
+<span id="cb29-23"><a href="#cb29-23" aria-hidden="true" tabindex="-1"></a><span class="st">            --prefix QUARTO_R : </span><span class="sc">${</span>pkgs.rWrapper.override <span class="op">{</span> <span class="va">packages</span> <span class="op">=</span> <span class="op">[</span> pkgs.rPackages.rmarkdown <span class="op">]</span> <span class="op">++</span> extraRPackages<span class="op">;</span> <span class="op">}</span><span class="sc">}</span><span class="st">/bin/R \</span></span>
+<span id="cb29-24"><a href="#cb29-24" aria-hidden="true" tabindex="-1"></a><span class="st">            --prefix QUARTO_PYTHON : </span><span class="sc">${</span>pkgs.python3.withPackages <span class="op">(</span><span class="va">ps</span><span class="op">:</span> <span class="kw">with</span> ps<span class="op">;</span> <span class="op">[</span> jupyter ipython <span class="op">]</span> <span class="op">++</span> <span class="op">(</span>extraPythonPackages ps<span class="op">))</span><span class="sc">}</span><span class="st">/bin/python3</span></span>
+<span id="cb29-25"><a href="#cb29-25" aria-hidden="true" tabindex="-1"></a><span class="st">        ''</span><span class="op">;</span></span>
+<span id="cb29-26"><a href="#cb29-26" aria-hidden="true" tabindex="-1"></a>        <span class="va">installPhase</span> <span class="op">=</span> <span class="st">''</span></span>
+<span id="cb29-27"><a href="#cb29-27" aria-hidden="true" tabindex="-1"></a><span class="st">            runHook preInstall</span></span>
+<span id="cb29-28"><a href="#cb29-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-29"><a href="#cb29-29" aria-hidden="true" tabindex="-1"></a><span class="st">            mkdir -p $out/bin $out/share</span></span>
+<span id="cb29-30"><a href="#cb29-30" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-31"><a href="#cb29-31" aria-hidden="true" tabindex="-1"></a><span class="st">            mv bin/* $out/bin</span></span>
+<span id="cb29-32"><a href="#cb29-32" aria-hidden="true" tabindex="-1"></a><span class="st">            mv share/* $out/share</span></span>
+<span id="cb29-33"><a href="#cb29-33" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-34"><a href="#cb29-34" aria-hidden="true" tabindex="-1"></a><span class="st">            runHook preInstall</span></span>
+<span id="cb29-35"><a href="#cb29-35" aria-hidden="true" tabindex="-1"></a><span class="st">            ''</span><span class="op">;</span></span>
+<span id="cb29-36"><a href="#cb29-36" aria-hidden="true" tabindex="-1"></a>    <span class="op">}))</span>.override <span class="op">{</span><span class="kw">inherit</span> pandoc extraPythonPackages extraRPackages<span class="op">;};</span></span>
+<span id="cb29-37"><a href="#cb29-37" aria-hidden="true" tabindex="-1"></a><span class="kw">in</span></span>
+<span id="cb29-38"><a href="#cb29-38" aria-hidden="true" tabindex="-1"></a>    pkgs.mkShell <span class="op">{</span></span>
+<span id="cb29-39"><a href="#cb29-39" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-40"><a href="#cb29-40" aria-hidden="true" tabindex="-1"></a>        <span class="va">packages</span> <span class="op">=</span> <span class="kw">with</span> pkgs<span class="op">;</span> <span class="op">[</span> python310Full quarto jupyter <span class="op">];</span></span>
+<span id="cb29-41"><a href="#cb29-41" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<p>And this works:</p>
+<div class="sourceCode" id="cb30"><pre class="sourceCode default code-overflow-wrap code-with-copy"><code class="sourceCode default"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a>[nix-shell:/tmp/test]$ quarto pandoc --version</span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>pandoc 3.1.1</span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a>Features: +server +lua</span>
+<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a>Scripting engine: Lua 5.4</span>
+<span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a>User data directory: /home/moonpie/.local/share/pandoc</span>
+<span id="cb30-6"><a href="#cb30-6" aria-hidden="true" tabindex="-1"></a>Copyright (C) 2006-2023 John MacFarlane. Web:  https://pandoc.org</span>
+<span id="cb30-7"><a href="#cb30-7" aria-hidden="true" tabindex="-1"></a>This is free software; see the source for copying conditions. There is no</span>
+<span id="cb30-8"><a href="#cb30-8" aria-hidden="true" tabindex="-1"></a>warranty, not even for merchantability or fitness for a particular purpose.</span>
+<span id="cb30-9"><a href="#cb30-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-10"><a href="#cb30-10" aria-hidden="true" tabindex="-1"></a>[nix-shell:/tmp/test]$ quarto render</span>
+<span id="cb30-11"><a href="#cb30-11" aria-hidden="true" tabindex="-1"></a>[1/4] about.qmd</span>
+<span id="cb30-12"><a href="#cb30-12" aria-hidden="true" tabindex="-1"></a>[2/4] posts/post-with-code/index.qmd</span>
+<span id="cb30-13"><a href="#cb30-13" aria-hidden="true" tabindex="-1"></a>[3/4] posts/welcome/index.qmd</span>
+<span id="cb30-14"><a href="#cb30-14" aria-hidden="true" tabindex="-1"></a>[4/4] index.qmd</span>
+<span id="cb30-15"><a href="#cb30-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-16"><a href="#cb30-16" aria-hidden="true" tabindex="-1"></a>Output created: _site/index.html</span>
+<span id="cb30-17"><a href="#cb30-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-18"><a href="#cb30-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-19"><a href="#cb30-19" aria-hidden="true" tabindex="-1"></a>[nix-shell:/tmp/test]$ </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Except not really:</p>
+<div class="sourceCode" id="cb31"><pre class="sourceCode default code-overflow-wrap code-with-copy"><code class="sourceCode default"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a>[nix-shell:/tmp/test]$ quarto check</span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a>[✓] Checking versions of quarto binary dependencies...</span>
+<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a>      Pandoc version 3.1.1: OK</span>
+<span id="cb31-5"><a href="#cb31-5" aria-hidden="true" tabindex="-1"></a>ERROR: TypeError: Invalid Version: 1.62.1 compiled with dart2js 2.19.6</span>
+<span id="cb31-6"><a href="#cb31-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-7"><a href="#cb31-7" aria-hidden="true" tabindex="-1"></a>TypeError: Invalid Version: 1.62.1 compiled with dart2js 2.19.6</span>
+<span id="cb31-8"><a href="#cb31-8" aria-hidden="true" tabindex="-1"></a>    at new SemVer (file:///nix/store/bbb70ala41gczl37hmcfy1fx6dldw57l-quarto-1.3.361/bin/quarto.js:48564:19)</span>
+<span id="cb31-9"><a href="#cb31-9" aria-hidden="true" tabindex="-1"></a>    at Range.test (file:///nix/store/bbb70ala41gczl37hmcfy1fx6dldw57l-quarto-1.3.361/bin/quarto.js:48974:23)</span>
+<span id="cb31-10"><a href="#cb31-10" aria-hidden="true" tabindex="-1"></a>    at satisfies (file:///nix/store/bbb70ala41gczl37hmcfy1fx6dldw57l-quarto-1.3.361/bin/quarto.js:49191:18)</span>
+<span id="cb31-11"><a href="#cb31-11" aria-hidden="true" tabindex="-1"></a>    at checkVersion (file:///nix/store/bbb70ala41gczl37hmcfy1fx6dldw57l-quarto-1.3.361/bin/quarto.js:104009:14)</span>
+<span id="cb31-12"><a href="#cb31-12" aria-hidden="true" tabindex="-1"></a>    at checkVersions (file:///nix/store/bbb70ala41gczl37hmcfy1fx6dldw57l-quarto-1.3.361/bin/quarto.js:104035:5)</span>
+<span id="cb31-13"><a href="#cb31-13" aria-hidden="true" tabindex="-1"></a>    at async check (file:///nix/store/bbb70ala41gczl37hmcfy1fx6dldw57l-quarto-1.3.361/bin/quarto.js:103989:13)</span>
+<span id="cb31-14"><a href="#cb31-14" aria-hidden="true" tabindex="-1"></a>    at async Command.fn (file:///nix/store/bbb70ala41gczl37hmcfy1fx6dldw57l-quarto-1.3.361/bin/quarto.js:104212:5)</span>
+<span id="cb31-15"><a href="#cb31-15" aria-hidden="true" tabindex="-1"></a>    at async Command.execute (file:///nix/store/bbb70ala41gczl37hmcfy1fx6dldw57l-quarto-1.3.361/bin/quarto.js:8437:13)</span>
+<span id="cb31-16"><a href="#cb31-16" aria-hidden="true" tabindex="-1"></a>    at async quarto (file:///nix/store/bbb70ala41gczl37hmcfy1fx6dldw57l-quarto-1.3.361/bin/quarto.js:127540:5)</span>
+<span id="cb31-17"><a href="#cb31-17" aria-hidden="true" tabindex="-1"></a>    at async file:///nix/store/bbb70ala41gczl37hmcfy1fx6dldw57l-quarto-1.3.361/bin/quarto.js:127558:9</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>So I did some experimenting. First, I replaced all the dependencies with the versions that came with the pandoc package, and then I didn’t get this error with the <code>quarto check</code> command, which checks the installation of quarto, python, pandoc, and R. I then removed the dependencies on by one, to see which one broke it. It ended up being <code>dart-sass</code>.</p>
+<p>So I tried again:</p>
+<details>
+<summary>
+Show shell.nix
+</summary>
+<div class="sourceCode" id="cb32"><pre class="sourceCode nix code-overflow-wrap code-with-copy"><code class="sourceCode nix"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="op">{</span> <span class="va">pkgs</span> <span class="op">?</span> <span class="bu">import</span> &lt;nixpkgs&gt; <span class="op">{}</span> <span class="op">}</span> :</span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> </span>
+<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a>    <span class="va">pandoc</span> <span class="op">=</span> <span class="cn">null</span><span class="op">;</span></span>
+<span id="cb32-4"><a href="#cb32-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb32-5"><a href="#cb32-5" aria-hidden="true" tabindex="-1"></a>    <span class="va">extraRPackages</span> <span class="op">=</span> <span class="op">[];</span></span>
+<span id="cb32-6"><a href="#cb32-6" aria-hidden="true" tabindex="-1"></a>    <span class="va">extraPythonPackages</span> <span class="op">=</span> <span class="va">ps</span><span class="op">:</span> <span class="kw">with</span> ps<span class="op">;</span> <span class="op">[];</span></span>
+<span id="cb32-7"><a href="#cb32-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb32-8"><a href="#cb32-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb32-9"><a href="#cb32-9" aria-hidden="true" tabindex="-1"></a>    <span class="va">quarto</span> <span class="op">=</span> <span class="op">(</span>pkgs.quarto.overrideAttrs <span class="op">(</span><span class="va">oldAttrs</span><span class="op">:</span> <span class="kw">rec</span> <span class="op">{</span></span>
+<span id="cb32-10"><a href="#cb32-10" aria-hidden="true" tabindex="-1"></a>        <span class="va">version</span> <span class="op">=</span> <span class="st">"1.3.361"</span><span class="op">;</span></span>
+<span id="cb32-11"><a href="#cb32-11" aria-hidden="true" tabindex="-1"></a>        <span class="va">src</span> <span class="op">=</span> pkgs.fetchurl <span class="op">{</span></span>
+<span id="cb32-12"><a href="#cb32-12" aria-hidden="true" tabindex="-1"></a>            <span class="va">url</span> <span class="op">=</span> <span class="st">"https://github.com/quarto-dev/quarto-cli/releases/download/v</span><span class="sc">${</span>version<span class="sc">}</span><span class="st">/quarto-</span><span class="sc">${</span>version<span class="sc">}</span><span class="st">-linux-amd64.tar.gz"</span><span class="op">;</span></span>
+<span id="cb32-13"><a href="#cb32-13" aria-hidden="true" tabindex="-1"></a>            <span class="va">sha256</span> <span class="op">=</span> <span class="st">"sha256-vvnrIUhjsBXkJJ6VFsotRxkuccYOGQstIlSNWIY5nuE="</span><span class="op">;</span></span>
+<span id="cb32-14"><a href="#cb32-14" aria-hidden="true" tabindex="-1"></a>        <span class="op">};</span></span>
+<span id="cb32-15"><a href="#cb32-15" aria-hidden="true" tabindex="-1"></a>        <span class="va">patches</span> <span class="op">=</span> <span class="op">[];</span></span>
+<span id="cb32-16"><a href="#cb32-16" aria-hidden="true" tabindex="-1"></a>        <span class="va">preFixup</span> <span class="op">=</span> <span class="st">''</span></span>
+<span id="cb32-17"><a href="#cb32-17" aria-hidden="true" tabindex="-1"></a><span class="st">            wrapProgram $out/bin/quarto \</span></span>
+<span id="cb32-18"><a href="#cb32-18" aria-hidden="true" tabindex="-1"></a><span class="st">            --prefix PATH : </span><span class="sc">${</span>pkgs.lib.makeBinPath <span class="op">[</span> pkgs.deno <span class="op">]</span><span class="sc">}</span><span class="st"> \</span></span>
+<span id="cb32-19"><a href="#cb32-19" aria-hidden="true" tabindex="-1"></a><span class="st">            --prefix QUARTO_PANDOC : $out/bin/tools/pandoc \</span></span>
+<span id="cb32-20"><a href="#cb32-20" aria-hidden="true" tabindex="-1"></a><span class="st">            --prefix QUARTO_ESBUILD : </span><span class="sc">${</span>pkgs.esbuild<span class="sc">}</span><span class="st">/bin/esbuild \</span></span>
+<span id="cb32-21"><a href="#cb32-21" aria-hidden="true" tabindex="-1"></a><span class="st">            --prefix QUARTO_DART_SASS : $out/bin/tools/dart-sass/sass \</span></span>
+<span id="cb32-22"><a href="#cb32-22" aria-hidden="true" tabindex="-1"></a><span class="st">            --prefix QUARTO_R : </span><span class="sc">${</span>pkgs.rWrapper.override <span class="op">{</span> <span class="va">packages</span> <span class="op">=</span> <span class="op">[</span> pkgs.rPackages.rmarkdown <span class="op">]</span> <span class="op">++</span> extraRPackages<span class="op">;</span> <span class="op">}</span><span class="sc">}</span><span class="st">/bin/R \</span></span>
+<span id="cb32-23"><a href="#cb32-23" aria-hidden="true" tabindex="-1"></a><span class="st">            --prefix QUARTO_PYTHON : </span><span class="sc">${</span>pkgs.python3.withPackages <span class="op">(</span><span class="va">ps</span><span class="op">:</span> <span class="kw">with</span> ps<span class="op">;</span> <span class="op">[</span> jupyter ipython <span class="op">]</span> <span class="op">++</span> <span class="op">(</span>extraPythonPackages ps<span class="op">))</span><span class="sc">}</span><span class="st">/bin/python3</span></span>
+<span id="cb32-24"><a href="#cb32-24" aria-hidden="true" tabindex="-1"></a><span class="st">        ''</span><span class="op">;</span></span>
+<span id="cb32-25"><a href="#cb32-25" aria-hidden="true" tabindex="-1"></a>        <span class="va">installPhase</span> <span class="op">=</span> <span class="st">''</span></span>
+<span id="cb32-26"><a href="#cb32-26" aria-hidden="true" tabindex="-1"></a><span class="st">            runHook preInstall</span></span>
+<span id="cb32-27"><a href="#cb32-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb32-28"><a href="#cb32-28" aria-hidden="true" tabindex="-1"></a><span class="st">            mkdir -p $out/bin $out/share</span></span>
+<span id="cb32-29"><a href="#cb32-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb32-30"><a href="#cb32-30" aria-hidden="true" tabindex="-1"></a><span class="st">            mv bin/* $out/bin</span></span>
+<span id="cb32-31"><a href="#cb32-31" aria-hidden="true" tabindex="-1"></a><span class="st">            mv share/* $out/share</span></span>
+<span id="cb32-32"><a href="#cb32-32" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb32-33"><a href="#cb32-33" aria-hidden="true" tabindex="-1"></a><span class="st">            runHook preInstall</span></span>
+<span id="cb32-34"><a href="#cb32-34" aria-hidden="true" tabindex="-1"></a><span class="st">            ''</span><span class="op">;</span></span>
+<span id="cb32-35"><a href="#cb32-35" aria-hidden="true" tabindex="-1"></a>    <span class="op">}))</span>.override <span class="op">{</span><span class="kw">inherit</span> pandoc extraPythonPackages extraRPackages<span class="op">;};</span></span>
+<span id="cb32-36"><a href="#cb32-36" aria-hidden="true" tabindex="-1"></a><span class="kw">in</span></span>
+<span id="cb32-37"><a href="#cb32-37" aria-hidden="true" tabindex="-1"></a>    pkgs.mkShell <span class="op">{</span></span>
+<span id="cb32-38"><a href="#cb32-38" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb32-39"><a href="#cb32-39" aria-hidden="true" tabindex="-1"></a>        <span class="va">packages</span> <span class="op">=</span> <span class="kw">with</span> pkgs<span class="op">;</span> <span class="op">[</span> python310Full quarto jupyter <span class="op">];</span></span>
+<span id="cb32-40"><a href="#cb32-40" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<p>And this works. The only thing that goes wrong is it gives me a warning when I use the preview function.</p>
+<p><code>WARNING: Specified QUARTO_PYTHON '/nix/store/xs35q9yb940cxsy1y0qcs84239zmd2jn-python3-3.10.11-env/bin/python3:/bin/python' does not exist.</code></p>
+<p>I’ve found no wayh to get rid of this warning, and since it is just a warning, I will ignore it. Here is my new shell.nix.</p>
+<details>
+<summary>
+Show shell.nix
+</summary>
+<div class="sourceCode" id="cb33"><pre class="sourceCode nix code-overflow-scroll code-with-copy"><code class="sourceCode nix"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a><span class="op">{</span> <span class="va">pkgs</span> <span class="op">?</span> <span class="bu">import</span> &lt;nixpkgs&gt; <span class="op">{}</span> <span class="op">}</span> :</span>
+<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a><span class="op">{</span> <span class="va">pkgs</span> <span class="op">?</span> <span class="bu">import</span> &lt;nixpkgs&gt; <span class="op">{}</span> <span class="op">}</span> :</span>
+<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> </span>
+<span id="cb33-5"><a href="#cb33-5" aria-hidden="true" tabindex="-1"></a>    <span class="va">pandoc</span> <span class="op">=</span> <span class="cn">null</span><span class="op">;</span></span>
+<span id="cb33-6"><a href="#cb33-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-7"><a href="#cb33-7" aria-hidden="true" tabindex="-1"></a>    <span class="va">extraRPackages</span> <span class="op">=</span> <span class="op">[];</span></span>
+<span id="cb33-8"><a href="#cb33-8" aria-hidden="true" tabindex="-1"></a>    <span class="va">extraPythonPackages</span> <span class="op">=</span> <span class="va">ps</span><span class="op">:</span> <span class="kw">with</span> ps<span class="op">;</span> <span class="op">[];</span></span>
+<span id="cb33-9"><a href="#cb33-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-10"><a href="#cb33-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-11"><a href="#cb33-11" aria-hidden="true" tabindex="-1"></a>    <span class="va">quarto</span> <span class="op">=</span> <span class="op">(</span>pkgs.quarto.overrideAttrs <span class="op">(</span><span class="va">oldAttrs</span><span class="op">:</span> <span class="kw">rec</span> <span class="op">{</span></span>
+<span id="cb33-12"><a href="#cb33-12" aria-hidden="true" tabindex="-1"></a>        <span class="va">version</span> <span class="op">=</span> <span class="st">"1.3.361"</span><span class="op">;</span></span>
+<span id="cb33-13"><a href="#cb33-13" aria-hidden="true" tabindex="-1"></a>        <span class="va">src</span> <span class="op">=</span> pkgs.fetchurl <span class="op">{</span></span>
+<span id="cb33-14"><a href="#cb33-14" aria-hidden="true" tabindex="-1"></a>            <span class="va">url</span> <span class="op">=</span> <span class="st">"https://github.com/quarto-dev/quarto-cli/releases/download/v</span><span class="sc">${</span>version<span class="sc">}</span><span class="st">/quarto-</span><span class="sc">${</span>version<span class="sc">}</span><span class="st">-linux-amd64.tar.gz"</span><span class="op">;</span></span>
+<span id="cb33-15"><a href="#cb33-15" aria-hidden="true" tabindex="-1"></a>            <span class="va">sha256</span> <span class="op">=</span> <span class="st">"sha256-vvnrIUhjsBXkJJ6VFsotRxkuccYOGQstIlSNWIY5nuE="</span><span class="op">;</span></span>
+<span id="cb33-16"><a href="#cb33-16" aria-hidden="true" tabindex="-1"></a>        <span class="op">};</span></span>
+<span id="cb33-17"><a href="#cb33-17" aria-hidden="true" tabindex="-1"></a>        <span class="va">buildInputs</span> <span class="op">=</span> <span class="kw">with</span> pkgs<span class="op">;</span> <span class="op">[</span> python3 jupyter <span class="op">];</span></span>
+<span id="cb33-18"><a href="#cb33-18" aria-hidden="true" tabindex="-1"></a>        <span class="va">preFixup</span> <span class="op">=</span> <span class="st">''</span></span>
+<span id="cb33-19"><a href="#cb33-19" aria-hidden="true" tabindex="-1"></a><span class="st">            wrapProgram $out/bin/quarto \</span></span>
+<span id="cb33-20"><a href="#cb33-20" aria-hidden="true" tabindex="-1"></a><span class="st">            --prefix PATH : </span><span class="sc">${</span>pkgs.lib.makeBinPath <span class="op">[</span> pkgs.deno <span class="op">]</span><span class="sc">}</span><span class="st"> \</span></span>
+<span id="cb33-21"><a href="#cb33-21" aria-hidden="true" tabindex="-1"></a><span class="st">            --prefix QUARTO_PANDOC : $out/bin/tools/pandoc \</span></span>
+<span id="cb33-22"><a href="#cb33-22" aria-hidden="true" tabindex="-1"></a><span class="st">            --prefix QUARTO_ESBUILD : </span><span class="sc">${</span>pkgs.esbuild<span class="sc">}</span><span class="st">/bin/esbuild \</span></span>
+<span id="cb33-23"><a href="#cb33-23" aria-hidden="true" tabindex="-1"></a><span class="st">            --prefix QUARTO_DART_SASS : $out/bin/tools/dart-sass/sass \</span></span>
+<span id="cb33-24"><a href="#cb33-24" aria-hidden="true" tabindex="-1"></a><span class="st">            --prefix QUARTO_R : </span><span class="sc">${</span>pkgs.rWrapper.override <span class="op">{</span> <span class="va">packages</span> <span class="op">=</span> <span class="op">[</span> pkgs.rPackages.rmarkdown <span class="op">]</span> <span class="op">++</span> extraRPackages<span class="op">;</span> <span class="op">}</span><span class="sc">}</span><span class="st">/bin/R \</span></span>
+<span id="cb33-25"><a href="#cb33-25" aria-hidden="true" tabindex="-1"></a><span class="st">            --prefix QUARTO_PYTHON : </span><span class="sc">${</span>pkgs.python3<span class="sc">}</span><span class="st">/bin/python3</span></span>
+<span id="cb33-26"><a href="#cb33-26" aria-hidden="true" tabindex="-1"></a><span class="st">        ''</span><span class="op">;</span></span>
+<span id="cb33-27"><a href="#cb33-27" aria-hidden="true" tabindex="-1"></a>        <span class="va">installPhase</span> <span class="op">=</span> <span class="st">''</span></span>
+<span id="cb33-28"><a href="#cb33-28" aria-hidden="true" tabindex="-1"></a><span class="st">            echo "this is the quarto python </span><span class="sc">${</span>pkgs.python3.withPackages <span class="op">(</span><span class="va">ps</span><span class="op">:</span> <span class="kw">with</span> ps<span class="op">;</span> <span class="op">[</span> jupyter ipython <span class="op">]</span> <span class="op">++</span> <span class="op">(</span>extraPythonPackages ps<span class="op">))</span><span class="sc">}</span><span class="st">/bin/python"</span></span>
+<span id="cb33-29"><a href="#cb33-29" aria-hidden="true" tabindex="-1"></a><span class="st">            runHook preInstall</span></span>
+<span id="cb33-30"><a href="#cb33-30" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-31"><a href="#cb33-31" aria-hidden="true" tabindex="-1"></a><span class="st">            mkdir -p $out/bin $out/share</span></span>
+<span id="cb33-32"><a href="#cb33-32" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-33"><a href="#cb33-33" aria-hidden="true" tabindex="-1"></a><span class="st">            mv bin/* $out/bin</span></span>
+<span id="cb33-34"><a href="#cb33-34" aria-hidden="true" tabindex="-1"></a><span class="st">            mv share/* $out/share</span></span>
+<span id="cb33-35"><a href="#cb33-35" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-36"><a href="#cb33-36" aria-hidden="true" tabindex="-1"></a><span class="st">            runHook preInstall</span></span>
+<span id="cb33-37"><a href="#cb33-37" aria-hidden="true" tabindex="-1"></a><span class="st">            ''</span><span class="op">;</span></span>
+<span id="cb33-38"><a href="#cb33-38" aria-hidden="true" tabindex="-1"></a>    <span class="op">}))</span>.override <span class="op">{</span><span class="kw">inherit</span> pandoc extraPythonPackages extraRPackages<span class="op">;};</span></span>
+<span id="cb33-39"><a href="#cb33-39" aria-hidden="true" tabindex="-1"></a><span class="kw">in</span></span>
+<span id="cb33-40"><a href="#cb33-40" aria-hidden="true" tabindex="-1"></a>    pkgs.mkShell <span class="op">{</span></span>
+<span id="cb33-41"><a href="#cb33-41" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-42"><a href="#cb33-42" aria-hidden="true" tabindex="-1"></a>        <span class="va">packages</span> <span class="op">=</span> <span class="kw">with</span> pkgs<span class="op">;</span> <span class="op">[</span> python310Full quarto jupyter <span class="op">];</span></span>
+<span id="cb33-43"><a href="#cb33-43" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<p>However, this is messy. Fitting an entire set of overrides into a single shell.nix file is definitely not the neatest way to do this. And there are some other flaws, like things that aren’t necessary as a dependency. Fortunately, there is a neater way.</p>
+<p>The nix <code>callPackage</code> function allows for a nix function to call it’s own derivation. Rather than using an override, I can write my own derivation and use the <code>callPackage</code> fucnction to call upon it.</p>
+<p>Here is my derivation:</p>
+<details>
+<summary>
+Show derivation:
+</summary>
+<div class="sourceCode" id="cb34"><pre class="sourceCode nix code-overflow-wrap code-with-copy"><code class="sourceCode nix"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="op">{</span> <span class="va">stdenv</span></span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a><span class="op">,</span> <span class="va">lib</span></span>
+<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a><span class="op">,</span> <span class="va">esbuild</span></span>
+<span id="cb34-4"><a href="#cb34-4" aria-hidden="true" tabindex="-1"></a><span class="op">,</span> <span class="va">deno</span></span>
+<span id="cb34-5"><a href="#cb34-5" aria-hidden="true" tabindex="-1"></a><span class="op">,</span> <span class="va">fetchurl</span></span>
+<span id="cb34-6"><a href="#cb34-6" aria-hidden="true" tabindex="-1"></a><span class="op">,</span> <span class="va">nodePackages</span></span>
+<span id="cb34-7"><a href="#cb34-7" aria-hidden="true" tabindex="-1"></a><span class="op">,</span> <span class="va">rWrapper</span></span>
+<span id="cb34-8"><a href="#cb34-8" aria-hidden="true" tabindex="-1"></a><span class="op">,</span> <span class="va">rPackages</span></span>
+<span id="cb34-9"><a href="#cb34-9" aria-hidden="true" tabindex="-1"></a><span class="op">,</span> <span class="va">extraRPackages</span> <span class="op">?</span> <span class="op">[]</span></span>
+<span id="cb34-10"><a href="#cb34-10" aria-hidden="true" tabindex="-1"></a><span class="op">,</span> <span class="va">makeWrapper</span></span>
+<span id="cb34-11"><a href="#cb34-11" aria-hidden="true" tabindex="-1"></a><span class="op">,</span> <span class="va">python3</span></span>
+<span id="cb34-12"><a href="#cb34-12" aria-hidden="true" tabindex="-1"></a><span class="op">,</span> <span class="va">extraPythonPackages</span> <span class="op">?</span> <span class="va">ps</span><span class="op">:</span> <span class="kw">with</span> ps<span class="op">;</span> <span class="op">[]</span></span>
+<span id="cb34-13"><a href="#cb34-13" aria-hidden="true" tabindex="-1"></a><span class="op">}</span>:</span>
+<span id="cb34-14"><a href="#cb34-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb34-15"><a href="#cb34-15" aria-hidden="true" tabindex="-1"></a>stdenv.mkDerivation <span class="kw">rec</span> <span class="op">{</span></span>
+<span id="cb34-16"><a href="#cb34-16" aria-hidden="true" tabindex="-1"></a>  <span class="va">pname</span> <span class="op">=</span> <span class="st">"quarto"</span><span class="op">;</span></span>
+<span id="cb34-17"><a href="#cb34-17" aria-hidden="true" tabindex="-1"></a>  <span class="va">version</span> <span class="op">=</span> <span class="st">"1.3.361"</span><span class="op">;</span></span>
+<span id="cb34-18"><a href="#cb34-18" aria-hidden="true" tabindex="-1"></a>        <span class="va">src</span> <span class="op">=</span> fetchurl <span class="op">{</span></span>
+<span id="cb34-19"><a href="#cb34-19" aria-hidden="true" tabindex="-1"></a>            <span class="va">url</span> <span class="op">=</span> <span class="st">"https://github.com/quarto-dev/quarto-cli/releases/download/v</span><span class="sc">${</span>version<span class="sc">}</span><span class="st">/quarto-</span><span class="sc">${</span>version<span class="sc">}</span><span class="st">-linux-amd64.tar.gz"</span><span class="op">;</span></span>
+<span id="cb34-20"><a href="#cb34-20" aria-hidden="true" tabindex="-1"></a>            <span class="va">sha256</span> <span class="op">=</span> <span class="st">"sha256-vvnrIUhjsBXkJJ6VFsotRxkuccYOGQstIlSNWIY5nuE="</span><span class="op">;</span></span>
+<span id="cb34-21"><a href="#cb34-21" aria-hidden="true" tabindex="-1"></a>        <span class="op">};</span></span>
+<span id="cb34-22"><a href="#cb34-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb34-23"><a href="#cb34-23" aria-hidden="true" tabindex="-1"></a>  <span class="va">nativeBuildInputs</span> <span class="op">=</span> <span class="op">[</span></span>
+<span id="cb34-24"><a href="#cb34-24" aria-hidden="true" tabindex="-1"></a>    makeWrapper</span>
+<span id="cb34-25"><a href="#cb34-25" aria-hidden="true" tabindex="-1"></a>  <span class="op">];</span></span>
+<span id="cb34-26"><a href="#cb34-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb34-27"><a href="#cb34-27" aria-hidden="true" tabindex="-1"></a>  <span class="va">patches</span> <span class="op">=</span> <span class="op">[</span></span>
+<span id="cb34-28"><a href="#cb34-28" aria-hidden="true" tabindex="-1"></a>    <span class="ss">./fix-deno-path.patch</span></span>
+<span id="cb34-29"><a href="#cb34-29" aria-hidden="true" tabindex="-1"></a>  <span class="op">];</span></span>
+<span id="cb34-30"><a href="#cb34-30" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb34-31"><a href="#cb34-31" aria-hidden="true" tabindex="-1"></a>  <span class="va">postPatch</span> <span class="op">=</span> <span class="st">''</span></span>
+<span id="cb34-32"><a href="#cb34-32" aria-hidden="true" tabindex="-1"></a><span class="st">    # Compat for Deno &gt;=1.26</span></span>
+<span id="cb34-33"><a href="#cb34-33" aria-hidden="true" tabindex="-1"></a><span class="st">    substituteInPlace bin/quarto.js \</span></span>
+<span id="cb34-34"><a href="#cb34-34" aria-hidden="true" tabindex="-1"></a><span class="st">      --replace 'Deno.setRaw(stdin.rid, ' 'Deno.stdin.setRaw(' \</span></span>
+<span id="cb34-35"><a href="#cb34-35" aria-hidden="true" tabindex="-1"></a><span class="st">      --replace 'Deno.setRaw(Deno.stdin.rid, ' 'Deno.stdin.setRaw('</span></span>
+<span id="cb34-36"><a href="#cb34-36" aria-hidden="true" tabindex="-1"></a><span class="st">  ''</span><span class="op">;</span></span>
+<span id="cb34-37"><a href="#cb34-37" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb34-38"><a href="#cb34-38" aria-hidden="true" tabindex="-1"></a>  <span class="va">dontStrip</span> <span class="op">=</span> <span class="cn">true</span><span class="op">;</span></span>
+<span id="cb34-39"><a href="#cb34-39" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb34-40"><a href="#cb34-40" aria-hidden="true" tabindex="-1"></a>  <span class="va">preFixup</span> <span class="op">=</span> <span class="st">''</span></span>
+<span id="cb34-41"><a href="#cb34-41" aria-hidden="true" tabindex="-1"></a><span class="st">            wrapProgram $out/bin/quarto \</span></span>
+<span id="cb34-42"><a href="#cb34-42" aria-hidden="true" tabindex="-1"></a><span class="st">            --prefix PATH : </span><span class="sc">${</span>lib.makeBinPath <span class="op">[</span> deno <span class="op">]</span><span class="sc">}</span><span class="st"> \</span></span>
+<span id="cb34-43"><a href="#cb34-43" aria-hidden="true" tabindex="-1"></a><span class="st">            --prefix QUARTO_PANDOC : $out/bin/tools/pandoc \</span></span>
+<span id="cb34-44"><a href="#cb34-44" aria-hidden="true" tabindex="-1"></a><span class="st">            --prefix QUARTO_ESBUILD : </span><span class="sc">${</span>esbuild<span class="sc">}</span><span class="st">/bin/esbuild \</span></span>
+<span id="cb34-45"><a href="#cb34-45" aria-hidden="true" tabindex="-1"></a><span class="st">            --prefix QUARTO_DART_SASS : $out/bin/tools/dart-sass/sass \</span></span>
+<span id="cb34-46"><a href="#cb34-46" aria-hidden="true" tabindex="-1"></a><span class="st">            --prefix QUARTO_R : </span><span class="sc">${</span>rWrapper.override <span class="op">{</span> <span class="va">packages</span> <span class="op">=</span> <span class="op">[</span> rPackages.rmarkdown <span class="op">]</span> <span class="op">++</span> extraRPackages<span class="op">;</span> <span class="op">}</span><span class="sc">}</span><span class="st">/bin/R \</span></span>
+<span id="cb34-47"><a href="#cb34-47" aria-hidden="true" tabindex="-1"></a><span class="st">            --prefix QUARTO_PYTHON : </span><span class="sc">${</span>python3<span class="sc">}</span><span class="st">/bin/python3</span></span>
+<span id="cb34-48"><a href="#cb34-48" aria-hidden="true" tabindex="-1"></a><span class="st">    ''</span><span class="op">;</span></span>
+<span id="cb34-49"><a href="#cb34-49" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb34-50"><a href="#cb34-50" aria-hidden="true" tabindex="-1"></a>  <span class="va">installPhase</span> <span class="op">=</span> <span class="st">''</span></span>
+<span id="cb34-51"><a href="#cb34-51" aria-hidden="true" tabindex="-1"></a><span class="st">            runHook preInstall</span></span>
+<span id="cb34-52"><a href="#cb34-52" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb34-53"><a href="#cb34-53" aria-hidden="true" tabindex="-1"></a><span class="st">            mkdir -p $out/bin $out/share</span></span>
+<span id="cb34-54"><a href="#cb34-54" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb34-55"><a href="#cb34-55" aria-hidden="true" tabindex="-1"></a><span class="st">            mv bin/* $out/bin</span></span>
+<span id="cb34-56"><a href="#cb34-56" aria-hidden="true" tabindex="-1"></a><span class="st">            mv share/* $out/share</span></span>
+<span id="cb34-57"><a href="#cb34-57" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb34-58"><a href="#cb34-58" aria-hidden="true" tabindex="-1"></a><span class="st">            runHook preInstall</span></span>
+<span id="cb34-59"><a href="#cb34-59" aria-hidden="true" tabindex="-1"></a><span class="st">            ''</span><span class="op">;</span></span>
+<span id="cb34-60"><a href="#cb34-60" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb34-61"><a href="#cb34-61" aria-hidden="true" tabindex="-1"></a>  <span class="va">meta</span> <span class="op">=</span> <span class="kw">with</span> lib<span class="op">;</span> <span class="op">{</span></span>
+<span id="cb34-62"><a href="#cb34-62" aria-hidden="true" tabindex="-1"></a>    <span class="va">description</span> <span class="op">=</span> <span class="st">"Open-source scientific and technical publishing system built on Pandoc"</span><span class="op">;</span></span>
+<span id="cb34-63"><a href="#cb34-63" aria-hidden="true" tabindex="-1"></a>    <span class="va">longDescription</span> <span class="op">=</span> <span class="st">''</span></span>
+<span id="cb34-64"><a href="#cb34-64" aria-hidden="true" tabindex="-1"></a><span class="st">        Quarto is an open-source scientific and technical publishing system built on Pandoc.</span></span>
+<span id="cb34-65"><a href="#cb34-65" aria-hidden="true" tabindex="-1"></a><span class="st">        Quarto documents are authored using markdown, an easy to write plain text format.</span></span>
+<span id="cb34-66"><a href="#cb34-66" aria-hidden="true" tabindex="-1"></a><span class="st">    ''</span><span class="op">;</span></span>
+<span id="cb34-67"><a href="#cb34-67" aria-hidden="true" tabindex="-1"></a>    <span class="va">homepage</span> <span class="op">=</span> <span class="st">"https://quarto.org/"</span><span class="op">;</span></span>
+<span id="cb34-68"><a href="#cb34-68" aria-hidden="true" tabindex="-1"></a>    <span class="va">changelog</span> <span class="op">=</span> <span class="st">"https://github.com/quarto-dev/quarto-cli/releases/tag/v</span><span class="sc">${</span>version<span class="sc">}</span><span class="st">"</span><span class="op">;</span></span>
+<span id="cb34-69"><a href="#cb34-69" aria-hidden="true" tabindex="-1"></a>    <span class="va">license</span> <span class="op">=</span> licenses.gpl2Plus<span class="op">;</span></span>
+<span id="cb34-70"><a href="#cb34-70" aria-hidden="true" tabindex="-1"></a>    <span class="va">maintainers</span> <span class="op">=</span> <span class="kw">with</span> maintainers<span class="op">;</span> <span class="op">[</span> mrtarantoga <span class="op">];</span></span>
+<span id="cb34-71"><a href="#cb34-71" aria-hidden="true" tabindex="-1"></a>    <span class="va">platforms</span> <span class="op">=</span> <span class="op">[</span> <span class="st">"x86_64-linux"</span> <span class="op">];</span></span>
+<span id="cb34-72"><a href="#cb34-72" aria-hidden="true" tabindex="-1"></a>    <span class="va">sourceProvenance</span> <span class="op">=</span> <span class="kw">with</span> sourceTypes<span class="op">;</span> <span class="op">[</span> binaryNativeCode binaryBytecode <span class="op">];</span></span>
+<span id="cb34-73"><a href="#cb34-73" aria-hidden="true" tabindex="-1"></a>  <span class="op">};</span></span>
+<span id="cb34-74"><a href="#cb34-74" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<p>And here is the shell.nix that summons this package:</p>
+<div class="sourceCode" id="cb35"><pre class="sourceCode nix code-overflow-wrap code-with-copy"><code class="sourceCode nix"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span></span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a>    <span class="va">pkgs</span> <span class="op">=</span> <span class="bu">import</span> &lt;nixpkgs&gt; <span class="op">{};</span></span>
+<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a>    <span class="va">quarto</span> <span class="op">=</span> pkgs.callPackage <span class="ss">./env/quarto.nix</span> <span class="op">{};</span></span>
+<span id="cb35-4"><a href="#cb35-4" aria-hidden="true" tabindex="-1"></a><span class="kw">in</span></span>
+<span id="cb35-5"><a href="#cb35-5" aria-hidden="true" tabindex="-1"></a>    pkgs.mkShell <span class="op">{</span></span>
+<span id="cb35-6"><a href="#cb35-6" aria-hidden="true" tabindex="-1"></a>        <span class="va">packages</span> <span class="op">=</span> <span class="kw">with</span> pkgs<span class="op">;</span> <span class="op">[</span> python310Full quarto jupyter <span class="op">];</span></span>
+<span id="cb35-7"><a href="#cb35-7" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
+<section id="conclusion-and-how-to-use" class="level1">
+<h1>Conclusion and How to Use</h1>
+<p>Now, users who have cloned the <a href="https://github.com/moonpidumplings/quartotest">repo for this blog</a>, can simply install nix, and run <code>nix-shell</code> in the root directory of the repo in order for them to get quarto, python, and jupyter, the dependencies I rely on for this project. Because of the way nix, works it is easy to modify my <code>shell.nix</code>, and add more dependencies, like R or more extra language support via juptyer kernels.</p>
+<p>My usual workflow is to open a terminal in this git repo, and type <code>nix-shell</code>, and then <code>code .</code>, which gives me vscode with quarto (I have the quarto vscode extension installed), python, and jupyter.</p>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    text: function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  function tippyHover(el, contentFn) {
+    const config = {
+      allowHTML: true,
+      content: contentFn,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start'
+    };
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+</div> <!-- /content -->
+
+
+
+</body></html>
