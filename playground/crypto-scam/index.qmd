@@ -1,0 +1,76 @@
+---
+title: "A very clever crypto scam"
+description: "Free bitcoin? Probably not."
+date: "2023-6-11"
+categories: [cybersecurity]
+execute:
+  freeze: auto
+---
+
+So I was browsing around, and I found this public pastebin.
+
+![](images/pastebin.png)
+
+`klovenierm6@193.233.202.76` where the password is `bDBShj`
+
+It seemed like a crypto wallet reset password? But why post this in a pastebin? It seemed suspicious, but I decided to log in.
+
+
+
+![](images/loggedin.png)
+
+Wow. $10000 worth of Bitcoin, right there for me to take. It seems to good to be true. 
+
+So, I spun up a wallet and attempted to deposit the money into it. 
+
+![](images/depositfirst.png)
+
+Wow. In order to withdraw the money first, to an unverified account, I first have to deposit around $2000 worth of Bitcoin into their account. 
+
+Obviously, this is a scam. It's a fairly common pattern, "Here's free money, but first, send me some money." But this is such an interesting technological twist, I couldn't not blog about it. 
+
+But I decided to experiment a little further. 
+
+```{.default .code-overflow-wrap}
+~ ❯ nmap -sV 193.233.202.76
+Starting Nmap 7.94 ( https://nmap.org ) at 2023-06-11 12:46 PDT
+Nmap scan report for vm.lan (193.233.202.76)
+Host is up (0.21s latency).
+Not shown: 995 closed tcp ports (conn-refused)
+PORT      STATE    SERVICE       VERSION
+22/tcp    open     ssh           OpenSSH 8.4p1 Debian 5+deb11u1 (protocol 2.0)
+2222/tcp  open     ssh           OpenSSH 8.4p1 Debian 5+deb11u1 (protocol 2.0)
+5900/tcp  filtered vnc
+5901/tcp  filtered vnc-1
+16992/tcp filtered amt-soap-http
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+```
+
+Nmap is a port scanning utility that tells you what people are running on their server. 
+
+So I attempted to connect to their other services. I tried to connect to both vnc servers first, but for both, I got a server not found error. This is probably because those services aren't up for public usage, as shown by the `filtered` state they return in the nmap scan. I suspect that they have a firewall that only allows for certain IP addresses or something like that. 
+
+I also tried to connect to the ssh service on port 2222, but it kicked me out saying I needed a public key. 
+
+
+Oooh, a scan later in the day (around 4-5 hours later) is differerent.
+
+```{.default .code-overflow-wrap}
+~ ❯ nmap -sV 193.233.202.76
+Starting Nmap 7.94 ( https://nmap.org ) at 2023-06-11 22:00 PDT
+Nmap scan report for vm.lan (193.233.202.76)
+Host is up (0.21s latency).
+Not shown: 996 closed tcp ports (conn-refused)
+PORT     STATE    SERVICE VERSION
+22/tcp   open     ssh     OpenSSH 8.4p1 Debian 5+deb11u1 (protocol 2.0)
+2222/tcp open     ssh     OpenSSH 8.4p1 Debian 5+deb11u1 (protocol 2.0)
+5900/tcp filtered vnc
+5901/tcp filtered vnc-1
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+
+Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 32.93 seconds
+```
+
+There appear to have taken the amt-soap-http service offline. Good security protocol, getting rid of uneeded services, minimizing the attack surface, but do they really need those vnc servers?
+

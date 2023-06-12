@@ -1,0 +1,101 @@
+---
+title: "Nginx proxy manager"
+date: "2023-2-28"
+categories: [nix, linux, devops, nginx]
+execute:
+  freeze: auto
+---
+
+# What is NPM and why do I want to use it?
+
+Nginx proxy manager (npm, but not the node one) is a web based frontend for nginx that automatically also configures letsencrypt, similar to how certbot does it. It makes nginx much easier to use. Rather than writing config files, you can just click around, which is much easier. For a high school computer science class, I think NPM is better, because it doesn't have the complexity of npm (less potential for accidental failurs), but still teaches people about ports mapping, encryption, and other necessary skills. 
+
+In addition to that, with npm, even if someone does create a bad config, only their server goes down. With npm, a bad nginx config leads to the whole server going down. That is... not optimal.
+
+# Installation and Setup
+
+Installation is simpleish. 
+
+First, create a docker network for usage with our docker containers ([step from here](https://nginxproxymanager.com/advanced-config/#best-practice-use-a-docker-network)). Because these are our school projects, I will call that network `nighthawks`
+
+`docker network create nighthawks`
+
+
+Create a folder called npm, and put a docker-compose.yml in it ([basic compose file from here](https://nginxproxymanager.com/guide/#quick-setup)):
+
+```{.yaml .code-overflow-wrap}
+version: '3'
+services:
+  app:
+    image: 'jc21/nginx-proxy-manager:latest'
+    restart: unless-stopped
+    ports:
+      - '80:80'
+      - '81:81'
+      - '443:443'
+    volumes:
+      - ./data:/data
+      - ./letsencrypt:/etc/letsencrypt
+
+networks:
+  default:
+    external: true
+    name: nighthawks
+
+```
+
+`docker-compose up -d` and you're good to go. It should be noted that you need to have ports 443 and 80 unused by anything else, like Nginx proper. So if you are running nginx, stop it first before you up NPM.
+
+NPM does need to have port 81 accessible. 
+
+You can either use a reverse proxy, or open up the port to be accessible from the internet.
+
+If you want the port to be accessible from the internet, you might have a firewall of some kind, so just open that. And if you are using one of the big cloud providers (aws, azure, oracle), then you also might have to configure security control groups, as that acts as an extra firewall for those server types. See my cockpit guide on how to do this with AWS. 
+
+If you want to do a reverse proxy, just use npm to do it: Use proxy post to connect http://npm_app_1:81 to a domain name.
+
+
+Now, to configure npm, just access the web interface at https://[domainname/ip]:81
+
+# Usage
+
+You may notice above, in the section about using a reverse to expose npm, I use the docker container name, rather than a port. That's the amazing part of npm. As long as your docker containers are on the same network, all you need is a hostname and the used port. You don't even need to expose ports in your docker-compose.yml
+
+So rather than the docker-compose.yml we use in our [deployment guide](https://nighthawkcoders.github.io/APCSP/techtalk/deploy#running-docker-using-docker-composeyml)
+
+We can use: 
+
+```{.yaml .code-overflow-wrap}
+
+
+
+version: '3'
+services:
+      web:
+              image: flask_port_v1
+              build: .
+              #ports: # ports section not needed
+                     # - "8086:8080"
+              volumes:
+                      - persistent_volume:/app/volumes
+volumes:
+persistent_volume:
+  driver: local
+  driver_opts:
+    o: bind
+    type: none
+    device: /home/ubuntu/flask_portfolio/volumes
+    # replace just flask_portfolio
+
+networks:
+  default:
+    external: true
+    name: nighthawks
+
+```
+
+And then you can simply expose http://flask_port_v1_web_1:8080 to the world!
+
+
+
+
