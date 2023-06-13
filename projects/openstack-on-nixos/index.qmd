@@ -83,4 +83,38 @@ I first asked, but then I realized that I could search github for the nix progra
 
 </details>
 
-Lxdware is a web based frontend for LXD, a type of hyperconverged infrastructure. LXD is a daemon, or background process, for managing containers, virtual machines, and to an extent, virtualized storage. It appealed to me, when I was searching for a hyperconverged infrastrucure.
+Lxdware is a web based frontend for LXD, a type of hyperconverged infrastructure. LXD is a daemon, or background process, for managing containers (ran via LXC), virtual machines, and to an extent, virtualized storage. It appealed to me, when I was searching for a hyperconverged infrastructure solution for my home lab.
+
+![](https://lxdware.com/wp-content/uploads/2021/03/screenshot_instances-1024x542.png)
+
+It's feature rich, and mature. However, I dislike the particular implementation used in the above configuration. They ran lxdware, in a docker container. This works, and probably works well, but this isn't a very nixos way of doing things. Nix offers reproducibility, so docker isn't needed, and is generally frowned upon because it brings some disadvantages. I wanted to configure lxdware using nix myself.
+
+I later looked at openstack, because I wanted to see if there was an ideal way to configure this with nixos. Nix makes it so easy to configure so many other services, just a few lines of nix code in the `configuration.nix` file to set up webservers, or other services.
+
+In fact, people even discussed this in a thread posted on the [Nixos discourse forums](https://discourse.nixos.org/t/deploying-nixos-openstack-cloud/21066)
+
+
+> Is there anyone actively working on being able to run an OpenStack cloud using NixOS?
+> Shouldn’t “we” be able to do what the Kayobe project does but without the Ansible stuff?
+https://docs.openstack.org/kayobe/latest/configuration/reference/kolla-ansible.html 9
+```
+
+One person replied, saying that they had done a bit, but work had "rotten since". And indeed, when I searched around github, I found an old project, in a [github repo titled nixstack](https://github.com/hyphon81/Nixtack/tree/master/openstack)
+
+This person, or group of people, had packaged openstack to be easy to enable. But as I read through the code, I realized that the app is from the era of python2, so this code is really old. 
+
+## It begins
+
+So I decided to package it myself. At least, that's my goal. It seems to be a massive project, but one user already did it, when I asked around on the discord.
+
+![](images/someonelse.png)
+
+They claimed they will open source it soon-ish, but right now, none of their work is public. 
+
+So I decided to do it myself. I have the old templates as my guides, and I know it is possible because someone else has done it. 
+
+After going through the code for nixstack, I experienced a pleasant suprise — openstack is purely a python application, and this means that it can be packages by nix's python packaging ecosystem.
+
+Because openstack is purely a python application, all the dependencies are declared in the requirements.txt, located in the root of the git repo of each openstack component. 
+
+Nixpkgs very large, but I don't know if they have all of the python packages. 
