@@ -97,7 +97,7 @@ In fact, people even discussed this in a thread posted on the [Nixos discourse f
 > Is there anyone actively working on being able to run an OpenStack cloud using NixOS?
 > Shouldn’t “we” be able to do what the Kayobe project does but without the Ansible stuff?
 https://docs.openstack.org/kayobe/latest/configuration/reference/kolla-ansible.html 9
-```
+
 
 One person replied, saying that they had done a bit, but work had "rotten since". And indeed, when I searched around github, I found an old project, in a [github repo titled nixstack](https://github.com/hyphon81/Nixtack/tree/master/openstack)
 
@@ -117,7 +117,134 @@ After going through the code for nixstack, I experienced a pleasant suprise — 
 
 Because openstack is purely a python application, all the dependencies are declared in the requirements.txt, located in the root of the git repo of each openstack component. 
 
-Nixpkgs very large, but I don't know if they have all of the python packages. Luckily, I found a newer project, pip2nix, which seems to have been first created at around the same time the openstack on nix projects stopped development.  
+Nixpkgs very large, but I don't know if they have all of the python packages. Luckily, I found a newer project, [pip2nix](https://github.com/nix-community/pip2nix), which seems to have been first created at around the same time the openstack on nix projects stopped development.  
+
+I should be able to convert a requirements.txt into something nix can install natively, directly from the pypi repos, without having to worry about packages not being packages in nixpkgs. 
 
 
-I started work on using pip2nix to convert the requirements.txt file into something usable. 
+So I started by cloning the openstack keystone repository from github: [https://github.com/openstack/keystone](https://github.com/openstack/keystone)
+
+
+I install and setup pip2nix and attempt to use it. It first complains about python36 being too old, but after I switch to the python39 version of pip2nix:
+
+```{.default .code-overflow-wrap}
+[nix-shell:~/vscode/keystone]$ pip2nix generate .
+Processing /home/moonpie/vscode/keystone
+... # lots of extraneous output
+```
+
+pip2nix generate seems to take the same inputs as pip, so to install a python package from the current working directory, you could usually do `pip install .`, but here I do a `pip2nix generate .` instead. This generates a python-packages.nix file with all the python packages, including openstack keystone. 
+
+
+I played around with trying to install openstack keystone in a `nix-shell` environment.
+
+
+```{.nix .code-overflow-wrap}
+{
+        pkgs ? import <nixpkgs> {}
+} : 
+with import ./python-packages.nix {inherit pkgs;};
+let
+        keystone-nix = callPackage keystone;
+in
+pkgs.mkShell {
+        packages = [ keystone-nix ];
+}
+
+```
+<details><summary>Show error</summary>
+
+```{.default .code-overflow-wrap}
+moonpie@localhost:~/vscode/keystone> nix-shell
+error:
+       … while calling the 'derivationStrict' builtin
+
+         at /builtin/derivation.nix:9:12: (source not available)
+
+       … while evaluating derivation 'nix-shell'
+         whose name attribute is located at /nix/store/q300rswsxpr2kkng9azzsbfi9m8fdg50-nixpkgs/nixpkgs/pkgs/stdenv/generic/make-derivation.nix:303:7
+
+       … while evaluating attribute 'nativeBuildInputs' of derivation 'nix-shell'
+
+         at /nix/store/q300rswsxpr2kkng9azzsbfi9m8fdg50-nixpkgs/nixpkgs/pkgs/stdenv/generic/make-derivation.nix:347:7:
+
+          346|       depsBuildBuild              = lib.elemAt (lib.elemAt dependencies 0) 0;
+          347|       nativeBuildInputs           = lib.elemAt (lib.elemAt dependencies 0) 1;
+             |       ^
+          348|       depsBuildTarget             = lib.elemAt (lib.elemAt dependencies 0) 2;
+
+       error: function 'anonymous lambda' called without required argument 'fetchurl'
+
+       at /home/moonpie/vscode/keystone/python-packages.nix:4:1:
+
+            3|
+            4| { pkgs, fetchurl, fetchgit, fetchhg }:
+             | ^
+            5|
+```
+
+</details>
+
+I remember getting a similar error when I was trying to package quarto, and I was told to use callPackage. I don't think I am using callPackage correctly here.
+
+I tried tinkering with some [code that I got from searching github](https://github.com/srghma/lingualeo2anki/blob/master/default.nix)
+
+```{.nix .code-overflow-wrap}
+{
+	pkgs ? import <nixpkgs> {}
+} : 
+with pkgs;
+let
+  python = python3;
+  pythonPackages = python.pkgs;
+
+  # generated with `pip2nix generate -r requirements.txt`
+  generatePipPackages = import ./python-packages.nix {
+    inherit pkgs;
+    inherit (pkgs) fetchurl fetchgit fetchhg;
+  };
+
+  pipPackages =  generatePipPackages pipPackages pythonPackages;
+in
+pkgs.mkShell {
+	packages = with pipPackages; [ keystone ];
+}
+```
+
+But this errors:
+
+<details><summary>Show error</summary>
+
+```{.default .code-overflow-wrap}
+moonpie@localhost:~/vscode/keystone> nix-shell
+error:
+       … while calling the 'derivationStrict' builtin
+
+         at /builtin/derivation.nix:9:12: (source not available)
+
+       … while evaluating derivation 'nix-shell'
+         whose name attribute is located at /nix/store/q300rswsxpr2kkng9azzsbfi9m8fdg50-nixpkgs/nixpkgs/pkgs/stdenv/generic/make-derivation.nix:303:7
+
+       … while evaluating attribute 'nativeBuildInputs' of derivation 'nix-shell'
+
+         at /nix/store/q300rswsxpr2kkng9azzsbfi9m8fdg50-nixpkgs/nixpkgs/pkgs/stdenv/generic/make-derivation.nix:347:7:
+
+          346|       depsBuildBuild              = lib.elemAt (lib.elemAt dependencies 0) 0;
+          347|       nativeBuildInputs           = lib.elemAt (lib.elemAt dependencies 0) 1;
+             |       ^
+          348|       depsBuildTarget             = lib.elemAt (lib.elemAt dependencies 0) 2;
+
+       (stack trace truncated; use '--show-trace' to show the full trace)
+
+       error: attribute 'setuptools' missing
+
+       at /home/moonpie/vscode/keystone/python-packages.nix:106:7:
+
+          105|     propagatedBuildInputs = [
+          106|       self."setuptools"
+             |       ^
+          107|       self."six"
+```
+</details>
+
+I don't really know why this errors. 

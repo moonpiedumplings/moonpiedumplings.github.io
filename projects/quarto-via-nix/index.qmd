@@ -999,4 +999,181 @@ My usual workflow is to open a terminal in this git repo, and type `nix-shell`, 
 
 I realized in hindsight that this only works on x86_64 linux, because my derivation works by taking the quarto x86_64 linux binary and packaging it using nix. But I did learn a lot about writing derivations through this, which I can apply to other things. 
 
+# Try 2, creating a multi architechture and multi OS package
+
+Very frustrating, quarto has no compilation instructions in the readme. However, thankfully, use github actions to do testing, and builds of the applications, which means that the build steps are technically public, just not immediately apparent. 
+
+
+![](images/ghactions.png)
+
+
+Github actions works by reading a .yml file for the instuctions on what do do, and this file can be found in the github actions menu, as [workflow file](https://github.com/quarto-dev/quarto-cli/actions/runs/5286090611/workflow).
+
+
+I don't need the whole thing, however, just the tarball building steps. 
+
+<details><summary>Show steps</summary>
+
+```{.yaml .code-overflow-wrap}
+obs:
+  configure:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{steps.config.outputs.version}}.${{ steps.config.outputs.build_number}}
+      version_base: ${{steps.config.outputs.version}}
+      tag_name: v${{steps.config.outputs.version}}.${{ steps.config.outputs.build_number }}
+      release: v${{steps.config.outputs.version}}.${{ steps.config.outputs.build_number }}
+      changes: ${{ steps.config.outputs.changes }}
+    if: github.event_name != 'schedule' || (github.event_name == 'schedule' && github.repository == 'quarto-dev/quarto-cli')
+    steps:
+      - name: Install libc6-div
+        run: sudo apt-get install libc6-dev
+
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: config
+        id: config
+        run: |
+          source ./configuration
+          CHANGES=
+          # CHANGES=$(git log $(git describe --tags --abbrev=0)..HEAD --oneline)
+          # Escape \n, \r to preserve multiline variable
+          # See https://github.community/t/set-output-truncates-multiline-strings/16852/2
+          # CHANGES="${CHANGES//'%'/'%25'}"
+          # CHANGES="${CHANGES//$'\n'/'%0A'}"
+          # CHANGES="${CHANGES//$'\r'/'%0D'}"
+          # echo "changes=$CHANGES" >> $GITHUB_OUTPUT
+          QUARTO_BUILD_NUMBER=$(($QUARTO_BUILD_RUN_OFFSET + $GITHUB_RUN_NUMBER))
+          echo "version=$QUARTO_VERSION" >> $GITHUB_OUTPUT
+          echo "changes=$CHANGES" >> $GITHUB_OUTPUT
+          echo "build_number=$QUARTO_BUILD_NUMBER" >> $GITHUB_OUTPUT
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: News
+          path: ./news/changelog-${{steps.config.outputs.version}}.md
+
+  make-source-tarball:
+    runs-on: ubuntu-latest
+    needs: [configure]
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Make Tarball
+        run: |
+          tar -zcvf  quarto-${{needs.configure.outputs.version}}.tar.gz *
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: Source
+          path: ./quarto-${{needs.configure.outputs.version}}.tar.gz
+
+  make-tarball:
+    runs-on: ubuntu-latest
+    needs: [configure]
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Configure
+        run: |
+          ./configure.sh
+      - name: Prepare Distribution
+        run: |
+          pushd package/src/
+          ./quarto-bld prepare-dist --set-version ${{needs.configure.outputs.version}} --log-level info
+          popd
+      - name: Make Tarball
+        run: |
+          pushd package/
+          mv pkg-working quarto-${{needs.configure.outputs.version}}
+          tar -cvf  quarto-${{needs.configure.outputs.version}}-linux-amd64.tar quarto-${{needs.configure.outputs.version}}
+          gzip quarto-${{needs.configure.outputs.version}}-linux-amd64.tar
+          mv quarto-${{needs.configure.outputs.version}} pkg-working
+          popd
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: Deb Zip
+          path: ./package/quarto-${{needs.configure.outputs.version}}-linux-amd64.tar.gz
+
+  make-arm64-tarball:
+    runs-on: ubuntu-latest
+    needs: [configure]
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Configure
+        run: |
+          ./configure.sh
+      - name: Prepare Distribution
+        run: |
+          pushd package/src/
+          ./quarto-bld prepare-dist --set-version ${{needs.configure.outputs.version}} --arch aarch64 --log-level info
+          popd
+      - name: Make Tarball
+        run: |
+          pushd package/
+          mv pkg-working quarto-${{needs.configure.outputs.version}}
+          tar -cvf  quarto-${{needs.configure.outputs.version}}-linux-arm64.tar quarto-${{needs.configure.outputs.version}}
+          gzip quarto-${{needs.configure.outputs.version}}-linux-arm64.tar
+          mv quarto-${{needs.configure.outputs.version}} pkg-working
+          popd
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: Deb Arm64 Zip
+          path: ./package/quarto-${{needs.configure.outputs.version}}-linux-arm64.tar.gz
+  ```
+
+  </details>
+
+So to convert github actions into somethign easier to read:
+
+
+AMD64 build:
+
+```{.default .code-overflow-wrap}
+source ./configuration
+./configure.sh
+pushd package/src/ # pushd is like a more advnaced version of cd
+/quarto-bld prepare-dist --set-version ${{needs.configure.outputs.   version}} --log-level info 
+popd
+pushd package/
+mv pkg-working quarto-${{needs.configure.outputs.version}}
+tar -cvf  quarto-${{needs.configure.outputs.version}}-linux-amd64.tar quarto-${{needs.configure.outputs.version}}
+gzip quarto-${{needs.configure.outputs.version}}-linux-amd64.tar
+mv quarto-${{needs.configure.outputs.version}} pkg-working
+popd
+```
+And then based on the github actions, the generated tarball is located at `./package/quarto-${{needs.configure.outputs.version}}-linux-amd64.tar.gz`
+
+ARM64 build (very similar steps):
+
+```{.default .code-overflow-wrap}
+./configure.sh
+pushd package/src/
+./quarto-bld prepare-dist --set-version ${{needs.configure.outputs.version}} --arch aarch64 --log-level info
+popd
+pushd package/
+mv pkg-working quarto-${{needs.configure.outputs.version}}
+tar -cvf  quarto-${{needs.configure.outputs.version}}-linux-arm64.tar quarto-${{needs.configure.outputs.version}}
+gzip quarto-${{needs.configure.outputs.version}}-linux-arm64.tar
+mv quarto-${{needs.configure.outputs.version}} pkg-working
+popd
+```
+
+And then based on the github actions, the generated file is located at `./package/quarto-${{needs.configure.outputs.version}}-linux-arm64.tar.gz`
+
+
+
+
+I downloaded these files from releases, and they appear to be extremely similar. The quarto "binary" is a bash script that includes a check for architechture. So the only difference is in the configure step, which seems to download a different architechture. 
+
+However, when experimenting with trying to compile quarto on my phone (arm) using termux, I get an error. `deno: cannot execute: required file not found`. So far, googling this error has gotten me nowhere. I may have to create an arm vm to test later. 
+
 
