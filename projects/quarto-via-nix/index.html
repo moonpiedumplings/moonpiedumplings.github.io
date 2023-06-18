@@ -168,6 +168,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#using-nix" id="toc-using-nix" class="nav-link" data-scroll-target="#using-nix">Using Nix</a></li>
   <li><a href="#packaging-quarto" id="toc-packaging-quarto" class="nav-link" data-scroll-target="#packaging-quarto">Packaging quarto</a></li>
   <li><a href="#conclusion-and-how-to-use" id="toc-conclusion-and-how-to-use" class="nav-link" data-scroll-target="#conclusion-and-how-to-use">Conclusion and How to Use</a></li>
+  <li><a href="#try-2-creating-a-multi-architechture-and-multi-os-package" id="toc-try-2-creating-a-multi-architechture-and-multi-os-package" class="nav-link" data-scroll-target="#try-2-creating-a-multi-architechture-and-multi-os-package">Try 2, creating a multi architechture and multi OS package</a></li>
   </ul>
 </nav>
     </div>
@@ -1000,6 +1001,159 @@ Show derivation:
 <p>Now, users who have cloned the <a href="https://github.com/moonpidumplings/quartotest">repo for this blog</a>, can simply install nix, and run <code>nix-shell</code> in the root directory of the repo in order for them to get quarto, python, and jupyter, the dependencies I rely on for this project. Because of the way nix, works it is easy to modify my <code>shell.nix</code>, and add more dependencies, like R or more extra language support via juptyer kernels.</p>
 <p>My usual workflow is to open a terminal in this git repo, and type <code>nix-shell</code>, and then <code>code .</code>, which gives me vscode with quarto (I have the quarto vscode extension installed), python, and jupyter.</p>
 <p>I realized in hindsight that this only works on x86_64 linux, because my derivation works by taking the quarto x86_64 linux binary and packaging it using nix. But I did learn a lot about writing derivations through this, which I can apply to other things.</p>
+</section>
+<section id="try-2-creating-a-multi-architechture-and-multi-os-package" class="level1">
+<h1>Try 2, creating a multi architechture and multi OS package</h1>
+<p>Very frustrating, quarto has no compilation instructions in the readme. However, thankfully, use github actions to do testing, and builds of the applications, which means that the build steps are technically public, just not immediately apparent.</p>
+<p><img src="images/ghactions.png" class="img-fluid"></p>
+<p>Github actions works by reading a .yml file for the instuctions on what do do, and this file can be found in the github actions menu, as <a href="https://github.com/quarto-dev/quarto-cli/actions/runs/5286090611/workflow">workflow file</a>.</p>
+<p>I don’t need the whole thing, however, just the tarball building steps.</p>
+<details>
+<summary>
+Show steps
+</summary>
+<div class="sourceCode" id="cb36"><pre class="sourceCode yaml code-overflow-wrap code-with-copy"><code class="sourceCode yaml"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="fu">obs</span><span class="kw">:</span></span>
+<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">configure</span><span class="kw">:</span></span>
+<span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">runs-on</span><span class="kw">:</span><span class="at"> ubuntu-latest</span></span>
+<span id="cb36-4"><a href="#cb36-4" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">outputs</span><span class="kw">:</span></span>
+<span id="cb36-5"><a href="#cb36-5" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">version</span><span class="kw">:</span><span class="at"> ${{steps.config.outputs.version}}.${{ steps.config.outputs.build_number}}</span></span>
+<span id="cb36-6"><a href="#cb36-6" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">version_base</span><span class="kw">:</span><span class="at"> ${{steps.config.outputs.version}}</span></span>
+<span id="cb36-7"><a href="#cb36-7" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">tag_name</span><span class="kw">:</span><span class="at"> v${{steps.config.outputs.version}}.${{ steps.config.outputs.build_number }}</span></span>
+<span id="cb36-8"><a href="#cb36-8" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">release</span><span class="kw">:</span><span class="at"> v${{steps.config.outputs.version}}.${{ steps.config.outputs.build_number }}</span></span>
+<span id="cb36-9"><a href="#cb36-9" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">changes</span><span class="kw">:</span><span class="at"> ${{ steps.config.outputs.changes }}</span></span>
+<span id="cb36-10"><a href="#cb36-10" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">if</span><span class="kw">:</span><span class="at"> github.event_name != 'schedule' || (github.event_name == 'schedule' &amp;&amp; github.repository == 'quarto-dev/quarto-cli')</span></span>
+<span id="cb36-11"><a href="#cb36-11" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">steps</span><span class="kw">:</span></span>
+<span id="cb36-12"><a href="#cb36-12" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> Install libc6-div</span></span>
+<span id="cb36-13"><a href="#cb36-13" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">run</span><span class="kw">:</span><span class="at"> sudo apt-get install libc6-dev</span></span>
+<span id="cb36-14"><a href="#cb36-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-15"><a href="#cb36-15" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="fu">uses</span><span class="kw">:</span><span class="at"> actions/checkout@v3</span></span>
+<span id="cb36-16"><a href="#cb36-16" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">with</span><span class="kw">:</span></span>
+<span id="cb36-17"><a href="#cb36-17" aria-hidden="true" tabindex="-1"></a><span class="at">          </span><span class="fu">fetch-depth</span><span class="kw">:</span><span class="at"> </span><span class="dv">0</span></span>
+<span id="cb36-18"><a href="#cb36-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-19"><a href="#cb36-19" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> config</span></span>
+<span id="cb36-20"><a href="#cb36-20" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">id</span><span class="kw">:</span><span class="at"> config</span></span>
+<span id="cb36-21"><a href="#cb36-21" aria-hidden="true" tabindex="-1"></a><span class="fu">        run</span><span class="kw">: </span><span class="ch">|</span></span>
+<span id="cb36-22"><a href="#cb36-22" aria-hidden="true" tabindex="-1"></a>          source ./configuration</span>
+<span id="cb36-23"><a href="#cb36-23" aria-hidden="true" tabindex="-1"></a>          CHANGES=</span>
+<span id="cb36-24"><a href="#cb36-24" aria-hidden="true" tabindex="-1"></a>          # CHANGES=$(git log $(git describe --tags --abbrev=0)..HEAD --oneline)</span>
+<span id="cb36-25"><a href="#cb36-25" aria-hidden="true" tabindex="-1"></a>          # Escape \n, \r to preserve multiline variable</span>
+<span id="cb36-26"><a href="#cb36-26" aria-hidden="true" tabindex="-1"></a>          # See https://github.community/t/set-output-truncates-multiline-strings/16852/2</span>
+<span id="cb36-27"><a href="#cb36-27" aria-hidden="true" tabindex="-1"></a>          # CHANGES="${CHANGES//'%'/'%25'}"</span>
+<span id="cb36-28"><a href="#cb36-28" aria-hidden="true" tabindex="-1"></a>          # CHANGES="${CHANGES//$'\n'/'%0A'}"</span>
+<span id="cb36-29"><a href="#cb36-29" aria-hidden="true" tabindex="-1"></a>          # CHANGES="${CHANGES//$'\r'/'%0D'}"</span>
+<span id="cb36-30"><a href="#cb36-30" aria-hidden="true" tabindex="-1"></a>          # echo "changes=$CHANGES" &gt;&gt; $GITHUB_OUTPUT</span>
+<span id="cb36-31"><a href="#cb36-31" aria-hidden="true" tabindex="-1"></a>          QUARTO_BUILD_NUMBER=$(($QUARTO_BUILD_RUN_OFFSET + $GITHUB_RUN_NUMBER))</span>
+<span id="cb36-32"><a href="#cb36-32" aria-hidden="true" tabindex="-1"></a>          echo "version=$QUARTO_VERSION" &gt;&gt; $GITHUB_OUTPUT</span>
+<span id="cb36-33"><a href="#cb36-33" aria-hidden="true" tabindex="-1"></a>          echo "changes=$CHANGES" &gt;&gt; $GITHUB_OUTPUT</span>
+<span id="cb36-34"><a href="#cb36-34" aria-hidden="true" tabindex="-1"></a>          echo "build_number=$QUARTO_BUILD_NUMBER" &gt;&gt; $GITHUB_OUTPUT</span>
+<span id="cb36-35"><a href="#cb36-35" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> Upload Artifact</span></span>
+<span id="cb36-36"><a href="#cb36-36" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">uses</span><span class="kw">:</span><span class="at"> actions/upload-artifact@v3</span></span>
+<span id="cb36-37"><a href="#cb36-37" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">with</span><span class="kw">:</span></span>
+<span id="cb36-38"><a href="#cb36-38" aria-hidden="true" tabindex="-1"></a><span class="at">          </span><span class="fu">name</span><span class="kw">:</span><span class="at"> News</span></span>
+<span id="cb36-39"><a href="#cb36-39" aria-hidden="true" tabindex="-1"></a><span class="at">          </span><span class="fu">path</span><span class="kw">:</span><span class="at"> ./news/changelog-${{steps.config.outputs.version}}.md</span></span>
+<span id="cb36-40"><a href="#cb36-40" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-41"><a href="#cb36-41" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">make-source-tarball</span><span class="kw">:</span></span>
+<span id="cb36-42"><a href="#cb36-42" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">runs-on</span><span class="kw">:</span><span class="at"> ubuntu-latest</span></span>
+<span id="cb36-43"><a href="#cb36-43" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">needs</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">configure</span><span class="kw">]</span></span>
+<span id="cb36-44"><a href="#cb36-44" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-45"><a href="#cb36-45" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">steps</span><span class="kw">:</span></span>
+<span id="cb36-46"><a href="#cb36-46" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="fu">uses</span><span class="kw">:</span><span class="at"> actions/checkout@v3</span></span>
+<span id="cb36-47"><a href="#cb36-47" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-48"><a href="#cb36-48" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> Make Tarball</span></span>
+<span id="cb36-49"><a href="#cb36-49" aria-hidden="true" tabindex="-1"></a><span class="fu">        run</span><span class="kw">: </span><span class="ch">|</span></span>
+<span id="cb36-50"><a href="#cb36-50" aria-hidden="true" tabindex="-1"></a>          tar -zcvf  quarto-${{needs.configure.outputs.version}}.tar.gz *</span>
+<span id="cb36-51"><a href="#cb36-51" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> Upload Artifact</span></span>
+<span id="cb36-52"><a href="#cb36-52" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">uses</span><span class="kw">:</span><span class="at"> actions/upload-artifact@v3</span></span>
+<span id="cb36-53"><a href="#cb36-53" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">with</span><span class="kw">:</span></span>
+<span id="cb36-54"><a href="#cb36-54" aria-hidden="true" tabindex="-1"></a><span class="at">          </span><span class="fu">name</span><span class="kw">:</span><span class="at"> Source</span></span>
+<span id="cb36-55"><a href="#cb36-55" aria-hidden="true" tabindex="-1"></a><span class="at">          </span><span class="fu">path</span><span class="kw">:</span><span class="at"> ./quarto-${{needs.configure.outputs.version}}.tar.gz</span></span>
+<span id="cb36-56"><a href="#cb36-56" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-57"><a href="#cb36-57" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">make-tarball</span><span class="kw">:</span></span>
+<span id="cb36-58"><a href="#cb36-58" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">runs-on</span><span class="kw">:</span><span class="at"> ubuntu-latest</span></span>
+<span id="cb36-59"><a href="#cb36-59" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">needs</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">configure</span><span class="kw">]</span></span>
+<span id="cb36-60"><a href="#cb36-60" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-61"><a href="#cb36-61" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">steps</span><span class="kw">:</span></span>
+<span id="cb36-62"><a href="#cb36-62" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="fu">uses</span><span class="kw">:</span><span class="at"> actions/checkout@v3</span></span>
+<span id="cb36-63"><a href="#cb36-63" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-64"><a href="#cb36-64" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> Configure</span></span>
+<span id="cb36-65"><a href="#cb36-65" aria-hidden="true" tabindex="-1"></a><span class="fu">        run</span><span class="kw">: </span><span class="ch">|</span></span>
+<span id="cb36-66"><a href="#cb36-66" aria-hidden="true" tabindex="-1"></a>          ./configure.sh</span>
+<span id="cb36-67"><a href="#cb36-67" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> Prepare Distribution</span></span>
+<span id="cb36-68"><a href="#cb36-68" aria-hidden="true" tabindex="-1"></a><span class="fu">        run</span><span class="kw">: </span><span class="ch">|</span></span>
+<span id="cb36-69"><a href="#cb36-69" aria-hidden="true" tabindex="-1"></a>          pushd package/src/</span>
+<span id="cb36-70"><a href="#cb36-70" aria-hidden="true" tabindex="-1"></a>          ./quarto-bld prepare-dist --set-version ${{needs.configure.outputs.version}} --log-level info</span>
+<span id="cb36-71"><a href="#cb36-71" aria-hidden="true" tabindex="-1"></a>          popd</span>
+<span id="cb36-72"><a href="#cb36-72" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> Make Tarball</span></span>
+<span id="cb36-73"><a href="#cb36-73" aria-hidden="true" tabindex="-1"></a><span class="fu">        run</span><span class="kw">: </span><span class="ch">|</span></span>
+<span id="cb36-74"><a href="#cb36-74" aria-hidden="true" tabindex="-1"></a>          pushd package/</span>
+<span id="cb36-75"><a href="#cb36-75" aria-hidden="true" tabindex="-1"></a>          mv pkg-working quarto-${{needs.configure.outputs.version}}</span>
+<span id="cb36-76"><a href="#cb36-76" aria-hidden="true" tabindex="-1"></a>          tar -cvf  quarto-${{needs.configure.outputs.version}}-linux-amd64.tar quarto-${{needs.configure.outputs.version}}</span>
+<span id="cb36-77"><a href="#cb36-77" aria-hidden="true" tabindex="-1"></a>          gzip quarto-${{needs.configure.outputs.version}}-linux-amd64.tar</span>
+<span id="cb36-78"><a href="#cb36-78" aria-hidden="true" tabindex="-1"></a>          mv quarto-${{needs.configure.outputs.version}} pkg-working</span>
+<span id="cb36-79"><a href="#cb36-79" aria-hidden="true" tabindex="-1"></a>          popd</span>
+<span id="cb36-80"><a href="#cb36-80" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> Upload Artifact</span></span>
+<span id="cb36-81"><a href="#cb36-81" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">uses</span><span class="kw">:</span><span class="at"> actions/upload-artifact@v3</span></span>
+<span id="cb36-82"><a href="#cb36-82" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">with</span><span class="kw">:</span></span>
+<span id="cb36-83"><a href="#cb36-83" aria-hidden="true" tabindex="-1"></a><span class="at">          </span><span class="fu">name</span><span class="kw">:</span><span class="at"> Deb Zip</span></span>
+<span id="cb36-84"><a href="#cb36-84" aria-hidden="true" tabindex="-1"></a><span class="at">          </span><span class="fu">path</span><span class="kw">:</span><span class="at"> ./package/quarto-${{needs.configure.outputs.version}}-linux-amd64.tar.gz</span></span>
+<span id="cb36-85"><a href="#cb36-85" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-86"><a href="#cb36-86" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">make-arm64-tarball</span><span class="kw">:</span></span>
+<span id="cb36-87"><a href="#cb36-87" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">runs-on</span><span class="kw">:</span><span class="at"> ubuntu-latest</span></span>
+<span id="cb36-88"><a href="#cb36-88" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">needs</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">configure</span><span class="kw">]</span></span>
+<span id="cb36-89"><a href="#cb36-89" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-90"><a href="#cb36-90" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">steps</span><span class="kw">:</span></span>
+<span id="cb36-91"><a href="#cb36-91" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="fu">uses</span><span class="kw">:</span><span class="at"> actions/checkout@v3</span></span>
+<span id="cb36-92"><a href="#cb36-92" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-93"><a href="#cb36-93" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> Configure</span></span>
+<span id="cb36-94"><a href="#cb36-94" aria-hidden="true" tabindex="-1"></a><span class="fu">        run</span><span class="kw">: </span><span class="ch">|</span></span>
+<span id="cb36-95"><a href="#cb36-95" aria-hidden="true" tabindex="-1"></a>          ./configure.sh</span>
+<span id="cb36-96"><a href="#cb36-96" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> Prepare Distribution</span></span>
+<span id="cb36-97"><a href="#cb36-97" aria-hidden="true" tabindex="-1"></a><span class="fu">        run</span><span class="kw">: </span><span class="ch">|</span></span>
+<span id="cb36-98"><a href="#cb36-98" aria-hidden="true" tabindex="-1"></a>          pushd package/src/</span>
+<span id="cb36-99"><a href="#cb36-99" aria-hidden="true" tabindex="-1"></a>          ./quarto-bld prepare-dist --set-version ${{needs.configure.outputs.version}} --arch aarch64 --log-level info</span>
+<span id="cb36-100"><a href="#cb36-100" aria-hidden="true" tabindex="-1"></a>          popd</span>
+<span id="cb36-101"><a href="#cb36-101" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> Make Tarball</span></span>
+<span id="cb36-102"><a href="#cb36-102" aria-hidden="true" tabindex="-1"></a><span class="fu">        run</span><span class="kw">: </span><span class="ch">|</span></span>
+<span id="cb36-103"><a href="#cb36-103" aria-hidden="true" tabindex="-1"></a>          pushd package/</span>
+<span id="cb36-104"><a href="#cb36-104" aria-hidden="true" tabindex="-1"></a>          mv pkg-working quarto-${{needs.configure.outputs.version}}</span>
+<span id="cb36-105"><a href="#cb36-105" aria-hidden="true" tabindex="-1"></a>          tar -cvf  quarto-${{needs.configure.outputs.version}}-linux-arm64.tar quarto-${{needs.configure.outputs.version}}</span>
+<span id="cb36-106"><a href="#cb36-106" aria-hidden="true" tabindex="-1"></a>          gzip quarto-${{needs.configure.outputs.version}}-linux-arm64.tar</span>
+<span id="cb36-107"><a href="#cb36-107" aria-hidden="true" tabindex="-1"></a>          mv quarto-${{needs.configure.outputs.version}} pkg-working</span>
+<span id="cb36-108"><a href="#cb36-108" aria-hidden="true" tabindex="-1"></a>          popd</span>
+<span id="cb36-109"><a href="#cb36-109" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> Upload Artifact</span></span>
+<span id="cb36-110"><a href="#cb36-110" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">uses</span><span class="kw">:</span><span class="at"> actions/upload-artifact@v3</span></span>
+<span id="cb36-111"><a href="#cb36-111" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">with</span><span class="kw">:</span></span>
+<span id="cb36-112"><a href="#cb36-112" aria-hidden="true" tabindex="-1"></a><span class="at">          </span><span class="fu">name</span><span class="kw">:</span><span class="at"> Deb Arm64 Zip</span></span>
+<span id="cb36-113"><a href="#cb36-113" aria-hidden="true" tabindex="-1"></a><span class="at">          </span><span class="fu">path</span><span class="kw">:</span><span class="at"> ./package/quarto-${{needs.configure.outputs.version}}-linux-arm64.tar.gz</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<p>So to convert github actions into somethign easier to read:</p>
+<p>AMD64 build:</p>
+<div class="sourceCode" id="cb37"><pre class="sourceCode default code-overflow-wrap code-with-copy"><code class="sourceCode default"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a>source ./configuration</span>
+<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a>./configure.sh</span>
+<span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a>pushd package/src/ # pushd is like a more advnaced version of cd</span>
+<span id="cb37-4"><a href="#cb37-4" aria-hidden="true" tabindex="-1"></a>/quarto-bld prepare-dist --set-version ${{needs.configure.outputs.   version}} --log-level info </span>
+<span id="cb37-5"><a href="#cb37-5" aria-hidden="true" tabindex="-1"></a>popd</span>
+<span id="cb37-6"><a href="#cb37-6" aria-hidden="true" tabindex="-1"></a>pushd package/</span>
+<span id="cb37-7"><a href="#cb37-7" aria-hidden="true" tabindex="-1"></a>mv pkg-working quarto-${{needs.configure.outputs.version}}</span>
+<span id="cb37-8"><a href="#cb37-8" aria-hidden="true" tabindex="-1"></a>tar -cvf  quarto-${{needs.configure.outputs.version}}-linux-amd64.tar quarto-${{needs.configure.outputs.version}}</span>
+<span id="cb37-9"><a href="#cb37-9" aria-hidden="true" tabindex="-1"></a>gzip quarto-${{needs.configure.outputs.version}}-linux-amd64.tar</span>
+<span id="cb37-10"><a href="#cb37-10" aria-hidden="true" tabindex="-1"></a>mv quarto-${{needs.configure.outputs.version}} pkg-working</span>
+<span id="cb37-11"><a href="#cb37-11" aria-hidden="true" tabindex="-1"></a>popd</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>And then based on the github actions, the generated tarball is located at <code>./package/quarto-${{needs.configure.outputs.version}}-linux-amd64.tar.gz</code></p>
+<p>ARM64 build (very similar steps):</p>
+<div class="sourceCode" id="cb38"><pre class="sourceCode default code-overflow-wrap code-with-copy"><code class="sourceCode default"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a>./configure.sh</span>
+<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a>pushd package/src/</span>
+<span id="cb38-3"><a href="#cb38-3" aria-hidden="true" tabindex="-1"></a>./quarto-bld prepare-dist --set-version ${{needs.configure.outputs.version}} --arch aarch64 --log-level info</span>
+<span id="cb38-4"><a href="#cb38-4" aria-hidden="true" tabindex="-1"></a>popd</span>
+<span id="cb38-5"><a href="#cb38-5" aria-hidden="true" tabindex="-1"></a>pushd package/</span>
+<span id="cb38-6"><a href="#cb38-6" aria-hidden="true" tabindex="-1"></a>mv pkg-working quarto-${{needs.configure.outputs.version}}</span>
+<span id="cb38-7"><a href="#cb38-7" aria-hidden="true" tabindex="-1"></a>tar -cvf  quarto-${{needs.configure.outputs.version}}-linux-arm64.tar quarto-${{needs.configure.outputs.version}}</span>
+<span id="cb38-8"><a href="#cb38-8" aria-hidden="true" tabindex="-1"></a>gzip quarto-${{needs.configure.outputs.version}}-linux-arm64.tar</span>
+<span id="cb38-9"><a href="#cb38-9" aria-hidden="true" tabindex="-1"></a>mv quarto-${{needs.configure.outputs.version}} pkg-working</span>
+<span id="cb38-10"><a href="#cb38-10" aria-hidden="true" tabindex="-1"></a>popd</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>And then based on the github actions, the generated file is located at <code>./package/quarto-${{needs.configure.outputs.version}}-linux-arm64.tar.gz</code></p>
+<p>I downloaded these files from releases, and they appear to be extremely similar. The quarto “binary” is a bash script that includes a check for architechture. So the only difference is in the configure step, which seems to download a different architechture.</p>
+<p>However, when experimenting with trying to compile quarto on my phone (arm) using termux, I get an error. <code>deno: cannot execute: required file not found</code>. So far, googling this error has gotten me nowhere. I may have to create an arm vm to test later.</p>
 
 
 </section>

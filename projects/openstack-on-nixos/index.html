@@ -271,7 +271,7 @@ Show someone else’s configs for lxdware on nixos
 <p>I later looked at openstack, because I wanted to see if there was an ideal way to configure this with nixos. Nix makes it so easy to configure so many other services, just a few lines of nix code in the <code>configuration.nix</code> file to set up webservers, or other services.</p>
 <p>In fact, people even discussed this in a thread posted on the <a href="https://discourse.nixos.org/t/deploying-nixos-openstack-cloud/21066">Nixos discourse forums</a></p>
 <blockquote class="blockquote">
-<p>Is there anyone actively working on being able to run an OpenStack cloud using NixOS? Shouldn’t “we” be able to do what the Kayobe project does but without the Ansible stuff? https://docs.openstack.org/kayobe/latest/configuration/reference/kolla-ansible.html 9 ```</p>
+<p>Is there anyone actively working on being able to run an OpenStack cloud using NixOS? Shouldn’t “we” be able to do what the Kayobe project does but without the Ansible stuff? https://docs.openstack.org/kayobe/latest/configuration/reference/kolla-ansible.html 9</p>
 </blockquote>
 <p>One person replied, saying that they had done a bit, but work had “rotten since”. And indeed, when I searched around github, I found an old project, in a <a href="https://github.com/hyphon81/Nixtack/tree/master/openstack">github repo titled nixstack</a></p>
 <p>This person, or group of people, had packaged openstack to be easy to enable. But as I read through the code, I realized that the app is from the era of python2, so this code is really old.</p>
@@ -284,8 +284,152 @@ Show someone else’s configs for lxdware on nixos
 <p>So I decided to do it myself. I have the old templates as my guides, and I know it is possible because someone else has done it.</p>
 <p>After going through the code for nixstack, I experienced a pleasant suprise — openstack is purely a python application, and this means that it can be packages by nix’s python packaging ecosystem.</p>
 <p>Because openstack is purely a python application, all the dependencies are declared in the requirements.txt, located in the root of the git repo of each openstack component.</p>
-<p>Nixpkgs very large, but I don’t know if they have all of the python packages. Luckily, I found a newer project, pip2nix, which seems to have been first created at around the same time the openstack on nix projects stopped development.</p>
-<p>I started work on using pip2nix to convert the requirements.txt file into something usable.</p>
+<p>Nixpkgs very large, but I don’t know if they have all of the python packages. Luckily, I found a newer project, <a href="https://github.com/nix-community/pip2nix">pip2nix</a>, which seems to have been first created at around the same time the openstack on nix projects stopped development.</p>
+<p>I should be able to convert a requirements.txt into something nix can install natively, directly from the pypi repos, without having to worry about packages not being packages in nixpkgs.</p>
+<p>So I started by cloning the openstack keystone repository from github: <a href="https://github.com/openstack/keystone">https://github.com/openstack/keystone</a></p>
+<p>I install and setup pip2nix and attempt to use it. It first complains about python36 being too old, but after I switch to the python39 version of pip2nix:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode default code-overflow-wrap code-with-copy"><code class="sourceCode default"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>[nix-shell:~/vscode/keystone]$ pip2nix generate .</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>Processing /home/moonpie/vscode/keystone</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>... # lots of extraneous output</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>pip2nix generate seems to take the same inputs as pip, so to install a python package from the current working directory, you could usually do <code>pip install .</code>, but here I do a <code>pip2nix generate .</code> instead. This generates a python-packages.nix file with all the python packages, including openstack keystone.</p>
+<p>I played around with trying to install openstack keystone in a <code>nix-shell</code> environment.</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode nix code-overflow-wrap code-with-copy"><code class="sourceCode nix"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="op">{</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>        <span class="va">pkgs</span> <span class="op">?</span> <span class="bu">import</span> &lt;nixpkgs&gt; <span class="op">{}</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="op">}</span> : </span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="kw">with</span> <span class="bu">import</span> <span class="ss">./python-packages.nix</span> <span class="op">{</span><span class="kw">inherit</span> pkgs<span class="op">;};</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>        <span class="va">keystone-nix</span> <span class="op">=</span> callPackage keystone<span class="op">;</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="kw">in</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>pkgs.mkShell <span class="op">{</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>        <span class="va">packages</span> <span class="op">=</span> <span class="op">[</span> keystone-nix <span class="op">];</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<details>
+<summary>
+Show error
+</summary>
+<div class="sourceCode" id="cb4"><pre class="sourceCode default code-overflow-wrap code-with-copy"><code class="sourceCode default"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>moonpie@localhost:~/vscode/keystone&gt; nix-shell</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>error:</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>       … while calling the 'derivationStrict' builtin</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>         at /builtin/derivation.nix:9:12: (source not available)</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>       … while evaluating derivation 'nix-shell'</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>         whose name attribute is located at /nix/store/q300rswsxpr2kkng9azzsbfi9m8fdg50-nixpkgs/nixpkgs/pkgs/stdenv/generic/make-derivation.nix:303:7</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>       … while evaluating attribute 'nativeBuildInputs' of derivation 'nix-shell'</span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>         at /nix/store/q300rswsxpr2kkng9azzsbfi9m8fdg50-nixpkgs/nixpkgs/pkgs/stdenv/generic/make-derivation.nix:347:7:</span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>          346|       depsBuildBuild              = lib.elemAt (lib.elemAt dependencies 0) 0;</span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>          347|       nativeBuildInputs           = lib.elemAt (lib.elemAt dependencies 0) 1;</span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>             |       ^</span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>          348|       depsBuildTarget             = lib.elemAt (lib.elemAt dependencies 0) 2;</span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a>       error: function 'anonymous lambda' called without required argument 'fetchurl'</span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a>       at /home/moonpie/vscode/keystone/python-packages.nix:4:1:</span>
+<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-23"><a href="#cb4-23" aria-hidden="true" tabindex="-1"></a>            3|</span>
+<span id="cb4-24"><a href="#cb4-24" aria-hidden="true" tabindex="-1"></a>            4| { pkgs, fetchurl, fetchgit, fetchhg }:</span>
+<span id="cb4-25"><a href="#cb4-25" aria-hidden="true" tabindex="-1"></a>             | ^</span>
+<span id="cb4-26"><a href="#cb4-26" aria-hidden="true" tabindex="-1"></a>            5|</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<p>I remember getting a similar error when I was trying to package quarto, and I was told to use callPackage. I don’t think I am using callPackage correctly here.</p>
+<p>I tried tinkering with some <a href="https://github.com/srghma/lingualeo2anki/blob/master/default.nix">code that I got from searching github</a></p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode nix code-overflow-wrap code-with-copy"><code class="sourceCode nix"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="op">{</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    <span class="va">pkgs</span> <span class="op">?</span> <span class="bu">import</span> &lt;nixpkgs&gt; <span class="op">{}</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="op">}</span> : </span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="kw">with</span> pkgs<span class="op">;</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>  <span class="va">python</span> <span class="op">=</span> python3<span class="op">;</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>  <span class="va">pythonPackages</span> <span class="op">=</span> python.pkgs<span class="op">;</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>  <span class="co"># generated with `pip2nix generate -r requirements.txt`</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>  <span class="va">generatePipPackages</span> <span class="op">=</span> <span class="bu">import</span> <span class="ss">./python-packages.nix</span> <span class="op">{</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>    <span class="kw">inherit</span> pkgs<span class="op">;</span></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>    <span class="kw">inherit</span> <span class="op">(</span>pkgs<span class="op">)</span> fetchurl fetchgit fetchhg<span class="op">;</span></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>  <span class="op">};</span></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>  <span class="va">pipPackages</span> <span class="op">=</span>  generatePipPackages pipPackages pythonPackages<span class="op">;</span></span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a><span class="kw">in</span></span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>pkgs.mkShell <span class="op">{</span></span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>    <span class="va">packages</span> <span class="op">=</span> <span class="kw">with</span> pipPackages<span class="op">;</span> <span class="op">[</span> keystone <span class="op">];</span></span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>But this errors:</p>
+<details>
+<summary>
+Show error
+</summary>
+<div class="sourceCode" id="cb6"><pre class="sourceCode default code-overflow-wrap code-with-copy"><code class="sourceCode default"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>moonpie@localhost:~/vscode/keystone&gt; nix-shell</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>error:</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>       … while calling the 'derivationStrict' builtin</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>         at /builtin/derivation.nix:9:12: (source not available)</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>       … while evaluating derivation 'nix-shell'</span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>         whose name attribute is located at /nix/store/q300rswsxpr2kkng9azzsbfi9m8fdg50-nixpkgs/nixpkgs/pkgs/stdenv/generic/make-derivation.nix:303:7</span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>       … while evaluating attribute 'nativeBuildInputs' of derivation 'nix-shell'</span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>         at /nix/store/q300rswsxpr2kkng9azzsbfi9m8fdg50-nixpkgs/nixpkgs/pkgs/stdenv/generic/make-derivation.nix:347:7:</span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>          346|       depsBuildBuild              = lib.elemAt (lib.elemAt dependencies 0) 0;</span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>          347|       nativeBuildInputs           = lib.elemAt (lib.elemAt dependencies 0) 1;</span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>             |       ^</span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>          348|       depsBuildTarget             = lib.elemAt (lib.elemAt dependencies 0) 2;</span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a>       (stack trace truncated; use '--show-trace' to show the full trace)</span>
+<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a>       error: attribute 'setuptools' missing</span>
+<span id="cb6-22"><a href="#cb6-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-23"><a href="#cb6-23" aria-hidden="true" tabindex="-1"></a>       at /home/moonpie/vscode/keystone/python-packages.nix:106:7:</span>
+<span id="cb6-24"><a href="#cb6-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-25"><a href="#cb6-25" aria-hidden="true" tabindex="-1"></a>          105|     propagatedBuildInputs = [</span>
+<span id="cb6-26"><a href="#cb6-26" aria-hidden="true" tabindex="-1"></a>          106|       self."setuptools"</span>
+<span id="cb6-27"><a href="#cb6-27" aria-hidden="true" tabindex="-1"></a>             |       ^</span>
+<span id="cb6-28"><a href="#cb6-28" aria-hidden="true" tabindex="-1"></a>          107|       self."six"</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<p>I don’t really know why this errors.</p>
+<p>So I did some more research, and looked at the <a href="https://pip2nix.readthedocs.io/en/latest/getting_started.html#using-pip2nix-in-a-project">pip2nix docs</a> (which I was suprised they had because nix isn’t the best documented). According to that, you can use <code>pip2nix scaffold --package projectName</code> to generate a <code>default.nix</code> which <code>nix-shell</code> will read and convert into a shell environment for you.</p>
+<p>So I did that. And I got the same error as above. I then did some searching on github for a similar issue, and found <a href="https://github.com/nix-community/pip2nix/issues/83">one issue</a> where a replier said that the user had to add Cython to the requirements.txt, otherwise pip2nix would not add it to the package set. So I tried adding setuptools to the end of the requirements.txt, and pip2nix pretty much just ignored it, and didn’t add it to the generated <code>python-packages.nix</code> file. Why?</p>
+<p>So I decied to add it to the generated <code>python-packages.nix</code> file manually, and I got an error, but that was probably because I had added <code>setuptools = pkgs.python310Packages.setuptools</code> when python39 was the version in use. This is because I didn’t realize nix packaged python39, I thought they only had 310/311, however, upon later trying to regenerate packages, I now get a completely different error.</p>
+<details>
+<summary>
+Show error
+</summary>
+<div class="sourceCode" id="cb7"><pre class="sourceCode default code-overflow-wrap code-with-copy"><code class="sourceCode default"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>moonpie@localhost:~/vscode/keystone&gt; nix-shell</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>error:</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>       … in the left operand of the update (//) operator</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>         at /nix/store/q300rswsxpr2kkng9azzsbfi9m8fdg50-nixpkgs/nixpkgs/lib/fixed-points.nix:69:64:</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>           68|   #</span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>           69|   extends = f: rattrs: self: let super = rattrs self; in super // f self super;</span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>             |                                                                ^</span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>           70|</span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>       … in the left operand of the update (//) operator</span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>         at /nix/store/q300rswsxpr2kkng9azzsbfi9m8fdg50-nixpkgs/nixpkgs/lib/fixed-points.nix:69:64:</span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a>           68|   #</span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a>           69|   extends = f: rattrs: self: let super = rattrs self; in super // f self super;</span>
+<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a>             |                                                                ^</span>
+<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a>           70|</span>
+<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a>       (stack trace truncated; use '--show-trace' to show the full trace)</span>
+<span id="cb7-22"><a href="#cb7-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-23"><a href="#cb7-23" aria-hidden="true" tabindex="-1"></a>       error: function 'anonymous lambda' called with unexpected argument 'self'</span>
+<span id="cb7-24"><a href="#cb7-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-25"><a href="#cb7-25" aria-hidden="true" tabindex="-1"></a>       at /nix/store/q300rswsxpr2kkng9azzsbfi9m8fdg50-nixpkgs/nixpkgs/pkgs/development/interpreters/python/passthrufun.nix:37:6:</span>
+<span id="cb7-26"><a href="#cb7-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-27"><a href="#cb7-27" aria-hidden="true" tabindex="-1"></a>           36|     # - applies overrides from `packageOverrides` and `pythonPackagesOverlays`.</span>
+<span id="cb7-28"><a href="#cb7-28" aria-hidden="true" tabindex="-1"></a>           37|     ({ pkgs, stdenv, python, overrides }: let</span>
+<span id="cb7-29"><a href="#cb7-29" aria-hidden="true" tabindex="-1"></a>             |      ^</span>
+<span id="cb7-30"><a href="#cb7-30" aria-hidden="true" tabindex="-1"></a>           38|       pythonPackagesFun = import ./python-packages-base.nix {</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<p>I literally changed nothing. Except for adding setuptools to the start of the requirements.txt, but I still got a differing error than the one I got yesterday.</p>
+<p>I recloned the keystone repo (reverting back to the default requirements.txt file), and regenerated the nix files using pip2nix, however I still get the same error.</p>
 
 
 </section>

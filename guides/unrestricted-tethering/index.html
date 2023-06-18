@@ -207,6 +207,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h2 class="anchored" data-anchor-id="why">Why</h2>
 <p>So I was on a plane ride recently, and the plane gave free, unlimited wifi, to one device, as long as you were using a T-Mobile data plan.</p>
 <p>I used my phone for a bit, but then I wanted to use my computer.</p>
+<p>Okay, so I’m writing this later, after I had written the guide. Apparently, the plan for the boat was 4 devices per person, not total. And even though I had wifi, when I tested USB tethering, it just worked. Either my phone does the proxying automatically or something, because it shouldn’t have worked according to reports of people I’ve talked to online.</p>
+<p>But after looking at some configs on my computer, It does look like my phone creates a virtual network which my computer connects to, and proxies all traffic.</p>
 </section>
 <section id="how" class="level2">
 <h2 class="anchored" data-anchor-id="how">How</h2>
@@ -260,6 +262,21 @@ Warning
 <p>This method works by creating an unauthenticated socks5 proxy server. Although not apparent to the average user, anyone with scanning utilities on the same network can see this server, and connect to it.</p>
 <p>If they connect, then <strong>no</strong> private data of yours will be put in jepoardy.</p>
 <p>However, if they do connect they will be able to eat up your bandwidth, potentially slowing your connection down, or they could do illegal things and you could be held liable for them, as it is your connection.</p>
+<p>I’m going to see if there is some way to bind this only to the tethered device.</p>
+</div>
+</div>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Note
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>When authenticating to a socks5 server, the passwords are sent over the network in plaintext. Although if you connect over USB tethering, no network should be exposed to the wireless network, if you are connecting directly over the wireless network, then people would be able to sniff your password and connect to your socks5 server.</p>
+<p>I might research if there is a way to limit the connections in advance, but it might not be possible with such a small and lightweight server application.</p>
 </div>
 </div>
 <p>Airplane wifi, and later on when I get to it, boat wifi, are both really slow. Don’t expect much speed from this setup when you are already limited. But I suspect this works great for those who live in areas without internet, but are on cellular data plans that let them created limited hotspots or do limited tethering.</p>
