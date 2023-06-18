@@ -248,3 +248,57 @@ error:
 </details>
 
 I don't really know why this errors. 
+
+
+So I did some more research, and looked at the [pip2nix docs](https://pip2nix.readthedocs.io/en/latest/getting_started.html#using-pip2nix-in-a-project) (which I was suprised they had because nix isn't the best documented). According to that, you can use `pip2nix scaffold --package projectName` to generate a `default.nix` which `nix-shell` will read and convert into a shell environment for you. 
+
+So I did that. And I got the same error as above. I then did some searching on github for a similar issue, and found [one issue](https://github.com/nix-community/pip2nix/issues/83) where a replier said that the user had to add Cython to the requirements.txt, otherwise pip2nix would not add it to the package set. So I tried adding setuptools to the end of the requirements.txt, and pip2nix pretty much just ignored it, and didn't add it to the generated `python-packages.nix` file. Why? 
+
+So I decied to add it to the generated `python-packages.nix` file manually, and I got an error, but that was probably because I had added `setuptools = pkgs.python310Packages.setuptools` when python39 was the version in use. This is because I didn't realize nix packaged python39, I thought they only had 310/311, however, upon later trying to regenerate packages, I now get a completely different error. 
+
+<details><summary>Show error</summary>
+
+```{.default .code-overflow-wrap}
+moonpie@localhost:~/vscode/keystone> nix-shell
+error:
+       … in the left operand of the update (//) operator
+
+         at /nix/store/q300rswsxpr2kkng9azzsbfi9m8fdg50-nixpkgs/nixpkgs/lib/fixed-points.nix:69:64:
+
+           68|   #
+           69|   extends = f: rattrs: self: let super = rattrs self; in super // f self super;
+             |                                                                ^
+           70|
+
+       … in the left operand of the update (//) operator
+
+         at /nix/store/q300rswsxpr2kkng9azzsbfi9m8fdg50-nixpkgs/nixpkgs/lib/fixed-points.nix:69:64:
+
+           68|   #
+           69|   extends = f: rattrs: self: let super = rattrs self; in super // f self super;
+             |                                                                ^
+           70|
+
+       (stack trace truncated; use '--show-trace' to show the full trace)
+
+       error: function 'anonymous lambda' called with unexpected argument 'self'
+
+       at /nix/store/q300rswsxpr2kkng9azzsbfi9m8fdg50-nixpkgs/nixpkgs/pkgs/development/interpreters/python/passthrufun.nix:37:6:
+
+           36|     # - applies overrides from `packageOverrides` and `pythonPackagesOverlays`.
+           37|     ({ pkgs, stdenv, python, overrides }: let
+             |      ^
+           38|       pythonPackagesFun = import ./python-packages-base.nix {
+```
+
+</details>
+
+I literally changed nothing. Except for adding setuptools to the start of the requirements.txt, but I still got a differing error than the one I got yesterday. 
+
+
+I recloned the keystone repo (reverting back to the default requirements.txt file), and regenerated the nix files using pip2nix, however I still get the same error. 
+
+
+
+
+

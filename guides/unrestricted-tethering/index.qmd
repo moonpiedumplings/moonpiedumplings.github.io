@@ -13,6 +13,10 @@ So I was on a plane ride recently, and the plane gave free, unlimited wifi, to o
 
 I used my phone for a bit, but then I wanted to use my computer. 
 
+Okay, so I'm writing this later, after I had written the guide. Apparently, the plan for the boat was 4 devices per person, not total. And even though I had wifi, when I tested USB tethering, it just worked. Either my phone does the proxying automatically or something, because it shouldn't have worked according to reports of people I've talked to online. 
+
+But after looking at some configs on my computer, It does look like my phone creates a virtual network which my computer connects to, and proxies all traffic. 
+
 ## How
 
 There is probably an equivalent set of steps you can take to get this setup using iSH, the iPhone terminal emulator, and iPhone USB tethering, as this process is universal, but this guide is written for Android specifically, as that is what I have.
@@ -58,6 +62,7 @@ Now, for security purposes, it's important to ensure that the proxy requires aut
 
 `microsocks -u username -p password -1` # This command requires a username and password to authenticate once, then whitelists, the connecting ip, so that it doesn't have to authenticate.
 
+
 To authenticate the proxy to put your device on the whitelist, you can use any method to connect to a socks5, authenticated proxy, such as `curl --socks5 user:password@phoneip:1080 google.com`, on your computer or connecting device. 
 
 Then, you can connect to the proxy using other means. For example, firefox has a built in option to connect to socks5 proxies, although it does not support authentication.
@@ -80,6 +85,14 @@ This method works by creating an unauthenticated socks5 proxy server. Although n
 If they connect, then **no** private data of yours will be put in jepoardy.
 
 However, if they do connect they will be able to eat up your bandwidth, potentially slowing your connection down, or they could do illegal things and you could be held liable for them, as it is your connection.
+
+I'm going to see if there is some way to bind this only to the tethered device.
+:::
+
+::: {.callout-note}
+When authenticating to a socks5 server, the passwords are sent over the network in plaintext. Although if you connect over USB tethering, no network should be exposed to the wireless network, if you are connecting directly over the wireless network, then people would be able to sniff your password and connect to your socks5 server. 
+
+I might research if there is a way to limit the connections in advance, but it might not be possible with such a small and lightweight server application.
 :::
 
 
