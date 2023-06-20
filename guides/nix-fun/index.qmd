@@ -33,5 +33,23 @@ Then: `nix-shell -p gh`. This installs the github cli tool.
 
 `git config --global credential.helper store` with this, git stores the credentials permanently.
 
+Now, while still in the nix environment:
+
+`git push` while in the local copy of a repo you have stored in github. 
+
+Check the `/home/yourusername/.git-credentials` file to make sure your git credentials are stored.
+
+And then you should be good to exit the nix environment. Because your credentials are saved, you can now run `git push` from the command line.
+
+## Deleting sensitive detail, or large files from a git repo
+
+Git tracks every change. So if you store something like an image, or a binary in a git repo, if you delete those files later, they will continue to eat space and be wasteful, even if you commit the deletions later on. To alter every past commit, you can use special tools, which are somewhat painful to install with methods other than nix. 
+
+
+
+`nix-shell -p bfg-repo-c
+
+
+
 
 
