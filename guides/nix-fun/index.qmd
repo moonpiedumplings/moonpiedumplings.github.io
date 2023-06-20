@@ -14,11 +14,9 @@ On a macos or linux system, run thsi command in your terminal (from the [nix man
 
 Now, nix is installed. You should be able to access the nix commands in your terminal. For example, the `nix-shell` command can be used to create a temporary shell environment with packages, environment variables, and more. For examples, see below.
 
-## installing home manager
+## Installing home-manager
 
-From the home manager github
-
-
+Home manager is a way to 
 # Using nix
 
 ## Connecting your github account to git from the terminal
@@ -41,15 +39,51 @@ Check the `/home/yourusername/.git-credentials` file to make sure your git crede
 
 And then you should be good to exit the nix environment. Because your credentials are saved, you can now run `git push` from the command line.
 
-## Deleting sensitive detail, or large files from a git repo
+## Deleting sensitive detail, or large binary files from a git repo
 
-Git tracks every change. So if you store something like an image, or a binary in a git repo, if you delete those files later, they will continue to eat space and be wasteful, even if you commit the deletions later on. To alter every past commit, you can use special tools, which are somewhat painful to install with methods other than nix. 
+Git tracks every change. So if you store something like an image, or a binary in a git repo, if you delete those files later, they will continue to eat space and be wasteful, even if you commit the deletions later on. Or, if you have sensitive data, like passwords or api keys in a repo, even if you delete them in later commits, they will still be present. 
+
+ To alter every past commit, you can use special tools, which are very easy to install using nix.
 
 
 
 `nix-shell -p git-filter-repo`
 
 
+From here, you can use the git-filter-repo command to nuke files or folders:
+
+First, `cd` into your git repo.
+
+`git-filter-repo --invert-paths --paths path/or/file`. git-filter-repo works by only taking anything that matches an expression, so by inverting that, it takes everything except what matches that path.
+
+Alternatively, the bfg-repo-cleaner tool can be used. I did not opt for this to clean out the images of my git repo, because it doesn't seem to be able to delete entire paths, or even individual files, only matching filenames, or doing text replacement. However, apparently, it is much faster than git-filter-repo for large repos, due to a different implementation.
+
+To replace sensitive data with bfg:
+
+`nix-shell -p bfg-repo-cleaner`
+
+
+`bfg-repo-cleaner --replace-text passwords.txt`
+
+Where passwords.txt contains data you want to replace. 
+
+```{.default filename="passwords.txt"}
+secretapikey ==> ***REMOVED*** is the default if you don't have an arrow
+secretpassword ==> but you can replace it with anything
+glob:*baddata* ==> glob matches work too
+```
+
+To push the changes to github, or your remote repository:
+
+`git push --force --all`
+
+And then it should be done. This should be seamless, but if you encounter any hiccups, like I did with slow internet speeds causing it to fail, there are some commands you can run:
+
+`git gc --aggressive` optimizes the repository
+
+`git config --global http.postBuffer 524288000` if you are on a slower network (high latency), this gives it more grace.
+
+But for me, because I am currently on vacation and didn't have access to the internet speeds I do at home, the only thing that worked was actually getting up and moving my laptop to an area with faster wifi. 
 
 
 
