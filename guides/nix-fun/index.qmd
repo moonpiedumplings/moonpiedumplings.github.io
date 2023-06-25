@@ -1,8 +1,8 @@
 ---
-title: "Installing the nix package manager and several uses for it"
+title: "Installing the nix package manager and how it's useful"
 description: "I love this thing"
 date: "2023-6-11"
-categories: [nix, linux]
+categories: [nix, git]
 execute:
   freeze: auto
 ---
@@ -12,11 +12,38 @@ execute:
 
 On a macos or linux system, run thsi command in your terminal (from the [nix manual](https://nixos.org/manual/nix/stable/installation/installing-binary.html)) `curl -L https://nixos.org/nix/install | sh -s -- --daemon`
 
+This should work on all cases, but if you are using WSL/WSL2, and you don't have [systemd enabled](https://learn.microsoft.com/en-us/windows/wsl/systemd), then you can do a single user, no daemon install.
+
+`curl -L https://nixos.org/nix/install | sh -s -- --no-daemon`
+
+
 Now, nix is installed. You should be able to access the nix commands in your terminal. For example, the `nix-shell` command can be used to create a temporary shell environment with packages, environment variables, and more. For examples, see below.
 
 ## Installing home-manager
 
-Home manager is a way to 
+Home manager is a way to declaratively manage a user environment, including packages installed, configuration files, and environment variables. It uses nix as the langauge of configuration.
+
+To install home manager, you can follow the steps from [their docs](https://nix-community.github.io/home-manager/index.html#sec-install-standalone)
+
+To use home-manager, you can edit the configuration file located at `$HOME/.config/home-manager/home.nix` For an example, see my [my blog post about this](../../blog/switch-to-opensuse/)
+
+## Enabling flakes
+
+Flakes are an "experimental" feature of nix. I put experimental in quotes because they are not enabled by default, and are marked as experimental, but they are so popular in the community and so well tested that they are basically just another feature. 
+
+Within home-manager's home.nix:
+
+```{.nix filename="home.nix"}
+nix.settings.experimental-features = ["nix-command" "flakes"];
+```
+
+Without home manager, edit the nix.conf file:
+
+```{.default filename="$HOME/.config/nix/nix.conf"}
+experimental-features = nix-command flakes
+```
+
+
 # Using nix
 
 ## Connecting your github account to git from the terminal
@@ -44,8 +71,6 @@ And then you should be good to exit the nix environment. Because your credential
 Git tracks every change. So if you store something like an image, or a binary in a git repo, if you delete those files later, they will continue to eat space and be wasteful, even if you commit the deletions later on. Or, if you have sensitive data, like passwords or api keys in a repo, even if you delete them in later commits, they will still be present. 
 
  To alter every past commit, you can use special tools, which are very easy to install using nix.
-
-
 
 `nix-shell -p git-filter-repo`
 
@@ -85,5 +110,6 @@ And then it should be done. This should be seamless, but if you encounter any hi
 
 But for me, because I am currently on vacation and didn't have access to the internet speeds I do at home, the only thing that worked was actually getting up and moving my laptop to an area with faster wifi. 
 
+Now, I did this to delete unused images from my repo, however, if you are trying to clean sensitive data off of the internet, there are some [extra steps](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/removing-sensitive-data-from-a-repository#fully-removing-the-data-from-github) you may want to take. 
 
 

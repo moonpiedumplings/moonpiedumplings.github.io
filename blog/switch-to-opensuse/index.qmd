@@ -164,7 +164,10 @@ nixGLWrap = pkg: pkgs.runCommand "${pkg.name}-nixgl-wrapper" {} ''
 
 And of course, finally my custom quarto package that I had made in [another post](../../projects/quarto-via-nix/)
 
-```{.nix}
+
+<details><summary>Show</summary>
+
+```{.nix filename="quarto.nix"}
 { pkgs, config, lib, ... } :
 
 let 
@@ -199,4 +202,24 @@ in
             '';
     })).override {inherit pandoc extraPythonPackages extraRPackages;};
 }
+```
+
+</details>
+
+However, in order for running some programs with sudo to work, I had to edit opensuse's default sudo configuration to keep environment variables, and not change the default path. This is an understandable thing to do on a multi user system, but on my single user system where I want to use some packages installed via nix with sudo, it is just annoying. 
+
+
+```{.default .code-overflow-wrap filename="/etc/sudoers"}
+...
+##
+## Defaults specification
+##
+## Prevent environment variables from influencing programs in an
+## unexpected or harmful way (CVE-2005-2959, CVE-2005-4158, CVE-2006-0151)
+#Defaults always_set_home
+## Use this PATH instead of the user's to find commands.
+#Defaults secure_path="/usr/sbin:/usr/bin:/sbin:/bin:/usr/local/bin:/usr/local/sbin"
+Defaults !env_reset
+## Change env_reset to !env_reset in previous line to keep all environment variables
+....
 ```
