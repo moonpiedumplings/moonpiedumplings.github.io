@@ -9,7 +9,7 @@
 <meta name="dcterms.date" content="2023-06-11">
 <meta name="description" content="I love this thing">
 
-<title>Jeffrey Fonseca - Installing the nix package manager and several uses for it</title>
+<title>Jeffrey Fonseca - Installing the nix package manager and how it’s useful</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -167,6 +167,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#install-nix-package-manager" id="toc-install-nix-package-manager" class="nav-link active" data-scroll-target="#install-nix-package-manager">Install nix package manager</a>
   <ul class="collapse">
   <li><a href="#installing-home-manager" id="toc-installing-home-manager" class="nav-link" data-scroll-target="#installing-home-manager">Installing home-manager</a></li>
+  <li><a href="#enabling-flakes" id="toc-enabling-flakes" class="nav-link" data-scroll-target="#enabling-flakes">Enabling flakes</a></li>
+  </ul></li>
+  <li><a href="#using-nix" id="toc-using-nix" class="nav-link" data-scroll-target="#using-nix">Using nix</a>
+  <ul class="collapse">
   <li><a href="#connecting-your-github-account-to-git-from-the-terminal" id="toc-connecting-your-github-account-to-git-from-the-terminal" class="nav-link" data-scroll-target="#connecting-your-github-account-to-git-from-the-terminal">Connecting your github account to git from the terminal</a></li>
   <li><a href="#deleting-sensitive-detail-or-large-binary-files-from-a-git-repo" id="toc-deleting-sensitive-detail-or-large-binary-files-from-a-git-repo" class="nav-link" data-scroll-target="#deleting-sensitive-detail-or-large-binary-files-from-a-git-repo">Deleting sensitive detail, or large binary files from a git repo</a></li>
   </ul></li>
@@ -178,10 +182,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">Installing the nix package manager and several uses for it</h1>
+<h1 class="title">Installing the nix package manager and how it’s useful</h1>
   <div class="quarto-categories">
     <div class="quarto-category">nix</div>
-    <div class="quarto-category">linux</div>
+    <div class="quarto-category">git</div>
   </div>
   </div>
 
@@ -211,11 +215,36 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="install-nix-package-manager" class="level1">
 <h1>Install nix package manager</h1>
 <p>On a macos or linux system, run thsi command in your terminal (from the <a href="https://nixos.org/manual/nix/stable/installation/installing-binary.html">nix manual</a>) <code>curl -L https://nixos.org/nix/install | sh -s -- --daemon</code></p>
+<p>This should work on all cases, but if you are using WSL/WSL2, and you don’t have <a href="https://learn.microsoft.com/en-us/windows/wsl/systemd">systemd enabled</a>, then you can do a single user, no daemon install.</p>
+<p><code>curl -L https://nixos.org/nix/install | sh -s -- --no-daemon</code></p>
 <p>Now, nix is installed. You should be able to access the nix commands in your terminal. For example, the <code>nix-shell</code> command can be used to create a temporary shell environment with packages, environment variables, and more. For examples, see below.</p>
 <section id="installing-home-manager" class="level2">
 <h2 class="anchored" data-anchor-id="installing-home-manager">Installing home-manager</h2>
-<p>Home manager is a way to # Using nix</p>
+<p>Home manager is a way to declaratively manage a user environment, including packages installed, configuration files, and environment variables. It uses nix as the langauge of configuration.</p>
+<p>To install home manager, you can follow the steps from <a href="https://nix-community.github.io/home-manager/index.html#sec-install-standalone">their docs</a></p>
+<p>To use home-manager, you can edit the configuration file located at <code>$HOME/.config/home-manager/home.nix</code> For an example, see my <a href="../../blog/switch-to-opensuse/">my blog post about this</a></p>
 </section>
+<section id="enabling-flakes" class="level2">
+<h2 class="anchored" data-anchor-id="enabling-flakes">Enabling flakes</h2>
+<p>Flakes are an “experimental” feature of nix. I put experimental in quotes because they are not enabled by default, and are marked as experimental, but they are so popular in the community and so well tested that they are basically just another feature.</p>
+<p>Within home-manager’s home.nix:</p>
+<div class="code-with-filename">
+<div class="code-with-filename-file">
+<pre><strong>home.nix</strong></pre>
+</div>
+<div class="sourceCode" id="cb1"><pre class="sourceCode nix code-with-copy"><code class="sourceCode nix"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>nix.settings.experimental<span class="op">-</span>features = <span class="op">[</span><span class="st">"nix-command"</span> <span class="st">"flakes"</span><span class="op">]</span>;</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Without home manager, edit the nix.conf file:</p>
+<div class="code-with-filename">
+<div class="code-with-filename-file">
+<pre><strong>$HOME/.config/nix/nix.conf</strong></pre>
+</div>
+<div class="sourceCode" id="cb2"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>experimental-features = nix-command flakes</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+</section>
+<section id="using-nix" class="level1">
+<h1>Using nix</h1>
 <section id="connecting-your-github-account-to-git-from-the-terminal" class="level2">
 <h2 class="anchored" data-anchor-id="connecting-your-github-account-to-git-from-the-terminal">Connecting your github account to git from the terminal</h2>
 <p>First, make sure you have git installed, but you probably do already, if you are here.</p>
@@ -245,9 +274,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="code-with-filename-file">
 <pre><strong>passwords.txt</strong></pre>
 </div>
-<div class="sourceCode" id="cb1"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>secretapikey ==&gt; ***REMOVED*** is the default if you don't have an arrow</span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>secretpassword ==&gt; but you can replace it with anything</span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>glob:*baddata* ==&gt; glob matches work too</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb3"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>secretapikey ==&gt; ***REMOVED*** is the default if you don't have an arrow</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>secretpassword ==&gt; but you can replace it with anything</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>glob:*baddata* ==&gt; glob matches work too</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>To push the changes to github, or your remote repository:</p>
 <p><code>git push --force --all</code></p>
@@ -255,6 +284,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p><code>git gc --aggressive</code> optimizes the repository</p>
 <p><code>git config --global http.postBuffer 524288000</code> if you are on a slower network (high latency), this gives it more grace.</p>
 <p>But for me, because I am currently on vacation and didn’t have access to the internet speeds I do at home, the only thing that worked was actually getting up and moving my laptop to an area with faster wifi.</p>
+<p>Now, I did this to delete unused images from my repo, however, if you are trying to clean sensitive data off of the internet, there are some <a href="https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/removing-sensitive-data-from-a-repository#fully-removing-the-data-from-github">extra steps</a> you may want to take.</p>
 
 
 </section>
