@@ -298,6 +298,252 @@ I literally changed nothing. Except for adding setuptools to the start of the re
 
 I recloned the keystone repo (reverting back to the default requirements.txt file), and regenerated the nix files using pip2nix, however I still get the same error. Weird.
 
-So later I did research into.
+2 days later, I still get the same error. So I decided to try another tool. Although I am aware that I could, in theory package every python package manually, I have opted not to do that when programattic solutions exist. Manual packaging is a last resort.
+
+
+So I tried another tool, [mach-nix](https://github.com/DavHau/mach-nix), which is unmaintained, but worked when I tried it a little bit ago.
+
+For some reason, trying to get the non-flake version of the package didn't work:
+
+<details><summary>Show error</summary>
+
+```{.default .code-overflow-wrap}
+moonpie@localhost:~/vscode/keystone> nix-shell -p '(callPackage (fetchTarball https://github.com/DavHau/mach-nix/tarball/3.5.0) {}).mach-nix'
+this derivation will be built:
+  /nix/store/71qql4471m8m5js7l1rwnd5m1aizd8m8-mach-nix-master.drv
+building '/nix/store/71qql4471m8m5js7l1rwnd5m1aizd8m8-mach-nix-master.drv'...
+Sourcing python-remove-tests-dir-hook
+Sourcing python-catch-conflicts-hook.sh
+...
+...
+/nix/store/74l4x6m97bvry7ccxv51h952ayvg2j46-stdenv-linux/setup: line 1596: pop_var_context: head of shell_variables not a function context
+error: builder for '/nix/store/71qql4471m8m5js7l1rwnd5m1aizd8m8-mach-nix-master.drv' failed with exit code 1;
+       last 10 log lines:
+       >   File "/nix/store/pv3psrncam37dc8n1v2q80jfvnw601ln-python3.9-setuptools-67.4.0/lib/python3.9/site-packages/setuptools/_distutils/cmd.py", line 305, in get_finalized_command
+       >     cmd_obj.ensure_finalized()
+       >   File "/nix/store/pv3psrncam37dc8n1v2q80jfvnw601ln-python3.9-setuptools-67.4.0/lib/python3.9/site-packages/setuptools/_distutils/cmd.py", line 111, in ensure_finalized
+       >     self.finalize_options()
+       >   File "/nix/store/pv3psrncam37dc8n1v2q80jfvnw601ln-python3.9-setuptools-67.4.0/lib/python3.9/site-packages/setuptools/command/egg_info.py", line 220, in finalize_options
+       >     parsed_version = packaging.version.Version(self.egg_version)
+       >   File "/nix/store/pv3psrncam37dc8n1v2q80jfvnw601ln-python3.9-setuptools-67.4.0/lib/python3.9/site-packages/setuptools/_vendor/packaging/version.py", line 197, in __init__
+       >     raise InvalidVersion(f"Invalid version: '{version}'")
+       > setuptools.extern.packaging.version.InvalidVersion: Invalid version: 'master'
+       > /nix/store/74l4x6m97bvry7ccxv51h952ayvg2j46-stdenv-linux/setup: line 1596: pop_var_context: head of shell_variables not a function context
+       For full logs, run 'nix-store -l /nix/store/71qql4471m8m5js7l1rwnd5m1aizd8m8-mach-nix-master.drv'.
+```
+
+</details>
+
+So I had to use the flake version of mach-nix
+
+
+```{.default .code-overflow-wrap}
+
+moonpie@localhost:~/vscode/keystone> nix shell github:DavHau/mach-nix
+moonpie@localhost:~/vscode/keystone> mach-nix env ./env -r requirements.txt
+path is '/nix/store/ahaz90hy6lins0a56mdivrd2fjj3rcb5-554d2d8aa25b6e583575459c297ec23750adb6cb'
+
+Initialized python environment in:                ./env
+To change python requirements, modify the file:   ./env/requirements.txt
+
+To activate the environment, execute:             nix-shell ./env
+```
+
+However, when I actually tried to activate the environment, it simply stalled forever, until I forcefully exited the program using Control + C. After which, it would spit out an error:
+
+```{.default .code-overflow-wrap}
+moonpie@localhost:~/vscode/keystone> nix-shell ./env
+^Cerror:
+       … while calling the 'derivationStrict' builtin
+
+         at /builtin/derivation.nix:9:12: (source not available)
+
+       … while evaluating derivation 'nix-shell'
+         whose name attribute is located at /nix/store/5n402azp0s9vza4rziv4z5y88v2cv1mq-nixpkgs/pkgs/stdenv/generic/make-derivation.nix:205:7
+
+       … while evaluating attribute 'buildInputs' of derivation 'nix-shell'
+
+         at /nix/store/5n402azp0s9vza4rziv4z5y88v2cv1mq-nixpkgs/pkgs/stdenv/generic/make-derivation.nix:247:7:
+
+          246|       depsHostHost                = lib.elemAt (lib.elemAt dependencies 1) 0;
+          247|       buildInputs                 = lib.elemAt (lib.elemAt dependencies 1) 1;
+             |       ^
+          248|       depsTargetTarget            = lib.elemAt (lib.elemAt dependencies 2) 0;
+
+       (stack trace truncated; use '--show-trace' to show the full trace)
+
+       error: download of 'https://github.com/DavHau/pypi-deps-db/tarball/e00b22ead9d3534ba1c448e1af3076af6b234acf' was interrupted
+```
+
+I could report an issue, but I decided to simply try the new project that the developer is working on instead, [dream2nix](https://github.com/nix-community/dream2nix).
+
+I decided to follow the [their python project instructions](https://nix-community.github.io/dream2nix/guides/getting-started-python.html).
+
+
+<details><summary>Show error</summary>
+
+```{.default .code-overflow-scroll}
+moonpie@localhost:~/vscode/keystone> nix run .#resolveImpure
+warning: Git tree '/home/moonpie/vscode/keystone' is dirty
+Resolving:: Name: main; Subsystem: python; relPath: 
+/tmp/tmp.rB9TAH7neG ~/vscode/keystone
+reading setup requirements from pyproject.toml
+Error: [Errno 2] No such file or directory: './source/pyproject.toml'
+install setup dependencies from extraSetupDeps
+
+[notice] A new release of pip available: 22.2.2 -> 23.1.2
+[notice] To update, run: /nix/store/w3lza2zk3i6xi1x5rh5zbwc9zlfsymc0-python3-3.10.7-env/bin/python3.10 -m pip install --upgrade pip
+download setup dependencies from pyproject.toml
+
+[notice] A new release of pip available: 22.2.2 -> 23.1.2
+[notice] To update, run: /nix/store/w3lza2zk3i6xi1x5rh5zbwc9zlfsymc0-python3-3.10.7-env/bin/python3.10 -m pip install --upgrade pip
+download files according to requirements
+realpath: ./install/lib/python3.10/site-packages: No such file or directory
+Processing ./source
+  Preparing metadata (setup.py) ... error
+  error: subprocess-exited-with-error
+  
+  × python setup.py egg_info did not run successfully.
+  │ exit code: 1
+  ╰─> [19 lines of output]
+      /nix/store/w3lza2zk3i6xi1x5rh5zbwc9zlfsymc0-python3-3.10.7-env/lib/python3.10/site-packages/setuptools/installer.py:27: SetuptoolsDeprecationWarning: setuptools.installer is deprecated. Requirements should be satisfied by a PEP 517 installer.
+        warnings.warn(
+      WARNING: The wheel package is not available.
+      Error parsing
+      Traceback (most recent call last):
+        File "/tmp/tmp.rB9TAH7neG/source/.eggs/pbr-5.11.1-py3.10.egg/pbr/core.py", line 105, in pbr
+          attrs = util.cfg_to_args(path, dist.script_args)
+        File "/tmp/tmp.rB9TAH7neG/source/.eggs/pbr-5.11.1-py3.10.egg/pbr/util.py", line 272, in cfg_to_args
+          pbr.hooks.setup_hook(config)
+        File "/tmp/tmp.rB9TAH7neG/source/.eggs/pbr-5.11.1-py3.10.egg/pbr/hooks/__init__.py", line 25, in setup_hook
+          metadata_config.run()
+        File "/tmp/tmp.rB9TAH7neG/source/.eggs/pbr-5.11.1-py3.10.egg/pbr/hooks/base.py", line 27, in run
+          self.hook()
+        File "/tmp/tmp.rB9TAH7neG/source/.eggs/pbr-5.11.1-py3.10.egg/pbr/hooks/metadata.py", line 25, in hook
+          self.config['version'] = packaging.get_version(
+        File "/tmp/tmp.rB9TAH7neG/source/.eggs/pbr-5.11.1-py3.10.egg/pbr/packaging.py", line 874, in get_version
+          raise Exception("Versioning for this project requires either an sdist"
+      Exception: Versioning for this project requires either an sdist tarball, or access to an upstream git repository. It's also possible that there is a mismatch between the package name in setup.cfg and the argument given to pbr.version.VersionInfo. Project name keystone was given, but was not able to be found.
+      error in setup command: Error parsing /tmp/tmp.rB9TAH7neG/source/setup.cfg: Exception: Versioning for this project requires either an sdist tarball, or access to an upstream git repository. It's also possible that there is a mismatch between the package name in setup.cfg and the argument given to pbr.version.VersionInfo. Project name keystone was given, but was not able to be found.
+      [end of output]
+  
+  note: This error originates from a subprocess, and is likely not a problem with pip.
+error: metadata-generation-failed
+
+× Encountered error while generating package metadata.
+╰─> See above for output.
+
+note: This is an issue with the package mentioned above, not pip.
+hint: See above for details.
+
+[notice] A new release of pip available: 22.2.2 -> 23.1.2
+[notice] To update, run: /nix/store/w3lza2zk3i6xi1x5rh5zbwc9zlfsymc0-python3-3.10.7-env/bin/python3.10 -m pip install --upgrade pip
+```
+
+</details>
+
+And an error. 
+
+
+
+
+
+Okay, I did find something else interesting. When I was looking at one of the openstack dependencies, packaged in nixpkgs, I found something interesting in the meta section:
+
+```{.nix}
+meta = with lib; {
+    description = "Oslo test framework";
+    homepage = "https://github.com/openstack/oslotest";
+    license = licenses.asl20;
+    maintainers = teams.openstack.members;
+  };
+```
+
+For maintainers, nix has "teams,"" or groups of people dedicated to packaging a group of packages. And apparently, they seem to have an openstack team:
+
+Sure enough, in the [nixpkgs list of teams](https://github.com/NixOS/nixpkgs/blob/master/maintainers/team-list.nix#L633), they can be found:
+
+```{.nix}
+openstack = {
+    members = [
+      emilytrau
+      SuperSandro2000
+    ];
+    scope = "Maintain the ecosystem around OpenStack";
+    shortName = "OpenStack";
+  };
+```
+
+These people maintain the ecosystem around openstack, but not openstack itself. Perhaps all openstack dependencies are already packaged?
+
+I would probably have to do overrides on some of the depedencies to ensure that the versions are correct, since sometimes newer packages have breaking changes, but if stuff is already packaged, that would be great.
+
+Here is the list of the packages from the requirements.txt. I will link each package to it's equivalent in nixpkgs.
+
+
+<details><summary>Show list</summary>
+
+
+pbr!=2.1.0,>=2.0.0 # Apache-2.0 [nixpkgs](https://search.nixos.org/packages?channel=unstable&from=0&size=50&sort=relevance&type=packages&query=pbr)
+
+WebOb>=1.7.1 # MIT [nixpkgs](https://search.nixos.org/packages?channel=unstable&from=0&size=50&sort=relevance&type=packages&query=webob)
+
+Flask!=0.11,>=1.0.2  # BSD [nixpkgs](https://search.nixos.org/packages?channel=unstable&from=0&size=50&sort=relevance&type=packages&query=flask)
+
+Flask-RESTful>=0.3.5  # BSD [nixpkgs](https://search.nixos.org/packages?channel=unstable&from=0&size=50&sort=relevance&type=packages&query=flask+restful)
+
+cryptography>=2.7 # BSD/Apache-2.0 [nixpkgs](https://search.nixos.org/packages?channel=unstable&from=0&size=50&sort=relevance&type=packages&query=cryptography)
+
+SQLAlchemy>=1.4.0 # MIT [nixpkgs](https://search.nixos.org/packages?channel=unstable&from=0&size=50&sort=relevance&type=packages&query=sqlalchemy)
+
+sqlalchemy-migrate>=0.13.0 # Apache-2.0 [nixpkgs](https://search.nixos.org/packages?channel=unstable&from=0&size=50&sort=relevance&type=packages&query=sqlalchemy+migrate)
+
+stevedore>=1.20.0 # Apache-2.0 [nixpkgs](https://search.nixos.org/packages?channel=unstable&from=0&size=50&sort=relevance&type=packages&query=stevedore+python)
+
+passlib>=1.7.0 # BSD [nixpkgs](https://search.nixos.org/packages?channel=unstable&from=0&size=50&sort=relevance&type=packages&query=passlib)
+
+python-keystoneclient>=3.8.0 # Apache-2.0 [nixpkgs](https://search.nixos.org/packages?channel=unstable&from=0&size=50&sort=relevance&type=packages&query=keystone+client+python)
+
+keystonemiddleware>=7.0.0 # Apache-2.0 NOT FOUND
+
+bcrypt>=3.1.3 # Apache-2.0 [nixpkgs](https://search.nixos.org/packages?channel=unstable&from=0&size=50&sort=relevance&type=packages&query=bcrypt+python)
+
+scrypt>=0.8.0 # BSD [nixpkgs](https://search.nixos.org/packages?channel=unstable&from=0&size=50&sort=relevance&type=packages&query=scrypt+python)
+
+oslo.cache>=1.26.0 # Apache-2.0 
+oslo.config>=6.8.0 # Apache-2.0
+oslo.context>=2.22.0 # Apache-2.0
+oslo.messaging>=5.29.0 # Apache-2.0
+oslo.db>=6.0.0 # Apache-2.0
+oslo.i18n>=3.15.3 # Apache-2.0
+oslo.log>=3.44.0 # Apache-2.0
+oslo.middleware>=3.31.0 # Apache-2.0
+oslo.policy>=3.10.0 # Apache-2.0
+oslo.serialization!=2.19.1,>=2.18.0 # Apache-2.0
+oslo.upgradecheck>=1.3.0 # Apache-2.0
+oslo.utils>=3.33.0 # Apache-2.0
+
+
+oauthlib>=0.6.2 # BSD [nixpkgs](https://search.nixos.org/packages?channel=unstable&from=0&size=50&sort=relevance&type=packages&query=oauthlib)
+
+pysaml2>=5.0.0 [nixpkgs](https://search.nixos.org/packages?channel=unstable&from=0&size=50&sort=relevance&type=packages&query=pysaml)
+
+PyJWT>=1.6.1 # MIT [nixpkgs](https://search.nixos.org/packages?channel=unstable&from=0&size=50&sort=relevance&type=packages&query=pyjwt)
+
+dogpile.cache>=1.0.2 # BSD [nixpkgs](https://search.nixos.org/packages?channel=unstable&from=0&size=50&sort=relevance&type=packages&query=dogpile+cache)
+
+jsonschema>=3.2.0 # MIT [nixpkgs](https://search.nixos.org/packages?channel=unstable&from=0&size=50&sort=relevance&type=packages&query=jsonschema)
+
+pycadf!=2.0.0,>=1.1.0 # Apache-2.0 NOT FOUND
+
+msgpack>=0.5.0 # Apache-2.0 [nixpkgs](https://search.nixos.org/packages?channel=unstable&from=0&size=50&sort=relevance&type=packages&query=msgpack+python)
+
+osprofiler>=1.4.0 # Apache-2.0 NOT FOUND
+
+pytz>=2013.6 # MIT [nipxkgs](https://search.nixos.org/packages?channel=unstable&from=0&size=50&sort=relevance&type=packages&query=pytz)
+
+</details>
+
+
 
 
