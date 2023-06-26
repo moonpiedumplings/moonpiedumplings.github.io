@@ -430,7 +430,179 @@ Show error
 </details>
 <p>I literally changed nothing. Except for adding setuptools to the start of the requirements.txt, but I still got a differing error than the one I got yesterday.</p>
 <p>I recloned the keystone repo (reverting back to the default requirements.txt file), and regenerated the nix files using pip2nix, however I still get the same error. Weird.</p>
-<p>So later I did research into.</p>
+<p>2 days later, I still get the same error. So I decided to try another tool. Although I am aware that I could, in theory package every python package manually, I have opted not to do that when programattic solutions exist. Manual packaging is a last resort.</p>
+<p>So I tried another tool, <a href="https://github.com/DavHau/mach-nix">mach-nix</a>, which is unmaintained, but worked when I tried it a little bit ago.</p>
+<p>For some reason, trying to get the non-flake version of the package didn’t work:</p>
+<details>
+<summary>
+Show error
+</summary>
+<div class="sourceCode" id="cb8"><pre class="sourceCode default code-overflow-wrap code-with-copy"><code class="sourceCode default"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>moonpie@localhost:~/vscode/keystone&gt; nix-shell -p '(callPackage (fetchTarball https://github.com/DavHau/mach-nix/tarball/3.5.0) {}).mach-nix'</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>this derivation will be built:</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  /nix/store/71qql4471m8m5js7l1rwnd5m1aizd8m8-mach-nix-master.drv</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>building '/nix/store/71qql4471m8m5js7l1rwnd5m1aizd8m8-mach-nix-master.drv'...</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>Sourcing python-remove-tests-dir-hook</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>Sourcing python-catch-conflicts-hook.sh</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>...</span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>...</span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>/nix/store/74l4x6m97bvry7ccxv51h952ayvg2j46-stdenv-linux/setup: line 1596: pop_var_context: head of shell_variables not a function context</span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>error: builder for '/nix/store/71qql4471m8m5js7l1rwnd5m1aizd8m8-mach-nix-master.drv' failed with exit code 1;</span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>       last 10 log lines:</span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>       &gt;   File "/nix/store/pv3psrncam37dc8n1v2q80jfvnw601ln-python3.9-setuptools-67.4.0/lib/python3.9/site-packages/setuptools/_distutils/cmd.py", line 305, in get_finalized_command</span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>       &gt;     cmd_obj.ensure_finalized()</span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>       &gt;   File "/nix/store/pv3psrncam37dc8n1v2q80jfvnw601ln-python3.9-setuptools-67.4.0/lib/python3.9/site-packages/setuptools/_distutils/cmd.py", line 111, in ensure_finalized</span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a>       &gt;     self.finalize_options()</span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a>       &gt;   File "/nix/store/pv3psrncam37dc8n1v2q80jfvnw601ln-python3.9-setuptools-67.4.0/lib/python3.9/site-packages/setuptools/command/egg_info.py", line 220, in finalize_options</span>
+<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a>       &gt;     parsed_version = packaging.version.Version(self.egg_version)</span>
+<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a>       &gt;   File "/nix/store/pv3psrncam37dc8n1v2q80jfvnw601ln-python3.9-setuptools-67.4.0/lib/python3.9/site-packages/setuptools/_vendor/packaging/version.py", line 197, in __init__</span>
+<span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a>       &gt;     raise InvalidVersion(f"Invalid version: '{version}'")</span>
+<span id="cb8-20"><a href="#cb8-20" aria-hidden="true" tabindex="-1"></a>       &gt; setuptools.extern.packaging.version.InvalidVersion: Invalid version: 'master'</span>
+<span id="cb8-21"><a href="#cb8-21" aria-hidden="true" tabindex="-1"></a>       &gt; /nix/store/74l4x6m97bvry7ccxv51h952ayvg2j46-stdenv-linux/setup: line 1596: pop_var_context: head of shell_variables not a function context</span>
+<span id="cb8-22"><a href="#cb8-22" aria-hidden="true" tabindex="-1"></a>       For full logs, run 'nix-store -l /nix/store/71qql4471m8m5js7l1rwnd5m1aizd8m8-mach-nix-master.drv'.</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<p>So I had to use the flake version of mach-nix</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode default code-overflow-wrap code-with-copy"><code class="sourceCode default"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>moonpie@localhost:~/vscode/keystone&gt; nix shell github:DavHau/mach-nix</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>moonpie@localhost:~/vscode/keystone&gt; mach-nix env ./env -r requirements.txt</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>path is '/nix/store/ahaz90hy6lins0a56mdivrd2fjj3rcb5-554d2d8aa25b6e583575459c297ec23750adb6cb'</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>Initialized python environment in:                ./env</span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>To change python requirements, modify the file:   ./env/requirements.txt</span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>To activate the environment, execute:             nix-shell ./env</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>However, when I actually tried to activate the environment, it simply stalled forever, until I forcefully exited the program using Control + C. After which, it would spit out an error:</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode default code-overflow-wrap code-with-copy"><code class="sourceCode default"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>moonpie@localhost:~/vscode/keystone&gt; nix-shell ./env</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>^Cerror:</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>       … while calling the 'derivationStrict' builtin</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>         at /builtin/derivation.nix:9:12: (source not available)</span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>       … while evaluating derivation 'nix-shell'</span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>         whose name attribute is located at /nix/store/5n402azp0s9vza4rziv4z5y88v2cv1mq-nixpkgs/pkgs/stdenv/generic/make-derivation.nix:205:7</span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>       … while evaluating attribute 'buildInputs' of derivation 'nix-shell'</span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>         at /nix/store/5n402azp0s9vza4rziv4z5y88v2cv1mq-nixpkgs/pkgs/stdenv/generic/make-derivation.nix:247:7:</span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a>          246|       depsHostHost                = lib.elemAt (lib.elemAt dependencies 1) 0;</span>
+<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a>          247|       buildInputs                 = lib.elemAt (lib.elemAt dependencies 1) 1;</span>
+<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a>             |       ^</span>
+<span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a>          248|       depsTargetTarget            = lib.elemAt (lib.elemAt dependencies 2) 0;</span>
+<span id="cb10-18"><a href="#cb10-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-19"><a href="#cb10-19" aria-hidden="true" tabindex="-1"></a>       (stack trace truncated; use '--show-trace' to show the full trace)</span>
+<span id="cb10-20"><a href="#cb10-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-21"><a href="#cb10-21" aria-hidden="true" tabindex="-1"></a>       error: download of 'https://github.com/DavHau/pypi-deps-db/tarball/e00b22ead9d3534ba1c448e1af3076af6b234acf' was interrupted</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>I could report an issue, but I decided to simply try the new project that the developer is working on instead, <a href="https://github.com/nix-community/dream2nix">dream2nix</a>.</p>
+<p>I decided to follow the <a href="https://nix-community.github.io/dream2nix/guides/getting-started-python.html">their python project instructions</a>.</p>
+<details>
+<summary>
+Show error
+</summary>
+<div class="sourceCode" id="cb11"><pre class="sourceCode default code-overflow-scroll code-with-copy"><code class="sourceCode default"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>moonpie@localhost:~/vscode/keystone&gt; nix run .#resolveImpure</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>warning: Git tree '/home/moonpie/vscode/keystone' is dirty</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>Resolving:: Name: main; Subsystem: python; relPath: </span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>/tmp/tmp.rB9TAH7neG ~/vscode/keystone</span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>reading setup requirements from pyproject.toml</span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>Error: [Errno 2] No such file or directory: './source/pyproject.toml'</span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>install setup dependencies from extraSetupDeps</span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>[notice] A new release of pip available: 22.2.2 -&gt; 23.1.2</span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a>[notice] To update, run: /nix/store/w3lza2zk3i6xi1x5rh5zbwc9zlfsymc0-python3-3.10.7-env/bin/python3.10 -m pip install --upgrade pip</span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a>download setup dependencies from pyproject.toml</span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a>[notice] A new release of pip available: 22.2.2 -&gt; 23.1.2</span>
+<span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a>[notice] To update, run: /nix/store/w3lza2zk3i6xi1x5rh5zbwc9zlfsymc0-python3-3.10.7-env/bin/python3.10 -m pip install --upgrade pip</span>
+<span id="cb11-15"><a href="#cb11-15" aria-hidden="true" tabindex="-1"></a>download files according to requirements</span>
+<span id="cb11-16"><a href="#cb11-16" aria-hidden="true" tabindex="-1"></a>realpath: ./install/lib/python3.10/site-packages: No such file or directory</span>
+<span id="cb11-17"><a href="#cb11-17" aria-hidden="true" tabindex="-1"></a>Processing ./source</span>
+<span id="cb11-18"><a href="#cb11-18" aria-hidden="true" tabindex="-1"></a>  Preparing metadata (setup.py) ... error</span>
+<span id="cb11-19"><a href="#cb11-19" aria-hidden="true" tabindex="-1"></a>  error: subprocess-exited-with-error</span>
+<span id="cb11-20"><a href="#cb11-20" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb11-21"><a href="#cb11-21" aria-hidden="true" tabindex="-1"></a>  × python setup.py egg_info did not run successfully.</span>
+<span id="cb11-22"><a href="#cb11-22" aria-hidden="true" tabindex="-1"></a>  │ exit code: 1</span>
+<span id="cb11-23"><a href="#cb11-23" aria-hidden="true" tabindex="-1"></a>  ╰─&gt; [19 lines of output]</span>
+<span id="cb11-24"><a href="#cb11-24" aria-hidden="true" tabindex="-1"></a>      /nix/store/w3lza2zk3i6xi1x5rh5zbwc9zlfsymc0-python3-3.10.7-env/lib/python3.10/site-packages/setuptools/installer.py:27: SetuptoolsDeprecationWarning: setuptools.installer is deprecated. Requirements should be satisfied by a PEP 517 installer.</span>
+<span id="cb11-25"><a href="#cb11-25" aria-hidden="true" tabindex="-1"></a>        warnings.warn(</span>
+<span id="cb11-26"><a href="#cb11-26" aria-hidden="true" tabindex="-1"></a>      WARNING: The wheel package is not available.</span>
+<span id="cb11-27"><a href="#cb11-27" aria-hidden="true" tabindex="-1"></a>      Error parsing</span>
+<span id="cb11-28"><a href="#cb11-28" aria-hidden="true" tabindex="-1"></a>      Traceback (most recent call last):</span>
+<span id="cb11-29"><a href="#cb11-29" aria-hidden="true" tabindex="-1"></a>        File "/tmp/tmp.rB9TAH7neG/source/.eggs/pbr-5.11.1-py3.10.egg/pbr/core.py", line 105, in pbr</span>
+<span id="cb11-30"><a href="#cb11-30" aria-hidden="true" tabindex="-1"></a>          attrs = util.cfg_to_args(path, dist.script_args)</span>
+<span id="cb11-31"><a href="#cb11-31" aria-hidden="true" tabindex="-1"></a>        File "/tmp/tmp.rB9TAH7neG/source/.eggs/pbr-5.11.1-py3.10.egg/pbr/util.py", line 272, in cfg_to_args</span>
+<span id="cb11-32"><a href="#cb11-32" aria-hidden="true" tabindex="-1"></a>          pbr.hooks.setup_hook(config)</span>
+<span id="cb11-33"><a href="#cb11-33" aria-hidden="true" tabindex="-1"></a>        File "/tmp/tmp.rB9TAH7neG/source/.eggs/pbr-5.11.1-py3.10.egg/pbr/hooks/__init__.py", line 25, in setup_hook</span>
+<span id="cb11-34"><a href="#cb11-34" aria-hidden="true" tabindex="-1"></a>          metadata_config.run()</span>
+<span id="cb11-35"><a href="#cb11-35" aria-hidden="true" tabindex="-1"></a>        File "/tmp/tmp.rB9TAH7neG/source/.eggs/pbr-5.11.1-py3.10.egg/pbr/hooks/base.py", line 27, in run</span>
+<span id="cb11-36"><a href="#cb11-36" aria-hidden="true" tabindex="-1"></a>          self.hook()</span>
+<span id="cb11-37"><a href="#cb11-37" aria-hidden="true" tabindex="-1"></a>        File "/tmp/tmp.rB9TAH7neG/source/.eggs/pbr-5.11.1-py3.10.egg/pbr/hooks/metadata.py", line 25, in hook</span>
+<span id="cb11-38"><a href="#cb11-38" aria-hidden="true" tabindex="-1"></a>          self.config['version'] = packaging.get_version(</span>
+<span id="cb11-39"><a href="#cb11-39" aria-hidden="true" tabindex="-1"></a>        File "/tmp/tmp.rB9TAH7neG/source/.eggs/pbr-5.11.1-py3.10.egg/pbr/packaging.py", line 874, in get_version</span>
+<span id="cb11-40"><a href="#cb11-40" aria-hidden="true" tabindex="-1"></a>          raise Exception("Versioning for this project requires either an sdist"</span>
+<span id="cb11-41"><a href="#cb11-41" aria-hidden="true" tabindex="-1"></a>      Exception: Versioning for this project requires either an sdist tarball, or access to an upstream git repository. It's also possible that there is a mismatch between the package name in setup.cfg and the argument given to pbr.version.VersionInfo. Project name keystone was given, but was not able to be found.</span>
+<span id="cb11-42"><a href="#cb11-42" aria-hidden="true" tabindex="-1"></a>      error in setup command: Error parsing /tmp/tmp.rB9TAH7neG/source/setup.cfg: Exception: Versioning for this project requires either an sdist tarball, or access to an upstream git repository. It's also possible that there is a mismatch between the package name in setup.cfg and the argument given to pbr.version.VersionInfo. Project name keystone was given, but was not able to be found.</span>
+<span id="cb11-43"><a href="#cb11-43" aria-hidden="true" tabindex="-1"></a>      [end of output]</span>
+<span id="cb11-44"><a href="#cb11-44" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb11-45"><a href="#cb11-45" aria-hidden="true" tabindex="-1"></a>  note: This error originates from a subprocess, and is likely not a problem with pip.</span>
+<span id="cb11-46"><a href="#cb11-46" aria-hidden="true" tabindex="-1"></a>error: metadata-generation-failed</span>
+<span id="cb11-47"><a href="#cb11-47" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-48"><a href="#cb11-48" aria-hidden="true" tabindex="-1"></a>× Encountered error while generating package metadata.</span>
+<span id="cb11-49"><a href="#cb11-49" aria-hidden="true" tabindex="-1"></a>╰─&gt; See above for output.</span>
+<span id="cb11-50"><a href="#cb11-50" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-51"><a href="#cb11-51" aria-hidden="true" tabindex="-1"></a>note: This is an issue with the package mentioned above, not pip.</span>
+<span id="cb11-52"><a href="#cb11-52" aria-hidden="true" tabindex="-1"></a>hint: See above for details.</span>
+<span id="cb11-53"><a href="#cb11-53" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-54"><a href="#cb11-54" aria-hidden="true" tabindex="-1"></a>[notice] A new release of pip available: 22.2.2 -&gt; 23.1.2</span>
+<span id="cb11-55"><a href="#cb11-55" aria-hidden="true" tabindex="-1"></a>[notice] To update, run: /nix/store/w3lza2zk3i6xi1x5rh5zbwc9zlfsymc0-python3-3.10.7-env/bin/python3.10 -m pip install --upgrade pip</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<p>And an error.</p>
+<p>Okay, I did find something else interesting. When I was looking at one of the openstack dependencies, packaged in nixpkgs, I found something interesting in the meta section:</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode nix code-with-copy"><code class="sourceCode nix"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>meta = <span class="kw">with</span> lib<span class="op">;</span> <span class="op">{</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>    <span class="va">description</span> <span class="op">=</span> <span class="st">"Oslo test framework"</span><span class="op">;</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>    <span class="va">homepage</span> <span class="op">=</span> <span class="st">"https://github.com/openstack/oslotest"</span><span class="op">;</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>    <span class="va">license</span> <span class="op">=</span> licenses.asl20<span class="op">;</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>    <span class="va">maintainers</span> <span class="op">=</span> teams.openstack.members<span class="op">;</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span>;</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>For maintainers, nix has “teams,”” or groups of people dedicated to packaging a group of packages. And apparently, they seem to have an openstack team:</p>
+<p>Sure enough, in the <a href="https://github.com/NixOS/nixpkgs/blob/master/maintainers/team-list.nix#L633">nixpkgs list of teams</a>, they can be found:</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode nix code-with-copy"><code class="sourceCode nix"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>openstack = <span class="op">{</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>    <span class="va">members</span> <span class="op">=</span> <span class="op">[</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>      emilytrau</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>      SuperSandro2000</span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>    <span class="op">];</span></span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>    <span class="va">scope</span> <span class="op">=</span> <span class="st">"Maintain the ecosystem around OpenStack"</span><span class="op">;</span></span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>    <span class="va">shortName</span> <span class="op">=</span> <span class="st">"OpenStack"</span><span class="op">;</span></span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span>;</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>These people maintain the ecosystem around openstack, but not openstack itself. Perhaps all openstack dependencies are already packaged?</p>
+<p>I would probably have to do overrides on some of the depedencies to ensure that the versions are correct, since sometimes newer packages have breaking changes, but if stuff is already packaged, that would be great.</p>
+<p>Here is the list of the packages from the requirements.txt. I will link each package to it’s equivalent in nixpkgs.</p>
+<details>
+<summary>
+Show list
+</summary>
+<p>pbr!=2.1.0,&gt;=2.0.0 # Apache-2.0 <a href="https://search.nixos.org/packages?channel=unstable&amp;from=0&amp;size=50&amp;sort=relevance&amp;type=packages&amp;query=pbr">nixpkgs</a></p>
+<p>WebOb&gt;=1.7.1 # MIT <a href="https://search.nixos.org/packages?channel=unstable&amp;from=0&amp;size=50&amp;sort=relevance&amp;type=packages&amp;query=webob">nixpkgs</a></p>
+<p>Flask!=0.11,&gt;=1.0.2 # BSD <a href="https://search.nixos.org/packages?channel=unstable&amp;from=0&amp;size=50&amp;sort=relevance&amp;type=packages&amp;query=flask">nixpkgs</a></p>
+<p>Flask-RESTful&gt;=0.3.5 # BSD <a href="https://search.nixos.org/packages?channel=unstable&amp;from=0&amp;size=50&amp;sort=relevance&amp;type=packages&amp;query=flask+restful">nixpkgs</a></p>
+<p>cryptography&gt;=2.7 # BSD/Apache-2.0 <a href="https://search.nixos.org/packages?channel=unstable&amp;from=0&amp;size=50&amp;sort=relevance&amp;type=packages&amp;query=cryptography">nixpkgs</a></p>
+<p>SQLAlchemy&gt;=1.4.0 # MIT <a href="https://search.nixos.org/packages?channel=unstable&amp;from=0&amp;size=50&amp;sort=relevance&amp;type=packages&amp;query=sqlalchemy">nixpkgs</a></p>
+<p>sqlalchemy-migrate&gt;=0.13.0 # Apache-2.0 <a href="https://search.nixos.org/packages?channel=unstable&amp;from=0&amp;size=50&amp;sort=relevance&amp;type=packages&amp;query=sqlalchemy+migrate">nixpkgs</a></p>
+<p>stevedore&gt;=1.20.0 # Apache-2.0 <a href="https://search.nixos.org/packages?channel=unstable&amp;from=0&amp;size=50&amp;sort=relevance&amp;type=packages&amp;query=stevedore+python">nixpkgs</a></p>
+<p>passlib&gt;=1.7.0 # BSD <a href="https://search.nixos.org/packages?channel=unstable&amp;from=0&amp;size=50&amp;sort=relevance&amp;type=packages&amp;query=passlib">nixpkgs</a></p>
+<p>python-keystoneclient&gt;=3.8.0 # Apache-2.0 <a href="https://search.nixos.org/packages?channel=unstable&amp;from=0&amp;size=50&amp;sort=relevance&amp;type=packages&amp;query=keystone+client+python">nixpkgs</a></p>
+<p>keystonemiddleware&gt;=7.0.0 # Apache-2.0 NOT FOUND</p>
+<p>bcrypt&gt;=3.1.3 # Apache-2.0 <a href="https://search.nixos.org/packages?channel=unstable&amp;from=0&amp;size=50&amp;sort=relevance&amp;type=packages&amp;query=bcrypt+python">nixpkgs</a></p>
+<p>scrypt&gt;=0.8.0 # BSD <a href="https://search.nixos.org/packages?channel=unstable&amp;from=0&amp;size=50&amp;sort=relevance&amp;type=packages&amp;query=scrypt+python">nixpkgs</a></p>
+<p>oslo.cache&gt;=1.26.0 # Apache-2.0 oslo.config&gt;=6.8.0 # Apache-2.0 oslo.context&gt;=2.22.0 # Apache-2.0 oslo.messaging&gt;=5.29.0 # Apache-2.0 oslo.db&gt;=6.0.0 # Apache-2.0 oslo.i18n&gt;=3.15.3 # Apache-2.0 oslo.log&gt;=3.44.0 # Apache-2.0 oslo.middleware&gt;=3.31.0 # Apache-2.0 oslo.policy&gt;=3.10.0 # Apache-2.0 oslo.serialization!=2.19.1,&gt;=2.18.0 # Apache-2.0 oslo.upgradecheck&gt;=1.3.0 # Apache-2.0 oslo.utils&gt;=3.33.0 # Apache-2.0</p>
+<p>oauthlib&gt;=0.6.2 # BSD <a href="https://search.nixos.org/packages?channel=unstable&amp;from=0&amp;size=50&amp;sort=relevance&amp;type=packages&amp;query=oauthlib">nixpkgs</a></p>
+<p>pysaml2&gt;=5.0.0 <a href="https://search.nixos.org/packages?channel=unstable&amp;from=0&amp;size=50&amp;sort=relevance&amp;type=packages&amp;query=pysaml">nixpkgs</a></p>
+<p>PyJWT&gt;=1.6.1 # MIT <a href="https://search.nixos.org/packages?channel=unstable&amp;from=0&amp;size=50&amp;sort=relevance&amp;type=packages&amp;query=pyjwt">nixpkgs</a></p>
+<p>dogpile.cache&gt;=1.0.2 # BSD <a href="https://search.nixos.org/packages?channel=unstable&amp;from=0&amp;size=50&amp;sort=relevance&amp;type=packages&amp;query=dogpile+cache">nixpkgs</a></p>
+<p>jsonschema&gt;=3.2.0 # MIT <a href="https://search.nixos.org/packages?channel=unstable&amp;from=0&amp;size=50&amp;sort=relevance&amp;type=packages&amp;query=jsonschema">nixpkgs</a></p>
+<p>pycadf!=2.0.0,&gt;=1.1.0 # Apache-2.0 NOT FOUND</p>
+<p>msgpack&gt;=0.5.0 # Apache-2.0 <a href="https://search.nixos.org/packages?channel=unstable&amp;from=0&amp;size=50&amp;sort=relevance&amp;type=packages&amp;query=msgpack+python">nixpkgs</a></p>
+<p>osprofiler&gt;=1.4.0 # Apache-2.0 NOT FOUND</p>
+<p>pytz&gt;=2013.6 # MIT <a href="https://search.nixos.org/packages?channel=unstable&amp;from=0&amp;size=50&amp;sort=relevance&amp;type=packages&amp;query=pytz">nipxkgs</a></p>
+</details>
 
 
 </section>
