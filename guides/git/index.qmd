@@ -51,6 +51,8 @@ Now, git sees your changes, but it still hasn't saved them. They are staged chan
 
 You can commit everything in one go using `git commit -am`, which is more convinient if you don't need to stage changes.
 
+`git status` shows staged and unstaged changes.
+
 ## Interact with a remote repository
 
 
@@ -68,7 +70,39 @@ If you make a small change, you can just copy and paste stuff around to undo it.
 
 That's where git comes in.
 
-`git log` shows the changes. `q` quits, and `/` searches. It uses vim keybindings. 
+### To view
+
+`git log` shows the changes. `q` quits, and `/` searches. It uses vim keybindings. Each change is noted by their SHA1 hash.
 
  But this kind of sucks, so I recommend using a graphical interface to view changes. This is one function of "git forges", websites like [github](https://github.com/), where they give you a graphical interface to view changes. However, there are locally installed applications with similar features, like gitg.
+
+### To revert to a change
+
+`git revert HEAD` creates a new commit that undoes the previous commit.
+
+`git revert <SHA1 HASH>` creates a new commit that reverts all the way back to the commit designated by the SHA1 hash of a commit. 
+
+`git reset SHA1` has a similar feature, except it simply moves backwards in commits. If you make new commits, this results in a nonlinear search commit history. You'll create a tree, or an octopus. Some people don't like this, because it can be a bit of a pain to manage.
+
+# How to *actually* use git
+
+Yeah, saving and undoing things isn't anything special. Your average word processor has these features. Carefully managed backups allow you to undo to any state you want. There are probably a thousand or more ways to send folders of whatever over the network.
+
+## Branches
+
+Branches are one of the killer features of version control. Basically, each branch is it's own copy of the codebase, which can be worked on without affecting other branches. 
+
+`git checkout -b <branch name>` creates a new branch. 
+
+`git checkout <branch name>` switches to a branch.
+
+Then, commit away. Switching to another branch and only the changes applied to that branch are present.
+
+In the wild, branches are commonly used to manage versioning. An older version, but still maintained version of a program will be kept in another branch, so people can still work on it. 
+
+`git checkout` manipulates the repository state. To manipulate branches, you must use `git branch`:
+
+`git branch -d <branch name>` deletes a branch.
+
+
 
