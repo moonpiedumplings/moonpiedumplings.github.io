@@ -136,7 +136,15 @@ ul.task-list li input[type="checkbox"] {
   <li><a href="#get-your-code-git-clone" id="toc-get-your-code-git-clone" class="nav-link" data-scroll-target="#get-your-code-git-clone">Get your code: git clone</a></li>
   <li><a href="#save-code-to-git" id="toc-save-code-to-git" class="nav-link" data-scroll-target="#save-code-to-git">Save code to git</a></li>
   <li><a href="#interact-with-a-remote-repository" id="toc-interact-with-a-remote-repository" class="nav-link" data-scroll-target="#interact-with-a-remote-repository">Interact with a remote repository</a></li>
-  <li><a href="#viewing-and-undoing-changes" id="toc-viewing-and-undoing-changes" class="nav-link" data-scroll-target="#viewing-and-undoing-changes">Viewing and undoing changes</a></li>
+  <li><a href="#viewing-and-undoing-changes" id="toc-viewing-and-undoing-changes" class="nav-link" data-scroll-target="#viewing-and-undoing-changes">Viewing and undoing changes</a>
+  <ul class="collapse">
+  <li><a href="#to-view" id="toc-to-view" class="nav-link" data-scroll-target="#to-view">To view</a></li>
+  <li><a href="#to-revert-to-a-change" id="toc-to-revert-to-a-change" class="nav-link" data-scroll-target="#to-revert-to-a-change">To revert to a change</a></li>
+  </ul></li>
+  </ul></li>
+  <li><a href="#how-to-actually-use-git" id="toc-how-to-actually-use-git" class="nav-link" data-scroll-target="#how-to-actually-use-git">How to <em>actually</em> use git</a>
+  <ul class="collapse">
+  <li><a href="#branches" id="toc-branches" class="nav-link" data-scroll-target="#branches">Branches</a></li>
   </ul></li>
   </ul>
 </nav>
@@ -203,6 +211,7 @@ ul.task-list li input[type="checkbox"] {
 <p>Now, git sees your changes, but it still hasn’t saved them. They are staged changes, meaning that git can see them in order to commit them.</p>
 <p><code>git commit -m "message here"</code> commits your changes with a commit message, which makes keeping track of what you did easier, especially when you need to revert changes.</p>
 <p>You can commit everything in one go using <code>git commit -am</code>, which is more convinient if you don’t need to stage changes.</p>
+<p><code>git status</code> shows staged and unstaged changes.</p>
 </section>
 <section id="interact-with-a-remote-repository" class="level2">
 <h2 class="anchored" data-anchor-id="interact-with-a-remote-repository">Interact with a remote repository</h2>
@@ -215,8 +224,31 @@ ul.task-list li input[type="checkbox"] {
 <h2 class="anchored" data-anchor-id="viewing-and-undoing-changes">Viewing and undoing changes</h2>
 <p>If you make a small change, you can just copy and paste stuff around to undo it. But if you are working on a large app, and a massive feature you intended to add didn’t work out, trying to just delete the code won’t really work out.</p>
 <p>That’s where git comes in.</p>
-<p><code>git log</code> shows the changes. <code>q</code> quits, and <code>/</code> searches. It uses vim keybindings.</p>
+<section id="to-view" class="level3">
+<h3 class="anchored" data-anchor-id="to-view">To view</h3>
+<p><code>git log</code> shows the changes. <code>q</code> quits, and <code>/</code> searches. It uses vim keybindings. Each change is noted by their SHA1 hash.</p>
 <p>But this kind of sucks, so I recommend using a graphical interface to view changes. This is one function of “git forges”, websites like <a href="https://github.com/">github</a>, where they give you a graphical interface to view changes. However, there are locally installed applications with similar features, like gitg.</p>
+</section>
+<section id="to-revert-to-a-change" class="level3">
+<h3 class="anchored" data-anchor-id="to-revert-to-a-change">To revert to a change</h3>
+<p><code>git revert HEAD</code> creates a new commit that undoes the previous commit.</p>
+<p><code>git revert &lt;SHA1 HASH&gt;</code> creates a new commit that reverts all the way back to the commit designated by the SHA1 hash of a commit.</p>
+<p><code>git reset SHA1</code> has a similar feature, except it simply moves backwards in commits. If you make new commits, this results in a nonlinear search commit history. You’ll create a tree, or an octopus. Some people don’t like this, because it can be a bit of a pain to manage.</p>
+</section>
+</section>
+</section>
+<section id="how-to-actually-use-git" class="level1">
+<h1>How to <em>actually</em> use git</h1>
+<p>Yeah, saving and undoing things isn’t anything special. Your average word processor has these features. Carefully managed backups allow you to undo to any state you want. There are probably a thousand or more ways to send folders of whatever over the network.</p>
+<section id="branches" class="level2">
+<h2 class="anchored" data-anchor-id="branches">Branches</h2>
+<p>Branches are one of the killer features of version control. Basically, each branch is it’s own copy of the codebase, which can be worked on without affecting other branches.</p>
+<p><code>git checkout -b &lt;branch name&gt;</code> creates a new branch.</p>
+<p><code>git checkout &lt;branch name&gt;</code> switches to a branch.</p>
+<p>Then, commit away. Switching to another branch and only the changes applied to that branch are present.</p>
+<p>In the wild, branches are commonly used to manage versioning. An older version, but still maintained version of a program will be kept in another branch, so people can still work on it.</p>
+<p><code>git checkout</code> manipulates the repository state. To manipulate branches, you must use <code>git branch</code>:</p>
+<p><code>git branch -d &lt;branch name&gt;</code> deletes a branch.</p>
 
 
 </section>
