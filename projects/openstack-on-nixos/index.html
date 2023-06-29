@@ -166,6 +166,15 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#what-is-hyperconverged-infrastrucuture" id="toc-what-is-hyperconverged-infrastrucuture" class="nav-link active" data-scroll-target="#what-is-hyperconverged-infrastrucuture">What is hyperconverged infrastrucuture?</a></li>
   <li><a href="#what-is-nixos" id="toc-what-is-nixos" class="nav-link" data-scroll-target="#what-is-nixos">What is Nixos?</a></li>
   <li><a href="#it-begins" id="toc-it-begins" class="nav-link" data-scroll-target="#it-begins">It begins</a></li>
+  <li><a href="#pip2nix" id="toc-pip2nix" class="nav-link" data-scroll-target="#pip2nix">Pip2nix</a></li>
+  <li><a href="#mach-nix" id="toc-mach-nix" class="nav-link" data-scroll-target="#mach-nix">Mach-nix</a>
+  <ul class="collapse">
+  <li><a href="#flying-blind" id="toc-flying-blind" class="nav-link" data-scroll-target="#flying-blind">Flying Blind</a></li>
+  <li><a href="#a-kind-user-helped-me." id="toc-a-kind-user-helped-me." class="nav-link" data-scroll-target="#a-kind-user-helped-me.">A kind user helped me.</a></li>
+  </ul></li>
+  <li><a href="#dream2nix" id="toc-dream2nix" class="nav-link" data-scroll-target="#dream2nix">Dream2nix</a></li>
+  <li><a href="#poetry2nix" id="toc-poetry2nix" class="nav-link" data-scroll-target="#poetry2nix">Poetry2nix</a></li>
+  <li><a href="#packaging-them-myself" id="toc-packaging-them-myself" class="nav-link" data-scroll-target="#packaging-them-myself">Packaging them myself</a></li>
   </ul>
 </nav>
     </div>
@@ -287,6 +296,9 @@ Show someone else’s configs for lxdware on nixos
 <p>Nixpkgs very large, but I don’t know if they have all of the python packages. Luckily, I found a newer project, <a href="https://github.com/nix-community/pip2nix">pip2nix</a>, which seems to have been first created at around the same time the openstack on nix projects stopped development.</p>
 <p>I should be able to convert a requirements.txt into something nix can install natively, directly from the pypi repos, without having to worry about packages not being packages in nixpkgs.</p>
 <p>So I started by cloning the openstack keystone repository from github: <a href="https://github.com/openstack/keystone">https://github.com/openstack/keystone</a></p>
+</section>
+<section id="pip2nix" class="level2">
+<h2 class="anchored" data-anchor-id="pip2nix">Pip2nix</h2>
 <p>I install and setup pip2nix and attempt to use it. It first complains about python36 being too old, but after I switch to the python39 version of pip2nix:</p>
 <div class="sourceCode" id="cb2"><pre class="sourceCode default code-overflow-wrap code-with-copy"><code class="sourceCode default"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>[nix-shell:~/vscode/keystone]$ pip2nix generate .</span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>Processing /home/moonpie/vscode/keystone</span>
@@ -431,6 +443,11 @@ Show error
 <p>I literally changed nothing. Except for adding setuptools to the start of the requirements.txt, but I still got a differing error than the one I got yesterday.</p>
 <p>I recloned the keystone repo (reverting back to the default requirements.txt file), and regenerated the nix files using pip2nix, however I still get the same error. Weird.</p>
 <p>2 days later, I still get the same error. So I decided to try another tool. Although I am aware that I could, in theory package every python package manually, I have opted not to do that when programattic solutions exist. Manual packaging is a last resort.</p>
+</section>
+<section id="mach-nix" class="level2">
+<h2 class="anchored" data-anchor-id="mach-nix">Mach-nix</h2>
+<section id="flying-blind" class="level3">
+<h3 class="anchored" data-anchor-id="flying-blind">Flying Blind</h3>
 <p>So I tried another tool, <a href="https://github.com/DavHau/mach-nix">mach-nix</a>, which is unmaintained, but worked when I tried it a little bit ago.</p>
 <p>For some reason, trying to get the non-flake version of the package didn’t work:</p>
 <details>
@@ -493,6 +510,18 @@ Show error
 <span id="cb10-20"><a href="#cb10-20" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb10-21"><a href="#cb10-21" aria-hidden="true" tabindex="-1"></a>       error: download of 'https://github.com/DavHau/pypi-deps-db/tarball/e00b22ead9d3534ba1c448e1af3076af6b234acf' was interrupted</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>I could report an issue, but I decided to simply try the new project that the developer is working on instead, <a href="https://github.com/nix-community/dream2nix">dream2nix</a>.</p>
+</section>
+<section id="a-kind-user-helped-me." class="level3">
+<h3 class="anchored" data-anchor-id="a-kind-user-helped-me.">A kind user helped me.</h3>
+<p>A user on matrix <a href="https://matrix.to/#/!PrIEtcffTLLzUWvJOS:matrix.org/$0qTdfRYYUTrx4eHQuIxdcegjHyauFIsX5ZsTMiXRA44?via=nixos.org&amp;via=matrix.org&amp;via=nixos.dev">responded to me asking for help with dream2nix</a></p>
+<p>They said:</p>
+<blockquote class="blockquote">
+<p>Have you tried to use mach-nix pinned to rev = “65266b5cc867fec2cb6a25409dd7cd12251f6107”; and versionPy ? “39” to use the req.txt file from keystone 23.0.0 (works for me)</p>
+</blockquote>
+</section>
+</section>
+<section id="dream2nix" class="level2">
+<h2 class="anchored" data-anchor-id="dream2nix">Dream2nix</h2>
 <p>I decided to follow the <a href="https://nix-community.github.io/dream2nix/guides/getting-started-python.html">their python project instructions</a>.</p>
 <details>
 <summary>
@@ -555,25 +584,48 @@ Show error
 <span id="cb11-55"><a href="#cb11-55" aria-hidden="true" tabindex="-1"></a>[notice] To update, run: /nix/store/w3lza2zk3i6xi1x5rh5zbwc9zlfsymc0-python3-3.10.7-env/bin/python3.10 -m pip install --upgrade pip</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <p>And an error.</p>
-<p>Poetry:</p>
-<p>Poetry is a</p>
+</section>
+<section id="poetry2nix" class="level2">
+<h2 class="anchored" data-anchor-id="poetry2nix">Poetry2nix</h2>
+<p>Poetry is a python dependency manager similar to nix. <a href="https://github.com/nix-community/poetry2nix">poetry2nix</a> uses poetry’s specifications to do things like download package, package applications, or create shell environments using nix.</p>
+<p>First I needed to convert the requirements.txt to poetry.</p>
+<p>I used the <a href="https://github.com/dephell/dephell">dephell</a> tool to do so. Specifically, <a href="https://dephell.readthedocs.io/cmd-deps-convert.html"><code>dephell deps convert</code></a></p>
+<p><code>dephell deps convert --from pip --to poetry</code></p>
+<p>After that, I used poetry2nix to create a shell environment, to test if the dependencies were downloaded.</p>
+<div class="code-with-filename">
+<div class="code-with-filename-file">
+<pre><strong>shell.nix</strong></pre>
+</div>
+<div class="sourceCode" id="cb12"><pre class="sourceCode nix code-overflow-wrap code-with-copy"><code class="sourceCode nix"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="op">{</span> </span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="va">pkgs</span> <span class="op">?</span> <span class="bu">import</span> &lt;nixpkgs&gt; <span class="op">{},</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="va">poetry2nix</span> <span class="op">?</span> <span class="bu">import</span> &lt;poetry2nix&gt; <span class="op">{}</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="op">}</span> :</span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>poetry2nix.mkPoetryEnv <span class="op">{</span></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>    <span class="va">projectDir</span> <span class="op">=</span> <span class="ss">./.</span><span class="op">;</span></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>After that, using <code>pip list</code> to list the python packages that pip can see confirms that this works to download all dependencies.</p>
+</section>
+<section id="packaging-them-myself" class="level2">
+<h2 class="anchored" data-anchor-id="packaging-them-myself">Packaging them myself</h2>
 <p>Okay, I did find something else interesting. When I was looking at one of the openstack dependencies, packaged in nixpkgs, I found something interesting in the meta section:</p>
-<div class="sourceCode" id="cb12"><pre class="sourceCode nix code-with-copy"><code class="sourceCode nix"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>meta = <span class="kw">with</span> lib<span class="op">;</span> <span class="op">{</span></span>
-<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>    <span class="va">description</span> <span class="op">=</span> <span class="st">"Oslo test framework"</span><span class="op">;</span></span>
-<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>    <span class="va">homepage</span> <span class="op">=</span> <span class="st">"https://github.com/openstack/oslotest"</span><span class="op">;</span></span>
-<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>    <span class="va">license</span> <span class="op">=</span> licenses.asl20<span class="op">;</span></span>
-<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>    <span class="va">maintainers</span> <span class="op">=</span> teams.openstack.members<span class="op">;</span></span>
-<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span>;</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb13"><pre class="sourceCode nix code-with-copy"><code class="sourceCode nix"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>meta = <span class="kw">with</span> lib<span class="op">;</span> <span class="op">{</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>    <span class="va">description</span> <span class="op">=</span> <span class="st">"Oslo test framework"</span><span class="op">;</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>    <span class="va">homepage</span> <span class="op">=</span> <span class="st">"https://github.com/openstack/oslotest"</span><span class="op">;</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>    <span class="va">license</span> <span class="op">=</span> licenses.asl20<span class="op">;</span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>    <span class="va">maintainers</span> <span class="op">=</span> teams.openstack.members<span class="op">;</span></span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span>;</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>For maintainers, nix has “teams,”” or groups of people dedicated to packaging a group of packages. And apparently, they seem to have an openstack team:</p>
 <p>Sure enough, in the <a href="https://github.com/NixOS/nixpkgs/blob/master/maintainers/team-list.nix#L633">nixpkgs list of teams</a>, they can be found:</p>
-<div class="sourceCode" id="cb13"><pre class="sourceCode nix code-with-copy"><code class="sourceCode nix"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>openstack = <span class="op">{</span></span>
-<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>    <span class="va">members</span> <span class="op">=</span> <span class="op">[</span></span>
-<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>      emilytrau</span>
-<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>      SuperSandro2000</span>
-<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>    <span class="op">];</span></span>
-<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>    <span class="va">scope</span> <span class="op">=</span> <span class="st">"Maintain the ecosystem around OpenStack"</span><span class="op">;</span></span>
-<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>    <span class="va">shortName</span> <span class="op">=</span> <span class="st">"OpenStack"</span><span class="op">;</span></span>
-<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span>;</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb14"><pre class="sourceCode nix code-with-copy"><code class="sourceCode nix"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>openstack = <span class="op">{</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>    <span class="va">members</span> <span class="op">=</span> <span class="op">[</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>      emilytrau</span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>      SuperSandro2000</span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>    <span class="op">];</span></span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>    <span class="va">scope</span> <span class="op">=</span> <span class="st">"Maintain the ecosystem around OpenStack"</span><span class="op">;</span></span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>    <span class="va">shortName</span> <span class="op">=</span> <span class="st">"OpenStack"</span><span class="op">;</span></span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span>;</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>These people maintain the ecosystem around openstack, but not openstack itself. Perhaps all openstack dependencies are already packaged?</p>
 <p>I would probably have to do overrides on some of the depedencies to ensure that the versions are correct, since sometimes newer packages have breaking changes, but if stuff is already packaged, that would be great.</p>
 <p>Here is the list of the packages from the requirements.txt. I will link each package to it’s equivalent in nixpkgs.</p>
@@ -619,9 +671,9 @@ Show list
 <p>However, I needed a way to check the compatibility of a python package, to a version of python. Thankfully, I found an easyish way to do so.</p>
 <p><code>pip install --python-version 311 --no-deps --target test-pkg packagename==missing</code></p>
 <p>Because openstack keystone is actually packaged in pypi repos, downloaded by pip, this works:</p>
-<div class="sourceCode" id="cb14"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>moonpie@localhost:~/vscode/keystone&gt; pip install --python-version 311 --no-deps --target test-pkg keystone==missing</span>
-<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>ERROR: Could not find a version that satisfies the requirement keystone==missing (from versions: 12.0.2, 12.0.3, 13.0.2, 13.0.3, 13.0.4, 14.0.0, 14.0.1, 14.1.0, 14.2.0, 15.0.0.0rc1, 15.0.0.0rc2, 15.0.0, 15.0.1, 16.0.0.0rc1, 16.0.0.0rc2, 16.0.0, 16.0.1, 16.0.2, 17.0.0.0rc1, 17.0.0.0rc2, 17.0.0, 17.0.1, 18.0.0.0rc1, 18.0.0, 18.1.0, 19.0.0.0rc1, 19.0.0.0rc2, 19.0.0, 19.0.1, 20.0.0.0rc1, 20.0.0, 20.0.1, 21.0.0.0rc1, 21.0.0, 22.0.0.0rc1, 22.0.0, 23.0.0.0rc1, 23.0.0)</span>
-<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>ERROR: No matching distribution found for keystone==missing</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb15"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>moonpie@localhost:~/vscode/keystone&gt; pip install --python-version 311 --no-deps --target test-pkg keystone==missing</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>ERROR: Could not find a version that satisfies the requirement keystone==missing (from versions: 12.0.2, 12.0.3, 13.0.2, 13.0.3, 13.0.4, 14.0.0, 14.0.1, 14.1.0, 14.2.0, 15.0.0.0rc1, 15.0.0.0rc2, 15.0.0, 15.0.1, 16.0.0.0rc1, 16.0.0.0rc2, 16.0.0, 16.0.1, 16.0.2, 17.0.0.0rc1, 17.0.0.0rc2, 17.0.0, 17.0.1, 18.0.0.0rc1, 18.0.0, 18.1.0, 19.0.0.0rc1, 19.0.0.0rc2, 19.0.0, 19.0.1, 20.0.0.0rc1, 20.0.0, 20.0.1, 21.0.0.0rc1, 21.0.0, 22.0.0.0rc1, 22.0.0, 23.0.0.0rc1, 23.0.0)</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>ERROR: No matching distribution found for keystone==missing</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>So openstack supports python 3.11, which is good. Nix doesn’t have many of the above libraries packaged for python 3.8 and below.</p>
 
 
