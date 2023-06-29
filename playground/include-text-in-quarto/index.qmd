@@ -70,7 +70,56 @@ Bit weird, but it works. Now how can I include external content from external fi
 ```{.nix filename="data/test.txt"}
 ```
 
+Since quarto can run python, and you can force the output of that to render to markdown with a few options:
 
+
+
+```{.python}
+#| output: asis
+#| echo: true
+
+backtick = "`"
+a = ""
+with open('data/python.py', 'r') as f:
+    file_contents = f.read()
+    a = file_contents
+
+print(f'''
+
+{backtick * 3}{{.python filename="data/python.py"}}
+{a}
+{backtick * 3}
+''')
+```
+
+Of course, the proper quarto syntax is:
+
+```{{python}}
+#| options here
+# python code here
+```
+
+
+
+```{python}
+#| output: asis
+#| echo: false
+
+backtick = "`"
+a = ""
+with open('data/python.py', 'r') as f:
+    file_contents = f.read()
+    a = file_contents
+
+print(f'''
+
+{backtick * 3}{{.python filename="data/python.py"}}
+{a}
+{backtick * 3}
+''')
+```
+
+It works! Perhaps an awkward way of doing this, but it works. I can probably even get code from remote repos, since it's all python. There are other ways to do this, but I didn't want to do have to rely on any extensions or external dependencies. 
 
 
 

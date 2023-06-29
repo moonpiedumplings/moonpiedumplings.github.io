@@ -124,6 +124,8 @@ I should be able to convert a requirements.txt into something nix can install na
 
 So I started by cloning the openstack keystone repository from github: [https://github.com/openstack/keystone](https://github.com/openstack/keystone)
 
+## Pip2nix
+
 
 I install and setup pip2nix and attempt to use it. It first complains about python36 being too old, but after I switch to the python39 version of pip2nix:
 
@@ -300,6 +302,9 @@ I recloned the keystone repo (reverting back to the default requirements.txt fil
 
 2 days later, I still get the same error. So I decided to try another tool. Although I am aware that I could, in theory package every python package manually, I have opted not to do that when programattic solutions exist. Manual packaging is a last resort.
 
+## Mach-nix
+
+### Flying Blind
 
 So I tried another tool, [mach-nix](https://github.com/DavHau/mach-nix), which is unmaintained, but worked when I tried it a little bit ago.
 
@@ -377,6 +382,19 @@ moonpie@localhost:~/vscode/keystone> nix-shell ./env
 
 I could report an issue, but I decided to simply try the new project that the developer is working on instead, [dream2nix](https://github.com/nix-community/dream2nix).
 
+
+### A kind user helped me. 
+
+
+A user on matrix [responded to me asking for help with dream2nix](https://matrix.to/#/!PrIEtcffTLLzUWvJOS:matrix.org/$0qTdfRYYUTrx4eHQuIxdcegjHyauFIsX5ZsTMiXRA44?via=nixos.org&via=matrix.org&via=nixos.dev)
+
+They said:
+
+> Have you tried to use mach-nix pinned to rev = "65266b5cc867fec2cb6a25409dd7cd12251f6107"; and versionPy ? "39" to use the req.txt file from keystone 23.0.0 (works for me)
+
+
+## Dream2nix
+
 I decided to follow the [their python project instructions](https://nix-community.github.io/dream2nix/guides/getting-started-python.html).
 
 
@@ -445,13 +463,32 @@ hint: See above for details.
 And an error. 
 
 
-Poetry:
+## Poetry2nix
 
-Poetry is a 
+Poetry is a python dependency manager similar to nix. [poetry2nix](https://github.com/nix-community/poetry2nix) uses poetry's specifications to do things like download package, package applications, or create shell environments using nix. 
+
+First I needed to convert the requirements.txt to poetry.
+
+I used the [dephell](https://github.com/dephell/dephell) tool to do so. Specifically, [`dephell deps convert`](https://dephell.readthedocs.io/cmd-deps-convert.html)
+
+`dephell deps convert --from pip --to poetry`
+
+After that, I used poetry2nix to create a shell environment, to test if the dependencies were downloaded. 
+
+```{.nix .code-overflow-wrap filename="shell.nix"}
+{ 
+pkgs ? import <nixpkgs> {},
+poetry2nix ? import <poetry2nix> {}
+} :
+
+poetry2nix.mkPoetryEnv {
+    projectDir = ./.;
+}
+```
+After that, using `pip list` to list the python packages that pip can see confirms that this works to download all dependencies. 
 
 
-
-
+## Packaging them myself
 
 Okay, I did find something else interesting. When I was looking at one of the openstack dependencies, packaged in nixpkgs, I found something interesting in the meta section:
 
