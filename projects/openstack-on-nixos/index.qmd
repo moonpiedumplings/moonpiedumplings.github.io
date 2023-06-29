@@ -392,6 +392,56 @@ They said:
 
 > Have you tried to use mach-nix pinned to rev = "65266b5cc867fec2cb6a25409dd7cd12251f6107"; and versionPy ? "39" to use the req.txt file from keystone 23.0.0 (works for me)
 
+So I created a small shell.nix to that simply calls my derivation:
+
+```{.nix filename="shell.nix"}
+{
+    pkgs ? import <nixpkgs> {},
+    
+} :
+let 
+    okeystone = pkgs.callPackage ./keystone.nix {}; # okeystone becuase packages with the name keystone already exists.
+in
+    pkgs.mkShell {
+        packages = with pkgs; [ okeystone ];
+    }
+```
+
+And my derivation
+
+<details><summary>Show derivation</summary>
+
+```{.nix .code-overflow-wrap filename="keystone.nix"}
+{
+    nixpkgs ? import <nipxkgs>,
+    #fetchFromGithub,
+    fetchgit,
+    python3
+} : 
+
+let
+    mach-nix = import (fetchgit {
+    url = "https://github.com/DavHau/mach-nix";
+    rev = "65266b5cc867fec2cb6a25409dd7cd12251f6107";
+    sha256 = "sha256-1OBBlBzZ894or8eHZjyADOMnGH89pPUKYGVVS5rwW/0=";
+    }) {};
+in
+
+mach-nix.buildPythonApplication {
+    pname =  "keystone";
+    version = "placeholder";
+    src = fetchgit {
+        url = "https://github.com/openstack/keystone/";
+        rev = "040e6d09b1e7e6817c81209c2b089d318715bef6";
+    };
+}
+```
+
+</details>
+
+And I get the same error as above, after I forcefully quit the stalled program.
+
+
 
 ## Dream2nix
 
