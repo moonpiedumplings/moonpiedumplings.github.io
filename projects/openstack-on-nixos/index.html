@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.3.433">
+<meta name="generator" content="quarto-1.3.361">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -518,6 +518,57 @@ Show error
 <blockquote class="blockquote">
 <p>Have you tried to use mach-nix pinned to rev = “65266b5cc867fec2cb6a25409dd7cd12251f6107”; and versionPy ? “39” to use the req.txt file from keystone 23.0.0 (works for me)</p>
 </blockquote>
+<p>So I created a small shell.nix to that simply calls my derivation:</p>
+<div class="code-with-filename">
+<div class="code-with-filename-file">
+<pre><strong>shell.nix</strong></pre>
+</div>
+<div class="sourceCode" id="cb11"><pre class="sourceCode nix code-with-copy"><code class="sourceCode nix"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="op">{</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>    <span class="va">pkgs</span> <span class="op">?</span> <span class="bu">import</span> &lt;nixpkgs&gt; <span class="op">{},</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="op">}</span> :</span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> </span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>    <span class="va">okeystone</span> <span class="op">=</span> pkgs.callPackage <span class="ss">./keystone.nix</span> <span class="op">{};</span> <span class="co"># okeystone becuase packages with the name keystone already exists.</span></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a><span class="kw">in</span></span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>    pkgs.mkShell <span class="op">{</span></span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>        <span class="va">packages</span> <span class="op">=</span> <span class="kw">with</span> pkgs<span class="op">;</span> <span class="op">[</span> okeystone <span class="op">];</span></span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>And my derivation</p>
+<details>
+<summary>
+Show derivation
+</summary>
+<div class="code-with-filename">
+<div class="code-with-filename-file">
+<pre><strong>keystone.nix</strong></pre>
+</div>
+<div class="sourceCode" id="cb12"><pre class="sourceCode nix code-overflow-wrap code-with-copy"><code class="sourceCode nix"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="op">{</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>    <span class="va">nixpkgs</span> <span class="op">?</span> <span class="bu">import</span> &lt;nipxkgs&gt;<span class="op">,</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>    <span class="co">#fetchFromGithub,</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>    <span class="va">fetchgit</span><span class="op">,</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>    <span class="va">python3</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a><span class="op">}</span> : </span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span></span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>    <span class="va">mach-nix</span> <span class="op">=</span> <span class="bu">import</span> <span class="op">(</span>fetchgit <span class="op">{</span></span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>    <span class="va">url</span> <span class="op">=</span> <span class="st">"https://github.com/DavHau/mach-nix"</span><span class="op">;</span></span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a>    <span class="va">rev</span> <span class="op">=</span> <span class="st">"65266b5cc867fec2cb6a25409dd7cd12251f6107"</span><span class="op">;</span></span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a>    <span class="va">sha256</span> <span class="op">=</span> <span class="st">"sha256-1OBBlBzZ894or8eHZjyADOMnGH89pPUKYGVVS5rwW/0="</span><span class="op">;</span></span>
+<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a>    <span class="op">})</span> <span class="op">{};</span></span>
+<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a><span class="kw">in</span></span>
+<span id="cb12-15"><a href="#cb12-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-16"><a href="#cb12-16" aria-hidden="true" tabindex="-1"></a>mach<span class="op">-</span>nix.buildPythonApplication <span class="op">{</span></span>
+<span id="cb12-17"><a href="#cb12-17" aria-hidden="true" tabindex="-1"></a>    <span class="va">pname</span> <span class="op">=</span>  <span class="st">"keystone"</span><span class="op">;</span></span>
+<span id="cb12-18"><a href="#cb12-18" aria-hidden="true" tabindex="-1"></a>    <span class="va">version</span> <span class="op">=</span> <span class="st">"placeholder"</span><span class="op">;</span></span>
+<span id="cb12-19"><a href="#cb12-19" aria-hidden="true" tabindex="-1"></a>    <span class="va">src</span> <span class="op">=</span> fetchgit <span class="op">{</span></span>
+<span id="cb12-20"><a href="#cb12-20" aria-hidden="true" tabindex="-1"></a>        <span class="va">url</span> <span class="op">=</span> <span class="st">"https://github.com/openstack/keystone/"</span><span class="op">;</span></span>
+<span id="cb12-21"><a href="#cb12-21" aria-hidden="true" tabindex="-1"></a>        <span class="va">rev</span> <span class="op">=</span> <span class="st">"040e6d09b1e7e6817c81209c2b089d318715bef6"</span><span class="op">;</span></span>
+<span id="cb12-22"><a href="#cb12-22" aria-hidden="true" tabindex="-1"></a>    <span class="op">};</span></span>
+<span id="cb12-23"><a href="#cb12-23" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</details>
+<p>And I get the same error as above, after I forcefully quit the stalled program.</p>
 </section>
 </section>
 <section id="dream2nix" class="level2">
@@ -527,61 +578,61 @@ Show error
 <summary>
 Show error
 </summary>
-<div class="sourceCode" id="cb11"><pre class="sourceCode default code-overflow-scroll code-with-copy"><code class="sourceCode default"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>moonpie@localhost:~/vscode/keystone&gt; nix run .#resolveImpure</span>
-<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>warning: Git tree '/home/moonpie/vscode/keystone' is dirty</span>
-<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>Resolving:: Name: main; Subsystem: python; relPath: </span>
-<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>/tmp/tmp.rB9TAH7neG ~/vscode/keystone</span>
-<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>reading setup requirements from pyproject.toml</span>
-<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>Error: [Errno 2] No such file or directory: './source/pyproject.toml'</span>
-<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>install setup dependencies from extraSetupDeps</span>
-<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>[notice] A new release of pip available: 22.2.2 -&gt; 23.1.2</span>
-<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a>[notice] To update, run: /nix/store/w3lza2zk3i6xi1x5rh5zbwc9zlfsymc0-python3-3.10.7-env/bin/python3.10 -m pip install --upgrade pip</span>
-<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a>download setup dependencies from pyproject.toml</span>
-<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a>[notice] A new release of pip available: 22.2.2 -&gt; 23.1.2</span>
-<span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a>[notice] To update, run: /nix/store/w3lza2zk3i6xi1x5rh5zbwc9zlfsymc0-python3-3.10.7-env/bin/python3.10 -m pip install --upgrade pip</span>
-<span id="cb11-15"><a href="#cb11-15" aria-hidden="true" tabindex="-1"></a>download files according to requirements</span>
-<span id="cb11-16"><a href="#cb11-16" aria-hidden="true" tabindex="-1"></a>realpath: ./install/lib/python3.10/site-packages: No such file or directory</span>
-<span id="cb11-17"><a href="#cb11-17" aria-hidden="true" tabindex="-1"></a>Processing ./source</span>
-<span id="cb11-18"><a href="#cb11-18" aria-hidden="true" tabindex="-1"></a>  Preparing metadata (setup.py) ... error</span>
-<span id="cb11-19"><a href="#cb11-19" aria-hidden="true" tabindex="-1"></a>  error: subprocess-exited-with-error</span>
-<span id="cb11-20"><a href="#cb11-20" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb11-21"><a href="#cb11-21" aria-hidden="true" tabindex="-1"></a>  × python setup.py egg_info did not run successfully.</span>
-<span id="cb11-22"><a href="#cb11-22" aria-hidden="true" tabindex="-1"></a>  │ exit code: 1</span>
-<span id="cb11-23"><a href="#cb11-23" aria-hidden="true" tabindex="-1"></a>  ╰─&gt; [19 lines of output]</span>
-<span id="cb11-24"><a href="#cb11-24" aria-hidden="true" tabindex="-1"></a>      /nix/store/w3lza2zk3i6xi1x5rh5zbwc9zlfsymc0-python3-3.10.7-env/lib/python3.10/site-packages/setuptools/installer.py:27: SetuptoolsDeprecationWarning: setuptools.installer is deprecated. Requirements should be satisfied by a PEP 517 installer.</span>
-<span id="cb11-25"><a href="#cb11-25" aria-hidden="true" tabindex="-1"></a>        warnings.warn(</span>
-<span id="cb11-26"><a href="#cb11-26" aria-hidden="true" tabindex="-1"></a>      WARNING: The wheel package is not available.</span>
-<span id="cb11-27"><a href="#cb11-27" aria-hidden="true" tabindex="-1"></a>      Error parsing</span>
-<span id="cb11-28"><a href="#cb11-28" aria-hidden="true" tabindex="-1"></a>      Traceback (most recent call last):</span>
-<span id="cb11-29"><a href="#cb11-29" aria-hidden="true" tabindex="-1"></a>        File "/tmp/tmp.rB9TAH7neG/source/.eggs/pbr-5.11.1-py3.10.egg/pbr/core.py", line 105, in pbr</span>
-<span id="cb11-30"><a href="#cb11-30" aria-hidden="true" tabindex="-1"></a>          attrs = util.cfg_to_args(path, dist.script_args)</span>
-<span id="cb11-31"><a href="#cb11-31" aria-hidden="true" tabindex="-1"></a>        File "/tmp/tmp.rB9TAH7neG/source/.eggs/pbr-5.11.1-py3.10.egg/pbr/util.py", line 272, in cfg_to_args</span>
-<span id="cb11-32"><a href="#cb11-32" aria-hidden="true" tabindex="-1"></a>          pbr.hooks.setup_hook(config)</span>
-<span id="cb11-33"><a href="#cb11-33" aria-hidden="true" tabindex="-1"></a>        File "/tmp/tmp.rB9TAH7neG/source/.eggs/pbr-5.11.1-py3.10.egg/pbr/hooks/__init__.py", line 25, in setup_hook</span>
-<span id="cb11-34"><a href="#cb11-34" aria-hidden="true" tabindex="-1"></a>          metadata_config.run()</span>
-<span id="cb11-35"><a href="#cb11-35" aria-hidden="true" tabindex="-1"></a>        File "/tmp/tmp.rB9TAH7neG/source/.eggs/pbr-5.11.1-py3.10.egg/pbr/hooks/base.py", line 27, in run</span>
-<span id="cb11-36"><a href="#cb11-36" aria-hidden="true" tabindex="-1"></a>          self.hook()</span>
-<span id="cb11-37"><a href="#cb11-37" aria-hidden="true" tabindex="-1"></a>        File "/tmp/tmp.rB9TAH7neG/source/.eggs/pbr-5.11.1-py3.10.egg/pbr/hooks/metadata.py", line 25, in hook</span>
-<span id="cb11-38"><a href="#cb11-38" aria-hidden="true" tabindex="-1"></a>          self.config['version'] = packaging.get_version(</span>
-<span id="cb11-39"><a href="#cb11-39" aria-hidden="true" tabindex="-1"></a>        File "/tmp/tmp.rB9TAH7neG/source/.eggs/pbr-5.11.1-py3.10.egg/pbr/packaging.py", line 874, in get_version</span>
-<span id="cb11-40"><a href="#cb11-40" aria-hidden="true" tabindex="-1"></a>          raise Exception("Versioning for this project requires either an sdist"</span>
-<span id="cb11-41"><a href="#cb11-41" aria-hidden="true" tabindex="-1"></a>      Exception: Versioning for this project requires either an sdist tarball, or access to an upstream git repository. It's also possible that there is a mismatch between the package name in setup.cfg and the argument given to pbr.version.VersionInfo. Project name keystone was given, but was not able to be found.</span>
-<span id="cb11-42"><a href="#cb11-42" aria-hidden="true" tabindex="-1"></a>      error in setup command: Error parsing /tmp/tmp.rB9TAH7neG/source/setup.cfg: Exception: Versioning for this project requires either an sdist tarball, or access to an upstream git repository. It's also possible that there is a mismatch between the package name in setup.cfg and the argument given to pbr.version.VersionInfo. Project name keystone was given, but was not able to be found.</span>
-<span id="cb11-43"><a href="#cb11-43" aria-hidden="true" tabindex="-1"></a>      [end of output]</span>
-<span id="cb11-44"><a href="#cb11-44" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb11-45"><a href="#cb11-45" aria-hidden="true" tabindex="-1"></a>  note: This error originates from a subprocess, and is likely not a problem with pip.</span>
-<span id="cb11-46"><a href="#cb11-46" aria-hidden="true" tabindex="-1"></a>error: metadata-generation-failed</span>
-<span id="cb11-47"><a href="#cb11-47" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-48"><a href="#cb11-48" aria-hidden="true" tabindex="-1"></a>× Encountered error while generating package metadata.</span>
-<span id="cb11-49"><a href="#cb11-49" aria-hidden="true" tabindex="-1"></a>╰─&gt; See above for output.</span>
-<span id="cb11-50"><a href="#cb11-50" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-51"><a href="#cb11-51" aria-hidden="true" tabindex="-1"></a>note: This is an issue with the package mentioned above, not pip.</span>
-<span id="cb11-52"><a href="#cb11-52" aria-hidden="true" tabindex="-1"></a>hint: See above for details.</span>
-<span id="cb11-53"><a href="#cb11-53" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-54"><a href="#cb11-54" aria-hidden="true" tabindex="-1"></a>[notice] A new release of pip available: 22.2.2 -&gt; 23.1.2</span>
-<span id="cb11-55"><a href="#cb11-55" aria-hidden="true" tabindex="-1"></a>[notice] To update, run: /nix/store/w3lza2zk3i6xi1x5rh5zbwc9zlfsymc0-python3-3.10.7-env/bin/python3.10 -m pip install --upgrade pip</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb13"><pre class="sourceCode default code-overflow-scroll code-with-copy"><code class="sourceCode default"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>moonpie@localhost:~/vscode/keystone&gt; nix run .#resolveImpure</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>warning: Git tree '/home/moonpie/vscode/keystone' is dirty</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>Resolving:: Name: main; Subsystem: python; relPath: </span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>/tmp/tmp.rB9TAH7neG ~/vscode/keystone</span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>reading setup requirements from pyproject.toml</span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>Error: [Errno 2] No such file or directory: './source/pyproject.toml'</span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>install setup dependencies from extraSetupDeps</span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>[notice] A new release of pip available: 22.2.2 -&gt; 23.1.2</span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>[notice] To update, run: /nix/store/w3lza2zk3i6xi1x5rh5zbwc9zlfsymc0-python3-3.10.7-env/bin/python3.10 -m pip install --upgrade pip</span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a>download setup dependencies from pyproject.toml</span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a>[notice] A new release of pip available: 22.2.2 -&gt; 23.1.2</span>
+<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a>[notice] To update, run: /nix/store/w3lza2zk3i6xi1x5rh5zbwc9zlfsymc0-python3-3.10.7-env/bin/python3.10 -m pip install --upgrade pip</span>
+<span id="cb13-15"><a href="#cb13-15" aria-hidden="true" tabindex="-1"></a>download files according to requirements</span>
+<span id="cb13-16"><a href="#cb13-16" aria-hidden="true" tabindex="-1"></a>realpath: ./install/lib/python3.10/site-packages: No such file or directory</span>
+<span id="cb13-17"><a href="#cb13-17" aria-hidden="true" tabindex="-1"></a>Processing ./source</span>
+<span id="cb13-18"><a href="#cb13-18" aria-hidden="true" tabindex="-1"></a>  Preparing metadata (setup.py) ... error</span>
+<span id="cb13-19"><a href="#cb13-19" aria-hidden="true" tabindex="-1"></a>  error: subprocess-exited-with-error</span>
+<span id="cb13-20"><a href="#cb13-20" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb13-21"><a href="#cb13-21" aria-hidden="true" tabindex="-1"></a>  × python setup.py egg_info did not run successfully.</span>
+<span id="cb13-22"><a href="#cb13-22" aria-hidden="true" tabindex="-1"></a>  │ exit code: 1</span>
+<span id="cb13-23"><a href="#cb13-23" aria-hidden="true" tabindex="-1"></a>  ╰─&gt; [19 lines of output]</span>
+<span id="cb13-24"><a href="#cb13-24" aria-hidden="true" tabindex="-1"></a>      /nix/store/w3lza2zk3i6xi1x5rh5zbwc9zlfsymc0-python3-3.10.7-env/lib/python3.10/site-packages/setuptools/installer.py:27: SetuptoolsDeprecationWarning: setuptools.installer is deprecated. Requirements should be satisfied by a PEP 517 installer.</span>
+<span id="cb13-25"><a href="#cb13-25" aria-hidden="true" tabindex="-1"></a>        warnings.warn(</span>
+<span id="cb13-26"><a href="#cb13-26" aria-hidden="true" tabindex="-1"></a>      WARNING: The wheel package is not available.</span>
+<span id="cb13-27"><a href="#cb13-27" aria-hidden="true" tabindex="-1"></a>      Error parsing</span>
+<span id="cb13-28"><a href="#cb13-28" aria-hidden="true" tabindex="-1"></a>      Traceback (most recent call last):</span>
+<span id="cb13-29"><a href="#cb13-29" aria-hidden="true" tabindex="-1"></a>        File "/tmp/tmp.rB9TAH7neG/source/.eggs/pbr-5.11.1-py3.10.egg/pbr/core.py", line 105, in pbr</span>
+<span id="cb13-30"><a href="#cb13-30" aria-hidden="true" tabindex="-1"></a>          attrs = util.cfg_to_args(path, dist.script_args)</span>
+<span id="cb13-31"><a href="#cb13-31" aria-hidden="true" tabindex="-1"></a>        File "/tmp/tmp.rB9TAH7neG/source/.eggs/pbr-5.11.1-py3.10.egg/pbr/util.py", line 272, in cfg_to_args</span>
+<span id="cb13-32"><a href="#cb13-32" aria-hidden="true" tabindex="-1"></a>          pbr.hooks.setup_hook(config)</span>
+<span id="cb13-33"><a href="#cb13-33" aria-hidden="true" tabindex="-1"></a>        File "/tmp/tmp.rB9TAH7neG/source/.eggs/pbr-5.11.1-py3.10.egg/pbr/hooks/__init__.py", line 25, in setup_hook</span>
+<span id="cb13-34"><a href="#cb13-34" aria-hidden="true" tabindex="-1"></a>          metadata_config.run()</span>
+<span id="cb13-35"><a href="#cb13-35" aria-hidden="true" tabindex="-1"></a>        File "/tmp/tmp.rB9TAH7neG/source/.eggs/pbr-5.11.1-py3.10.egg/pbr/hooks/base.py", line 27, in run</span>
+<span id="cb13-36"><a href="#cb13-36" aria-hidden="true" tabindex="-1"></a>          self.hook()</span>
+<span id="cb13-37"><a href="#cb13-37" aria-hidden="true" tabindex="-1"></a>        File "/tmp/tmp.rB9TAH7neG/source/.eggs/pbr-5.11.1-py3.10.egg/pbr/hooks/metadata.py", line 25, in hook</span>
+<span id="cb13-38"><a href="#cb13-38" aria-hidden="true" tabindex="-1"></a>          self.config['version'] = packaging.get_version(</span>
+<span id="cb13-39"><a href="#cb13-39" aria-hidden="true" tabindex="-1"></a>        File "/tmp/tmp.rB9TAH7neG/source/.eggs/pbr-5.11.1-py3.10.egg/pbr/packaging.py", line 874, in get_version</span>
+<span id="cb13-40"><a href="#cb13-40" aria-hidden="true" tabindex="-1"></a>          raise Exception("Versioning for this project requires either an sdist"</span>
+<span id="cb13-41"><a href="#cb13-41" aria-hidden="true" tabindex="-1"></a>      Exception: Versioning for this project requires either an sdist tarball, or access to an upstream git repository. It's also possible that there is a mismatch between the package name in setup.cfg and the argument given to pbr.version.VersionInfo. Project name keystone was given, but was not able to be found.</span>
+<span id="cb13-42"><a href="#cb13-42" aria-hidden="true" tabindex="-1"></a>      error in setup command: Error parsing /tmp/tmp.rB9TAH7neG/source/setup.cfg: Exception: Versioning for this project requires either an sdist tarball, or access to an upstream git repository. It's also possible that there is a mismatch between the package name in setup.cfg and the argument given to pbr.version.VersionInfo. Project name keystone was given, but was not able to be found.</span>
+<span id="cb13-43"><a href="#cb13-43" aria-hidden="true" tabindex="-1"></a>      [end of output]</span>
+<span id="cb13-44"><a href="#cb13-44" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb13-45"><a href="#cb13-45" aria-hidden="true" tabindex="-1"></a>  note: This error originates from a subprocess, and is likely not a problem with pip.</span>
+<span id="cb13-46"><a href="#cb13-46" aria-hidden="true" tabindex="-1"></a>error: metadata-generation-failed</span>
+<span id="cb13-47"><a href="#cb13-47" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-48"><a href="#cb13-48" aria-hidden="true" tabindex="-1"></a>× Encountered error while generating package metadata.</span>
+<span id="cb13-49"><a href="#cb13-49" aria-hidden="true" tabindex="-1"></a>╰─&gt; See above for output.</span>
+<span id="cb13-50"><a href="#cb13-50" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-51"><a href="#cb13-51" aria-hidden="true" tabindex="-1"></a>note: This is an issue with the package mentioned above, not pip.</span>
+<span id="cb13-52"><a href="#cb13-52" aria-hidden="true" tabindex="-1"></a>hint: See above for details.</span>
+<span id="cb13-53"><a href="#cb13-53" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-54"><a href="#cb13-54" aria-hidden="true" tabindex="-1"></a>[notice] A new release of pip available: 22.2.2 -&gt; 23.1.2</span>
+<span id="cb13-55"><a href="#cb13-55" aria-hidden="true" tabindex="-1"></a>[notice] To update, run: /nix/store/w3lza2zk3i6xi1x5rh5zbwc9zlfsymc0-python3-3.10.7-env/bin/python3.10 -m pip install --upgrade pip</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <p>And an error.</p>
 </section>
@@ -596,36 +647,36 @@ Show error
 <div class="code-with-filename-file">
 <pre><strong>shell.nix</strong></pre>
 </div>
-<div class="sourceCode" id="cb12"><pre class="sourceCode nix code-overflow-wrap code-with-copy"><code class="sourceCode nix"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="op">{</span> </span>
-<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="va">pkgs</span> <span class="op">?</span> <span class="bu">import</span> &lt;nixpkgs&gt; <span class="op">{},</span></span>
-<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="va">poetry2nix</span> <span class="op">?</span> <span class="bu">import</span> &lt;poetry2nix&gt; <span class="op">{}</span></span>
-<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="op">}</span> :</span>
-<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>poetry2nix.mkPoetryEnv <span class="op">{</span></span>
-<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>    <span class="va">projectDir</span> <span class="op">=</span> <span class="ss">./.</span><span class="op">;</span></span>
-<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb14"><pre class="sourceCode nix code-overflow-wrap code-with-copy"><code class="sourceCode nix"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="op">{</span> </span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="va">pkgs</span> <span class="op">?</span> <span class="bu">import</span> &lt;nixpkgs&gt; <span class="op">{},</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a><span class="va">poetry2nix</span> <span class="op">?</span> <span class="bu">import</span> &lt;poetry2nix&gt; <span class="op">{}</span></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a><span class="op">}</span> :</span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>poetry2nix.mkPoetryEnv <span class="op">{</span></span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>    <span class="va">projectDir</span> <span class="op">=</span> <span class="ss">./.</span><span class="op">;</span></span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>After that, using <code>pip list</code> to list the python packages that pip can see confirms that this works to download all dependencies.</p>
 </section>
 <section id="packaging-them-myself" class="level2">
 <h2 class="anchored" data-anchor-id="packaging-them-myself">Packaging them myself</h2>
 <p>Okay, I did find something else interesting. When I was looking at one of the openstack dependencies, packaged in nixpkgs, I found something interesting in the meta section:</p>
-<div class="sourceCode" id="cb13"><pre class="sourceCode nix code-with-copy"><code class="sourceCode nix"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>meta = <span class="kw">with</span> lib<span class="op">;</span> <span class="op">{</span></span>
-<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>    <span class="va">description</span> <span class="op">=</span> <span class="st">"Oslo test framework"</span><span class="op">;</span></span>
-<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>    <span class="va">homepage</span> <span class="op">=</span> <span class="st">"https://github.com/openstack/oslotest"</span><span class="op">;</span></span>
-<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>    <span class="va">license</span> <span class="op">=</span> licenses.asl20<span class="op">;</span></span>
-<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>    <span class="va">maintainers</span> <span class="op">=</span> teams.openstack.members<span class="op">;</span></span>
-<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span>;</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb15"><pre class="sourceCode nix code-with-copy"><code class="sourceCode nix"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>meta = <span class="kw">with</span> lib<span class="op">;</span> <span class="op">{</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>    <span class="va">description</span> <span class="op">=</span> <span class="st">"Oslo test framework"</span><span class="op">;</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>    <span class="va">homepage</span> <span class="op">=</span> <span class="st">"https://github.com/openstack/oslotest"</span><span class="op">;</span></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>    <span class="va">license</span> <span class="op">=</span> licenses.asl20<span class="op">;</span></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>    <span class="va">maintainers</span> <span class="op">=</span> teams.openstack.members<span class="op">;</span></span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span>;</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>For maintainers, nix has “teams,”” or groups of people dedicated to packaging a group of packages. And apparently, they seem to have an openstack team:</p>
 <p>Sure enough, in the <a href="https://github.com/NixOS/nixpkgs/blob/master/maintainers/team-list.nix#L633">nixpkgs list of teams</a>, they can be found:</p>
-<div class="sourceCode" id="cb14"><pre class="sourceCode nix code-with-copy"><code class="sourceCode nix"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>openstack = <span class="op">{</span></span>
-<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>    <span class="va">members</span> <span class="op">=</span> <span class="op">[</span></span>
-<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>      emilytrau</span>
-<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>      SuperSandro2000</span>
-<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>    <span class="op">];</span></span>
-<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>    <span class="va">scope</span> <span class="op">=</span> <span class="st">"Maintain the ecosystem around OpenStack"</span><span class="op">;</span></span>
-<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>    <span class="va">shortName</span> <span class="op">=</span> <span class="st">"OpenStack"</span><span class="op">;</span></span>
-<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span>;</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb16"><pre class="sourceCode nix code-with-copy"><code class="sourceCode nix"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>openstack = <span class="op">{</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>    <span class="va">members</span> <span class="op">=</span> <span class="op">[</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>      emilytrau</span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>      SuperSandro2000</span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>    <span class="op">];</span></span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>    <span class="va">scope</span> <span class="op">=</span> <span class="st">"Maintain the ecosystem around OpenStack"</span><span class="op">;</span></span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a>    <span class="va">shortName</span> <span class="op">=</span> <span class="st">"OpenStack"</span><span class="op">;</span></span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span>;</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>These people maintain the ecosystem around openstack, but not openstack itself. Perhaps all openstack dependencies are already packaged?</p>
 <p>I would probably have to do overrides on some of the depedencies to ensure that the versions are correct, since sometimes newer packages have breaking changes, but if stuff is already packaged, that would be great.</p>
 <p>Here is the list of the packages from the requirements.txt. I will link each package to it’s equivalent in nixpkgs.</p>
@@ -671,9 +722,9 @@ Show list
 <p>However, I needed a way to check the compatibility of a python package, to a version of python. Thankfully, I found an easyish way to do so.</p>
 <p><code>pip install --python-version 311 --no-deps --target test-pkg packagename==missing</code></p>
 <p>Because openstack keystone is actually packaged in pypi repos, downloaded by pip, this works:</p>
-<div class="sourceCode" id="cb15"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>moonpie@localhost:~/vscode/keystone&gt; pip install --python-version 311 --no-deps --target test-pkg keystone==missing</span>
-<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>ERROR: Could not find a version that satisfies the requirement keystone==missing (from versions: 12.0.2, 12.0.3, 13.0.2, 13.0.3, 13.0.4, 14.0.0, 14.0.1, 14.1.0, 14.2.0, 15.0.0.0rc1, 15.0.0.0rc2, 15.0.0, 15.0.1, 16.0.0.0rc1, 16.0.0.0rc2, 16.0.0, 16.0.1, 16.0.2, 17.0.0.0rc1, 17.0.0.0rc2, 17.0.0, 17.0.1, 18.0.0.0rc1, 18.0.0, 18.1.0, 19.0.0.0rc1, 19.0.0.0rc2, 19.0.0, 19.0.1, 20.0.0.0rc1, 20.0.0, 20.0.1, 21.0.0.0rc1, 21.0.0, 22.0.0.0rc1, 22.0.0, 23.0.0.0rc1, 23.0.0)</span>
-<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>ERROR: No matching distribution found for keystone==missing</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb17"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>moonpie@localhost:~/vscode/keystone&gt; pip install --python-version 311 --no-deps --target test-pkg keystone==missing</span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>ERROR: Could not find a version that satisfies the requirement keystone==missing (from versions: 12.0.2, 12.0.3, 13.0.2, 13.0.3, 13.0.4, 14.0.0, 14.0.1, 14.1.0, 14.2.0, 15.0.0.0rc1, 15.0.0.0rc2, 15.0.0, 15.0.1, 16.0.0.0rc1, 16.0.0.0rc2, 16.0.0, 16.0.1, 16.0.2, 17.0.0.0rc1, 17.0.0.0rc2, 17.0.0, 17.0.1, 18.0.0.0rc1, 18.0.0, 18.1.0, 19.0.0.0rc1, 19.0.0.0rc2, 19.0.0, 19.0.1, 20.0.0.0rc1, 20.0.0, 20.0.1, 21.0.0.0rc1, 21.0.0, 22.0.0.0rc1, 22.0.0, 23.0.0.0rc1, 23.0.0)</span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>ERROR: No matching distribution found for keystone==missing</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>So openstack supports python 3.11, which is good. Nix doesn’t have many of the above libraries packaged for python 3.8 and below.</p>
 
 
