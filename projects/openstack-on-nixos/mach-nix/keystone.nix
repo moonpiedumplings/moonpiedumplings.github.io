@@ -1,8 +1,8 @@
 {
-    nixpkgs ? import <nipxkgs>,
+    pkgs ? import <nipxkgs>,
     #fetchFromGithub,
     fetchgit,
-    python3
+    versionPy ? "39"
 } : 
 
 let
@@ -11,9 +11,13 @@ let
     rev = "65266b5cc867fec2cb6a25409dd7cd12251f6107";
     sha256 = "sha256-1OBBlBzZ894or8eHZjyADOMnGH89pPUKYGVVS5rwW/0=";
     }) {};
+    python = pkgs."python${versionPy}Full";
+    pythonPkgs = pkgs."python${versionPy}Packages";
 in
 
 mach-nix.buildPythonApplication {
+    python = pkgs."python${versionPy}Full";
+    pythonPkgs = pkgs."python${versionPy}Packages";
     pname =  "keystone";
     version = "placeholder";
     src = fetchgit {

@@ -4,7 +4,7 @@ description: ""
 date: "2023-6-11"
 categories: [nix, hci]
 execute:
-  freeze: auto
+  freeze: false
 ---
 
 ## What is hyperconverged infrastrucuture?
@@ -439,7 +439,43 @@ mach-nix.buildPythonApplication {
 
 </details>
 
-And I get the same error as above, after I forcefully quit the stalled program.
+And I get the same error as above, after I forcefully quit the stalled program. 
+
+I realized a little bit later that I forgot to declare `versionPy ? "39"`. 
+
+
+For those trying to help me, here is a live version, updated every `git push`, of the files I am working on.
+
+<details><summary>Show</summary>
+
+```{python}
+#| output: asis
+#| echo: false
+
+tick = "`"
+backticks = tick * 3
+a = ""
+b = ""
+with open('mach-nix/shell.nix', 'r') as f:
+    file_contents = f.read()
+    a = file_contents
+with open('mach-nix/keystone.nix', 'r') as f:
+    file_contents = f.read()
+    b = file_contents
+
+print(f'''
+
+{backticks}{{.nix filename="shell.nix"}}
+{a}
+{backticks}
+
+{backticks}{{.nix filename="keystone.nix"}}
+{b}
+{backticks}
+
+''')
+```
+
 
 
 
