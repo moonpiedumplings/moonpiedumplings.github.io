@@ -16,6 +16,14 @@ jobs:
 
       - name: Set up Quarto
         uses: quarto-dev/quarto-actions/setup@v2
+      - name: Install jupyter and other deps
+        using: 'composite'
+        steps: 
+            run:
+              shell: bash
+              run: |
+                sudo apt-get install jupyter-notebook jupyter-core python-ipykernel -y
+
 
       - name: Render and Publish
         uses: quarto-dev/quarto-actions/publish@v2
