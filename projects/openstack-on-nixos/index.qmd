@@ -6,6 +6,7 @@ categories: [nix, hci]
 execute:
   freeze: false
 ---
+# What is all this?
 
 ## What is hyperconverged infrastrucuture?
 
@@ -103,7 +104,7 @@ One person replied, saying that they had done a bit, but work had "rotten since"
 
 This person, or group of people, had packaged openstack to be easy to enable. But as I read through the code, I realized that the app is from the era of python2, so this code is really old. 
 
-## It begins
+# The actual project
 
 So I decided to package it myself. At least, that's my goal. It seems to be a massive project, but one user already did it, when I asked around on the discord.
 
@@ -562,6 +563,20 @@ poetry2nix.mkPoetryEnv {
 }
 ```
 After that, using `pip list` to list the python packages that pip can see confirms that this works to download all dependencies. 
+
+But I don't really like doing this, because dephell is depreceated. So I'm going to look into some other converion tools, tools to convert the pip file format/requirements.txt to the poetry file format/pyproject.toml.
+
+
+| Project | Notes |
+| - | - |
+| [dephell](https://github.com/dephell/dephell) | Works, but is archive/unmaintained, and complains about a piece being deprecated when ran... |
+| [stanza](https://github.com/src-r-r/python-stanza) | Last commit was a year ago|
+| [poeareq](https://github.com/tddschn/poetry-add-requirements.txt) | maintained by one person, last commit a year ago. Present in pypi |
+| [tigerhawk's gist](https://gist.github.com/tigerhawkvok/856bc4690353e14a6ee03db20c0dfbd4) | just a github gist, a user complimented in a comment one month ago. But the script was last updated in 2019 |
+| [various shell one liners](https://stackoverflow.com/questions/62764148/how-to-import-requirements-txt-from-an-existing-project-using-poetry/72456245#72456245) | provided by stackoverflow. They work, but are hacky, and apparently have edge cases they don't cover. |
+| [pip-poetry-migration](https://github.com/expobrain/pip-poetry-migration) | untested/unresearched |
+| [poetry-import](https://github.com/BrandonLWhite/poetry-import) | untested/unresearched. In pypi. |
+
 
 
 ## Packaging them myself
