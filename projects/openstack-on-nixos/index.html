@@ -163,9 +163,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#what-is-hyperconverged-infrastrucuture" id="toc-what-is-hyperconverged-infrastrucuture" class="nav-link active" data-scroll-target="#what-is-hyperconverged-infrastrucuture">What is hyperconverged infrastrucuture?</a></li>
+  <li><a href="#what-is-all-this" id="toc-what-is-all-this" class="nav-link active" data-scroll-target="#what-is-all-this">What is all this?</a>
+  <ul class="collapse">
+  <li><a href="#what-is-hyperconverged-infrastrucuture" id="toc-what-is-hyperconverged-infrastrucuture" class="nav-link" data-scroll-target="#what-is-hyperconverged-infrastrucuture">What is hyperconverged infrastrucuture?</a></li>
   <li><a href="#what-is-nixos" id="toc-what-is-nixos" class="nav-link" data-scroll-target="#what-is-nixos">What is Nixos?</a></li>
-  <li><a href="#it-begins" id="toc-it-begins" class="nav-link" data-scroll-target="#it-begins">It begins</a></li>
+  </ul></li>
+  <li><a href="#the-actual-project" id="toc-the-actual-project" class="nav-link" data-scroll-target="#the-actual-project">The actual project</a>
+  <ul class="collapse">
   <li><a href="#pip2nix" id="toc-pip2nix" class="nav-link" data-scroll-target="#pip2nix">Pip2nix</a></li>
   <li><a href="#mach-nix" id="toc-mach-nix" class="nav-link" data-scroll-target="#mach-nix">Mach-nix</a>
   <ul class="collapse">
@@ -175,6 +179,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#dream2nix" id="toc-dream2nix" class="nav-link" data-scroll-target="#dream2nix">Dream2nix</a></li>
   <li><a href="#poetry2nix" id="toc-poetry2nix" class="nav-link" data-scroll-target="#poetry2nix">Poetry2nix</a></li>
   <li><a href="#packaging-them-myself" id="toc-packaging-them-myself" class="nav-link" data-scroll-target="#packaging-them-myself">Packaging them myself</a></li>
+  </ul></li>
   </ul>
 </nav>
     </div>
@@ -208,6 +213,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 </header>
 
+<section id="what-is-all-this" class="level1">
+<h1>What is all this?</h1>
 <section id="what-is-hyperconverged-infrastrucuture" class="level2">
 <h2 class="anchored" data-anchor-id="what-is-hyperconverged-infrastrucuture">What is hyperconverged infrastrucuture?</h2>
 <p><a href="https://en.wikipedia.org/wiki/Hyper-converged_infrastructure">Hyperconverged infrastrucucture</a>, is when multiple aspects of computing can all be managed from the same platform. This is usually done with virtualization, like virtualized servers, or virtualized storage.</p>
@@ -285,8 +292,9 @@ Show someone else’s configs for lxdware on nixos
 <p>One person replied, saying that they had done a bit, but work had “rotten since”. And indeed, when I searched around github, I found an old project, in a <a href="https://github.com/hyphon81/Nixtack/tree/master/openstack">github repo titled nixstack</a></p>
 <p>This person, or group of people, had packaged openstack to be easy to enable. But as I read through the code, I realized that the app is from the era of python2, so this code is really old.</p>
 </section>
-<section id="it-begins" class="level2">
-<h2 class="anchored" data-anchor-id="it-begins">It begins</h2>
+</section>
+<section id="the-actual-project" class="level1">
+<h1>The actual project</h1>
 <p>So I decided to package it myself. At least, that’s my goal. It seems to be a massive project, but one user already did it, when I asked around on the discord.</p>
 <p><img src="images/someonelse.png" class="img-fluid"></p>
 <p>They claimed they will open source it soon-ish, but right now, none of their work is public.</p>
@@ -296,7 +304,6 @@ Show someone else’s configs for lxdware on nixos
 <p>Nixpkgs very large, but I don’t know if they have all of the python packages. Luckily, I found a newer project, <a href="https://github.com/nix-community/pip2nix">pip2nix</a>, which seems to have been first created at around the same time the openstack on nix projects stopped development.</p>
 <p>I should be able to convert a requirements.txt into something nix can install natively, directly from the pypi repos, without having to worry about packages not being packages in nixpkgs.</p>
 <p>So I started by cloning the openstack keystone repository from github: <a href="https://github.com/openstack/keystone">https://github.com/openstack/keystone</a></p>
-</section>
 <section id="pip2nix" class="level2">
 <h2 class="anchored" data-anchor-id="pip2nix">Pip2nix</h2>
 <p>I install and setup pip2nix and attempt to use it. It first complains about python36 being too old, but after I switch to the python39 version of pip2nix:</p>
@@ -595,20 +602,20 @@ Show
 <pre><strong>keystone.nix</strong></pre>
 </div>
 <div class="sourceCode" id="cb14"><pre class="sourceCode nix code-with-copy"><code class="sourceCode nix"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="op">{</span></span>
-<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>    <span class="va">pkgs</span> <span class="op">?</span> <span class="bu">import</span> &lt;nipxkgs&gt;<span class="op">,</span></span>
-<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>    <span class="co">#fetchFromGithub,</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>    <span class="va">pkgs</span> <span class="op">?</span> <span class="bu">import</span> &lt;nipxkgs&gt; <span class="op">{},</span> </span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>    <span class="co">#pkgs ? (import fetchtarball {"https://github.com/nixos/nixpkgs/archive/f10cdcf31dd2a436edbf7f0ad82c44b911804bc8.tar.gz"}),</span></span>
 <span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>    <span class="va">fetchgit</span><span class="op">,</span></span>
 <span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>    <span class="va">versionPy</span> <span class="op">?</span> <span class="st">"39"</span></span>
 <span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a><span class="op">}</span> : </span>
 <span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span></span>
-<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a>    <span class="va">mach-nix</span> <span class="op">=</span> <span class="bu">import</span> <span class="op">(</span>fetchgit <span class="op">{</span></span>
-<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a>    <span class="va">url</span> <span class="op">=</span> <span class="st">"https://github.com/DavHau/mach-nix"</span><span class="op">;</span></span>
-<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a>    <span class="va">rev</span> <span class="op">=</span> <span class="st">"65266b5cc867fec2cb6a25409dd7cd12251f6107"</span><span class="op">;</span></span>
-<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a>    <span class="va">sha256</span> <span class="op">=</span> <span class="st">"sha256-1OBBlBzZ894or8eHZjyADOMnGH89pPUKYGVVS5rwW/0="</span><span class="op">;</span></span>
-<span id="cb14-13"><a href="#cb14-13" aria-hidden="true" tabindex="-1"></a>    <span class="op">})</span> <span class="op">{};</span></span>
-<span id="cb14-14"><a href="#cb14-14" aria-hidden="true" tabindex="-1"></a>    <span class="va">python</span> <span class="op">=</span> pkgs.<span class="st">"python</span><span class="sc">${</span>versionPy<span class="sc">}</span><span class="st">Full"</span><span class="op">;</span></span>
-<span id="cb14-15"><a href="#cb14-15" aria-hidden="true" tabindex="-1"></a>    <span class="va">pythonPkgs</span> <span class="op">=</span> pkgs.<span class="st">"python</span><span class="sc">${</span>versionPy<span class="sc">}</span><span class="st">Packages"</span><span class="op">;</span></span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a>    <span class="va">python</span> <span class="op">=</span> pkgs.<span class="st">"python</span><span class="sc">${</span>versionPy<span class="sc">}</span><span class="st">Full"</span><span class="op">;</span></span>
+<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a>    <span class="va">pythonPackages</span> <span class="op">=</span> pkgs.<span class="st">"python</span><span class="sc">${</span>versionPy<span class="sc">}</span><span class="st">Packages"</span><span class="op">;</span></span>
+<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a>    <span class="va">mach-nix</span> <span class="op">=</span> <span class="bu">import</span> <span class="op">(</span>fetchGit <span class="op">{</span></span>
+<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a>    <span class="va">url</span> <span class="op">=</span> <span class="st">"https://github.com/DavHau/mach-nix"</span><span class="op">;</span></span>
+<span id="cb14-13"><a href="#cb14-13" aria-hidden="true" tabindex="-1"></a>    <span class="va">rev</span> <span class="op">=</span> <span class="st">"65266b5cc867fec2cb6a25409dd7cd12251f6107"</span><span class="op">;</span></span>
+<span id="cb14-14"><a href="#cb14-14" aria-hidden="true" tabindex="-1"></a>    <span class="co">#sha256 = "sha256-1OBBlBzZ894or8eHZjyADOMnGH89pPUKYGVVS5rwW/0=";</span></span>
+<span id="cb14-15"><a href="#cb14-15" aria-hidden="true" tabindex="-1"></a>    <span class="op">})</span> <span class="op">{</span><span class="kw">inherit</span> pkgs python pythonPackages<span class="op">;};</span></span>
 <span id="cb14-16"><a href="#cb14-16" aria-hidden="true" tabindex="-1"></a><span class="kw">in</span></span>
 <span id="cb14-17"><a href="#cb14-17" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb14-18"><a href="#cb14-18" aria-hidden="true" tabindex="-1"></a>mach<span class="op">-</span>nix.buildPythonApplication <span class="op">{</span></span>
@@ -620,7 +627,9 @@ Show
 <span id="cb14-24"><a href="#cb14-24" aria-hidden="true" tabindex="-1"></a>        <span class="va">url</span> <span class="op">=</span> <span class="st">"https://github.com/openstack/keystone/"</span><span class="op">;</span></span>
 <span id="cb14-25"><a href="#cb14-25" aria-hidden="true" tabindex="-1"></a>        <span class="va">rev</span> <span class="op">=</span> <span class="st">"040e6d09b1e7e6817c81209c2b089d318715bef6"</span><span class="op">;</span></span>
 <span id="cb14-26"><a href="#cb14-26" aria-hidden="true" tabindex="-1"></a>    <span class="op">};</span></span>
-<span id="cb14-27"><a href="#cb14-27" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb14-27"><a href="#cb14-27" aria-hidden="true" tabindex="-1"></a>    <span class="va">pypiDataRev</span> <span class="op">=</span> <span class="st">"e9571cac25d2f509e44fec9dc94a3703a40126ff"</span><span class="op">;</span></span>
+<span id="cb14-28"><a href="#cb14-28" aria-hidden="true" tabindex="-1"></a>    <span class="va">pypiDataSha256</span> <span class="op">=</span> <span class="st">"1rbb0yx5kjn0j6lk0ml163227swji8abvq0krynqyi759ixirxd5"</span><span class="op">;</span></span>
+<span id="cb14-29"><a href="#cb14-29" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </details></section>
 </section>
@@ -710,6 +719,45 @@ Show error
 <span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>After that, using <code>pip list</code> to list the python packages that pip can see confirms that this works to download all dependencies.</p>
+<p>But I don’t really like doing this, because dephell is depreceated. So I’m going to look into some other converion tools, tools to convert the pip file format/requirements.txt to the poetry file format/pyproject.toml.</p>
+<table class="table">
+<thead>
+<tr class="header">
+<th>Project</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><a href="https://github.com/dephell/dephell">dephell</a></td>
+<td>Works, but is archive/unmaintained, and complains about a piece being deprecated when ran…</td>
+</tr>
+<tr class="even">
+<td><a href="https://github.com/src-r-r/python-stanza">stanza</a></td>
+<td>Last commit was a year ago</td>
+</tr>
+<tr class="odd">
+<td><a href="https://github.com/tddschn/poetry-add-requirements.txt">poeareq</a></td>
+<td>maintained by one person, last commit a year ago. Present in pypi</td>
+</tr>
+<tr class="even">
+<td><a href="https://gist.github.com/tigerhawkvok/856bc4690353e14a6ee03db20c0dfbd4">tigerhawk’s gist</a></td>
+<td>just a github gist, a user complimented in a comment one month ago. But the script was last updated in 2019</td>
+</tr>
+<tr class="odd">
+<td><a href="https://stackoverflow.com/questions/62764148/how-to-import-requirements-txt-from-an-existing-project-using-poetry/72456245#72456245">various shell one liners</a></td>
+<td>provided by stackoverflow. They work, but are hacky, and apparently have edge cases they don’t cover.</td>
+</tr>
+<tr class="even">
+<td><a href="https://github.com/expobrain/pip-poetry-migration">pip-poetry-migration</a></td>
+<td>untested/unresearched</td>
+</tr>
+<tr class="odd">
+<td><a href="https://github.com/BrandonLWhite/poetry-import">poetry-import</a></td>
+<td>untested/unresearched. In pypi.</td>
+</tr>
+</tbody>
+</table>
 </section>
 <section id="packaging-them-myself" class="level2">
 <h2 class="anchored" data-anchor-id="packaging-them-myself">Packaging them myself</h2>
@@ -781,6 +829,7 @@ Show list
 <p>So openstack supports python 3.11, which is good. Nix doesn’t have many of the above libraries packaged for python 3.8 and below.</p>
 
 
+</section>
 </section>
 
 </main> <!-- /main -->
