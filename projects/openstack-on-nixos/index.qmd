@@ -452,25 +452,15 @@ For those trying to help me, here is a live version, updated every `git push`, o
 #| output: asis
 #| echo: false
 
-tick = "`"
-backticks = tick * 3
-a = ""
-b = ""
-with open('mach-nix/shell.nix', 'r') as f:
-    file_contents = f.read()
-    a = file_contents
-with open('mach-nix/keystone.nix', 'r') as f:
-    file_contents = f.read()
-    b = file_contents
-
+backticks = "`" * 3
 print(f'''
 
 {backticks}{{.nix filename="shell.nix"}}
-{a}
+{open('mach-nix/shell.nix', 'r').read()}
 {backticks}
 
 {backticks}{{.nix filename="keystone.nix"}}
-{b}
+{open('mach-nix/keystone.nix','r').read()}
 {backticks}
 
 ''')

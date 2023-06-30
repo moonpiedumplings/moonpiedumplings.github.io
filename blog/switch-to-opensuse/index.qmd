@@ -18,7 +18,7 @@ Security. Previously, I didn't care about this, because I carried my laptop arou
 
 And the other, is my tools and packages. I didn't worry too much about this, because I had decided beforehand on using nix and [home-manager](https://github.com/nix-community/home-manager) to install packages not available in the repositories. Home manager is a tool that allows for declarative configuration of a user environmetn, including packages, configuration files, or environment variables, using the nix programming language. Notably, it can be useed on almost all linux distros. 
 
-Here is my current home.nix, the file home-manager takes as an input.
+Here is my current home.nix, as of writing this, the file home-manager takes as an input.
 
 
 <details><summary>Show</summary>
@@ -222,4 +222,28 @@ However, in order for running some programs with sudo to work, I had to edit ope
 Defaults !env_reset
 ## Change env_reset to !env_reset in previous line to keep all environment variables
 ....
+```
+
+I've now uploaded my home.nix to a github repo: [https://github.com/moonpiedumplings/home-manager](https://github.com/moonpiedumplings/home-manager)
+
+Here is the home.nix that is currently in the `main` branch of my github repo (this is dynamically rendered and updated every update of this blog)
+
+
+```{python}
+#| output: asis
+#| echo: false
+
+import requests
+backticks = "`" * 3
+
+print(f'''
+
+{backticks}{{.nix .code-overflow-wrap filename=home.nix}}
+{requests.get('https://raw.githubusercontent.com/moonpiedumplings/home-manager/main/home.nix').text}
+{backticks}
+
+
+''')
+
+
 ```
