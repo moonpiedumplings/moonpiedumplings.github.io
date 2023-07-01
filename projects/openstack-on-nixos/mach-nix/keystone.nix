@@ -3,6 +3,7 @@
     #pkgs ? (import fetchtarball {"https://github.com/nixos/nixpkgs/archive/f10cdcf31dd2a436edbf7f0ad82c44b911804bc8.tar.gz"}),
     fetchgit,
     versionPy ? "39"
+    builtins
 } : 
 
 let
@@ -21,7 +22,7 @@ let
     };
 in
 
-mach-nix.buildPythonApplication {
+mach-nix.buildPythonApplication rec {
     pname =  "keystone";
     version = "placeholder";
 
@@ -30,5 +31,6 @@ mach-nix.buildPythonApplication {
         rev = "040e6d09b1e7e6817c81209c2b089d318715bef6";
         sha256 = "sha256-qQgGh0WwEDSYQC1PDnSDp3RUiWoFjV5SCjw0SiUlJtk=";
     };
+    requirements =  builtins.readFile "${src}/requirements.txt";
     
 }

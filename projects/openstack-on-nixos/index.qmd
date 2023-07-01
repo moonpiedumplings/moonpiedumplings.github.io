@@ -538,6 +538,65 @@ Clear, and easy to understand. For whatever reason, mach-nix is unable to get re
 
 I will see if there is a way to get around this. 
 
+So I found a way to get around this:
+
+```{.nix .code-overflow-wrap}
+mach-nix.buildPythonApplication rec {
+    pname =  "keystone";
+    version = "placeholder";
+
+    src = fetchgit {
+        url = "https://github.com/openstack/keystone/";
+        rev = "040e6d09b1e7e6817c81209c2b089d318715bef6";
+        sha256 = "sha256-qQgGh0WwEDSYQC1PDnSDp3RUiWoFjV5SCjw0SiUlJtk=";
+    };
+    requirements =  builtins.readFile "${src}/requirements.txt";
+    
+}
+```
+
+But of course, this still errors. 
+
+After a lot of compiling and building, I get this:
+
+<details><summary>Show error</summary>
+
+```{.default .code-overflow-scroll}
+ERROR:root:Error parsing
+Traceback (most recent call last):
+  File "/nix/store/bksvs9irxl40bnm126sdnhxam0rzidby-python3.9-pbr-5.11.0/lib/python3.9/site-packages/pbr/core.py", line 111, in pbr
+    attrs = util.cfg_to_args(path, dist.script_args)
+  File "/nix/store/bksvs9irxl40bnm126sdnhxam0rzidby-python3.9-pbr-5.11.0/lib/python3.9/site-packages/pbr/util.py", line 272, in cfg_to_args
+    pbr.hooks.setup_hook(config)
+  File "/nix/store/bksvs9irxl40bnm126sdnhxam0rzidby-python3.9-pbr-5.11.0/lib/python3.9/site-packages/pbr/hooks/__init__.py", line 25, in setup_hook
+    metadata_config.run()
+  File "/nix/store/bksvs9irxl40bnm126sdnhxam0rzidby-python3.9-pbr-5.11.0/lib/python3.9/site-packages/pbr/hooks/base.py", line 27, in run
+    self.hook()
+  File "/nix/store/bksvs9irxl40bnm126sdnhxam0rzidby-python3.9-pbr-5.11.0/lib/python3.9/site-packages/pbr/hooks/metadata.py", line 25, in hook
+    self.config['version'] = packaging.get_version(
+  File "/nix/store/bksvs9irxl40bnm126sdnhxam0rzidby-python3.9-pbr-5.11.0/lib/python3.9/site-packages/pbr/packaging.py", line 874, in get_version
+    raise Exception("Versioning for this project requires either an sdist"
+Exception: Versioning for this project requires either an sdist tarball, or access to an upstream git repository. It's also possible that there is a mismatch between the package name in setup.cfg and the argument given to pbr.version.VersionInfo. Project name keystone was given, but was not able to be found.
+error in setup command: Error parsing /build/keystone-040e6d0/setup.cfg: Exception: Versioning for this project requires either an sdist tarball, or access to an upstream git repository. It's also possible that there is a mismatch between the package name in setup.cfg and the argument given to pbr.version.VersionInfo. Project name keystone was given, but was not able to be found.
+error: builder for '/nix/store/gyj2647z1nk1g0dq5wh8jbf1lhv91b9x-python3.9-keystone-placeholder.drv' failed with exit code 1;
+       last 10 log lines:
+       >   File "/nix/store/bksvs9irxl40bnm126sdnhxam0rzidby-python3.9-pbr-5.11.0/lib/python3.9/site-packages/pbr/hooks/__init__.py", line 25, in setup_hook
+       >     metadata_config.run()
+       >   File "/nix/store/bksvs9irxl40bnm126sdnhxam0rzidby-python3.9-pbr-5.11.0/lib/python3.9/site-packages/pbr/hooks/base.py", line 27, in run
+       >     self.hook()
+       >   File "/nix/store/bksvs9irxl40bnm126sdnhxam0rzidby-python3.9-pbr-5.11.0/lib/python3.9/site-packages/pbr/hooks/metadata.py", line 25, in hook
+       >     self.config['version'] = packaging.get_version(
+       >   File "/nix/store/bksvs9irxl40bnm126sdnhxam0rzidby-python3.9-pbr-5.11.0/lib/python3.9/site-packages/pbr/packaging.py", line 874, in get_version
+       >     raise Exception("Versioning for this project requires either an sdist"
+       > Exception: Versioning for this project requires either an sdist tarball, or access to an upstream git repository. It's also possible that there is a mismatch between the package name in setup.cfg and the argument given to pbr.version.VersionInfo. Project name keystone was given, but was not able to be found.
+       > error in setup command: Error parsing /build/keystone-040e6d0/setup.cfg: Exception: Versioning for this project requires either an sdist tarball, or access to an upstream git repository. It's also possible that there is a mismatch between the package name in setup.cfg and the argument given to pbr.version.VersionInfo. Project name keystone was given, but was not able to be found.
+       For full logs, run 'nix-store -l /nix/store/gyj2647z1nk1g0dq5wh8jbf1lhv91b9x-python3.9-keystone-placeholder.drv'.
+```
+
+</details>
+
+At least the error is explicit. I will look into this more later. 
+
 
 For those trying to help me, here is a live version, updated every `git push`, of the files I am working on, because I don't usually update my blog as I work on things, only after.
 
