@@ -778,7 +778,8 @@ Show
 <span id="cb18-35"><a href="#cb18-35" aria-hidden="true" tabindex="-1"></a>    </span>
 <span id="cb18-36"><a href="#cb18-36" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-</details></section>
+</details>
+</section>
 </section>
 <section id="dream2nix" class="level2">
 <h2 class="anchored" data-anchor-id="dream2nix">Dream2nix</h2>
@@ -903,28 +904,93 @@ Show error
 <td><a href="https://github.com/BrandonLWhite/poetry-import">poetry-import</a></td>
 <td>untested/unresearched. In pypi.</td>
 </tr>
+<tr class="even">
+<td><a href="https://github.com/kk6/poetrify">poetrify</a></td>
+<td>last updated 2 years ago. Says that requirements.txt is still in trial in description.</td>
+</tr>
+<tr class="odd">
+<td><a href="https://github.com/neriberto/poetry-plugin-import">poetry import plugin</a></td>
+<td>poetry plugin, so it may be easier to install/automate. Last updated 9 months ago.</td>
+</tr>
+<tr class="even">
+<td><a href="https://github.com/thoth-station/micropipenv">micropipenv</a></td>
+<td>I don’t know if it can actually do what I want. last updated 2 months ago. Maintained by Red Hat.</td>
+</tr>
 </tbody>
 </table>
+<p>Here is a live version of what I am working on for poetry, updated every <code>git push</code>.</p>
+<details>
+<summary>
+Show
+</summary>
+<div class="code-with-filename">
+<div class="code-with-filename-file">
+<pre><strong>shell.nix</strong></pre>
+</div>
+<div class="sourceCode" id="cb21"><pre class="sourceCode nix code-with-copy"><code class="sourceCode nix"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="op">{</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>    <span class="va">pkgs</span> <span class="op">?</span> <span class="bu">import</span> &lt;nixpkgs&gt; <span class="op">{},</span></span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a><span class="op">}</span> :</span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> </span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a>    <span class="va">okeystone</span> <span class="op">=</span> pkgs.callPackage <span class="ss">./keystone.nix</span> <span class="op">{};</span></span>
+<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a><span class="kw">in</span></span>
+<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a>    pkgs.mkShell <span class="op">{</span></span>
+<span id="cb21-9"><a href="#cb21-9" aria-hidden="true" tabindex="-1"></a>        <span class="va">packages</span> <span class="op">=</span> <span class="kw">with</span> pkgs<span class="op">;</span> <span class="op">[</span> okeystone <span class="op">];</span></span>
+<span id="cb21-10"><a href="#cb21-10" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="code-with-filename">
+<div class="code-with-filename-file">
+<pre><strong>keystone.nix</strong></pre>
+</div>
+<div class="sourceCode" id="cb22"><pre class="sourceCode nix code-with-copy"><code class="sourceCode nix"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="op">{</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>    <span class="va">pkgs</span> <span class="op">?</span> <span class="bu">import</span> &lt;nipxkgs&gt; <span class="op">{},</span> </span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>    <span class="co">#pkgs ? (import fetchtarball {"https://github.com/nixos/nixpkgs/archive/f10cdcf31dd2a436edbf7f0ad82c44b911804bc8.tar.gz"}),</span></span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>    <span class="co">#poetry2nix ? (import fetchtarball {"https://github.com/nix-community/poetry2nix/archive/215afa14f7077ca0610882d6d18ac3454f48fa65.tar.gz"}),</span></span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a>    <span class="va">fetchgit</span><span class="op">,</span></span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a><span class="op">}</span> : </span>
+<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span></span>
+<span id="cb22-9"><a href="#cb22-9" aria-hidden="true" tabindex="-1"></a>    <span class="co">/*poetryConverter = src: pkgs.runCommand "${pkg.name}-nixgl-wrapper" {} ''</span></span>
+<span id="cb22-10"><a href="#cb22-10" aria-hidden="true" tabindex="-1"></a><span class="co">    ${pkgs.poetry}/bin/poetry self add poetry-plugin-import</span></span>
+<span id="cb22-11"><a href="#cb22-11" aria-hidden="true" tabindex="-1"></a><span class="co">    mkdir $out</span></span>
+<span id="cb22-12"><a href="#cb22-12" aria-hidden="true" tabindex="-1"></a><span class="co">    ln -s ${pkg}/* $out</span></span>
+<span id="cb22-13"><a href="#cb22-13" aria-hidden="true" tabindex="-1"></a><span class="co">    rm $out/bin</span></span>
+<span id="cb22-14"><a href="#cb22-14" aria-hidden="true" tabindex="-1"></a><span class="co">    mkdir $out/bin</span></span>
+<span id="cb22-15"><a href="#cb22-15" aria-hidden="true" tabindex="-1"></a><span class="co">  '';*/</span></span>
+<span id="cb22-16"><a href="#cb22-16" aria-hidden="true" tabindex="-1"></a>    <span class="va">poetry2nix</span> <span class="op">=</span> <span class="bu">import</span> <span class="op">(</span><span class="bu">builtins</span>.<span class="bu">fetchTarball</span> <span class="op">{</span></span>
+<span id="cb22-17"><a href="#cb22-17" aria-hidden="true" tabindex="-1"></a>    <span class="va">url</span> <span class="op">=</span> <span class="st">"https://github.com/nix-community/poetry2nix/archive/215afa14f7077ca0610882d6d18ac3454f48fa65.tar.gz"</span><span class="op">;</span></span>
+<span id="cb22-18"><a href="#cb22-18" aria-hidden="true" tabindex="-1"></a>    <span class="va">sha256</span> <span class="op">=</span> <span class="st">"0k0blf48ln6bcj7c76cjjcdx41l1ygscpczi2k2d2vqv14a5bzan"</span><span class="op">;</span></span>
+<span id="cb22-19"><a href="#cb22-19" aria-hidden="true" tabindex="-1"></a>  <span class="op">})</span> <span class="op">{};</span></span>
+<span id="cb22-20"><a href="#cb22-20" aria-hidden="true" tabindex="-1"></a><span class="kw">in</span></span>
+<span id="cb22-21"><a href="#cb22-21" aria-hidden="true" tabindex="-1"></a>poetry2nix.mkPoetryApplication <span class="op">{</span></span>
+<span id="cb22-22"><a href="#cb22-22" aria-hidden="true" tabindex="-1"></a>    <span class="va">src</span> <span class="op">=</span> fetchgit <span class="op">{</span></span>
+<span id="cb22-23"><a href="#cb22-23" aria-hidden="true" tabindex="-1"></a>        <span class="va">url</span> <span class="op">=</span> <span class="st">"https://github.com/openstack/keystone/"</span><span class="op">;</span></span>
+<span id="cb22-24"><a href="#cb22-24" aria-hidden="true" tabindex="-1"></a>        <span class="va">rev</span> <span class="op">=</span> <span class="st">"040e6d09b1e7e6817c81209c2b089d318715bef6"</span><span class="op">;</span></span>
+<span id="cb22-25"><a href="#cb22-25" aria-hidden="true" tabindex="-1"></a>        <span class="va">sha256</span> <span class="op">=</span> <span class="st">"sha256-qQgGh0WwEDSYQC1PDnSDp3RUiWoFjV5SCjw0SiUlJtk="</span><span class="op">;</span></span>
+<span id="cb22-26"><a href="#cb22-26" aria-hidden="true" tabindex="-1"></a>    <span class="op">};</span></span>
+<span id="cb22-27"><a href="#cb22-27" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</details>
 </section>
 <section id="packaging-them-myself" class="level2">
 <h2 class="anchored" data-anchor-id="packaging-them-myself">Packaging them myself</h2>
 <p>Okay, I did find something else interesting. When I was looking at one of the openstack dependencies, packaged in nixpkgs, I found something interesting in the meta section:</p>
-<div class="sourceCode" id="cb21"><pre class="sourceCode nix code-with-copy"><code class="sourceCode nix"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>meta = <span class="kw">with</span> lib<span class="op">;</span> <span class="op">{</span></span>
-<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>    <span class="va">description</span> <span class="op">=</span> <span class="st">"Oslo test framework"</span><span class="op">;</span></span>
-<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>    <span class="va">homepage</span> <span class="op">=</span> <span class="st">"https://github.com/openstack/oslotest"</span><span class="op">;</span></span>
-<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>    <span class="va">license</span> <span class="op">=</span> licenses.asl20<span class="op">;</span></span>
-<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>    <span class="va">maintainers</span> <span class="op">=</span> teams.openstack.members<span class="op">;</span></span>
-<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span>;</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb23"><pre class="sourceCode nix code-with-copy"><code class="sourceCode nix"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>meta = <span class="kw">with</span> lib<span class="op">;</span> <span class="op">{</span></span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>    <span class="va">description</span> <span class="op">=</span> <span class="st">"Oslo test framework"</span><span class="op">;</span></span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>    <span class="va">homepage</span> <span class="op">=</span> <span class="st">"https://github.com/openstack/oslotest"</span><span class="op">;</span></span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>    <span class="va">license</span> <span class="op">=</span> licenses.asl20<span class="op">;</span></span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a>    <span class="va">maintainers</span> <span class="op">=</span> teams.openstack.members<span class="op">;</span></span>
+<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span>;</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>For maintainers, nix has “teams,”” or groups of people dedicated to packaging a group of packages. And apparently, they seem to have an openstack team:</p>
 <p>Sure enough, in the <a href="https://github.com/NixOS/nixpkgs/blob/master/maintainers/team-list.nix#L633">nixpkgs list of teams</a>, they can be found:</p>
-<div class="sourceCode" id="cb22"><pre class="sourceCode nix code-with-copy"><code class="sourceCode nix"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>openstack = <span class="op">{</span></span>
-<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>    <span class="va">members</span> <span class="op">=</span> <span class="op">[</span></span>
-<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>      emilytrau</span>
-<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>      SuperSandro2000</span>
-<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a>    <span class="op">];</span></span>
-<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a>    <span class="va">scope</span> <span class="op">=</span> <span class="st">"Maintain the ecosystem around OpenStack"</span><span class="op">;</span></span>
-<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a>    <span class="va">shortName</span> <span class="op">=</span> <span class="st">"OpenStack"</span><span class="op">;</span></span>
-<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span>;</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb24"><pre class="sourceCode nix code-with-copy"><code class="sourceCode nix"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>openstack = <span class="op">{</span></span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>    <span class="va">members</span> <span class="op">=</span> <span class="op">[</span></span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>      emilytrau</span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a>      SuperSandro2000</span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a>    <span class="op">];</span></span>
+<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a>    <span class="va">scope</span> <span class="op">=</span> <span class="st">"Maintain the ecosystem around OpenStack"</span><span class="op">;</span></span>
+<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a>    <span class="va">shortName</span> <span class="op">=</span> <span class="st">"OpenStack"</span><span class="op">;</span></span>
+<span id="cb24-8"><a href="#cb24-8" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span>;</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>These people maintain the ecosystem around openstack, but not openstack itself. Perhaps all openstack dependencies are already packaged?</p>
 <p>I would probably have to do overrides on some of the depedencies to ensure that the versions are correct, since sometimes newer packages have breaking changes, but if stuff is already packaged, that would be great.</p>
 <p>Here is the list of the packages from the requirements.txt. I will link each package to it’s equivalent in nixpkgs.</p>
@@ -970,9 +1036,9 @@ Show list
 <p>However, I needed a way to check the compatibility of a python package, to a version of python. Thankfully, I found an easyish way to do so.</p>
 <p><code>pip install --python-version 311 --no-deps --target test-pkg packagename==missing</code></p>
 <p>Because openstack keystone is actually packaged in pypi repos, downloaded by pip, this works:</p>
-<div class="sourceCode" id="cb23"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>moonpie@localhost:~/vscode/keystone&gt; pip install --python-version 311 --no-deps --target test-pkg keystone==missing</span>
-<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>ERROR: Could not find a version that satisfies the requirement keystone==missing (from versions: 12.0.2, 12.0.3, 13.0.2, 13.0.3, 13.0.4, 14.0.0, 14.0.1, 14.1.0, 14.2.0, 15.0.0.0rc1, 15.0.0.0rc2, 15.0.0, 15.0.1, 16.0.0.0rc1, 16.0.0.0rc2, 16.0.0, 16.0.1, 16.0.2, 17.0.0.0rc1, 17.0.0.0rc2, 17.0.0, 17.0.1, 18.0.0.0rc1, 18.0.0, 18.1.0, 19.0.0.0rc1, 19.0.0.0rc2, 19.0.0, 19.0.1, 20.0.0.0rc1, 20.0.0, 20.0.1, 21.0.0.0rc1, 21.0.0, 22.0.0.0rc1, 22.0.0, 23.0.0.0rc1, 23.0.0)</span>
-<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>ERROR: No matching distribution found for keystone==missing</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb25"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>moonpie@localhost:~/vscode/keystone&gt; pip install --python-version 311 --no-deps --target test-pkg keystone==missing</span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>ERROR: Could not find a version that satisfies the requirement keystone==missing (from versions: 12.0.2, 12.0.3, 13.0.2, 13.0.3, 13.0.4, 14.0.0, 14.0.1, 14.1.0, 14.2.0, 15.0.0.0rc1, 15.0.0.0rc2, 15.0.0, 15.0.1, 16.0.0.0rc1, 16.0.0.0rc2, 16.0.0, 16.0.1, 16.0.2, 17.0.0.0rc1, 17.0.0.0rc2, 17.0.0, 17.0.1, 18.0.0.0rc1, 18.0.0, 18.1.0, 19.0.0.0rc1, 19.0.0.0rc2, 19.0.0, 19.0.1, 20.0.0.0rc1, 20.0.0, 20.0.1, 21.0.0.0rc1, 21.0.0, 22.0.0.0rc1, 22.0.0, 23.0.0.0rc1, 23.0.0)</span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>ERROR: No matching distribution found for keystone==missing</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>So openstack supports python 3.11, which is good. Nix doesn’t have many of the above libraries packaged for python 3.8 and below.</p>
 
 
