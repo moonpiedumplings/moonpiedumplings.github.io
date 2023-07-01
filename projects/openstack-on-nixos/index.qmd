@@ -445,7 +445,101 @@ And I get the same error as above, after I forcefully quit the stalled program.
 I realized a little bit later that I forgot to declare `versionPy ? "39"`. 
 
 
-For those trying to help me, here is a live version, updated every `git push`, of the files I am working on.
+Later, I finally made some progress. 
+
+<details><summary>Show</summary>
+
+```{.nix .code-overflow-wrap filename="keystone.nix"}
+{
+    pkgs ? import <nipxkgs> {}, 
+    #pkgs ? (import fetchtarball {"https://github.com/nixos/nixpkgs/archive/f10cdcf31dd2a436edbf7f0ad82c44b911804bc8.tar.gz"}),
+    fetchgit,
+    versionPy ? "39"
+} : 
+
+let
+    #python = pkgs."python${versionPy}Full";
+    #pythonPackages = pkgs."python${versionPy}Packages";
+    mach-nix = import (fetchGit {
+    url = "https://github.com/DavHau/mach-nix";
+    rev = "65266b5cc867fec2cb6a25409dd7cd12251f6107";
+    #sha256 = "sha256-1OBBlBzZ894or8eHZjyADOMnGH89pPUKYGVVS5rwW/0=";
+    }) {
+    python = "python39";
+    pythonPackages = "python39Packages";
+
+    pypiDataRev = "e9571cac25d2f509e44fec9dc94a3703a40126ff";
+    pypiDataSha256 = "1rbb0yx5kjn0j6lk0ml163227swji8abvq0krynqyi759ixirxd5";
+    };
+in
+
+mach-nix.buildPythonApplication {
+    pname =  "keystone";
+    version = "placeholder";
+
+    src = fetchgit {
+        url = "https://github.com/openstack/keystone/";
+        rev = "040e6d09b1e7e6817c81209c2b089d318715bef6";
+        sha256 = "sha256-qQgGh0WwEDSYQC1PDnSDp3RUiWoFjV5SCjw0SiUlJtk=";
+    };
+    
+}
+```
+
+</details>
+
+This doesn't fail instantly, but rather does some stuff before giving me a differing, but easy to understand error.
+
+<details><summary>Show error</summary>
+
+```{.default .code-overflow-wrap}
+moonpie@localhost:~/vscode/moonpiedumplings.github.io/projects/openstack-on-nixos/mach-nix> nix-shell
+building '/nix/store/lwpd31yfdr3jcpi8f1ik21dgyhp063iw-python3-3.9.9-env.drv'...
+created 223 symlinks in user environment
+building '/nix/store/iag09dlfh5z4l4f5zq87f38wpwqhdg5h-python3-3.9.9-env-patched.drv'...
+File /nix/store/jzlvmms4bxkqscd2akcfhwwdj2668sjp-python3-3.9.9-env-patched/lib/python3.9/distutils/core.py is read-only; trying to patch anyway
+patching file /nix/store/jzlvmms4bxkqscd2akcfhwwdj2668sjp-python3-3.9.9-env-patched/lib/python3.9/distutils/core.py
+/nix/store/jzlvmms4bxkqscd2akcfhwwdj2668sjp-python3-3.9.9-env-patched/lib/python3.9/site-packages/setuptools/__init__.py
+File /nix/store/jzlvmms4bxkqscd2akcfhwwdj2668sjp-python3-3.9.9-env-patched/lib/python3.9/site-packages/setuptools/__init__.py is read-only; trying to patch anyway
+patching file /nix/store/jzlvmms4bxkqscd2akcfhwwdj2668sjp-python3-3.9.9-env-patched/lib/python3.9/site-packages/setuptools/__init__.py
+Hunk #1 succeeded at 239 (offset -12 lines).
+building '/nix/store/zj70xbgg1gm8kils98insy3xzjzmphqx-package-requirements.drv'...
+unpacking sources
+unpacking source archive /nix/store/22jqj6c8na5k547qjrhlpjpagzq3wvhc-keystone-040e6d0
+source root is keystone-040e6d0
+installing
+extracting dependencies
+error:
+       … while calling the 'derivationStrict' builtin
+
+         at /builtin/derivation.nix:9:12: (source not available)
+
+       … while evaluating derivation 'nix-shell'
+         whose name attribute is located at /nix/store/q300rswsxpr2kkng9azzsbfi9m8fdg50-nixpkgs/nixpkgs/pkgs/stdenv/generic/make-derivation.nix:303:7
+
+       … while evaluating attribute 'nativeBuildInputs' of derivation 'nix-shell'
+
+         at /nix/store/q300rswsxpr2kkng9azzsbfi9m8fdg50-nixpkgs/nixpkgs/pkgs/stdenv/generic/make-derivation.nix:347:7:
+
+          346|       depsBuildBuild              = lib.elemAt (lib.elemAt dependencies 0) 0;
+          347|       nativeBuildInputs           = lib.elemAt (lib.elemAt dependencies 0) 1;
+             |       ^
+          348|       depsBuildTarget             = lib.elemAt (lib.elemAt dependencies 0) 2;
+
+       (stack trace truncated; use '--show-trace' to show the full trace)
+
+       error: Automatic requirements extraction failed for keystone:placeholder.
+       Please manually specify 'requirements'
+```
+
+</details>
+
+Clear, and easy to understand. For whatever reason, mach-nix is unable to get requirements.txt from keystone, and it wants me to manually specify them. 
+
+I will see if there is a way to get around this. 
+
+
+For those trying to help me, here is a live version, updated every `git push`, of the files I am working on, because I don't usually update my blog as I work on things, only after.
 
 <details><summary>Show</summary>
 

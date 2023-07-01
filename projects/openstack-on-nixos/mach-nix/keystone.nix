@@ -6,24 +6,29 @@
 } : 
 
 let
-    python = pkgs."python${versionPy}Full";
-    pythonPackages = pkgs."python${versionPy}Packages";
+    #python = pkgs."python${versionPy}Full";
+    #pythonPackages = pkgs."python${versionPy}Packages";
     mach-nix = import (fetchGit {
     url = "https://github.com/DavHau/mach-nix";
     rev = "65266b5cc867fec2cb6a25409dd7cd12251f6107";
     #sha256 = "sha256-1OBBlBzZ894or8eHZjyADOMnGH89pPUKYGVVS5rwW/0=";
-    }) {inherit pkgs python pythonPackages;};
+    }) {
+    python = "python39";
+    pythonPackages = "python39Packages";
+
+    pypiDataRev = "e9571cac25d2f509e44fec9dc94a3703a40126ff";
+    pypiDataSha256 = "1rbb0yx5kjn0j6lk0ml163227swji8abvq0krynqyi759ixirxd5";
+    };
 in
 
 mach-nix.buildPythonApplication {
-    python = pkgs."python${versionPy}Full";
-    pythonPkgs = pkgs."python${versionPy}Packages";
     pname =  "keystone";
     version = "placeholder";
+
     src = fetchgit {
         url = "https://github.com/openstack/keystone/";
         rev = "040e6d09b1e7e6817c81209c2b089d318715bef6";
+        sha256 = "sha256-qQgGh0WwEDSYQC1PDnSDp3RUiWoFjV5SCjw0SiUlJtk=";
     };
-    pypiDataRev = "e9571cac25d2f509e44fec9dc94a3703a40126ff";
-    pypiDataSha256 = "1rbb0yx5kjn0j6lk0ml163227swji8abvq0krynqyi759ixirxd5";
+    
 }
