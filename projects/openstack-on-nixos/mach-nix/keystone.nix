@@ -2,18 +2,17 @@
     pkgs ? import <nipxkgs> {}, 
     #pkgs ? (import fetchtarball {"https://github.com/nixos/nixpkgs/archive/f10cdcf31dd2a436edbf7f0ad82c44b911804bc8.tar.gz"}),
     fetchgit,
-    fetchPypi,
-    versionPy ? "39"
-    builtins
+    fetchFromGitHub,
+    versionPy ? "39",
 } : 
 
 let
     #python = pkgs."python${versionPy}Full";
     #pythonPackages = pkgs."python${versionPy}Packages";
-    mach-nix = import (fetchGit {
+    mach-nix = import (fetchgit {
     url = "https://github.com/DavHau/mach-nix";
     rev = "65266b5cc867fec2cb6a25409dd7cd12251f6107";
-    #sha256 = "sha256-1OBBlBzZ894or8eHZjyADOMnGH89pPUKYGVVS5rwW/0=";
+    sha256 = "sha256-1OBBlBzZ894or8eHZjyADOMnGH89pPUKYGVVS5rwW/0=";
     }) {
     python = "python39";
     pythonPackages = "python39Packages";
@@ -25,7 +24,8 @@ in
 
 mach-nix.buildPythonApplication rec {
     pname =  "keystone";
-    version = "v3.14";
+    version = "23.0.0";
+    preInstall = ''PBR_VERSION=23.0.0'';
 
     /*src = fetchgit {
         url = "https://github.com/openstack/keystone/";
@@ -36,16 +36,27 @@ mach-nix.buildPythonApplication rec {
         url = "https://github.com/openstack/keystone/archive/eff960e124e2f28922067800547e23f1931d3c4a.tar.gz";
         sha256 = "";
     };*/
-    src = fetchgit {
+    /*src = fetchgit {
         url = "https://github.com/openstack/keystone/";
         rev = "eff960e124e2f28922067800547e23f1931d3c4a";
         sha256 = "sha256-JYP29APY27BpX9GSyayW/y7rskdn8zW5mVsjdBXjCus=";
-    };
+    };*/
     /*src = fetchPypi {
         pname = "keystone";
         version = "23.0.0";
         sha256 = "sha256-t0ravo9+H2nYcoGkvoxn5YxHOTf68vSon+VTJFn6INY=";
     };*/
+   /*src = fetchFromGitHub {
+        owner = "openstack";
+        repo = "keystone";
+        tag = "23.0.0";
+   };*/
+   /*src = fetchTarball {
+        url = "https://github.com/openstack/keystone/archive/refs/tags/23.0.0.tar.gz";
+        sha256 = "";
+    };*/
+    src = /home/moonpie/vscode/keystone; # currently in correct tag
+
     requirements =  builtins.readFile "${src}/requirements.txt";
     
 }
