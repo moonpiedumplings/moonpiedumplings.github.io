@@ -19,9 +19,11 @@ let
   }) {};
 in
 poetry2nix.mkPoetryApplication {
-    src = fetchgit {
+    /*src = fetchgit {
         url = "https://github.com/openstack/keystone/";
         rev = "040e6d09b1e7e6817c81209c2b089d318715bef6";
         sha256 = "sha256-qQgGh0WwEDSYQC1PDnSDp3RUiWoFjV5SCjw0SiUlJtk=";
     };
+    */
+    src = "$HOME/vscode/keystone"; # Not gonna post anything online yet, espcially in such an alpha state. 
 }
