@@ -745,7 +745,7 @@ Show
 <span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>    <span class="va">pkgs</span> <span class="op">?</span> <span class="bu">import</span> &lt;nipxkgs&gt; <span class="op">{},</span> </span>
 <span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>    <span class="co">#pkgs ? (import fetchtarball {"https://github.com/nixos/nixpkgs/archive/f10cdcf31dd2a436edbf7f0ad82c44b911804bc8.tar.gz"}),</span></span>
 <span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>    <span class="va">fetchgit</span><span class="op">,</span></span>
-<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>    <span class="va">fetchFromGitHub</span><span class="op">,</span></span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>    <span class="co">#fetchFromGitHub,</span></span>
 <span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a>    <span class="va">versionPy</span> <span class="op">?</span> <span class="st">"39"</span><span class="op">,</span></span>
 <span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a><span class="op">}</span> : </span>
 <span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a></span>
@@ -768,7 +768,7 @@ Show
 <span id="cb18-25"><a href="#cb18-25" aria-hidden="true" tabindex="-1"></a>mach<span class="op">-</span>nix.buildPythonApplication <span class="kw">rec</span> <span class="op">{</span></span>
 <span id="cb18-26"><a href="#cb18-26" aria-hidden="true" tabindex="-1"></a>    <span class="va">pname</span> <span class="op">=</span>  <span class="st">"keystone"</span><span class="op">;</span></span>
 <span id="cb18-27"><a href="#cb18-27" aria-hidden="true" tabindex="-1"></a>    <span class="va">version</span> <span class="op">=</span> <span class="st">"23.0.0"</span><span class="op">;</span></span>
-<span id="cb18-28"><a href="#cb18-28" aria-hidden="true" tabindex="-1"></a>    <span class="va">preInstall</span> <span class="op">=</span> <span class="st">''PBR_VERSION=23.0.0''</span><span class="op">;</span></span>
+<span id="cb18-28"><a href="#cb18-28" aria-hidden="true" tabindex="-1"></a>    <span class="co">#preInstall = ''PBR_VERSION=23.0.0'';</span></span>
 <span id="cb18-29"><a href="#cb18-29" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb18-30"><a href="#cb18-30" aria-hidden="true" tabindex="-1"></a>    <span class="co">/*src = fetchgit {</span></span>
 <span id="cb18-31"><a href="#cb18-31" aria-hidden="true" tabindex="-1"></a><span class="co">        url = "https://github.com/openstack/keystone/";</span></span>
@@ -779,30 +779,31 @@ Show
 <span id="cb18-36"><a href="#cb18-36" aria-hidden="true" tabindex="-1"></a><span class="co">        url = "https://github.com/openstack/keystone/archive/eff960e124e2f28922067800547e23f1931d3c4a.tar.gz";</span></span>
 <span id="cb18-37"><a href="#cb18-37" aria-hidden="true" tabindex="-1"></a><span class="co">        sha256 = "";</span></span>
 <span id="cb18-38"><a href="#cb18-38" aria-hidden="true" tabindex="-1"></a><span class="co">    };*/</span></span>
-<span id="cb18-39"><a href="#cb18-39" aria-hidden="true" tabindex="-1"></a>    <span class="co">/*src = fetchgit {</span></span>
-<span id="cb18-40"><a href="#cb18-40" aria-hidden="true" tabindex="-1"></a><span class="co">        url = "https://github.com/openstack/keystone/";</span></span>
-<span id="cb18-41"><a href="#cb18-41" aria-hidden="true" tabindex="-1"></a><span class="co">        rev = "eff960e124e2f28922067800547e23f1931d3c4a";</span></span>
-<span id="cb18-42"><a href="#cb18-42" aria-hidden="true" tabindex="-1"></a><span class="co">        sha256 = "sha256-JYP29APY27BpX9GSyayW/y7rskdn8zW5mVsjdBXjCus=";</span></span>
-<span id="cb18-43"><a href="#cb18-43" aria-hidden="true" tabindex="-1"></a><span class="co">    };*/</span></span>
-<span id="cb18-44"><a href="#cb18-44" aria-hidden="true" tabindex="-1"></a>    <span class="co">/*src = fetchPypi {</span></span>
-<span id="cb18-45"><a href="#cb18-45" aria-hidden="true" tabindex="-1"></a><span class="co">        pname = "keystone";</span></span>
-<span id="cb18-46"><a href="#cb18-46" aria-hidden="true" tabindex="-1"></a><span class="co">        version = "23.0.0";</span></span>
-<span id="cb18-47"><a href="#cb18-47" aria-hidden="true" tabindex="-1"></a><span class="co">        sha256 = "sha256-t0ravo9+H2nYcoGkvoxn5YxHOTf68vSon+VTJFn6INY=";</span></span>
-<span id="cb18-48"><a href="#cb18-48" aria-hidden="true" tabindex="-1"></a><span class="co">    };*/</span></span>
-<span id="cb18-49"><a href="#cb18-49" aria-hidden="true" tabindex="-1"></a>   <span class="co">/*src = fetchFromGitHub {</span></span>
-<span id="cb18-50"><a href="#cb18-50" aria-hidden="true" tabindex="-1"></a><span class="co">        owner = "openstack";</span></span>
-<span id="cb18-51"><a href="#cb18-51" aria-hidden="true" tabindex="-1"></a><span class="co">        repo = "keystone";</span></span>
-<span id="cb18-52"><a href="#cb18-52" aria-hidden="true" tabindex="-1"></a><span class="co">        tag = "23.0.0";</span></span>
-<span id="cb18-53"><a href="#cb18-53" aria-hidden="true" tabindex="-1"></a><span class="co">   };*/</span></span>
-<span id="cb18-54"><a href="#cb18-54" aria-hidden="true" tabindex="-1"></a>   <span class="co">/*src = fetchTarball {</span></span>
-<span id="cb18-55"><a href="#cb18-55" aria-hidden="true" tabindex="-1"></a><span class="co">        url = "https://github.com/openstack/keystone/archive/refs/tags/23.0.0.tar.gz";</span></span>
-<span id="cb18-56"><a href="#cb18-56" aria-hidden="true" tabindex="-1"></a><span class="co">        sha256 = "";</span></span>
-<span id="cb18-57"><a href="#cb18-57" aria-hidden="true" tabindex="-1"></a><span class="co">    };*/</span></span>
-<span id="cb18-58"><a href="#cb18-58" aria-hidden="true" tabindex="-1"></a>    <span class="va">src</span> <span class="op">=</span> <span class="ss">/home/moonpie/vscode/keystone</span><span class="op">;</span> <span class="co"># currently in correct tag</span></span>
-<span id="cb18-59"><a href="#cb18-59" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb18-60"><a href="#cb18-60" aria-hidden="true" tabindex="-1"></a>    <span class="va">requirements</span> <span class="op">=</span>  <span class="bu">builtins</span>.readFile <span class="st">"</span><span class="sc">${</span>src<span class="sc">}</span><span class="st">/requirements.txt"</span><span class="op">;</span></span>
-<span id="cb18-61"><a href="#cb18-61" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb18-62"><a href="#cb18-62" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb18-39"><a href="#cb18-39" aria-hidden="true" tabindex="-1"></a>    <span class="va">src</span> <span class="op">=</span> <span class="bu">builtins</span>.fetchGit <span class="op">{</span></span>
+<span id="cb18-40"><a href="#cb18-40" aria-hidden="true" tabindex="-1"></a>        <span class="va">url</span> <span class="op">=</span> <span class="st">"https://github.com/openstack/keystone/"</span><span class="op">;</span></span>
+<span id="cb18-41"><a href="#cb18-41" aria-hidden="true" tabindex="-1"></a>        <span class="va">ref</span> <span class="op">=</span> <span class="st">"refs/tags/23.0.0"</span><span class="op">;</span></span>
+<span id="cb18-42"><a href="#cb18-42" aria-hidden="true" tabindex="-1"></a>        <span class="co">#rev = "";</span></span>
+<span id="cb18-43"><a href="#cb18-43" aria-hidden="true" tabindex="-1"></a>        <span class="co">#sha256 = "sha256-JYP29APY27BpX9GSyayW/y7rskdn8zW5mVsjdBXjCus=";</span></span>
+<span id="cb18-44"><a href="#cb18-44" aria-hidden="true" tabindex="-1"></a>    <span class="op">};</span></span>
+<span id="cb18-45"><a href="#cb18-45" aria-hidden="true" tabindex="-1"></a>    <span class="co">/*src = fetchPypi {</span></span>
+<span id="cb18-46"><a href="#cb18-46" aria-hidden="true" tabindex="-1"></a><span class="co">        pname = "keystone";</span></span>
+<span id="cb18-47"><a href="#cb18-47" aria-hidden="true" tabindex="-1"></a><span class="co">        version = "23.0.0";</span></span>
+<span id="cb18-48"><a href="#cb18-48" aria-hidden="true" tabindex="-1"></a><span class="co">        sha256 = "sha256-t0ravo9+H2nYcoGkvoxn5YxHOTf68vSon+VTJFn6INY=";</span></span>
+<span id="cb18-49"><a href="#cb18-49" aria-hidden="true" tabindex="-1"></a><span class="co">    };*/</span></span>
+<span id="cb18-50"><a href="#cb18-50" aria-hidden="true" tabindex="-1"></a>   <span class="co">/*src = fetchFromGitHub {</span></span>
+<span id="cb18-51"><a href="#cb18-51" aria-hidden="true" tabindex="-1"></a><span class="co">        owner = "openstack";</span></span>
+<span id="cb18-52"><a href="#cb18-52" aria-hidden="true" tabindex="-1"></a><span class="co">        repo = "keystone";</span></span>
+<span id="cb18-53"><a href="#cb18-53" aria-hidden="true" tabindex="-1"></a><span class="co">        tag = "23.0.0";</span></span>
+<span id="cb18-54"><a href="#cb18-54" aria-hidden="true" tabindex="-1"></a><span class="co">   };*/</span></span>
+<span id="cb18-55"><a href="#cb18-55" aria-hidden="true" tabindex="-1"></a>   <span class="co">/*src = fetchTarball {</span></span>
+<span id="cb18-56"><a href="#cb18-56" aria-hidden="true" tabindex="-1"></a><span class="co">        url = "https://github.com/openstack/keystone/archive/refs/tags/23.0.0.tar.gz";</span></span>
+<span id="cb18-57"><a href="#cb18-57" aria-hidden="true" tabindex="-1"></a><span class="co">        sha256 = "";</span></span>
+<span id="cb18-58"><a href="#cb18-58" aria-hidden="true" tabindex="-1"></a><span class="co">    };*/</span></span>
+<span id="cb18-59"><a href="#cb18-59" aria-hidden="true" tabindex="-1"></a>    <span class="co">#src = /home/moonpie/vscode/keystone; # currently in correct tag</span></span>
+<span id="cb18-60"><a href="#cb18-60" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-61"><a href="#cb18-61" aria-hidden="true" tabindex="-1"></a>    <span class="va">requirements</span> <span class="op">=</span>  <span class="bu">builtins</span>.readFile <span class="st">"</span><span class="sc">${</span>src<span class="sc">}</span><span class="st">/requirements.txt"</span><span class="op">;</span></span>
+<span id="cb18-62"><a href="#cb18-62" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb18-63"><a href="#cb18-63" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </details>
 </section>
@@ -871,6 +872,16 @@ Show error
 <span id="cb19-55"><a href="#cb19-55" aria-hidden="true" tabindex="-1"></a>[notice] To update, run: /nix/store/w3lza2zk3i6xi1x5rh5zbwc9zlfsymc0-python3-3.10.7-env/bin/python3.10 -m pip install --upgrade pip</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <p>And an error. Interestingly, this is the exact same error that I got with mach-nix. This means that the error proabbly has the same solution, and if I find it, I’d like to stick to dream2nix is it is actively maintained, unlike mach-nix.</p>
+<p>So I started doing some research. The first thing was something another user on matrix sent to me, <a href="https://stackoverflow.com/questions/58854822/python-setup-py-sdist-error-versioning-for-this-project-requires-either-an-sdist">a stackoverflow post</a></p>
+<p>This post had several interesting ramifications. I was recommended to attempt to set the version of keystone using an environment variable, but I noticed that PBR, the tool used to build/install keystone, should be able to get teh current version from git tags, without that hassle. So I did more research as to why this wasn’t working.</p>
+<p>I found a keystone specific bug, on <a href="https://bugs.launchpad.net/pbr/+bug/1968877">launchpad</a>, a bug reporting site. Someone not using nix encountered my exact error. Linked below was a <a href="https://review.opendev.org/c/openstack/devstack/+/837659">fix</a>, created and merged into other openstack repos, but not the keystone one. Apparently, <code>git</code> was changed in such a way that it cannot do any operations on a repo not owned by the current user, in order to <a href="https://github.blog/2022-04-12-git-security-vulnerability-announced/">fix a security vulnerability</a>. This may not bug normal users, but with nix, the git repo is downloaded into the nix store, where is is owned by the <code>root</code> user. Then, the <code>nixbld</code> user’s operate on the store paths and files. This means that nix is probably encountering this specific git behavior. I am guessing my next step is do do something that makes it okay for git to operate on git repo’s not owned by the current user.</p>
+<p>You should be able to adjust git configs to add “safe” directories, that is, declare directories that are ok to operate on not by the current user.</p>
+<p>One <a href="https://stackoverflow.com/questions/75878318/after-upgrade-getting-error-repository-not-owned-by-current-user">stackoverflow</a> answer recommended this:</p>
+<p><code>git config --global --add safe.directory *</code></p>
+<p>But this edits the git configuration files for that user. There might be a way to edit just for that repository, since git stores some configs in the repo itself, but I doubt that, as that creates a very easy workaround for the fix designed to squash the security issue.</p>
+<p>There is the <code>git config --system</code> option, but if I ran that inside of a nix chroot, where would it store it?</p>
+<p>Maybe I could use a modified version of git with nix?</p>
+<p>Another thing to consider is, for the dream2nix approach, does it store a copy of the repository in the nix store, or does it work directly on the repository I run it in?</p>
 </section>
 <section id="poetry2nix" class="level2">
 <h2 class="anchored" data-anchor-id="poetry2nix">Poetry2nix</h2>
