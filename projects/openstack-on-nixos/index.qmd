@@ -693,6 +693,25 @@ hint: See above for details.
 
 And an error. Interestingly, this is the exact same error that I got with mach-nix. This means that the error proabbly has the same solution, and if I find it, I'd like to stick to dream2nix is it is actively maintained, unlike mach-nix.
 
+So I started doing some research. The first thing was something another user on matrix sent to me, [a stackoverflow post](https://stackoverflow.com/questions/58854822/python-setup-py-sdist-error-versioning-for-this-project-requires-either-an-sdist)
+
+This post had several interesting ramifications. I was recommended to attempt to set the version of keystone using an environment variable, but I noticed that PBR, the tool used to build/install keystone, should be able to get teh current version from git tags, without that hassle. So I did more research as to why this wasn't working.
+
+I found a keystone specific bug, on [launchpad](https://bugs.launchpad.net/pbr/+bug/1968877), a bug reporting site. Someone not using nix encountered my exact error. Linked below was a [fix](https://review.opendev.org/c/openstack/devstack/+/837659), created and merged into other openstack repos, but not the keystone one. Apparently, `git` was changed in such a way that it cannot do any operations on a repo not owned by the current user, in order to [fix a security vulnerability](https://github.blog/2022-04-12-git-security-vulnerability-announced/). This may not bug normal users, but with nix, the git repo is downloaded into the nix store, where is is owned by the `root` user. Then, the `nixbld` user's operate on the store paths and files. This means that nix is probably encountering this specific git behavior. I am guessing my next step is do do something that makes it okay for git to operate on git repo's not owned by the current user. 
+
+You should be able to adjust git configs to add "safe" directories, that is, declare directories that are ok to operate on not by the current user. 
+
+One [stackoverflow](https://stackoverflow.com/questions/75878318/after-upgrade-getting-error-repository-not-owned-by-current-user) answer recommended this:
+
+`git config --global --add safe.directory *`
+
+But this edits the git configuration files for that user. There might be a way to edit just for that repository, since git stores some configs in the repo itself, but I doubt that, as that creates a very easy workaround for the fix designed to squash the security issue.
+
+There is the `git config --system` option, but if I ran that inside of a nix chroot, where would it store it?
+
+Maybe I could use a modified version of git with nix?
+
+Another thing to consider is, for the dream2nix approach, does it store a copy of the repository in the nix store, or does it work directly on the repository I run it in?
 
 ## Poetry2nix
 

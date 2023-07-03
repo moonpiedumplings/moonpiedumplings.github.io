@@ -2,7 +2,7 @@
     pkgs ? import <nipxkgs> {}, 
     #pkgs ? (import fetchtarball {"https://github.com/nixos/nixpkgs/archive/f10cdcf31dd2a436edbf7f0ad82c44b911804bc8.tar.gz"}),
     fetchgit,
-    fetchFromGitHub,
+    #fetchFromGitHub,
     versionPy ? "39",
 } : 
 
@@ -25,7 +25,7 @@ in
 mach-nix.buildPythonApplication rec {
     pname =  "keystone";
     version = "23.0.0";
-    preInstall = ''PBR_VERSION=23.0.0'';
+    #preInstall = ''PBR_VERSION=23.0.0'';
 
     /*src = fetchgit {
         url = "https://github.com/openstack/keystone/";
@@ -36,11 +36,12 @@ mach-nix.buildPythonApplication rec {
         url = "https://github.com/openstack/keystone/archive/eff960e124e2f28922067800547e23f1931d3c4a.tar.gz";
         sha256 = "";
     };*/
-    /*src = fetchgit {
+    src = builtins.fetchGit {
         url = "https://github.com/openstack/keystone/";
-        rev = "eff960e124e2f28922067800547e23f1931d3c4a";
-        sha256 = "sha256-JYP29APY27BpX9GSyayW/y7rskdn8zW5mVsjdBXjCus=";
-    };*/
+        ref = "refs/tags/23.0.0";
+        #rev = "";
+        #sha256 = "sha256-JYP29APY27BpX9GSyayW/y7rskdn8zW5mVsjdBXjCus=";
+    };
     /*src = fetchPypi {
         pname = "keystone";
         version = "23.0.0";
@@ -55,7 +56,7 @@ mach-nix.buildPythonApplication rec {
         url = "https://github.com/openstack/keystone/archive/refs/tags/23.0.0.tar.gz";
         sha256 = "";
     };*/
-    src = /home/moonpie/vscode/keystone; # currently in correct tag
+    #src = /home/moonpie/vscode/keystone; # currently in correct tag
 
     requirements =  builtins.readFile "${src}/requirements.txt";
     
