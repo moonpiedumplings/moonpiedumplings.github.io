@@ -1,0 +1,47 @@
+---
+title: "Increasing my security"
+date: "2023-7-5"
+categories: [cybersecurity]
+execute:
+  freeze: auto
+---
+
+Previously, I've been very lax with security. But as I go into the world, and will be leaving my devices unattended, and as what is on my computers becomes more valuable than game site logins, I now need to put actual effort into securing my devices.
+
+# The laptops
+
+In a [previous blogpost](../switch-to-opensuse), I detailed how I set up my laptop with secure boot and disk encryption.
+
+The perfomance impact from disk encyrption is very minimal. This means that if I lose my laptop, then other people won't get access to my data.
+
+Secure boot protects against [evil maid attacks](https://en.wikipedia.org/wiki/Evil_maid_attack). For example, someone could physical access to my machine to replace the kernel with a malicious one, but they can't with secure boot enabled since it only allows for booting of a validated kernel.
+
+And finally, I set a bios password. This prevents people from disabling secure boot.
+
+# The USB's.
+
+Previously, I just carried my USB's, and my hard drive arround, with all the data on them unencrypted. That won't do, because if I lose a USB, it means that people can look at the saved logins, or even get access to my logged in session
+
+I first attempted to use the transparent encryption feature of the [f2fs filesystem](https://en.wikipedia.org/wiki/F2FS). Transparent encryption makes it so that you can use the filesystem normally, but data is encrypted on the drive. However, opensuse seems to have lacking f2fs support, so this didn't work.
+
+I then attempted to use [LUKS](https://en.wikipedia.org/wiki/Linux_Unified_Key_Setup) to encrypt a spare USB I had, so I could move data over. However, for some reason, the LUKS USB wouldn't mount. I experimented with LUKS encryption in other places, but trying to encrypt something in place resulted in data loss, so I ended up giving up.
+
+In addition to this, I began to experience the frustrations with trying to encrypt every single thing on a device. So I decided to only encrypt sensitive data.
+
+I decided to use the [gocryptfs](https://github.com/rfjakob/gocryptfs) tool to create encrypted folders on USB's and hard drive's. It stores the config file in the directory to be encrypted, enabling portability to any device that has gocrypt.
+
+In addition to this, it might be possible to use access the USB's, encrypted folder and all, by either using gocryptfs via [termux](https://github.com/termux/termux-app), an app to give you a linux terminal on android, or via [DroidFS](https://github.com/hardcore-sushi/DroidFS). However, I haven't tested them, and these tools may not be able to access the USB devices.
+
+# Yubikey's
+
+My father had a few spare [yubikey](https://en.wikipedia.org/wiki/YubiKey)'s he could lend to me. Yubikey's are a hardware authentication device, used for things like two factor authentication (2FA). Many services, like my college, support this as an alternative method of 2FA. Because I didn't have them set up yet, I was forced to install yet another app for 2FA on my phone. I don't have these things set up, but I will soon. I probably won't use the Yubikey as a method of unlocking encrypted drives, as it is somewhat redudant.
+
+## Virtual FIDO Device
+
+I may also consider a virtual Fido2 device, to emulate a yubikey, if I don't really want to keep them plugged in. Here are two projects I found:
+
+<https://github.com/bulwarkid/virtual-fido>
+
+<https://github.com/psanford/tpm-fido>
+
+<https://github.com/danstiner/rust-u2f> 
