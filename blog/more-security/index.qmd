@@ -32,6 +32,25 @@ I decided to use the [gocryptfs](https://github.com/rfjakob/gocryptfs) tool to c
 
 In addition to this, it might be possible to use access the USB's, encrypted folder and all, by either using gocryptfs via [termux](https://github.com/termux/termux-app), an app to give you a linux terminal on android, or via [DroidFS](https://github.com/hardcore-sushi/DroidFS). However, I haven't tested them, and these tools may not be able to access the USB devices.
 
+## Cleaning
+
+I needed to clean the data off of the USB's. However due to USB's unique method of data storage, simply deleting the data isn't enough. I decided to overwrite the data once for a more secure erase. However, it wasn't practical to overwrite whole files, so I have to find the sensitive data, so that I can delete it. This is much faster than overwriting everything. 
+
+
+`find . -type f -regex '.*mozilla.*\.\(json\|db\|sqlite\)$'`
+
+This uses a regex to find anything ending in .json, .db, or .sqlite, that is also has a parent or grandfather directory with the name mozilla in it. 
+
+`find . -type f -regex ''.*mozilla.*\.\(json\|db\|sqlite\)$' -exec <securedeletecommand> {} \;`
+
+With this, I can run my secure delete command on my USB's. I think I am going to use [srm](https://srm.sourceforge.net/) a command line tool that is compatible with the `rm` file remover standard util. 
+
+`srm -rfsv` is the command I will use. 
+
+`find . -type f -regex '.*mozilla.*\.\(json\|db\|sqlite\)$' -exec srm -rfsv {} \;`
+
+And this will clean my external storage quite nicely, while not touching other databases or json files that don't have sensitive data.
+
 # Yubikey's
 
 My father had a few spare [yubikey](https://en.wikipedia.org/wiki/YubiKey)'s he could lend to me. Yubikey's are a hardware authentication device, used for things like two factor authentication (2FA). Many services, like my college, support this as an alternative method of 2FA. Because I didn't have them set up yet, I was forced to install yet another app for 2FA on my phone. I don't have these things set up, but I will soon. I probably won't use the Yubikey as a method of unlocking encrypted drives, as it is somewhat redudant.
