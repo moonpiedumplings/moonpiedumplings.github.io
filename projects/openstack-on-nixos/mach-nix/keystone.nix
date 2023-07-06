@@ -2,6 +2,7 @@
     pkgs ? import <nipxkgs> {}, 
     #pkgs ? (import fetchtarball {"https://github.com/nixos/nixpkgs/archive/f10cdcf31dd2a436edbf7f0ad82c44b911804bc8.tar.gz"}),
     fetchgit,
+    fetchPypi,
     #fetchFromGitHub,
     versionPy ? "39",
 } : 
@@ -22,10 +23,10 @@ let
     };
 in
 
-mach-nix.buildPythonApplication rec {
+mach-nix.buildPythonPackage rec {
     pname =  "keystone";
     version = "23.0.0";
-    #preInstall = ''PBR_VERSION=23.0.0'';
+    PBR_VERSION = "${version}";
 
     /*src = fetchgit {
         url = "https://github.com/openstack/keystone/";
@@ -39,12 +40,11 @@ mach-nix.buildPythonApplication rec {
     src = builtins.fetchGit {
         url = "https://github.com/openstack/keystone/";
         ref = "refs/tags/23.0.0";
-        #rev = "";
+        rev = "c08d97672dcd40f8d927f91e59049053cfe3b5e4";
         #sha256 = "sha256-JYP29APY27BpX9GSyayW/y7rskdn8zW5mVsjdBXjCus=";
     };
     /*src = fetchPypi {
-        pname = "keystone";
-        version = "23.0.0";
+        inherit pname version;
         sha256 = "sha256-t0ravo9+H2nYcoGkvoxn5YxHOTf68vSon+VTJFn6INY=";
     };*/
    /*src = fetchFromGitHub {

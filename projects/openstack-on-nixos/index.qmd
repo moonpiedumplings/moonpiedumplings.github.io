@@ -597,6 +597,53 @@ error: builder for '/nix/store/gyj2647z1nk1g0dq5wh8jbf1lhv91b9x-python3.9-keysto
 
 At least the error is explicit. I will look into this more later. 
 
+I found something that worked. Looking at the old [nixstack code](https://github.com/hyphon81/Nixtack/blob/master/openstack/keystone/keystone.nix), there is an attribute that can be set:
+
+`  PBR_VERSION = "${version}";`
+
+and this works. My current keystone.nix:
+
+```{.nix .code-overflow-wrap filename="keystone.nix"}
+{
+    pkgs ? import <nipxkgs> {}, 
+    #pkgs ? (import fetchtarball {"https://github.com/nixos/nixpkgs/archive/f10cdcf31dd2a436edbf7f0ad82c44b911804bc8.tar.gz"}),
+    fetchgit,
+    fetchPypi,
+    #fetchFromGitHub,
+    versionPy ? "39",
+} : 
+
+let
+    #python = pkgs."python${versionPy}Full";
+    #pythonPackages = pkgs."python${versionPy}Packages";
+    mach-nix = import (fetchgit {
+    url = "https://github.com/DavHau/mach-nix";
+    rev = "65266b5cc867fec2cb6a25409dd7cd12251f6107";
+    sha256 = "sha256-1OBBlBzZ894or8eHZjyADOMnGH89pPUKYGVVS5rwW/0=";
+    }) {
+    python = "python39";
+    pythonPackages = "python39Packages";
+
+    pypiDataRev = "e9571cac25d2f509e44fec9dc94a3703a40126ff";
+    pypiDataSha256 = "1rbb0yx5kjn0j6lk0ml163227swji8abvq0krynqyi759ixirxd5";
+    };
+in
+
+mach-nix.buildPythonPackage rec {
+    pname =  "keystone";
+    version = "23.0.0";
+    PBR_VERSION = "${version}";
+    src = builtins.fetchGit {
+        url = "https://github.com/openstack/keystone/";
+        ref = "refs/tags/23.0.0";
+        rev = "c08d97672dcd40f8d927f91e59049053cfe3b5e4";
+    };
+    requirements =  builtins.readFile "${src}/requirements.txt";
+    
+}
+```
+
+But I don't really want to use mach-nix, as it is unmaintained. I will see if there is a way to set this up with dream2nix. 
 
 For those trying to help me, here is a live version, updated every `git push`, of the files I am working on, because I don't usually update my blog as I work on things, only after.
 
