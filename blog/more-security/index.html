@@ -130,7 +130,10 @@ ul.task-list li input[type="checkbox"] {
    
   <ul>
   <li><a href="#the-laptops" id="toc-the-laptops" class="nav-link active" data-scroll-target="#the-laptops">The laptops</a></li>
-  <li><a href="#the-usbs." id="toc-the-usbs." class="nav-link" data-scroll-target="#the-usbs.">The USB’s.</a></li>
+  <li><a href="#the-usbs." id="toc-the-usbs." class="nav-link" data-scroll-target="#the-usbs.">The USB’s.</a>
+  <ul class="collapse">
+  <li><a href="#cleaning" id="toc-cleaning" class="nav-link" data-scroll-target="#cleaning">Cleaning</a></li>
+  </ul></li>
   <li><a href="#yubikeys" id="toc-yubikeys" class="nav-link" data-scroll-target="#yubikeys">Yubikey’s</a>
   <ul class="collapse">
   <li><a href="#virtual-fido-device" id="toc-virtual-fido-device" class="nav-link" data-scroll-target="#virtual-fido-device">Virtual FIDO Device</a></li>
@@ -183,6 +186,17 @@ ul.task-list li input[type="checkbox"] {
 <p>In addition to this, I began to experience the frustrations with trying to encrypt every single thing on a device. So I decided to only encrypt sensitive data.</p>
 <p>I decided to use the <a href="https://github.com/rfjakob/gocryptfs">gocryptfs</a> tool to create encrypted folders on USB’s and hard drive’s. It stores the config file in the directory to be encrypted, enabling portability to any device that has gocrypt.</p>
 <p>In addition to this, it might be possible to use access the USB’s, encrypted folder and all, by either using gocryptfs via <a href="https://github.com/termux/termux-app">termux</a>, an app to give you a linux terminal on android, or via <a href="https://github.com/hardcore-sushi/DroidFS">DroidFS</a>. However, I haven’t tested them, and these tools may not be able to access the USB devices.</p>
+<section id="cleaning" class="level2">
+<h2 class="anchored" data-anchor-id="cleaning">Cleaning</h2>
+<p>I needed to clean the data off of the USB’s. However due to USB’s unique method of data storage, simply deleting the data isn’t enough. I decided to overwrite the data once for a more secure erase. However, it wasn’t practical to overwrite whole files, so I have to find the sensitive data, so that I can delete it. This is much faster than overwriting everything.</p>
+<p><code>find . -type f -regex '.*mozilla.*\.\(json\|db\|sqlite\)$'</code></p>
+<p>This uses a regex to find anything ending in .json, .db, or .sqlite, that is also has a parent or grandfather directory with the name mozilla in it.</p>
+<p><code>find . -type f -regex ''.*mozilla.*\.\(json\|db\|sqlite\)$' -exec &lt;securedeletecommand&gt; {} \;</code></p>
+<p>With this, I can run my secure delete command on my USB’s. I think I am going to use <a href="https://srm.sourceforge.net/">srm</a> a command line tool that is compatible with the <code>rm</code> file remover standard util.</p>
+<p><code>srm -rfsv</code> is the command I will use.</p>
+<p><code>find . -type f -regex '.*mozilla.*\.\(json\|db\|sqlite\)$' -exec srm -rfsv {} \;</code></p>
+<p>And this will clean my external storage quite nicely, while not touching other databases or json files that don’t have sensitive data.</p>
+</section>
 </section>
 <section id="yubikeys" class="level1">
 <h1>Yubikey’s</h1>
