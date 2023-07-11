@@ -166,6 +166,7 @@ ul.task-list li input[type="checkbox"] {
 <p>So I finally found the internet cafe on the cruise ship. I didn’t think they had one.</p>
 <p>The computers look something like this:</p>
 <p><img src="images/intro.jpg" class="img-fluid"></p>
+<p>They have a keyboard, mouse and screen, but the rest of the machine was locked away, physically, behind the desk. I couldn’t get to it, and the cabinets were locked.</p>
 <p>The only reason I know it’s windows is because all devices on this ship, including point of sale devices appear to be using windows. However, there is no taskbar, or windows UI visible, just a chrome browser in an incognito tab session, and a big blue “End Internet Session” button in the top right. When presses, this button completely resets the session.</p>
 <p>So obviously, I decided to do some snooping around.</p>
 <p>Can I get open task manager from the cntrl alt delete interface? :</p>
@@ -197,7 +198,7 @@ ul.task-list li input[type="checkbox"] {
 <p>The settings app wouldn’t launch, it would close instantly. And attempting to launch control panel made erred as well, complaining about being disabled by the administrator.</p>
 <p>So, I decided to use powershell to do further snooping around:</p>
 <p><img src="images/systeminfo.jpg" class="img-fluid"></p>
-<p>Wow, that is an old version of windows. It looks like they haven’t updated this system from when they first installed it in 2020 (It’s currently 9/24/2023 as I write this).</p>
+<p>Wow, that is an old version of windows. It looks like they haven’t updated this system from when they first installed it in 2020 (It’s currently 6/24/2023 as I write this).</p>
 <p><img src="images/whoami.jpg" class="img-fluid"></p>
 <p>The whoami command tells a little bit about users and permissions. Looking at permissions, I notice something. The user I am logged in as is denied all permissions except one, bypass traversal checking. Bypass traversal checking allows users to visit lower level directories they haven’t been explicitly granted permission to go to, even if they are denied to higher level directories.</p>
 <p>In this case, even though I have been denied access to the C drive, this singular permission enabled me to get into C:/Windows, and launch the explorer.exe program. This singular persmission created a security hole for me to crawl to.</p>
