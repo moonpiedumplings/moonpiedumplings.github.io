@@ -6,9 +6,9 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
-<meta name="description" content="This is I blog my progress on my projects. I often use this as a reference sheet when I come back to incomplete projects.">
+<meta name="dcterms.date" content="2023-06-11">
 
-<title>Jeffrey Fonseca - Projects</title>
+<title>Jeffrey Fonseca - Packaging Openstack on Nixos</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -31,8 +31,6 @@ ul.task-list li input[type="checkbox"] {
 <script src="../site_libs/quarto-search/fuse.min.js"></script>
 <script src="../site_libs/quarto-search/quarto-search.js"></script>
 <meta name="quarto:offset" content="../">
-<script src="../site_libs/quarto-listing/list.min.js"></script>
-<script src="../site_libs/quarto-listing/quarto-listing.js"></script>
 <script src="../site_libs/quarto-html/quarto.js"></script>
 <script src="../site_libs/quarto-html/popper.min.js"></script>
 <script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
@@ -62,38 +60,7 @@ ul.task-list li input[type="checkbox"] {
     "search-label": "Search"
   }
 }</script>
-<script>
 
-  window.document.addEventListener("DOMContentLoaded", function (_event) {
-    const listingTargetEl = window.document.querySelector('#listing-listing .list');
-    if (!listingTargetEl) {
-      // No listing discovered, do not attach.
-      return; 
-    }
-
-    const options = {
-      valueNames: ['listing-date','listing-title','listing-author',{ data: ['index'] },{ data: ['categories'] },{ data: ['listing-date-sort'] },{ data: ['listing-title-sort'] }],
-      
-      searchColumns: ["listing-date","listing-title","listing-author"],
-    };
-
-    window['quarto-listings'] = window['quarto-listings'] || {};
-    window['quarto-listings']['listing-listing'] = new List('listing-listing', options);
-
-    if (window['quarto-listing-loaded']) {
-      window['quarto-listing-loaded']();
-    }
-  });
-
-  window.addEventListener('hashchange',() => {
-    if (window['quarto-listing-loaded']) {
-      window['quarto-listing-loaded']();
-    }
-  })
-  </script>
-
-  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
-  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
 
 <link rel="stylesheet" href="../styles.css">
 </head>
@@ -120,7 +87,7 @@ ul.task-list li input[type="checkbox"] {
  <span class="menu-text">Home</span></a>
   </li>  
   <li class="nav-item">
-    <a class="nav-link active" href="../projects/index.html" rel="" target="" aria-current="page">
+    <a class="nav-link" href="../projects/index.html" rel="" target="">
  <span class="menu-text">Projects</span></a>
   </li>  
   <li class="nav-item">
@@ -150,122 +117,208 @@ ul.task-list li input[type="checkbox"] {
     </nav>
 </header>
 <!-- content -->
-<header id="title-block-header" class="quarto-title-block default page-columns page-full">
-  <div class="quarto-title-banner page-columns page-full">
-    <div class="quarto-title column-page-left">
-      <h1 class="title">Projects</h1>
-                  <div>
-        <div class="description">
-          This is I blog my progress on my projects. I often use this as a reference sheet when I come back to incomplete projects.
-        </div>
-      </div>
-                </div>
-  </div>
-    
-  
-  <div class="quarto-title-meta">
-
-      
-    
-      
-    </div>
-    
-  
-  </header><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-full page-navbar">
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
 <!-- sidebar -->
 <!-- margin-sidebar -->
     <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
-        
-    <h5 class="quarto-listing-category-title">Categories</h5><div class="quarto-listing-category category-default"><div class="category" data-category="">All <span class="quarto-category-count">(5)</span></div><div class="category" data-category="devops">devops <span class="quarto-category-count">(2)</span></div><div class="category" data-category="hci">hci <span class="quarto-category-count">(1)</span></div><div class="category" data-category="kasm">kasm <span class="quarto-category-count">(2)</span></div><div class="category" data-category="linux">linux <span class="quarto-category-count">(3)</span></div><div class="category" data-category="nix">nix <span class="quarto-category-count">(5)</span></div><div class="category" data-category="quarto">quarto <span class="quarto-category-count">(1)</span></div><div class="category" data-category="ubuntu">ubuntu <span class="quarto-category-count">(1)</span></div></div></div>
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#summary" id="toc-summary" class="nav-link active" data-scroll-target="#summary">Summary</a></li>
+  <li><a href="#education" id="toc-education" class="nav-link" data-scroll-target="#education">Education</a></li>
+  <li><a href="#technical-proficiencies" id="toc-technical-proficiencies" class="nav-link" data-scroll-target="#technical-proficiencies">Technical Proficiencies</a></li>
+  </ul>
+</nav>
+    </div>
 <!-- main -->
-<main class="content quarto-banner-title-block column-page-left" id="quarto-document-content">
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Packaging Openstack on Nixos</h1>
+  <div class="quarto-categories">
+    <div class="quarto-category">nix</div>
+    <div class="quarto-category">hci</div>
+  </div>
+  </div>
 
 
 
+<div class="quarto-title-meta">
 
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">June 11, 2023</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
 
+</header>
 
-
-
-<div class="quarto-listing quarto-listing-container-table" id="listing-listing">
-
-<table class="quarto-listing-table table">
-<thead>
-<tr>
-<th>
-Date
-</th>
-<th>
-Title
-</th>
-<th>
-Author
-</th>
-</tr>
-</thead>
-<tbody class="list">
-<tr data-index="0" data-categories="nix,linux" data-listing-date-sort="1689292800000" data-listing-file-modified-sort="1689468444692" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="8" data-listing-title-sort="Putting nixos where it's not supposed to be" data-listing-filename-sort="index.qmd">
-<td>
-<span class="listing-date">Jul 14, 2023</span>
-</td>
-<td>
-<a href="../projects/nixos-vps/index.html" class="title listing-title">Putting nixos where it’s not supposed to be</a>
-</td>
-<td>
-<span class="listing-author"></span>
-</td>
-</tr>
-<tr data-index="1" data-categories="nix,hci" data-listing-date-sort="1686441600000" data-listing-file-modified-sort="1689468444692" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="34" data-listing-title-sort="Packaging Openstack on Nixos" data-listing-filename-sort="index.qmd">
-<td>
-<span class="listing-date">Jun 11, 2023</span>
-</td>
-<td>
-<a href="../projects/openstack-on-nixos/index.html" class="title listing-title">Packaging Openstack on Nixos</a>
-</td>
-<td>
-<span class="listing-author"></span>
-</td>
-</tr>
-<tr data-index="2" data-categories="nix,quarto" data-listing-date-sort="1685577600000" data-listing-file-modified-sort="1689468444696" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="39" data-listing-title-sort="Packaging quarto using nix" data-listing-filename-sort="index.qmd">
-<td>
-<span class="listing-date">Jun 1, 2023</span>
-</td>
-<td>
-<a href="../projects/quarto-via-nix/index.html" class="title listing-title">Packaging quarto using nix</a>
-</td>
-<td>
-<span class="listing-author"></span>
-</td>
-</tr>
-<tr data-index="3" data-categories="linux,devops,nix,kasm" data-listing-date-sort="1682985600000" data-listing-file-modified-sort="1689468444692" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="11" data-listing-title-sort="Compiling KasmVNC on NixOS" data-listing-filename-sort="index.qmd">
-<td>
-<span class="listing-date">May 2, 2023</span>
-</td>
-<td>
-<a href="../projects/compiling-kasmvnc-on-nixos/index.html" class="title listing-title">Compiling KasmVNC on NixOS</a>
-</td>
-<td>
-<span class="listing-author"></span>
-</td>
-</tr>
-<tr data-index="4" data-categories="nix,linux,devops,ubuntu,kasm" data-listing-date-sort="1674691200000" data-listing-file-modified-sort="1689468444700" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="10" data-listing-title-sort="Kasmweb setup" data-listing-filename-sort="index.qmd">
-<td>
-<span class="listing-date">Jan 26, 2023</span>
-</td>
-<td>
-<a href="../projects/setting-up-kasm/index.html" class="title listing-title">Kasmweb setup</a>
-</td>
-<td>
-<span class="listing-author"></span>
-</td>
+<section id="summary" class="level1">
+<h1>Summary</h1>
+<p>short, paragraph summary here.</p>
+<p>- | - | - |<br>
+* bullet point of soft skills | · goes here | * test |</p>
+<table class="table">
+<colgroup>
+<col style="width: 22%">
+<col style="width: 22%">
+<col style="width: 29%">
+</colgroup>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">Right</td>
+<td style="text-align: left;">Left</td>
+<td style="text-align: center;">Centered</td>
 </tr>
 </tbody>
-
 </table>
-<div class="listing-no-matching d-none">
-No matching items
-</div>
-</div></main> <!-- /main -->
+<table class="table">
+<colgroup>
+<col style="width: 63%">
+</colgroup>
+<tbody>
+<tr class="odd">
+<td><ul>
+<li>Bullet points | - of soft skills | - here</li>
+</ul></td>
+</tr>
+</tbody>
+</table>
+<table class="table">
+<colgroup>
+<col style="width: 22%">
+<col style="width: 22%">
+<col style="width: 29%">
+</colgroup>
+<tbody>
+<tr class="odd">
+<td>Bananas</td>
+<td>$1.34</td>
+<td><ul>
+<li>built-in wrapper</li>
+<li>bright color</li>
+</ul></td>
+</tr>
+<tr class="even">
+<td>Oranges</td>
+<td>$2.10</td>
+<td><ul>
+<li>cures scurvy</li>
+<li>tasty</li>
+</ul></td>
+</tr>
+</tbody>
+</table>
+<table class="table">
+<colgroup>
+<col style="width: 22%">
+<col style="width: 22%">
+<col style="width: 29%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Fruit</th>
+<th>Price</th>
+<th>Advantages</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Bananas</td>
+<td>$1.34</td>
+<td><ul>
+<li>built-in wrapper</li>
+<li>bright color</li>
+</ul></td>
+</tr>
+<tr class="even">
+<td>Oranges</td>
+<td>$2.10</td>
+<td><ul>
+<li>cures scurvy</li>
+<li>tasty</li>
+</ul></td>
+</tr>
+</tbody>
+</table>
+<table class="table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 25%">
+<col style="width: 41%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: right;">Version</th>
+<th>Name</th>
+<th>Features</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">1.0</td>
+<td>Alpha</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<table class="table">
+<colgroup>
+<col style="width: 39%">
+<col style="width: 28%">
+<col style="width: 32%">
+</colgroup>
+<thead>
+<tr class="header">
+<th></th>
+<th>Apples</th>
+<th>Oranges</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>attributes</td>
+<td>• color: red <br> • shape: round</td>
+<td>• color: orange <br> • shape: round</td>
+</tr>
+<tr class="even">
+<td>tasty</td>
+<td>yes</td>
+<td>yes</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="education" class="level1">
+<h1>Education</h1>
+<p>Diploma from Del Norte High School AP Calculus AB AP Computer Science Principles</p>
+<p>Palomar Community College CSINT 110 — Intro to OS/Hardware Fundamentals</p>
+<p>Coursera Duke Un</p>
+</section>
+<section id="technical-proficiencies" class="level1">
+<h1>Technical Proficiencies</h1>
+<p>Languages: Python, Nix</p>
+<p>Operating Systems: dnf based (Red Hat Enterprise Linux, Oracle Linux, Opensuse/SLES), apt based (ubuntu, mint), Archlinux, and Nixos</p>
+<p>Configuration as code: Docker Compose, Nix Containerization: Docker, Podman Virtualization: Proxmox, Virtualbox Firewalls: Nix, firewalld, ufw Networking</p>
+<p>Skills and Interests: nmap, linux cli,</p>
+<p>Current projects can be found on my blog.</p>
+<p>Professional Experience:</p>
+<p>Dates? Did tech support for my mother’s business, a bevahioral health clinic, which involved me setting up meshcentral (link it) on my server so that I could access machines remotely.</p>
+<p>dates? Currently doing the internship</p>
+<p>Personal Experience</p>
+
+
+</section>
+
+</main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">
 window.document.addEventListener("DOMContentLoaded", function (event) {
   const toggleBodyColorMode = (bsSheetEl) => {
