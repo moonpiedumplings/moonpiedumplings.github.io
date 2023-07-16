@@ -251,18 +251,7 @@ error:
 </details>
 
 I don't really know why this errors. 
-
-
-So I did some more research, and looked at the [pip2nix docs](https://pip2nix.readthedocs.io/en/latest/getting_started.html#using-pip2nix-in-a-project) (which I was suprised they had because nix isn't the best documented). According to that, you can use `pip2nix scaffold --package projectName` to generate a `default.nix` which `nix-shell` will read and convert into a shell environment for you. 
-
-So I did that. And I got the same error as above. I then did some searching on github for a similar issue, and found [one issue](https://github.com/nix-community/pip2nix/issues/83) where a replier said that the user had to add Cython to the requirements.txt, otherwise pip2nix would not add it to the package set. So I tried adding setuptools to the end of the requirements.txt, and pip2nix pretty much just ignored it, and didn't add it to the generated `python-packages.nix` file. Why? 
-
-So I decied to add it to the generated `python-packages.nix` file manually, and I got an error, but that was probably because I had added `setuptools = pkgs.python310Packages.setuptools` when python39 was the version in use. This is because I didn't realize nix packaged python39, I thought they only had 310/311, however, upon later trying to regenerate packages, I now get a completely different error. 
-
-<details><summary>Show error</summary>
-
-```{.default .code-overflow-wrap}
-moonpie@localhost:~/vscode/keystone> nix-shell
+o this is good advice. I just graduated, and although I have an internship I will need to do this anix-shell
 error:
        … in the left operand of the update (//) operator
 
@@ -326,9 +315,7 @@ Sourcing python-catch-conflicts-hook.sh
 error: builder for '/nix/store/71qql4471m8m5js7l1rwnd5m1aizd8m8-mach-nix-master.drv' failed with exit code 1;
        last 10 log lines:
        >   File "/nix/store/pv3psrncam37dc8n1v2q80jfvnw601ln-python3.9-setuptools-67.4.0/lib/python3.9/site-packages/setuptools/_distutils/cmd.py", line 305, in get_finalized_command
-       >     cmd_obj.ensure_finalized()
-       >   File "/nix/store/pv3psrncam37dc8n1v2q80jfvnw601ln-python3.9-setuptools-67.4.0/lib/python3.9/site-packages/setuptools/_distutils/cmd.py", line 111, in ensure_finalized
-       >     self.finalize_options()
+       >     cmd_obj.ensure_fio this is good advice. I just graduated, and although I have an internship I will need to do this ations()
        >   File "/nix/store/pv3psrncam37dc8n1v2q80jfvnw601ln-python3.9-setuptools-67.4.0/lib/python3.9/site-packages/setuptools/command/egg_info.py", line 220, in finalize_options
        >     parsed_version = packaging.version.Version(self.egg_version)
        >   File "/nix/store/pv3psrncam37dc8n1v2q80jfvnw601ln-python3.9-setuptools-67.4.0/lib/python3.9/site-packages/setuptools/_vendor/packaging/version.py", line 197, in __init__
