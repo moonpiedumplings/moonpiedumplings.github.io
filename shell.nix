@@ -3,5 +3,5 @@ let
     quarto = pkgs.callPackage ./env/quarto.nix {};
 in
     pkgs.mkShell {
-        packages = with pkgs; [ python310Full quarto jupyter ];
+        packages = with pkgs; [ python310Full quarto jupyter texlive.combined.scheme-full ];
     }
