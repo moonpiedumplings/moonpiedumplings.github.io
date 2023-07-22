@@ -1,0 +1,42 @@
+---
+title: "Can I write my resume in python?"
+description: ""
+date: "2023-11-6"
+execute:
+  freeze: false
+format:
+  html:
+    toc: false
+    page-layout: article
+---
+
+I am trying to generate a two column resume, but nothign I have tried has been able to output to both pdf and html format. So I am now trying to generate a resume using jupyter and pythons graph generating capabilities. 
+
+
+I found an [example](https://towardsdatascience.com/generating-a-resume-in-python-1480a4d6a399) online, but it has syntax errors when I try to run it, and I also don't know what the code is liscensed under, so I think I will try to write my own. 
+
+First, I need to select a graphics library. They used matplotlib, but I will search for an easier way to do it first. 
+
+
+```{python}
+from ipywidgets import interact, interactive, fixed, interact_manual
+import ipywidgets as widgets
+
+import matplotlib.pyplot as plt
+%matplotlib inline
+
+import numpy as np
+
+def plot_func(freq):
+    x = np.linspace(0, 2*np.pi)
+    y = np.sin(x * freq)
+    plt.plot(x, y)
+
+interact(plot_func, freq = widgets.FloatSlider(value=7.5,
+                                               min=1,
+                                               max=5.0,
+                                               step=0.5))
+```
+
+
+I found another [guide](https://www.iceorfire.com/post/resume-generation-with-python) to write a resume with html, and then convert it to pdf with python, but I don't really want that. 
