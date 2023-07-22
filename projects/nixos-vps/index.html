@@ -8,7 +8,7 @@
 
 <meta name="dcterms.date" content="2023-07-14">
 
-<title>Jeffrey Fonseca - Putting nixos where it’s not supposed to be</title>
+<title>Jeffrey Fonseca - Automating my server config, first nix, then ansible</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -159,8 +159,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#what-i-want-to-do" id="toc-what-i-want-to-do" class="nav-link active" data-scroll-target="#what-i-want-to-do">What I want to do</a></li>
-  <li><a href="#how-i-want-to-do-it" id="toc-how-i-want-to-do-it" class="nav-link" data-scroll-target="#how-i-want-to-do-it">How I want to do it</a></li>
+  <li><a href="#what-i-want-to-do" id="toc-what-i-want-to-do" class="nav-link active" data-scroll-target="#what-i-want-to-do">What I want to do:</a>
+  <ul class="collapse">
+  <li><a href="#nixos" id="toc-nixos" class="nav-link" data-scroll-target="#nixos">Nixos</a></li>
+  <li><a href="#deployment-attempts" id="toc-deployment-attempts" class="nav-link" data-scroll-target="#deployment-attempts">Deployment attempts</a></li>
+  <li><a href="#i-give-up-ansible" id="toc-i-give-up-ansible" class="nav-link" data-scroll-target="#i-give-up-ansible">I give up, ansible</a></li>
+  </ul></li>
   </ul>
 </nav>
     </div>
@@ -169,10 +173,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">Putting nixos where it’s not supposed to be</h1>
+<h1 class="title">Automating my server config, first nix, then ansible</h1>
   <div class="quarto-categories">
     <div class="quarto-category">nix</div>
     <div class="quarto-category">linux</div>
+    <div class="quarto-category">ansible</div>
   </div>
   </div>
 
@@ -195,12 +200,15 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </header>
 
 <section id="what-i-want-to-do" class="level1">
-<h1>What I want to do</h1>
+<h1>What I want to do:</h1>
+<p>I want to automate my install with nixos</p>
+<section id="nixos" class="level2">
+<h2 class="anchored" data-anchor-id="nixos">Nixos</h2>
 <p>I possess a small (5 GB of ram, 3 cores) virtual private server (vps), which I use for some things, such as meshcentral. However, for maintainence purposes, I want to change it to nixos. I already started on a nixos config, which can be found on github: <a href="https://github.com/moonpiedumplings/nixos-configs">nixos-configs</a>.</p>
 <p>Anyway, the config is fairly simple, and a copy of my current vps config, but as code.</p>
 </section>
-<section id="how-i-want-to-do-it" class="level1">
-<h1>How I want to do it</h1>
+<section id="deployment-attempts" class="level2">
+<h2 class="anchored" data-anchor-id="deployment-attempts">Deployment attempts</h2>
 <p>However, I now want to deploy this. I am currently using <a href="https://webdock.io">webdock.io</a> as my VPS provider, which doesn’t officially support nixos. So I want to convert an existing ubuntu install in place to a nixos installation, without physical access to the machine.</p>
 <p>I have tried multiple tools and they have not worked, but I am now trying <a href="https://github.com/numtide/nixos-anywhere">nixos-anywhere</a> for this.</p>
 <p>Here is my config as of 7/14/2023</p>
@@ -335,6 +343,10 @@ disk-config.nix
 <p>My ssh identity file is named <code>nixos-vps</code>.</p>
 <p>But this config doesn’t work. Although my effort to set up the grub bootloader seemed to have prevailed, and the terminal output said it had succeeded, I cannot access the device. I think it is an issue with network connection.</p>
 <p>For those who may be attempting to help me, or look at my work, here is a copy of the files I am working with, updated live on every push to the github repo for this blog.</p>
+<details>
+<summary>
+Show files
+</summary>
 <div class="code-with-filename">
 <div class="code-with-filename-file">
 <pre><strong>flake.nix</strong></pre>
@@ -446,8 +458,72 @@ disk-config.nix
 <span id="cb4-29"><a href="#cb4-29" aria-hidden="true" tabindex="-1"></a>    <span class="op">};</span></span>
 <span id="cb4-30"><a href="#cb4-30" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
+</details>
+</section>
+<section id="i-give-up-ansible" class="level2">
+<h2 class="anchored" data-anchor-id="i-give-up-ansible">I give up, ansible</h2>
+<p>Lately, for my job, I am currently to create a proxmox image using packer. I am starting with a debian image, and then using ansible to configure the image, using public proxmox repos. Although not really ready for public or production usage yet, my repo of this can be found <a href="https://github.com/moonpiedumplings/proxmox-maas/">here</a>.</p>
+<p>Here I am going to begin documenting my initial research and documentation, before I shift to a seperate github repo, which I can apply CI/CD to.</p>
+<p>Ansible appears to support <a href="https://docs.ansible.com/ansible/latest/collections/community/docker/docker_compose_module.html">configuring docker-compose</a>, so it will be very easy to convert my server to that.</p>
+<p>An example docker-compose, from the official ansible documentation:</p>
+<pre class="{yaml}"><code>tasks:
+    - name: Remove flask project
+      community.docker.docker_compose:
+        project_src: flask
+        state: absent
+
+    - name: Start flask project with inline definition
+      community.docker.docker_compose:
+        project_name: flask
+        definition:
+            db:
+              image: postgres
+            web:
+              build: "{{ playbook_dir }}/flask"
+              command: "python manage.py runserver 0.0.0.0:8000"
+              volumes:
+                - "{{ playbook_dir }}/flask:/code"
+              ports:
+                - "8000:8000"
+              links:
+                - db
+      register: output
+</code></pre>
+<p>Below is the main.yml, ansible file I am currently working with, updated every git push.</p>
+<div class="code-with-filename">
+<div class="code-with-filename-file">
+<pre><strong>main.yml</strong></pre>
+</div>
+<div class="sourceCode" id="cb6"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> meshcentral</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">community.docker.docker-compose</span><span class="kw">:</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">project_name</span><span class="kw">:</span><span class="at"> meshcentral</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">definition</span><span class="kw">:</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">version</span><span class="kw">:</span><span class="at"> </span><span class="st">'3'</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">services</span><span class="kw">:</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">meshcentral</span><span class="kw">:</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a><span class="at">            </span><span class="fu">restart</span><span class="kw">:</span><span class="at"> always</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a><span class="at">            </span><span class="fu">container_name</span><span class="kw">:</span><span class="at"> meshcentral</span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a><span class="at">            </span><span class="fu">image</span><span class="kw">:</span><span class="at"> typhonragewind/meshcentral</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a><span class="co">            #ports:</span></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a><span class="co">            #    - 8086:443  #MeshCentral will moan and try everything not to use port 80, but you can also use it if you so desire, just change the config.json according to your needs</span></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a><span class="at">            </span><span class="fu">environment</span><span class="kw">:</span></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a><span class="at">                </span><span class="kw">-</span><span class="at"> HOSTNAME=officemesh.duckdns.org</span><span class="co">     #your hostname</span></span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a><span class="at">                </span><span class="kw">-</span><span class="at"> REVERSE_PROXY=172.18.0.3</span><span class="co">     #set to your reverse proxy IP if you want to put meshcentral behind a reverse proxy</span></span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a><span class="at">                </span><span class="kw">-</span><span class="at"> REVERSE_PROXY_TLS_PORT=443</span></span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a><span class="at">                </span><span class="kw">-</span><span class="at"> IFRAME=false</span><span class="co">    #set to true if you wish to enable iframe support</span></span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a><span class="at">                </span><span class="kw">-</span><span class="at"> ALLOW_NEW_ACCOUNTS=true</span><span class="co">    #set to false if you want disable self-service creation of new accounts besides the first (admin)</span></span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a><span class="at">                </span><span class="kw">-</span><span class="at"> WEBRTC=false</span><span class="co">  #set to true to enable WebRTC - per documentation it is not officially released with meshcentral, but is solid enough to work with. Use with caution</span></span>
+<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a><span class="at">            </span><span class="fu">volumes</span><span class="kw">:</span></span>
+<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a><span class="at">                </span><span class="kw">-</span><span class="at"> ./meshcentral/data:/opt/meshcentral/meshcentral-data</span><span class="co">    #config.json and other important files live here. A must for data persistence</span></span>
+<span id="cb6-22"><a href="#cb6-22" aria-hidden="true" tabindex="-1"></a><span class="at">                </span><span class="kw">-</span><span class="at"> ./meshcentral/user_files:/opt/meshcentral/meshcentral-files</span><span class="co">    #where file uploads for users live</span></span>
+<span id="cb6-23"><a href="#cb6-23" aria-hidden="true" tabindex="-1"></a><span class="at">            </span><span class="fu">networks</span><span class="kw">:</span></span>
+<span id="cb6-24"><a href="#cb6-24" aria-hidden="true" tabindex="-1"></a><span class="at">              </span><span class="fu">default</span><span class="kw">:</span></span>
+<span id="cb6-25"><a href="#cb6-25" aria-hidden="true" tabindex="-1"></a><span class="at">                </span><span class="fu">external</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb6-26"><a href="#cb6-26" aria-hidden="true" tabindex="-1"></a><span class="at">                </span><span class="fu">name</span><span class="kw">:</span><span class="at"> mine</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
 
 
+</section>
 </section>
 
 </main> <!-- /main -->
