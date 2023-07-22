@@ -6,8 +6,9 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
+<meta name="description" content="Playground, where I experiment with technology. Often with quarto itself.">
 
-<title>Jeffrey Fonseca - Hi, I’m Jeffrey Fonseca</title>
+<title>Jeffrey Fonseca - Playground</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -30,6 +31,8 @@ ul.task-list li input[type="checkbox"] {
 <script src="site_libs/quarto-search/fuse.min.js"></script>
 <script src="site_libs/quarto-search/quarto-search.js"></script>
 <meta name="quarto:offset" content="./">
+<script src="site_libs/quarto-listing/list.min.js"></script>
+<script src="site_libs/quarto-listing/quarto-listing.js"></script>
 <script src="site_libs/quarto-html/quarto.js"></script>
 <script src="site_libs/quarto-html/popper.min.js"></script>
 <script src="site_libs/quarto-html/tippy.umd.min.js"></script>
@@ -59,7 +62,38 @@ ul.task-list li input[type="checkbox"] {
     "search-label": "Search"
   }
 }</script>
+<script>
 
+  window.document.addEventListener("DOMContentLoaded", function (_event) {
+    const listingTargetEl = window.document.querySelector('#listing-listing .list');
+    if (!listingTargetEl) {
+      // No listing discovered, do not attach.
+      return; 
+    }
+
+    const options = {
+      valueNames: ['listing-date','listing-title','listing-author',{ data: ['index'] },{ data: ['categories'] },{ data: ['listing-date-sort'] },{ data: ['listing-title-sort'] }],
+      
+      searchColumns: ["listing-date","listing-title","listing-author"],
+    };
+
+    window['quarto-listings'] = window['quarto-listings'] || {};
+    window['quarto-listings']['listing-listing'] = new List('listing-listing', options);
+
+    if (window['quarto-listing-loaded']) {
+      window['quarto-listing-loaded']();
+    }
+  });
+
+  window.addEventListener('hashchange',() => {
+    if (window['quarto-listing-loaded']) {
+      window['quarto-listing-loaded']();
+    }
+  })
+  </script>
+
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
 
 <link rel="stylesheet" href="styles.css">
 </head>
@@ -82,24 +116,28 @@ ul.task-list li input[type="checkbox"] {
           <div class="collapse navbar-collapse" id="navbarCollapse">
             <ul class="navbar-nav navbar-nav-scroll me-auto">
   <li class="nav-item">
-    <a class="nav-link active" href="./index.html" rel="" target="" aria-current="page">
+    <a class="nav-link" href="./index.html" rel="" target="">
  <span class="menu-text">Home</span></a>
   </li>  
   <li class="nav-item">
-    <a class="nav-link" href="./projects/index.html" rel="" target="">
+    <a class="nav-link" href="./projects.html" rel="" target="">
  <span class="menu-text">Projects</span></a>
   </li>  
   <li class="nav-item">
-    <a class="nav-link" href="./blog/index.html" rel="" target="">
+    <a class="nav-link" href="./blog.html" rel="" target="">
  <span class="menu-text">Blog</span></a>
   </li>  
   <li class="nav-item">
-    <a class="nav-link" href="./playground/index.html" rel="" target="">
+    <a class="nav-link active" href="./playground.html" rel="" target="" aria-current="page">
  <span class="menu-text">Playground</span></a>
   </li>  
   <li class="nav-item">
-    <a class="nav-link" href="./guides/index.html" rel="" target="">
+    <a class="nav-link" href="./guides.html" rel="" target="">
  <span class="menu-text">Guides</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="./about.html" rel="" target="">
+ <span class="menu-text">About</span></a>
   </li>  
 </ul>
             <ul class="navbar-nav navbar-nav-scroll ms-auto">
@@ -116,45 +154,122 @@ ul.task-list li input[type="checkbox"] {
     </nav>
 </header>
 <!-- content -->
-<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<header id="title-block-header" class="quarto-title-block default page-columns page-full">
+  <div class="quarto-title-banner page-columns page-full">
+    <div class="quarto-title column-page-left">
+      <h1 class="title">Playground</h1>
+                  <div>
+        <div class="description">
+          Playground, where I experiment with technology. Often with quarto itself.
+        </div>
+      </div>
+                </div>
+  </div>
+    
+  
+  <div class="quarto-title-meta">
+
+      
+    
+      
+    </div>
+    
+  
+  </header><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-full page-navbar">
 <!-- sidebar -->
 <!-- margin-sidebar -->
     <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
         
-    </div>
+    <h5 class="quarto-listing-category-title">Categories</h5><div class="quarto-listing-category category-default"><div class="category" data-category="">All <span class="quarto-category-count">(5)</span></div><div class="category" data-category="cybersecurity">cybersecurity <span class="quarto-category-count">(3)</span></div><div class="category" data-category="html">html <span class="quarto-category-count">(1)</span></div><div class="category" data-category="python">python <span class="quarto-category-count">(1)</span></div><div class="category" data-category="quarto">quarto <span class="quarto-category-count">(1)</span></div><div class="category" data-category="windows">windows <span class="quarto-category-count">(1)</span></div></div></div>
 <!-- main -->
-<main class="content" id="quarto-document-content">
+<main class="content quarto-banner-title-block column-page-left" id="quarto-document-content">
 
-<header id="title-block-header" class="quarto-title-block default">
-<div class="quarto-title">
-<h1 class="title">Hi, I’m Jeffrey Fonseca</h1>
+
+
+
+
+
+
+
+<div class="quarto-listing quarto-listing-container-table" id="listing-listing">
+
+<table class="quarto-listing-table table">
+<thead>
+<tr>
+<th>
+Date
+</th>
+<th>
+Title
+</th>
+<th>
+Author
+</th>
+</tr>
+</thead>
+<tbody class="list">
+<tr data-index="0" data-categories="windows,cybersecurity" data-listing-date-sort="1687330800000" data-listing-file-modified-sort="1689072457658" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="4" data-listing-title-sort="The cruise ship I am on has very locked down computers" data-listing-filename-sort="index.qmd">
+<td>
+<span class="listing-date">Jun 21, 2023</span>
+</td>
+<td>
+<a href="./playground/cruise-ship-computers/index.html" class="title listing-title">The cruise ship I am on has very locked down computers</a>
+</td>
+<td>
+<span class="listing-author"></span>
+</td>
+</tr>
+<tr data-index="1" data-categories="cybersecurity" data-listing-date-sort="1686553200000" data-listing-file-modified-sort="1688473766803" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="1" data-listing-title-sort="Dorking around" data-listing-filename-sort="index.qmd">
+<td>
+<span class="listing-date">Jun 12, 2023</span>
+</td>
+<td>
+<a href="./playground/dorking/index.html" class="title listing-title">Dorking around</a>
+</td>
+<td>
+<span class="listing-author"></span>
+</td>
+</tr>
+<tr data-index="2" data-categories="cybersecurity" data-listing-date-sort="1686466800000" data-listing-file-modified-sort="1688473766803" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="3" data-listing-title-sort="A very clever crypto scam" data-listing-filename-sort="index.qmd">
+<td>
+<span class="listing-date">Jun 11, 2023</span>
+</td>
+<td>
+<a href="./playground/crypto-scam/index.html" class="title listing-title">A very clever crypto scam</a>
+</td>
+<td>
+<span class="listing-author"></span>
+</td>
+</tr>
+<tr data-index="3" data-categories="quarto,html" data-listing-date-sort="1686466800000" data-listing-file-modified-sort="1688473766803" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="2" data-listing-title-sort="Can I include text from other files in quarto?" data-listing-filename-sort="index.qmd">
+<td>
+<span class="listing-date">Jun 11, 2023</span>
+</td>
+<td>
+<a href="./playground/include-text-in-quarto/index.html" class="title listing-title">Can I include text from other files in quarto?</a>
+</td>
+<td>
+<span class="listing-author"></span>
+</td>
+</tr>
+<tr data-index="4" data-categories="python" data-listing-date-sort="1684738800000" data-listing-file-modified-sort="1688473766803" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="2" data-listing-title-sort="Experiments with Running python in the browser" data-listing-filename-sort="index.qmd">
+<td>
+<span class="listing-date">May 22, 2023</span>
+</td>
+<td>
+<a href="./playground/interactive-python-tutorial/index.html" class="title listing-title">Experiments with Running python in the browser</a>
+</td>
+<td>
+<span class="listing-author"></span>
+</td>
+</tr>
+</tbody>
+
+</table>
+<div class="listing-no-matching d-none">
+No matching items
 </div>
-
-
-
-<div class="quarto-title-meta">
-
-    
-  
-    
-  </div>
-  
-
-</header>
-
-<p>Over the summer before my freshman year of high school, I took a course at palomar college, CSNT 110, hardware and OS fundamentals.</p>
-<p>I first learned about the internals of computers during a summer course I took at Palomar college online before my freshman year of highschool — CSNT 110/ OS and Hardware Fundamentals.</p>
-<p>During my freshman year, when my laptop starting slowing down, I switched to a linux based operating system, in an attempt to make it faster, using knowledge I had obtained from that course.</p>
-<p>Since then, I have been tinkering, playing with software, and doing personal projects. However, when I was taking AP Computer Science Principles, during my senior year of high school, my teacher criticized me for being a maverick. I didn’t bother with the group projects, working on my own projects, although I contributed back to the group often, but I didn’t document what I do.</p>
-<p>As a response, I created this website. It isn’t fancy, because frontend/website design isn’t my preferred work. But for it does what I desire for it’s purposes, and since then, I’ve been documenting my work, to create a portfolio for myself.</p>
-<p>The <a href="./projects/index.html">projects</a> documents my progress in my personal projects.</p>
-<p><a href="./blog/index.html">Blog</a> are my writings and ramblings.</p>
-<p><a href="./playground/index.html">Playground</a> is my shorter term experiments and testings.</p>
-<p><a href="./guides/index.html">Guides</a> are guides I’ve written to help other people. For example, I created the <a href="guides/duckdns/">duckdns guide</a> because I was tired of helping people through that myself.</p>
-
-
-
-</main> <!-- /main -->
+</div></main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">
 window.document.addEventListener("DOMContentLoaded", function (event) {
   const toggleBodyColorMode = (bsSheetEl) => {
