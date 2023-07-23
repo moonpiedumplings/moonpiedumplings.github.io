@@ -40,3 +40,59 @@ interact(plot_func, freq = widgets.FloatSlider(value=7.5,
 
 
 I found another [guide](https://www.iceorfire.com/post/resume-generation-with-python) to write a resume with html, and then convert it to pdf with python, but I don't really want that. 
+
+
+```{python}
+#| column: body-outset
+from ipywidgets import interact, interactive, fixed, interact_manual
+import ipywidgets as widgets
+
+import matplotlib.pyplot as plt
+
+# Configuring the graph
+%matplotlib inline
+plt.figure(figsize=(10,6))
+plt.axis('off')
+
+
+
+# Test text
+Test = "test"
+plt.annotate(Test, (.02,.98), weight='regular', fontsize=8, alpha=.75)
+
+# Border lines
+#plt.axvline(x=.99, color='#000000', alpha=0.5, linewidth=300)
+```
+
+
+bqplot instead:
+
+```{python}
+import bqplot.pyplot as plt
+import numpy as np
+
+fig = plt.figure(title="Sine")
+
+# create data vectors
+x = np.linspace(-10, 10, 200)
+y = np.sin(x)
+
+# create line mark
+line = plt.plot(x, y)
+
+# renders the figure in the output cell (with toolbar for panzoom, save etc.)
+plt.show()
+
+```
+
+This apparently requires some libraries:
+
+```{.default}
+playground/resume/bqplot.js (404: Not Found)
+  /playground/resume/@jupyter-widgets/1551f4f60c37af51121f.woff2 (404: Not Found)
+  /playground/resume/@jupyter-widgets/eeccf4f66002c6f2ba24.woff (404: Not Found)
+  /playground/resume/@jupyter-widgets/be9ee23c0c6390141475.ttf (404: Not Found)
+  /playground/resume/@jupyter-widgets/html-manager/dist/1551f4f60c37af51121f.woff2 (404: Not Found)
+  /playground/resume/@jupyter-widgets/html-manager/dist/eeccf4f66002c6f2ba24.woff (404: Not Found)
+  /playground/resume/@jupyter-widgets/html-manager/dist/be9ee23c0c6390141475.ttf (404: Not Found)
+```
