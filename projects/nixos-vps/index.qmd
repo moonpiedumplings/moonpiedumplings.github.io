@@ -216,6 +216,40 @@ tasks:
 
 ```
 
+
+Ansible also seems to support [managing git repos](https://docs.ansible.com/ansible/latest/collections/ansible/builtin/git_module.html), which I can use to automate. I've decided to write an example using the features that I would utilize.
+
+```yaml
+- name: Git checkout
+  ansible.builtin.git:
+    repo: 'https://foosball.example.'
+    dest: /home/moonpie
+    version: release-0.22 # can be branch, tag, or sha1 hashshum of the repo.
+
+```
+
+In addition to that, I also need a way to keep the system updated, for security purposes. Because I am using ubuntu, I will use the ansible apt modele
+
+```{yaml}
+- name: update the system to latest distro packages
+  ansible.builtin.apt: 
+    update-cache: yes # equivlaent of apt-get update
+    upgrade: safe # conservative, safe upprade.full/dist upgrades all packages to latest, but I will have to research the difference between the two. 
+    autoclean: yes # cleans not installed packages from the cache
+    autoremove: yes # delete uneeded dependencies
+    clean: yes # deletes all packages from the cache
+
+  
+- name: update the distrobution itself? Still working on this one
+  ansible.builtin.apt:
+
+
+- name: Reboot the system
+  reboot: # However, when I tested this for my current project at my internship, it didn't work. The ssh did not reconnect. 
+
+
+```
+
 Below is the main.yml, ansible file I am currently working with, updated every git push.
 
 ```{python}
