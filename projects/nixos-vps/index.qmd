@@ -186,11 +186,23 @@ Lately, for my job, I am currently to create a proxmox image using packer. I am 
 Here I am going to begin documenting my initial research and documentation, before I shift to a seperate github repo, which I can apply CI/CD to. 
 
 
+Ansible is a configuration as code system written in python. It is distro agnostic, meaning it supports ubuntu. 
+
 Ansible appears to support [configuring docker-compose](https://docs.ansible.com/ansible/latest/collections/community/docker/docker_compose_module.html), so it will be very easy to convert my server to that. 
+
+However, this and other modules I am looking at aren't part of the preinstalled modules. To install them, you must use ansible-galaxy to install them, which isn't part of older versions of ansible. Ansible 2.9 or later is required. I'm not too worried about getting the latest version of ansible, because I can get it either from pip/pipx or from nix.
+
+To install a collection, like the docker/docker compose collections:
+
+`ansible-galaxy collection install community.docker`
+
+Can I automate this, like in github actions? I may need to, if I want to set up a CI/CD system for this. 
+
+This will provide docker to me. 
 
 An example docker-compose, from the official ansible documentation:
 
-```{yaml}
+```{.yaml}
 tasks:
     - name: Remove flask project
       community.docker.docker_compose:
@@ -199,6 +211,14 @@ tasks:
 
     - name: Start flask project with inline definition
       community.docker.docker_compose:
+        pull: true # Not default. Will pull images upon every rerun.
+        
+        # rebuilds if a change to the dockerfile contents are detected. If a rebuild, then will attempt to pull a newer version fo the image, but not otherwise
+        build: always 
+
+        state: present # default, but to be noted. 
+
+        #Docker compose goes here. But can I have multiple projects?
         project_name: flask
         definition:
             db:
@@ -212,25 +232,47 @@ tasks:
                 - "8000:8000"
               links:
                 - db
-      register: output
 
 ```
 
+Ansible also offers an image for managing direct parts of docker, like images. 
+
+```{.yaml}
+- name: Pull an image
+  community.docker.docker_image:
+    name: pacur/centos-7
+    source: pull
+    # Select platform for pulling. If not specified, will pull whatever docker prefers.
+    pull:
+      platform: amd64
+- name: Build image and with build args
+  community.docker.docker_image:
+    name: myimage
+    build:
+      path: /path/to/build/dir
+      args: # key value args 
+        log_volume: /var/log/myapp
+        listen_port: 8080
+        file: Dockerfile_name
+    source: build
+```
 
 Ansible also seems to support [managing git repos](https://docs.ansible.com/ansible/latest/collections/ansible/builtin/git_module.html), which I can use to automate. I've decided to write an example using the features that I would utilize.
 
-```yaml
+```{.yaml}
 - name: Git checkout
   ansible.builtin.git:
     repo: 'https://foosball.example.'
     dest: /home/moonpie
     version: release-0.22 # can be branch, tag, or sha1 hashshum of the repo.
-
 ```
 
-In addition to that, I also need a way to keep the system updated, for security purposes. Because I am using ubuntu, I will use the ansible apt modele
+This will enable me to write docker-compose's, Dockerfiles, or other things and put them in a git repo, which I can then clone and use later. 
 
-```{yaml}
+
+In addition to that, I also need a way to keep the system updated, for security purposes. Because I am using ubuntu, I will use the ansible apt module.
+
+```{.yaml}
 - name: update the system to latest distro packages
   ansible.builtin.apt: 
     update-cache: yes # equivlaent of apt-get update
@@ -240,7 +282,7 @@ In addition to that, I also need a way to keep the system updated, for security 
     clean: yes # deletes all packages from the cache
 
   
-- name: update the distrobution itself? Still working on this one
+- name: update the distribution itself? Still working on this one
   ansible.builtin.apt:
 
 
