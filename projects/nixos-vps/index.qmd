@@ -262,7 +262,7 @@ Ansible also seems to support [managing git repos](https://docs.ansible.com/ansi
 ```{.yaml}
 - name: Git checkout
   ansible.builtin.git:
-    repo: 'https://foosball.example.'
+    repo: 'https://foosball.example.com'
     dest: /home/moonpie
     version: release-0.22 # can be branch, tag, or sha1 hashshum of the repo.
 ```
@@ -284,13 +284,73 @@ In addition to that, I also need a way to keep the system updated, for security 
   
 - name: update the distribution itself? Still working on this one
   ansible.builtin.apt:
+  # Hmmm, the format for apt repos is currently changing.
+
+- name: manage apt_repo #since apt key is deprecated, this an an alternative around it.
+  block:
+    - name: somerepo |no apt key
+      ansible.builtin.get_url:
+        url: https://download.example.com/linux/ubuntu/gpg
+        dest: /etc/apt/keyrings/somerepo.asc
+
+    - name: somerepo | apt source
+      ansible.builtin.apt_repository:
+        repo: "deb [arch=amd64 signed-by=/etc/apt/keyrings/myrepo.asc] https://download.example.com/linux/ubuntu {{ ansible_distribution_release }} stable"
+        state: present
+
+- name: The newer deb822 format is better # however, this isn't used by my ubuntu install. 
+  deb822_repository:
+    name: example
+    types: deb
+    uris: https://download.example.com/linux/ubuntu
+    suites: '{{ ansible_distribution_release }}'
+    components: stable
+    architectures: amd64
+    signed_by: https://download.example.com/linux/ubuntu/gpg
+
+
 
 
 - name: Reboot the system
   reboot: # However, when I tested this for my current project at my internship, it didn't work. The ssh did not reconnect. 
-
-
 ```
+
+# SSH keys
+
+Ansible has multiple ways to configure ssh keys. One way is to explicitly specify a ssh private key file in your inventory file:
+
+
+```{.yaml}
+all:
+  hosts:
+    your_remote_host1:
+      ansible_user: your_username1
+      ansible_password: your_password1
+      ansible_ssh_private_key_file: /path/to/your_private_key1
+    your_remote_host2:
+      ansible_user: your_username2
+      # and so on
+
+  vars:
+    ansible_ssh_common_args: '-o StrictHostKeyChecking=no' # Disables auto reject of unkown hosts.
+```
+
+Another way is to specify the private key in your `~/.config/ssh/config` file.
+
+```{.default}
+Host your_remote_host1
+  HostName your_remote_host1.example.com
+  User your_username
+  IdentityFile /path/to/your_private_key
+
+Host your_remote_host2
+  HostName your_remote_host2.example.com
+  User your_username
+  IdentityFile /path/to/another_private_key
+```
+
+I am searching for the most CI/CD friendly way to do this. Tbh, it may be lazy, but for a single machine, I may simply ssh into the machine, git clone the repo, and use ansible's local mode, which runs an ansible playbook on the local machine.
+
 
 Below is the main.yml, ansible file I am currently working with, updated every git push.
 
