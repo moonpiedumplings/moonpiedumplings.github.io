@@ -595,39 +595,8 @@ Show files
 <span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>  HostName your_remote_host2.example.com</span>
 <span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>  User your_username</span>
 <span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>  IdentityFile /path/to/another_private_key</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>You can also specify the private key on the command line, with the –private-key=/path/to option.</p>
 <p>I am searching for the most CI/CD friendly way to do this. Tbh, it may be lazy, but for a single machine, I may simply ssh into the machine, git clone the repo, and use ansible’s local mode, which runs an ansible playbook on the local machine.</p>
-<p>Below is the main.yml, ansible file I am currently working with, updated every git push.</p>
-<div class="code-with-filename">
-<div class="code-with-filename-file">
-<pre><strong>main.yml</strong></pre>
-</div>
-<div class="sourceCode" id="cb11"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> meshcentral</span></span>
-<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">community.docker.docker-compose</span><span class="kw">:</span></span>
-<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">project_name</span><span class="kw">:</span><span class="at"> meshcentral</span></span>
-<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">definition</span><span class="kw">:</span></span>
-<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">version</span><span class="kw">:</span><span class="at"> </span><span class="st">'3'</span></span>
-<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">services</span><span class="kw">:</span></span>
-<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">meshcentral</span><span class="kw">:</span></span>
-<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a><span class="at">            </span><span class="fu">restart</span><span class="kw">:</span><span class="at"> always</span></span>
-<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a><span class="at">            </span><span class="fu">container_name</span><span class="kw">:</span><span class="at"> meshcentral</span></span>
-<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a><span class="at">            </span><span class="fu">image</span><span class="kw">:</span><span class="at"> typhonragewind/meshcentral</span></span>
-<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a><span class="co">            #ports:</span></span>
-<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a><span class="co">            #    - 8086:443  #MeshCentral will moan and try everything not to use port 80, but you can also use it if you so desire, just change the config.json according to your needs</span></span>
-<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a><span class="at">            </span><span class="fu">environment</span><span class="kw">:</span></span>
-<span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a><span class="at">                </span><span class="kw">-</span><span class="at"> HOSTNAME=officemesh.duckdns.org</span><span class="co">     #your hostname</span></span>
-<span id="cb11-15"><a href="#cb11-15" aria-hidden="true" tabindex="-1"></a><span class="at">                </span><span class="kw">-</span><span class="at"> REVERSE_PROXY=172.18.0.3</span><span class="co">     #set to your reverse proxy IP if you want to put meshcentral behind a reverse proxy</span></span>
-<span id="cb11-16"><a href="#cb11-16" aria-hidden="true" tabindex="-1"></a><span class="at">                </span><span class="kw">-</span><span class="at"> REVERSE_PROXY_TLS_PORT=443</span></span>
-<span id="cb11-17"><a href="#cb11-17" aria-hidden="true" tabindex="-1"></a><span class="at">                </span><span class="kw">-</span><span class="at"> IFRAME=false</span><span class="co">    #set to true if you wish to enable iframe support</span></span>
-<span id="cb11-18"><a href="#cb11-18" aria-hidden="true" tabindex="-1"></a><span class="at">                </span><span class="kw">-</span><span class="at"> ALLOW_NEW_ACCOUNTS=true</span><span class="co">    #set to false if you want disable self-service creation of new accounts besides the first (admin)</span></span>
-<span id="cb11-19"><a href="#cb11-19" aria-hidden="true" tabindex="-1"></a><span class="at">                </span><span class="kw">-</span><span class="at"> WEBRTC=false</span><span class="co">  #set to true to enable WebRTC - per documentation it is not officially released with meshcentral, but is solid enough to work with. Use with caution</span></span>
-<span id="cb11-20"><a href="#cb11-20" aria-hidden="true" tabindex="-1"></a><span class="at">            </span><span class="fu">volumes</span><span class="kw">:</span></span>
-<span id="cb11-21"><a href="#cb11-21" aria-hidden="true" tabindex="-1"></a><span class="at">                </span><span class="kw">-</span><span class="at"> ./meshcentral/data:/opt/meshcentral/meshcentral-data</span><span class="co">    #config.json and other important files live here. A must for data persistence</span></span>
-<span id="cb11-22"><a href="#cb11-22" aria-hidden="true" tabindex="-1"></a><span class="at">                </span><span class="kw">-</span><span class="at"> ./meshcentral/user_files:/opt/meshcentral/meshcentral-files</span><span class="co">    #where file uploads for users live</span></span>
-<span id="cb11-23"><a href="#cb11-23" aria-hidden="true" tabindex="-1"></a><span class="at">            </span><span class="fu">networks</span><span class="kw">:</span></span>
-<span id="cb11-24"><a href="#cb11-24" aria-hidden="true" tabindex="-1"></a><span class="at">              </span><span class="fu">default</span><span class="kw">:</span></span>
-<span id="cb11-25"><a href="#cb11-25" aria-hidden="true" tabindex="-1"></a><span class="at">                </span><span class="fu">external</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
-<span id="cb11-26"><a href="#cb11-26" aria-hidden="true" tabindex="-1"></a><span class="at">                </span><span class="fu">name</span><span class="kw">:</span><span class="at"> mine</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
 
 
 </section>
