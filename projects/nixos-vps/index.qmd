@@ -180,6 +180,7 @@ print(f'''
 
 ## I give up, ansible
 
+I've gotten started on the ansible vps configs, and they are public on github: <https://github.com/moonpiedumplings/ansible-vps-config>
 
 Lately, for my job, I am currently to create a proxmox image using packer. I am starting with a debian image, and then using ansible to configure the image, using public proxmox repos. Although not really ready for public or production usage yet, my repo of this can be found [here](https://github.com/moonpiedumplings/proxmox-maas/). 
 
@@ -353,8 +354,72 @@ You can also specify the private key on the command line, with the --private-key
 
 I am searching for the most CI/CD friendly way to do this. Tbh, it may be lazy, but for a single machine, I may simply ssh into the machine, git clone the repo, and use ansible's local mode, which runs an ansible playbook on the local machine.
 
+Here is my current ansible inventory. Because I am only configuring one host, it is extremely simple.
 
-I've gotten started on the ansible vps configs, and they are public on github: <https://github.com/moonpiedumplings/ansible-vps-config>
+```{.yml filename="inventory.yml"}
+---
+all:
+  hosts:
+   office:
+```
+
+And here is my ssh config file, censored of course.
+
+```{.yml filename="~/.ssh/config"}
+Host office
+        HostName {server ip or hostname goes here}
+        port 22
+        user moonpie
+        IdentityFile /home/moonpie/.ssh/office-vps
+```
+
+Now, I can test if my hosts are up with a simple ansible command. 
+
+
+```{.default}
+[nix-shell:~/vscode/ansible-vps-config]$ ansible all -i inventory.yml -m ping
+office | SUCCESS => {
+    "ansible_facts": {
+        "discovered_interpreter_python": "/usr/bin/python3"
+    },
+    "changed": false,
+    "ping": "pong"
+}
+```
+
+The "ping: pong" part means that it discoverd my server, and it is ready for me to configure it if I so wish.
+
+
+Now, after some tinkering with syntax, I've gotten ansible to do a dry run without complaining:
+
+```{.default}
+[nix-shell:~/vscode/ansible-vps-config]$ ansible-playbook --check -i inventory.yml main.yml --ask-become-pass
+BECOME password: 
+
+PLAY [all] *********************************************************************************************************
+
+TASK [Gathering Facts] *********************************************************************************************
+ok: [office]
+
+TASK [docker-compose : Meshcentral] ********************************************************************************
+included: /home/moonpie/vscode/ansible-vps-config/roles/docker-compose/tasks/compose-files/meshcentral.yml for office
+
+TASK [docker-compose : Meshcentral] ********************************************************************************
+ok: [office]
+
+TASK [docker-compose : npm] ****************************************************************************************
+included: /home/moonpie/vscode/ansible-vps-config/roles/docker-compose/tasks/compose-files/npm.yml for office
+
+TASK [docker-compose : npm] ****************************************************************************************
+changed: [office]
+
+TASK [sys-maintain : update the system to latest distro packages] **************************************************
+changed: [office]
+
+PLAY RECAP *********************************************************************************************************
+office                     : ok=6    changed=2    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
+```
+The `--ask-become-pass` asks me for the sudo password on my server, in case my user doesn't have permission to do passwordless sudo.
 
 
 
