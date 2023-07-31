@@ -159,13 +159,17 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#what-i-want-to-do" id="toc-what-i-want-to-do" class="nav-link active" data-scroll-target="#what-i-want-to-do">What I want to do:</a>
+  <li><a href="#what-i-want-to-do" id="toc-what-i-want-to-do" class="nav-link active" data-scroll-target="#what-i-want-to-do">What I want to do:</a></li>
+  <li><a href="#nixos" id="toc-nixos" class="nav-link" data-scroll-target="#nixos">Nixos</a>
   <ul class="collapse">
-  <li><a href="#nixos" id="toc-nixos" class="nav-link" data-scroll-target="#nixos">Nixos</a></li>
   <li><a href="#deployment-attempts" id="toc-deployment-attempts" class="nav-link" data-scroll-target="#deployment-attempts">Deployment attempts</a></li>
-  <li><a href="#i-give-up-ansible" id="toc-i-give-up-ansible" class="nav-link" data-scroll-target="#i-give-up-ansible">I give up, ansible</a></li>
   </ul></li>
-  <li><a href="#ssh-keys" id="toc-ssh-keys" class="nav-link" data-scroll-target="#ssh-keys">SSH keys</a></li>
+  <li><a href="#i-give-up-ansible" id="toc-i-give-up-ansible" class="nav-link" data-scroll-target="#i-give-up-ansible">I give up, ansible</a>
+  <ul class="collapse">
+  <li><a href="#scaffolding-and-beginnings" id="toc-scaffolding-and-beginnings" class="nav-link" data-scroll-target="#scaffolding-and-beginnings">Scaffolding and Beginnings</a></li>
+  <li><a href="#ansible-inventory" id="toc-ansible-inventory" class="nav-link" data-scroll-target="#ansible-inventory">Ansible Inventory</a></li>
+  <li><a href="#dry-runs-and-testing" id="toc-dry-runs-and-testing" class="nav-link" data-scroll-target="#dry-runs-and-testing">Dry runs and Testing</a></li>
+  </ul></li>
   </ul>
 </nav>
     </div>
@@ -203,11 +207,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="what-i-want-to-do" class="level1">
 <h1>What I want to do:</h1>
 <p>I want to automate my install with nixos</p>
-<section id="nixos" class="level2">
-<h2 class="anchored" data-anchor-id="nixos">Nixos</h2>
+</section>
+<section id="nixos" class="level1">
+<h1>Nixos</h1>
 <p>I possess a small (5 GB of ram, 3 cores) virtual private server (vps), which I use for some things, such as meshcentral. However, for maintainence purposes, I want to change it to nixos. I already started on a nixos config, which can be found on github: <a href="https://github.com/moonpiedumplings/nixos-configs">nixos-configs</a>.</p>
 <p>Anyway, the config is fairly simple, and a copy of my current vps config, but as code.</p>
-</section>
 <section id="deployment-attempts" class="level2">
 <h2 class="anchored" data-anchor-id="deployment-attempts">Deployment attempts</h2>
 <p>However, I now want to deploy this. I am currently using <a href="https://webdock.io">webdock.io</a> as my VPS provider, which doesn’t officially support nixos. So I want to convert an existing ubuntu install in place to a nixos installation, without physical access to the machine.</p>
@@ -461,8 +465,9 @@ Show files
 </div>
 </details>
 </section>
-<section id="i-give-up-ansible" class="level2">
-<h2 class="anchored" data-anchor-id="i-give-up-ansible">I give up, ansible</h2>
+</section>
+<section id="i-give-up-ansible" class="level1">
+<h1>I give up, ansible</h1>
 <p>I’ve gotten started on the ansible vps configs, and they are public on github: <a href="https://github.com/moonpiedumplings/ansible-vps-config" class="uri">https://github.com/moonpiedumplings/ansible-vps-config</a></p>
 <p>Lately, for my job, I am currently to create a proxmox image using packer. I am starting with a debian image, and then using ansible to configure the image, using public proxmox repos. Although not really ready for public or production usage yet, my repo of this can be found <a href="https://github.com/moonpiedumplings/proxmox-maas/">here</a>.</p>
 <p>Here I am going to begin documenting my initial research and documentation, before I shift to a seperate github repo, which I can apply CI/CD to.</p>
@@ -473,6 +478,8 @@ Show files
 <p><code>ansible-galaxy collection install community.docker</code></p>
 <p>Can I automate this, like in github actions? I may need to, if I want to set up a CI/CD system for this.</p>
 <p>This will provide docker to me.</p>
+<section id="scaffolding-and-beginnings" class="level2">
+<h2 class="anchored" data-anchor-id="scaffolding-and-beginnings">Scaffolding and Beginnings</h2>
 <p>An example docker-compose, from the official ansible documentation:</p>
 <div class="sourceCode" id="cb5"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">tasks</span><span class="kw">:</span></span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> Remove flask project</span></span>
@@ -570,9 +577,8 @@ Show files
 <span id="cb8-39"><a href="#cb8-39" aria-hidden="true" tabindex="-1"></a><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> Reboot the system</span></span>
 <span id="cb8-40"><a href="#cb8-40" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">reboot</span><span class="kw">:</span><span class="co"> # However, when I tested this for my current project at my internship, it didn't work. The ssh did not reconnect. </span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </section>
-</section>
-<section id="ssh-keys" class="level1">
-<h1>SSH keys</h1>
+<section id="ansible-inventory" class="level2">
+<h2 class="anchored" data-anchor-id="ansible-inventory">Ansible Inventory</h2>
 <p>Ansible has multiple ways to configure ssh keys. One way is to explicitly specify a ssh private key file in your inventory file:</p>
 <div class="sourceCode" id="cb9"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">all</span><span class="kw">:</span></span>
 <span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">hosts</span><span class="kw">:</span></span>
@@ -629,6 +635,9 @@ Show files
 <span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>    "ping": "pong"</span>
 <span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>The “ping: pong” part means that it discoverd my server, and it is ready for me to configure it if I so wish.</p>
+</section>
+<section id="dry-runs-and-testing" class="level2">
+<h2 class="anchored" data-anchor-id="dry-runs-and-testing">Dry runs and Testing</h2>
 <p>Now, after some tinkering with syntax, I’ve gotten ansible to do a dry run without complaining:</p>
 <div class="sourceCode" id="cb14"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>[nix-shell:~/vscode/ansible-vps-config]$ ansible-playbook --check -i inventory.yml main.yml --ask-become-pass</span>
 <span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>BECOME password: </span>
@@ -656,8 +665,58 @@ Show files
 <span id="cb14-24"><a href="#cb14-24" aria-hidden="true" tabindex="-1"></a>PLAY RECAP *********************************************************************************************************</span>
 <span id="cb14-25"><a href="#cb14-25" aria-hidden="true" tabindex="-1"></a>office                     : ok=6    changed=2    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>The <code>--ask-become-pass</code> asks me for the sudo password on my server, in case my user doesn’t have permission to do passwordless sudo.</p>
+<p>Since this is a dry run, it simply tells me what will be changed, but doesn’t actually change it. For some reason, it didn’t update one of the docker containers although it did update the other. I discoverd this was because I was missing something in my compose file.</p>
+<div class="sourceCode" id="cb15"><pre class="sourceCode yml code-with-copy"><code class="sourceCode yaml"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="pp">---</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> npm</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">community.docker.docker_compose</span><span class="kw">:</span></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">pull</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">build</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span><span class="at"> </span></span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">project_name</span><span class="kw">:</span><span class="at"> npm</span></span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">definition</span><span class="kw">:</span></span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">version</span><span class="kw">:</span><span class="at"> </span><span class="st">'3'</span></span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">services</span><span class="kw">:</span></span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">app</span><span class="kw">:</span></span>
+<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a><span class="at">          </span><span class="fu">image</span><span class="kw">:</span><span class="at"> </span><span class="st">'jc21/nginx-proxy-manager'</span></span>
+<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a><span class="at">          </span><span class="fu">restart</span><span class="kw">:</span><span class="at"> unless-stopped</span></span>
+<span id="cb15-13"><a href="#cb15-13" aria-hidden="true" tabindex="-1"></a><span class="at">          </span><span class="fu">ports</span><span class="kw">:</span></span>
+<span id="cb15-14"><a href="#cb15-14" aria-hidden="true" tabindex="-1"></a><span class="at">            </span><span class="kw">-</span><span class="at"> </span><span class="st">'80:80'</span></span>
+<span id="cb15-15"><a href="#cb15-15" aria-hidden="true" tabindex="-1"></a><span class="at">            </span><span class="kw">-</span><span class="at"> </span><span class="st">'81:81'</span></span>
+<span id="cb15-16"><a href="#cb15-16" aria-hidden="true" tabindex="-1"></a><span class="at">            </span><span class="kw">-</span><span class="at"> </span><span class="st">'443:443'</span></span>
+<span id="cb15-17"><a href="#cb15-17" aria-hidden="true" tabindex="-1"></a><span class="co">          # - '53:53'</span></span>
+<span id="cb15-18"><a href="#cb15-18" aria-hidden="true" tabindex="-1"></a><span class="at">          </span><span class="fu">volumes</span><span class="kw">:</span><span class="at"> </span></span>
+<span id="cb15-19"><a href="#cb15-19" aria-hidden="true" tabindex="-1"></a><span class="at">            </span><span class="kw">-</span><span class="at"> /home/{{ ansible_user_id }}/npm/data:/data</span></span>
+<span id="cb15-20"><a href="#cb15-20" aria-hidden="true" tabindex="-1"></a><span class="at">            </span><span class="kw">-</span><span class="at"> /home/{{ ansible_user_id }}/npm/letsencrypt:/etc/letsencrypt</span></span>
+<span id="cb15-21"><a href="#cb15-21" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">networks</span><span class="kw">:</span></span>
+<span id="cb15-22"><a href="#cb15-22" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">default</span><span class="kw">:</span></span>
+<span id="cb15-23"><a href="#cb15-23" aria-hidden="true" tabindex="-1"></a><span class="at">          </span><span class="fu">external</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb15-24"><a href="#cb15-24" aria-hidden="true" tabindex="-1"></a><span class="at">          </span><span class="fu">name</span><span class="kw">:</span><span class="at"> mine</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>For the image portion, I needed <code>image: 'jc21/nginx-proxy-manager:latest'</code>. this will ensure that every time I rerun the ansible playbook, docker will attempt to update the container versions.</p>
+<p>Now, I can run just the docker-compose part of my using a the tags feature.</p>
+<div class="sourceCode" id="cb16"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>[nix-shell:~/vscode/ansible-vps-config]$ ansible-playbook --check -i inventory.yml main.yml --ask-become-pass --tags docker-compose</span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>BECOME password: </span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>PLAY [all] *********************************************************************************************************</span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>TASK [Gathering Facts] *********************************************************************************************</span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a>ok: [office]</span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a>TASK [docker-compose : Meshcentral] ********************************************************************************</span>
+<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a>included: /home/moonpie/vscode/ansible-vps-config/roles/docker-compose/tasks/compose-files/meshcentral.yml for office</span>
+<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a>TASK [docker-compose : Meshcentral] ********************************************************************************</span>
+<span id="cb16-13"><a href="#cb16-13" aria-hidden="true" tabindex="-1"></a>changed: [office]</span>
+<span id="cb16-14"><a href="#cb16-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-15"><a href="#cb16-15" aria-hidden="true" tabindex="-1"></a>TASK [docker-compose : npm] ****************************************************************************************</span>
+<span id="cb16-16"><a href="#cb16-16" aria-hidden="true" tabindex="-1"></a>included: /home/moonpie/vscode/ansible-vps-config/roles/docker-compose/tasks/compose-files/npm.yml for office</span>
+<span id="cb16-17"><a href="#cb16-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-18"><a href="#cb16-18" aria-hidden="true" tabindex="-1"></a>TASK [docker-compose : npm] ****************************************************************************************</span>
+<span id="cb16-19"><a href="#cb16-19" aria-hidden="true" tabindex="-1"></a>changed: [office]</span>
+<span id="cb16-20"><a href="#cb16-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-21"><a href="#cb16-21" aria-hidden="true" tabindex="-1"></a>PLAY RECAP *********************************************************************************************************</span>
+<span id="cb16-22"><a href="#cb16-22" aria-hidden="true" tabindex="-1"></a>office                     : ok=5    changed=2    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 
 
+</section>
 </section>
 
 </main> <!-- /main -->
