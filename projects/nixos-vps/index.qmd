@@ -11,7 +11,7 @@ execute:
 
 I want to automate my install with nixos
 
-## Nixos
+# Nixos
 
 I possess a small (5 GB of ram, 3 cores) virtual private server (vps), which I use for some things, such as meshcentral. However, for maintainence purposes, I want to change it to nixos. I already started on a nixos config, which can be found on github: [nixos-configs](https://github.com/moonpiedumplings/nixos-configs).
 
@@ -178,7 +178,7 @@ print(f'''
 </details>
 
 
-## I give up, ansible
+# I give up, ansible
 
 I've gotten started on the ansible vps configs, and they are public on github: <https://github.com/moonpiedumplings/ansible-vps-config>
 
@@ -200,6 +200,8 @@ To install a collection, like the docker/docker compose collections:
 Can I automate this, like in github actions? I may need to, if I want to set up a CI/CD system for this. 
 
 This will provide docker to me. 
+
+## Scaffolding and Beginnings
 
 An example docker-compose, from the official ansible documentation:
 
@@ -316,7 +318,7 @@ In addition to that, I also need a way to keep the system updated, for security 
   reboot: # However, when I tested this for my current project at my internship, it didn't work. The ssh did not reconnect. 
 ```
 
-# SSH keys
+## Ansible Inventory
 
 Ansible has multiple ways to configure ssh keys. One way is to explicitly specify a ssh private key file in your inventory file:
 
@@ -390,6 +392,9 @@ office | SUCCESS => {
 The "ping: pong" part means that it discoverd my server, and it is ready for me to configure it if I so wish.
 
 
+## Dry runs and Testing
+
+
 Now, after some tinkering with syntax, I've gotten ansible to do a dry run without complaining:
 
 ```{.default}
@@ -420,6 +425,65 @@ PLAY RECAP *********************************************************************
 office                     : ok=6    changed=2    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
 ```
 The `--ask-become-pass` asks me for the sudo password on my server, in case my user doesn't have permission to do passwordless sudo.
+
+Since this is a dry run, it simply tells me what will be changed, but doesn't actually change it. For some reason, it didn't update one of the docker containers although it did update the other. I discoverd this was because I was missing something in my compose file. 
+
+```{.yml}
+---
+- name: npm
+  community.docker.docker_compose:
+    pull: true
+    build: true 
+    project_name: npm
+    definition:
+      version: '3'
+      services:
+        app:
+          image: 'jc21/nginx-proxy-manager'
+          restart: unless-stopped
+          ports:
+            - '80:80'
+            - '81:81'
+            - '443:443'
+          # - '53:53'
+          volumes: 
+            - /home/{{ ansible_user_id }}/npm/data:/data
+            - /home/{{ ansible_user_id }}/npm/letsencrypt:/etc/letsencrypt
+      networks:
+        default:
+          external: true
+          name: mine
+```
+
+For the image portion, I needed `image: 'jc21/nginx-proxy-manager:latest'`. this will ensure that every time I rerun the ansible playbook, docker will attempt to update the container versions. 
+
+Now, I can run just the docker-compose part of my using a the tags feature.
+
+```{.default}
+[nix-shell:~/vscode/ansible-vps-config]$ ansible-playbook --check -i inventory.yml main.yml --ask-become-pass --tags docker-compose
+BECOME password: 
+
+PLAY [all] *********************************************************************************************************
+
+TASK [Gathering Facts] *********************************************************************************************
+ok: [office]
+
+TASK [docker-compose : Meshcentral] ********************************************************************************
+included: /home/moonpie/vscode/ansible-vps-config/roles/docker-compose/tasks/compose-files/meshcentral.yml for office
+
+TASK [docker-compose : Meshcentral] ********************************************************************************
+changed: [office]
+
+TASK [docker-compose : npm] ****************************************************************************************
+included: /home/moonpie/vscode/ansible-vps-config/roles/docker-compose/tasks/compose-files/npm.yml for office
+
+TASK [docker-compose : npm] ****************************************************************************************
+changed: [office]
+
+PLAY RECAP *********************************************************************************************************
+office                     : ok=5    changed=2    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
+```
+
 
 
 
