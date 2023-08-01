@@ -45,8 +45,8 @@ stdenv.mkDerivation rec {
             --prefix QUARTO_ESBUILD : ${esbuild}/bin/esbuild \
             --prefix QUARTO_DART_SASS : $out/bin/tools/dart-sass/sass \
             --prefix QUARTO_R : ${rWrapper.override { packages = [ rPackages.rmarkdown ] ++ extraRPackages; }}/bin/R \
-            --prefix QUARTO_PYTHON : ${python3}/bin/python3
     '';
+    #            --prefix QUARTO_PYTHON : ${python3}/bin/python3
 
   installPhase = ''
             runHook preInstall
