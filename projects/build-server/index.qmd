@@ -1,0 +1,52 @@
+---
+title: "Building my own Server"
+date: "2023-8-1"
+categories: [linux]
+format:
+  html:
+    code-fold: true
+    code-summary: "Show the code"
+    code-block-background: true
+execute:
+  freeze: true
+---
+
+# Hardware
+
+## Selection
+
+I wanted a machine for experimenting with devops and deep learning. That means plenty of ram, cpu, and a modest gpu.
+
+I was very careful with my selection, and here is what I ended up with:
+
+-   Dell Precision Tower Server 7910, with 2X intel xeon E5 2687 v4. Came with 32 GB of ram. \$300 USD
+-   More memory, when added, I will get a total of 128 GB of ECC memory. \$60 USD
+-   Nvidia rtx 4070 GPU, 12 GB vram. $700
+
+## Building
+
+Here is the inside of my server:
+
+![](images/insides.jpg)
+
+Anyway, I need to figure out where to put the GPU. The computer has several PCIe slots, and I want the fastest one.
+
+Up top:
+
+![](images/toppcie.jpg)
+
+And below:
+
+![](images/belowpcie.jpg)
+
+I need to figure out what each of these pcie ports is. What do the numbers and color mean?
+
+To catalog them: 
+
+* Three black PCIe3x16 slots (all 75W)
+* One blue PCIe3x16 75W + ext 225 w
+* One black PCIe2x4 25 W
+* One tan PCI slot
+
+I think it is safe to assume that the color is related to wattage, not PCIe protocol. Since the computer comes with the necessary power plug that the nvidia gpu wants, it is safe to assume that any of the PCIe3x16 are optimal, although I will try to place the gpu in the best spot for cooling.
+
