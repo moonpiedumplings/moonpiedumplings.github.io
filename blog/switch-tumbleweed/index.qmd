@@ -1,0 +1,37 @@
+---
+title: "Switching to opensuse tumbleweed, research into nixos"
+date: "2023-8-3"
+categories: [linux]
+execute:
+  freeze: auto
+---
+
+I recently switched from opensuse leap to opensuse tumbleweed. The upgrade process was almost completely seamless. I simply followed the [official documentation](https://en.opensuse.org/openSUSE:Tumbleweed_upgrade) from opensuse. 
+
+However, after I upgraded to tumbleweed, secure boot wasn't working. I decided to do a fresh reinstall of tumbleweed... and secure boot still didnt' work. 
+
+
+
+However, other than that, I a very happy with opensuse tumbleweed. The repositories are large and kept up do date, and some packages which weren't available or were more dated on opensuse leap such as gocryptfs, syncthing, or firefox, where available in the repositories. I did not have to use nix to install them.
+
+In addition to that, the [opi](https://en.opensuse.org/SDB:OBS_Package_Installer) command line helper, lets you easily install third party packages from the open build service, or repositories like microsoft's, so that you can get packages like microsoft edge or vscode, without having to use nix.
+
+
+However, secure boot not working is detrimental for me. I did a little bit of asking around, and another user complained about a similar struggle, claiming that they have never gotten opensuse tumbleweed secure boot working, and my struggle was futile. 
+
+Hmm, in my research, I found an open issue: https://bugzilla.opensuse.org/show_bug.cgi?id=1209985. It appears to be a bug in opensuse tumbleweed. That sucks. 
+
+
+It should be automatic, except it isn't working. I am considering switching to nixos, so that I can have secure boot working, although I don't really like the most popular implementatio of secure boot on nixos, [lanzaboote](https://github.com/nix-community/lanzaboote), because it stores kernels in the esp system partition, which may run out of space because it is usually very small, and nixos often stores many older kernels. 
+
+Relevant links: 
+
+https://nixos.wiki/wiki/Secure_Boot
+
+https://nixos.wiki/wiki/Security#Filesystem_encryption
+
+[reddit post where a commmenter posted instructions](https://old.reddit.com/r/NixOS/comments/xrgszw/nixos_full_disk_encryption_with_tpm_and_secure/)
+
+https://github.com/DeterminateSystems/bootspec-secureboot
+
+This looks very appealing. Rather than using it with systemd-boot, I might be able to set up grub. 
