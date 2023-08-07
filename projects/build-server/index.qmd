@@ -68,6 +68,8 @@ I also did research into some youtube videos.
 
 The important thing to note about the memory upgrading process is that the memory shroud (cover) does not interfere with other processes.
 
+## GPU
+
 However, I am trying to add the gpu, so I can get monitor output, so I can run testing suites to ensure the computer is in proper working order. 
 
 However, the gpu does not seem to have screw slots for holding it in place. Rather than that, the entire thing rests on a single screw, as shown below.
@@ -95,3 +97,64 @@ Anyway, I also did more research, attempting to find more manuals and whatnot.
 Linked on [this page](https://www.dell.com/support/home/en-us/product-support/product/precision-t7910-workstation/docs) I found a [proper manual](https://dl.dell.com/topicspdf/precision-t7910-workstation_owners-manual_en-us.pdf) which gave visual instructions on how to do things like remove the memory shroud. 
 
 Too bad it still doesn't detail how to install the gpu. I just know I'm not doing it right, the servers I worked with at cirrascale had a screw that would actually hold the gpu in place. It doesn't make sense to simply have the gpu be resting. I may simply give up, and find some nuts and attatch them to the back of the screws, locking the gpu into place. 
+
+Later, I found out that it was very simple, and I'm frustrated I missed it. I simply had to reverse the direction of the screw, and screw it in from the other side, like so:
+
+![](images/gpuscrewed.jpg)
+
+
+## Hard Drives
+
+Now that I had the GPU installed I could get video output and see what the BIOS is saying. I installed two hard drives, and got an error: "Alert Hard drive not found". 
+
+I decided to pause on the hard drives, and run the built in memory test. The memory, and cpu tests ran without error, however, I got an error about not being able to find the hard drives
+
+![](images/noharddrives.jpg)
+
+Just to make sure that the issue was a hardware issue, and not the BIOS merely complaining about not seeing a bootable device, I booted into a live USB and ran lsblk:
+
+![](images/manjarolsblk.jpg)
+
+I messed around with moving around the hard drive positions, unplugging and plugging in cables, no dice. This issue is definitely at the hardware level, however, and there are several causes:
+
+* Bad cable. I only have a single cable, an SAS connector on both sides. 
+* No power to the hard drives. I will test to see if they light up later. 
+* Motherboard not working. Maybe the motherboard plug isn't working, but I tried both of them...
+
+It's definitely not defective hard drives, as this happens with both of the hard drives I am testing with, both of which are new. However, they rely on the same cable and same power supply (they attatch to a seperate board which has a cable connecting that to the motherboard and another connecting it to the power supply)
+
+# Sofware
+
+## Operating system
+
+I was originally going to choose a RHEL compatible distro, but then RHEL made changes put the status of those in limbo. 
+
+I am currently deciding between:
+
+* Ubuntu
+* Debian
+* RHEL (via a developer subscription)
+* A RHEL rebuild
+  - Rocky Linux
+  - Alma Linux
+  - One of the academic distros, like scientific linux
+* Centos Stream
+
+The important thing is that it's a stable release distro with automatic updates. I don't want to have to do too much manual maintainence. 
+
+
+## Software Suite
+
+I want an easy install, but I also want lots of features. Here are some things I have looked at:
+
+* Proxmox VE
+* Xen Orchestra
+* Openstack 
+* [Canonicals LXD UI](https://github.com/canonical/lxd-ui)
+* Ovirt
+* Harvester
+
+
+There are several things I want. An absolute necessity is virtual machine management, and some level of virtual networking. Since this is a living document, I will elaborate on the other things I desire later, decide on a software to manage services on my server. 
+
+
