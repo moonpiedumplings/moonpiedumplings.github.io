@@ -19,9 +19,9 @@ I wanted a machine for experimenting with devops and deep learning. That means p
 
 I was very careful with my selection, and here is what I ended up with:
 
--   Dell Precision Tower Server 7910, with 2X intel xeon E5 2687 v4. Came with 32 GB of ram. \$300 USD
--   More memory, when added, I will get a total of 128 GB of ECC memory. \$60 USD
--   Nvidia rtx 4070 GPU, 12 GB vram. $700
+-   Dell Precision Tower Server 7910, with 2X intel xeon E5 2687 v4. Came with 32 GB of ram.
+-   More memory, when added, I will get a total of 128 GB of ECC memory. 
+-   Nvidia rtx 4070 GPU, 12 GB vram.
 
 ## Building
 
@@ -157,15 +157,65 @@ I want an easy install, but I also want lots of features. Here are some things I
 * Harvester
 * OpenVZ
 
+## Openstack
+
 
 Currently, openstack appeals to me a lot. Although I originally wanted to do a bare metal install, I now realize that that is too time consuming and not realistic, so I am most likely going to use one of the automated methods of installation. 
 
-[Kolla ansible]()
+[Kolla ansible](https://docs.openstack.org/kolla-ansible/latest/)
 
 
 They have an easy [deployment guide](https://docs.openstack.org/kolla-ansible/latest/user/quickstart.html) for an all in one node, perfect for my single server. 
 
-I will definitely not use every service, but I do want to use openstack because of the sheer number of services it offers. 
+I will definitely not use every service, but I do want to use openstack because of the sheer number of services it offers. Openstack offers every single feature of other virtualization platforms, at the cost of complexity. Here are the features that made me decide I needed that complexity.
+
+### Skyline/Horizon
+
+Openstack has a previous generation web ui, horizon, and a newer generation web ui, skyline. These web ui's offer all the features of other web based virtualization platforms like proxmox, but they also let you configure the other things of openstack.
+
+![](https://external-content.duckduckgo.com/iu/?u=http%3A%2F%2Fwww.itzgeek.com%2Fwp-content%2Fuploads%2F2015%2F07%2FOpenStack-Configure-Horizon-Instance-Console.jpg&f=1&nofb=1&ipt=c31c95fcc86ecd2a334a098fddcf51cbdad6b8c3b3d1bd1257b28dbc4b7cb17e&ipo=images)
+
+And they have some special features, like giving you a visual layout of network topology. 
+
+![](https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fi.ytimg.com%2Fvi%2Fz6ftW7fUdp4%2Fmaxresdefault.jpg&f=1&nofb=1&ipt=4e02ee4eb9751d8f6d2ae8693ca223d0626deef5779ec2fe01e614be210a4c5e&ipo=images)
+
+
+### Multi tenancy. 
+
+The most important feature of openstack, in my opinion, is it's multi tenant architechture. Unliek proxmox, which is designed for a single organization, openstack is designed in such a way that you can create extra users, which get their own allocation of resources.
+
+So when I go to college, if anyone wants a VPS to play around in, I can just allocate them a few resources, and then they get their own web ui for playing with servers and networking.
+
+Many public cloud services are actually using openstack in the background for it's public tenant architecture. Openstack's dashboards can be rebranded to be your own company: 
+
+![](https://www.scalecloud.co.uk/wp-content/uploads/2017/02/vnc-console.png)
+
+### Bare metal nodes
+
+Openstack saves a lot of trouble by immensely abstracting almost all the manual work that goes into putting together a modern cloud. 
+
+It takes it a step further, with it's ability to treat physical, bare metal machines, as virtual machines, even automating the provisioning the same way you can do so for a virtual machine. 
+
+[The docs](https://docs.openstack.org/newton/admin-guide/baremetal.html) make it sound complex, but it really isn't all that. By leveraging the [nova]() component of openstack, which abstracts the backend drivers of virtual machines (qemu-kvm, xen, or even [hyper-v](https://docs.openstack.org/ocata/config-reference/compute/hypervisor-hyper-v.html)) can be used as backend drivers for nova. 
+
+However, when combined with [ironic](https://docs.openstack.org/ironic/latest/) openstack's service to configure bare metal nodes, nova can also use bare metal as a driver for compute nodes. This integrates further with services like magnum...
+
+
+### Magnum
+
+Magnum is openstack's kubernetes-as-as-service. It provisions nodes using nova, with kubernetes clusters.
+
+Now here is where I get greedy. Do I need kubernetes? No. Will kubernetes even be useful on a single server setup? No. Do I want kubernetes? Yes. 
+
+Here is a video demonstration, where someone uses the web ui to create a cluster using magnum.
+
+{{< video https://www.youtube.com/watch?v=QvS4nDYE2r0&t=160s >}}
+
+
+
+### An api
+
+Openstack is much more automatable than solutions like proxmox, becuase it is designed to be a cloud. Because of this, software like terraform, or perhaps custom software written to suit the needs of the users can interact with the [openstack api](https://docs.openstack.org/api-quick-start/)
 
 
 
