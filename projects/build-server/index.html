@@ -129,6 +129,13 @@ ul.task-list li input[type="checkbox"] {
   <ul class="collapse">
   <li><a href="#selection" id="toc-selection" class="nav-link" data-scroll-target="#selection">Selection</a></li>
   <li><a href="#building" id="toc-building" class="nav-link" data-scroll-target="#building">Building</a></li>
+  <li><a href="#gpu" id="toc-gpu" class="nav-link" data-scroll-target="#gpu">GPU</a></li>
+  <li><a href="#hard-drives" id="toc-hard-drives" class="nav-link" data-scroll-target="#hard-drives">Hard Drives</a></li>
+  </ul></li>
+  <li><a href="#sofware" id="toc-sofware" class="nav-link" data-scroll-target="#sofware">Sofware</a>
+  <ul class="collapse">
+  <li><a href="#operating-system" id="toc-operating-system" class="nav-link" data-scroll-target="#operating-system">Operating system</a></li>
+  <li><a href="#software-suite" id="toc-software-suite" class="nav-link" data-scroll-target="#software-suite">Software Suite</a></li>
   </ul></li>
   </ul>
 </nav>
@@ -199,6 +206,9 @@ ul.task-list li input[type="checkbox"] {
 <p><a href="https://www.youtube.com/watch?v=jPDYT0XW6Rs">General review</a></p>
 <p><a href="https://www.youtube.com/watch?v=b499mGPEwVg">Memory upgrading process</a></p>
 <p>The important thing to note about the memory upgrading process is that the memory shroud (cover) does not interfere with other processes.</p>
+</section>
+<section id="gpu" class="level2">
+<h2 class="anchored" data-anchor-id="gpu">GPU</h2>
 <p>However, I am trying to add the gpu, so I can get monitor output, so I can run testing suites to ensure the computer is in proper working order.</p>
 <p>However, the gpu does not seem to have screw slots for holding it in place. Rather than that, the entire thing rests on a single screw, as shown below.</p>
 <p><img src="images/singlescrew.jpg" class="img-fluid"></p>
@@ -212,6 +222,57 @@ ul.task-list li input[type="checkbox"] {
 <p>Anyway, I also did more research, attempting to find more manuals and whatnot.</p>
 <p>Linked on <a href="https://www.dell.com/support/home/en-us/product-support/product/precision-t7910-workstation/docs">this page</a> I found a <a href="https://dl.dell.com/topicspdf/precision-t7910-workstation_owners-manual_en-us.pdf">proper manual</a> which gave visual instructions on how to do things like remove the memory shroud.</p>
 <p>Too bad it still doesn’t detail how to install the gpu. I just know I’m not doing it right, the servers I worked with at cirrascale had a screw that would actually hold the gpu in place. It doesn’t make sense to simply have the gpu be resting. I may simply give up, and find some nuts and attatch them to the back of the screws, locking the gpu into place.</p>
+<p>Later, I found out that it was very simple, and I’m frustrated I missed it. I simply had to reverse the direction of the screw, and screw it in from the other side, like so:</p>
+<p><img src="images/gpuscrewed.jpg" class="img-fluid"></p>
+</section>
+<section id="hard-drives" class="level2">
+<h2 class="anchored" data-anchor-id="hard-drives">Hard Drives</h2>
+<p>Now that I had the GPU installed I could get video output and see what the BIOS is saying. I installed two hard drives, and got an error: “Alert Hard drive not found”.</p>
+<p>I decided to pause on the hard drives, and run the built in memory test. The memory, and cpu tests ran without error, however, I got an error about not being able to find the hard drives</p>
+<p><img src="images/noharddrives.jpg" class="img-fluid"></p>
+<p>Just to make sure that the issue was a hardware issue, and not the BIOS merely complaining about not seeing a bootable device, I booted into a live USB and ran lsblk:</p>
+<p><img src="images/manjarolsblk.jpg" class="img-fluid"></p>
+<p>I messed around with moving around the hard drive positions, unplugging and plugging in cables, no dice. This issue is definitely at the hardware level, however, and there are several causes:</p>
+<ul>
+<li>Bad cable. I only have a single cable, an SAS connector on both sides.</li>
+<li>No power to the hard drives. I will test to see if they light up later.</li>
+<li>Motherboard not working. Maybe the motherboard plug isn’t working, but I tried both of them…</li>
+</ul>
+<p>It’s definitely not defective hard drives, as this happens with both of the hard drives I am testing with, both of which are new. However, they rely on the same cable and same power supply (they attatch to a seperate board which has a cable connecting that to the motherboard and another connecting it to the power supply)</p>
+</section>
+</section>
+<section id="sofware" class="level1">
+<h1>Sofware</h1>
+<section id="operating-system" class="level2">
+<h2 class="anchored" data-anchor-id="operating-system">Operating system</h2>
+<p>I was originally going to choose a RHEL compatible distro, but then RHEL made changes put the status of those in limbo.</p>
+<p>I am currently deciding between:</p>
+<ul>
+<li>Ubuntu</li>
+<li>Debian</li>
+<li>RHEL (via a developer subscription)</li>
+<li>A RHEL rebuild
+<ul>
+<li>Rocky Linux</li>
+<li>Alma Linux</li>
+<li>One of the academic distros, like scientific linux</li>
+</ul></li>
+<li>Centos Stream</li>
+</ul>
+<p>The important thing is that it’s a stable release distro with automatic updates. I don’t want to have to do too much manual maintainence.</p>
+</section>
+<section id="software-suite" class="level2">
+<h2 class="anchored" data-anchor-id="software-suite">Software Suite</h2>
+<p>I want an easy install, but I also want lots of features. Here are some things I have looked at:</p>
+<ul>
+<li>Proxmox VE</li>
+<li>Xen Orchestra</li>
+<li>Openstack</li>
+<li><a href="https://github.com/canonical/lxd-ui">Canonicals LXD UI</a></li>
+<li>Ovirt</li>
+<li>Harvester</li>
+</ul>
+<p>There are several things I want. An absolute necessity is virtual machine management, and some level of virtual networking. Since this is a living document, I will elaborate on the other things I desire later, decide on a software to manage services on my server.</p>
 
 
 </section>
