@@ -211,16 +211,43 @@ Here is a video demonstration, where someone uses the web ui to create a cluster
 
 {{< video https://www.youtube.com/watch?v=QvS4nDYE2r0&t=160s >}}
 
+In addition to that, because openstack magnum uses openstack heat, which provisions nodes from templates, it can be used to do things like auto install nvidia drivers and container runtime.
+
+{{< video https://www.youtube.com/embed/P4z2Hdh0l4g
+    start="262"
+>}}
+
+This video is a bit outdated, so heat and magnum are much more mature since then, and have only gained more features. 
 
 
-### An api
+### An api, and many automation features
 
 Openstack is much more automatable than solutions like proxmox, becuase it is designed to be a cloud. Because of this, software like terraform, or perhaps custom software written to suit the needs of the users can interact with the [openstack api](https://docs.openstack.org/api-quick-start/)
 
 
 ### Openstack Zun
 
-Openstack zun is the container service for openstack. It doesn't run them in virtual machines, but instead directly on metal. It's likely that when I want to run containerized services for actual usage, this is what I will be using instead of kubernetes since I will be using a single server, and thus won't be able to get the benefits of kubernetes. 
+Openstack zun is the container service for openstack. It doesn't run them in virtual machines, but instead directly on metal. It's likely that when I want to run containerized services for actual usage, this is what I will be using instead of kubernetes since I will be using a single server, and thus won't be able to get the benefits of kubernetes. The benefit I see form using containers is that because I have an nvidia desktop gpu, I won't be able to use vgpu, a feature that lets you divide the gpu between virtual machines. However, containers have no such limitation. 
+
+
+## Installing Openstack
+
+I've decided to use the kolla-ansible project to install openstack. It works by using ansible to deploy docker containers, which the openstack services run in.
+
+They have a quickstart guide:
+
+<https://docs.openstack.org/kolla-ansible/latest/user/quickstart.html>
+
+And the ansible playbook can be found here:
+
+<https://opendev.org/openstack/kolla-ansible>
+
+And they provide a [sample ansible inventory](https://opendev.org/openstack/kolla-ansible/src/branch/master/ansible/inventory/multinode) for the all in one node.
+
+I do not need all of those features. I pretty much just want virtualized compute, networking, containers, and kubernetes. I don't need things like an S3 compatible block storage, or an app store. Okay, but maybe I want them.
+
+I will do more research into what I want and what I don't want, and edit the ansible playbook accordingly.
+
 
 
 
