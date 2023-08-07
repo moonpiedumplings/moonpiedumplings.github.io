@@ -142,9 +142,10 @@ ul.task-list li input[type="checkbox"] {
   <li><a href="#multi-tenancy." id="toc-multi-tenancy." class="nav-link" data-scroll-target="#multi-tenancy.">Multi tenancy.</a></li>
   <li><a href="#bare-metal-nodes" id="toc-bare-metal-nodes" class="nav-link" data-scroll-target="#bare-metal-nodes">Bare metal nodes</a></li>
   <li><a href="#magnum" id="toc-magnum" class="nav-link" data-scroll-target="#magnum">Magnum</a></li>
-  <li><a href="#an-api" id="toc-an-api" class="nav-link" data-scroll-target="#an-api">An api</a></li>
+  <li><a href="#an-api-and-many-automation-features" id="toc-an-api-and-many-automation-features" class="nav-link" data-scroll-target="#an-api-and-many-automation-features">An api, and many automation features</a></li>
   <li><a href="#openstack-zun" id="toc-openstack-zun" class="nav-link" data-scroll-target="#openstack-zun">Openstack Zun</a></li>
   </ul></li>
+  <li><a href="#installing-openstack" id="toc-installing-openstack" class="nav-link" data-scroll-target="#installing-openstack">Installing Openstack</a></li>
   </ul></li>
   </ul>
 </nav>
@@ -317,17 +318,31 @@ ul.task-list li input[type="checkbox"] {
 <p>Now here is where I get greedy. Do I need kubernetes? No.&nbsp;Will kubernetes even be useful on a single server setup? No.&nbsp;Do I want kubernetes? Yes.</p>
 <p>Here is a video demonstration, where someone uses the web ui to create a cluster using magnum.</p>
 <div class="quarto-video ratio ratio-16x9"><iframe data-external="1" src="https://www.youtube.com/embed/QvS4nDYE2r0" title="" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen=""></iframe></div>
+<p>In addition to that, because openstack magnum uses openstack heat, which provisions nodes from templates, it can be used to do things like auto install nvidia drivers and container runtime.</p>
+<div class="quarto-video ratio ratio-16x9"><iframe data-external="1" src="https://www.youtube.com/embed/P4z2Hdh0l4g?start=262" title="" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen=""></iframe></div>
+<p>This video is a bit outdated, so heat and magnum are much more mature since then, and have only gained more features.</p>
 </section>
-<section id="an-api" class="level3">
-<h3 class="anchored" data-anchor-id="an-api">An api</h3>
+<section id="an-api-and-many-automation-features" class="level3">
+<h3 class="anchored" data-anchor-id="an-api-and-many-automation-features">An api, and many automation features</h3>
 <p>Openstack is much more automatable than solutions like proxmox, becuase it is designed to be a cloud. Because of this, software like terraform, or perhaps custom software written to suit the needs of the users can interact with the <a href="https://docs.openstack.org/api-quick-start/">openstack api</a></p>
 </section>
 <section id="openstack-zun" class="level3">
 <h3 class="anchored" data-anchor-id="openstack-zun">Openstack Zun</h3>
-<p>Openstack zun is the container service for openstack. It doesn’t run them in virtual machines, but instead directly on metal. It’s likely that when I want to run containerized services for actual usage, this is what I will be using instead of kubernetes since I will be using a single server, and thus won’t be able to get the benefits of kubernetes.</p>
-
-
+<p>Openstack zun is the container service for openstack. It doesn’t run them in virtual machines, but instead directly on metal. It’s likely that when I want to run containerized services for actual usage, this is what I will be using instead of kubernetes since I will be using a single server, and thus won’t be able to get the benefits of kubernetes. The benefit I see form using containers is that because I have an nvidia desktop gpu, I won’t be able to use vgpu, a feature that lets you divide the gpu between virtual machines. However, containers have no such limitation.</p>
 </section>
+</section>
+<section id="installing-openstack" class="level2">
+<h2 class="anchored" data-anchor-id="installing-openstack">Installing Openstack</h2>
+<p>I’ve decided to use the kolla-ansible project to install openstack. It works by using ansible to deploy docker containers, which the openstack services run in.</p>
+<p>They have a quickstart guide:</p>
+<p><a href="https://docs.openstack.org/kolla-ansible/latest/user/quickstart.html" class="uri">https://docs.openstack.org/kolla-ansible/latest/user/quickstart.html</a></p>
+<p>And the ansible playbook can be found here:</p>
+<p><a href="https://opendev.org/openstack/kolla-ansible" class="uri">https://opendev.org/openstack/kolla-ansible</a></p>
+<p>And they provide a <a href="https://opendev.org/openstack/kolla-ansible/src/branch/master/ansible/inventory/multinode">sample ansible inventory</a> for the all in one node.</p>
+<p>I do not need all of those features. I pretty much just want virtualized compute, networking, containers, and kubernetes. I don’t need things like an S3 compatible block storage, or an app store. Okay, but maybe I want them.</p>
+<p>I will do more research into what I want and what I don’t want, and edit the ansible playbook accordingly.</p>
+
+
 </section>
 </section>
 
