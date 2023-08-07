@@ -136,6 +136,14 @@ ul.task-list li input[type="checkbox"] {
   <ul class="collapse">
   <li><a href="#operating-system" id="toc-operating-system" class="nav-link" data-scroll-target="#operating-system">Operating system</a></li>
   <li><a href="#software-suite" id="toc-software-suite" class="nav-link" data-scroll-target="#software-suite">Software Suite</a></li>
+  <li><a href="#openstack" id="toc-openstack" class="nav-link" data-scroll-target="#openstack">Openstack</a>
+  <ul class="collapse">
+  <li><a href="#skylinehorizon" id="toc-skylinehorizon" class="nav-link" data-scroll-target="#skylinehorizon">Skyline/Horizon</a></li>
+  <li><a href="#multi-tenancy." id="toc-multi-tenancy." class="nav-link" data-scroll-target="#multi-tenancy.">Multi tenancy.</a></li>
+  <li><a href="#bare-metal-nodes" id="toc-bare-metal-nodes" class="nav-link" data-scroll-target="#bare-metal-nodes">Bare metal nodes</a></li>
+  <li><a href="#magnum" id="toc-magnum" class="nav-link" data-scroll-target="#magnum">Magnum</a></li>
+  <li><a href="#an-api" id="toc-an-api" class="nav-link" data-scroll-target="#an-api">An api</a></li>
+  </ul></li>
   </ul></li>
   </ul>
 </nav>
@@ -176,9 +184,9 @@ ul.task-list li input[type="checkbox"] {
 <p>I wanted a machine for experimenting with devops and deep learning. That means plenty of ram, cpu, and a modest gpu.</p>
 <p>I was very careful with my selection, and here is what I ended up with:</p>
 <ul>
-<li>Dell Precision Tower Server 7910, with 2X intel xeon E5 2687 v4. Came with 32 GB of ram. $300 USD</li>
-<li>More memory, when added, I will get a total of 128 GB of ECC memory. $60 USD</li>
-<li>Nvidia rtx 4070 GPU, 12 GB vram. $700</li>
+<li>Dell Precision Tower Server 7910, with 2X intel xeon E5 2687 v4. Came with 32 GB of ram.</li>
+<li>More memory, when added, I will get a total of 128 GB of ECC memory.</li>
+<li>Nvidia rtx 4070 GPU, 12 GB vram.</li>
 </ul>
 </section>
 <section id="building" class="level2">
@@ -274,12 +282,47 @@ ul.task-list li input[type="checkbox"] {
 <li>Harvester</li>
 <li>OpenVZ</li>
 </ul>
+</section>
+<section id="openstack" class="level2">
+<h2 class="anchored" data-anchor-id="openstack">Openstack</h2>
 <p>Currently, openstack appeals to me a lot. Although I originally wanted to do a bare metal install, I now realize that that is too time consuming and not realistic, so I am most likely going to use one of the automated methods of installation.</p>
-<p><a href="">Kolla ansible</a></p>
+<p><a href="https://docs.openstack.org/kolla-ansible/latest/">Kolla ansible</a></p>
 <p>They have an easy <a href="https://docs.openstack.org/kolla-ansible/latest/user/quickstart.html">deployment guide</a> for an all in one node, perfect for my single server.</p>
-<p>I will definitely not use every service, but I do want to use openstack because of the sheer number of services it offers.</p>
+<p>I will definitely not use every service, but I do want to use openstack because of the sheer number of services it offers. Openstack offers every single feature of other virtualization platforms, at the cost of complexity. Here are the features that made me decide I needed that complexity.</p>
+<section id="skylinehorizon" class="level3">
+<h3 class="anchored" data-anchor-id="skylinehorizon">Skyline/Horizon</h3>
+<p>Openstack has a previous generation web ui, horizon, and a newer generation web ui, skyline. These web ui’s offer all the features of other web based virtualization platforms like proxmox, but they also let you configure the other things of openstack.</p>
+<p><img src="https://external-content.duckduckgo.com/iu/?u=http%3A%2F%2Fwww.itzgeek.com%2Fwp-content%2Fuploads%2F2015%2F07%2FOpenStack-Configure-Horizon-Instance-Console.jpg&amp;f=1&amp;nofb=1&amp;ipt=c31c95fcc86ecd2a334a098fddcf51cbdad6b8c3b3d1bd1257b28dbc4b7cb17e&amp;ipo=images" class="img-fluid"></p>
+<p>And they have some special features, like giving you a visual layout of network topology.</p>
+<p><img src="https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fi.ytimg.com%2Fvi%2Fz6ftW7fUdp4%2Fmaxresdefault.jpg&amp;f=1&amp;nofb=1&amp;ipt=4e02ee4eb9751d8f6d2ae8693ca223d0626deef5779ec2fe01e614be210a4c5e&amp;ipo=images" class="img-fluid"></p>
+</section>
+<section id="multi-tenancy." class="level3">
+<h3 class="anchored" data-anchor-id="multi-tenancy.">Multi tenancy.</h3>
+<p>The most important feature of openstack, in my opinion, is it’s multi tenant architechture. Unliek proxmox, which is designed for a single organization, openstack is designed in such a way that you can create extra users, which get their own allocation of resources.</p>
+<p>So when I go to college, if anyone wants a VPS to play around in, I can just allocate them a few resources, and then they get their own web ui for playing with servers and networking.</p>
+<p>Many public cloud services are actually using openstack in the background for it’s public tenant architecture. Openstack’s dashboards can be rebranded to be your own company:</p>
+<p><img src="https://www.scalecloud.co.uk/wp-content/uploads/2017/02/vnc-console.png" class="img-fluid"></p>
+</section>
+<section id="bare-metal-nodes" class="level3">
+<h3 class="anchored" data-anchor-id="bare-metal-nodes">Bare metal nodes</h3>
+<p>Openstack saves a lot of trouble by immensely abstracting almost all the manual work that goes into putting together a modern cloud.</p>
+<p>It takes it a step further, with it’s ability to treat physical, bare metal machines, as virtual machines, even automating the provisioning the same way you can do so for a virtual machine.</p>
+<p><a href="https://docs.openstack.org/newton/admin-guide/baremetal.html">The docs</a> make it sound complex, but it really isn’t all that. By leveraging the <a href="">nova</a> component of openstack, which abstracts the backend drivers of virtual machines (qemu-kvm, xen, or even <a href="https://docs.openstack.org/ocata/config-reference/compute/hypervisor-hyper-v.html">hyper-v</a>) can be used as backend drivers for nova.</p>
+<p>However, when combined with <a href="https://docs.openstack.org/ironic/latest/">ironic</a> openstack’s service to configure bare metal nodes, nova can also use bare metal as a driver for compute nodes. This integrates further with services like magnum…</p>
+</section>
+<section id="magnum" class="level3">
+<h3 class="anchored" data-anchor-id="magnum">Magnum</h3>
+<p>Magnum is openstack’s kubernetes-as-as-service. It provisions nodes using nova, with kubernetes clusters.</p>
+<p>Now here is where I get greedy. Do I need kubernetes? No.&nbsp;Will kubernetes even be useful on a single server setup? No.&nbsp;Do I want kubernetes? Yes.</p>
+<p>Here is a video demonstration, where someone uses the web ui to create a cluster using magnum.</p>
+<div class="quarto-video ratio ratio-16x9"><iframe data-external="1" src="https://www.youtube.com/embed/QvS4nDYE2r0" title="" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen=""></iframe></div>
+</section>
+<section id="an-api" class="level3">
+<h3 class="anchored" data-anchor-id="an-api">An api</h3>
+<p>Openstack is much more automatable than solutions like proxmox, becuase it is designed to be a cloud. Because of this, software like terraform, or perhaps custom software written to suit the needs of the users can interact with the <a href="https://docs.openstack.org/api-quick-start/">openstack api</a></p>
 
 
+</section>
 </section>
 </section>
 
