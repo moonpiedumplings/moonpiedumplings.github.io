@@ -169,6 +169,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <ul class="collapse">
   <li><a href="#connecting-your-github-account-to-git-from-the-terminal" id="toc-connecting-your-github-account-to-git-from-the-terminal" class="nav-link" data-scroll-target="#connecting-your-github-account-to-git-from-the-terminal">Connecting your github account to git from the terminal</a></li>
   <li><a href="#deleting-sensitive-detail-or-large-binary-files-from-a-git-repo" id="toc-deleting-sensitive-detail-or-large-binary-files-from-a-git-repo" class="nav-link" data-scroll-target="#deleting-sensitive-detail-or-large-binary-files-from-a-git-repo">Deleting sensitive detail, or large binary files from a git repo</a></li>
+  <li><a href="#renaming-flash-drives" id="toc-renaming-flash-drives" class="nav-link" data-scroll-target="#renaming-flash-drives">Renaming flash drives</a></li>
   </ul></li>
   </ul>
 </nav>
@@ -281,6 +282,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p><code>git config --global http.postBuffer 524288000</code> if you are on a slower network (high latency), this gives it more grace.</p>
 <p>But for me, because I am currently on vacation and didn’t have access to the internet speeds I do at home, the only thing that worked was actually getting up and moving my laptop to an area with faster wifi.</p>
 <p>Now, I did this to delete unused images from my repo, however, if you are trying to clean sensitive data off of the internet, there are some <a href="https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/removing-sensitive-data-from-a-repository#fully-removing-the-data-from-github">extra steps</a> you may want to take.</p>
+</section>
+<section id="renaming-flash-drives" class="level2">
+<h2 class="anchored" data-anchor-id="renaming-flash-drives">Renaming flash drives</h2>
+<p><code>nix-shell -p exfatprogs</code> install utilities to manipulate the exfat file system used by usb flash drives.</p>
+<p>Then:</p>
+<p><code>sudo extfatlabel &lt;device&gt; &lt;new label&gt;</code></p>
+<p>You can see the device with the lsblk tool, which lists all attached drives.</p>
 
 
 </section>
