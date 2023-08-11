@@ -165,6 +165,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#building" id="toc-building" class="nav-link" data-scroll-target="#building">Building</a></li>
   <li><a href="#gpu" id="toc-gpu" class="nav-link" data-scroll-target="#gpu">GPU</a></li>
   <li><a href="#hard-drives" id="toc-hard-drives" class="nav-link" data-scroll-target="#hard-drives">Hard Drives</a></li>
+  <li><a href="#memory" id="toc-memory" class="nav-link" data-scroll-target="#memory">Memory</a></li>
   </ul></li>
   <li><a href="#software" id="toc-software" class="nav-link" data-scroll-target="#software">Software</a>
   <ul class="collapse">
@@ -371,6 +372,15 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>However, after doing some research, it appears that only the dos and efi versions of sas3flash are able to flash IT firmware over IR firmware, according to the official <a href="https://www.broadcom.com/support/knowledgebase/1211161501344/flashing-firmware-and-bios-on-lsi-sas-hbas">broadcom website</a>. ON that site, there is a compatibility table, meaning I need to use the either the efi version, or the dos version. I should have noticed how the existing guides used either the efi version or the dos version.</p>
 <p>So I set up a USB with the efi version of the flasher, and I attempted to get into the boot menu… only for it not to work. I press F12, or F8 then F12The screen says something along the lines of “Entering the one time boot configuration”, before taking me to the “cannot find hard drive” screen. I have no idea why it’s not working, as it has worked before.</p>
 <p>According to one <a href="https://forums.tomsguide.com/threads/cant-get-into-bios-or-windows-f2-and-f12-do-not-work.422868/">forum post</a>, the issue has something to do with the CD Rom drive, and I should try removing it. However, that question and suggestion is relating to laptops, not workstations, so it might not work for me.</p>
+</section>
+<section id="memory" class="level2">
+<h2 class="anchored" data-anchor-id="memory">Memory</h2>
+<p>This comes with two 16 gb sticks, one in each cpu.</p>
+<p>I bought 6 more 16 GB ecc sticks, so I will have a total of 128 GB of memory.</p>
+<p>In order to ensure that dual channel works, I will need to put them in the right spots. Now, the previous <a href="https://dl.dell.com/topicspdf/precision-t7910-workstation_owners-manual_en-us.pdf">manual</a> that I found has a chart detailing on the channel configuration, but that chart is very complex. Lower down in the manual, in the “errors and warnings” section, there is a error that could appear that makes things very clear to me.</p>
+<p>“Warning: Non-optimal memory population detected. For increased memory bandwidth populate DIMM connectors with white latches before those with black latches.”</p>
+<p>That makes things very simple for me.</p>
+<p>I added the ram. And now my system won’t boot at all. I don’t get any monitor output. I asked around, and someone mentioned that it could be dust in the ram socket cores, so I will have to take them out, blow the dust out, and then reseat the ram.</p>
 </section>
 </section>
 <section id="software" class="level1">
