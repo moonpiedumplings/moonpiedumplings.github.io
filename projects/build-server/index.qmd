@@ -20,7 +20,7 @@ I wanted a machine for experimenting with devops and deep learning. That means p
 I was very careful with my selection, and here is what I ended up with:
 
 -   Dell Precision Tower Server 7910, with 2X intel xeon E5 2687 v4. Came with 32 GB of ram.
--   More memory, when added, I will get a total of 128 GB of ECC memory. 
+-   More memory, when added, I will get a total of 128 GB of ECC memory.
 -   Nvidia rtx 4070 GPU, 12 GB vram.
 
 ## Building
@@ -41,26 +41,22 @@ And below:
 
 I need to figure out what each of these pcie ports is. What do the numbers and color mean?
 
-To catalog them: 
+To catalog them:
 
-* Three black PCIe3x16 slots (all 75W)
-* One blue PCIe3x16 75W + ext 225 w
-* One black PCIe2x4 25 W
-* One tan PCI slot
+-   Three black PCIe3x16 slots (all 75W)
+-   One blue PCIe3x16 75W + ext 225 w
+-   One black PCIe2x4 25 W
+-   One tan PCI slot
 
 I think it is safe to assume that the color is related to wattage, not PCIe protocol. Since the computer comes with the necessary power plug that the nvidia gpu wants, it is safe to assume that any of the PCIe3x16 are optimal, although I will try to place the gpu in the best spot for cooling.
 
-I found a [forum post](https://www.dell.com/community/Desktops-General-Read-Only/What-is-the-meaning-of-the-blue-PCIe-slot-on-the-Dell-T7910/td-p/5153034) ([wayback archive](https://web.archive.org/web/20230804052739/https://www.dell.com/community/Desktops-General-Read-Only/What-is-the-meaning-of-the-blue-PCIe-slot-on-the-Dell-T7910/td-p/5153034)) where someone asked this exact question. 
+I found a [forum post](https://www.dell.com/community/Desktops-General-Read-Only/What-is-the-meaning-of-the-blue-PCIe-slot-on-the-Dell-T7910/td-p/5153034) ([wayback archive](https://web.archive.org/web/20230804052739/https://www.dell.com/community/Desktops-General-Read-Only/What-is-the-meaning-of-the-blue-PCIe-slot-on-the-Dell-T7910/td-p/5153034)) where someone asked this exact question.
 
-An unsourced answer replied that the blue pcie slot was the primary gpu slot, so since I only have one gpu, that is where I put it. 
+An unsourced answer replied that the blue pcie slot was the primary gpu slot, so since I only have one gpu, that is where I put it.
 
-I found the [manual](https://www.dell.com/support/manuals/en-us/precision-t7910-workstation/precision_t7910_om_pub/additional-information?guid=guid-ba746105-ecbd-4bb4-9fcc-b78681607aab&lang=en-us) for my system online, but it doesn't seem to label each pci port in images. 
-
-
-
+I found the [manual](https://www.dell.com/support/manuals/en-us/precision-t7910-workstation/precision_t7910_om_pub/additional-information?guid=guid-ba746105-ecbd-4bb4-9fcc-b78681607aab&lang=en-us) for my system online, but it doesn't seem to label each pci port in images.
 
 I also did research into some youtube videos.
-
 
 [General review](https://www.youtube.com/watch?v=jPDYT0XW6Rs)
 
@@ -70,21 +66,19 @@ The important thing to note about the memory upgrading process is that the memor
 
 ## GPU
 
-However, I am trying to add the gpu, so I can get monitor output, so I can run testing suites to ensure the computer is in proper working order. 
+However, I am trying to add the gpu, so I can get monitor output, so I can run testing suites to ensure the computer is in proper working order.
 
 However, the gpu does not seem to have screw slots for holding it in place. Rather than that, the entire thing rests on a single screw, as shown below.
 
 ![](images/singlescrew.jpg)
 
-But the GPU, is inserted: 
+But the GPU, is inserted:
 
 ![](images/gpuin.jpg)
 
-
-After plugging the gpu power in: 
+After plugging the gpu power in:
 
 ![](images/gpuwithpower.jpg)
-
 
 I can turn the machine on and get monitor output:
 
@@ -92,20 +86,19 @@ I can turn the machine on and get monitor output:
 
 Next step is to run the system diagnostics on the memory I currently have. Thankfully, I have an extra keyboard I can connect it to. It's a small bluetooth one, closer to a remote than something meant for typing, but it will do nicely.
 
-Anyway, I also did more research, attempting to find more manuals and whatnot. 
+Anyway, I also did more research, attempting to find more manuals and whatnot.
 
-Linked on [this page](https://www.dell.com/support/home/en-us/product-support/product/precision-t7910-workstation/docs) I found a [proper manual](https://dl.dell.com/topicspdf/precision-t7910-workstation_owners-manual_en-us.pdf) which gave visual instructions on how to do things like remove the memory shroud. 
+Linked on [this page](https://www.dell.com/support/home/en-us/product-support/product/precision-t7910-workstation/docs) I found a [proper manual](https://dl.dell.com/topicspdf/precision-t7910-workstation_owners-manual_en-us.pdf) which gave visual instructions on how to do things like remove the memory shroud.
 
-Too bad it still doesn't detail how to install the gpu. I just know I'm not doing it right, the servers I worked with at cirrascale had a screw that would actually hold the gpu in place. It doesn't make sense to simply have the gpu be resting. I may simply give up, and find some nuts and attatch them to the back of the screws, locking the gpu into place. 
+Too bad it still doesn't detail how to install the gpu. I just know I'm not doing it right, the servers I worked with at cirrascale had a screw that would actually hold the gpu in place. It doesn't make sense to simply have the gpu be resting. I may simply give up, and find some nuts and attatch them to the back of the screws, locking the gpu into place.
 
 Later, I found out that it was very simple, and I'm frustrated I missed it. I simply had to reverse the direction of the screw, and screw it in from the other side, like so:
 
 ![](images/gpuscrewed.jpg)
 
-
 ## Hard Drives
 
-Now that I had the GPU installed I could get video output and see what the BIOS is saying. I installed two hard drives, and got an error: "Alert Hard drive not found". 
+Now that I had the GPU installed I could get video output and see what the BIOS is saying. I installed two hard drives, and got an error: "Alert Hard drive not found".
 
 I decided to pause on the hard drives, and run the built in memory test. The memory, and cpu tests ran without error, however, I got an error about not being able to find the hard drives
 
@@ -117,13 +110,13 @@ Just to make sure that the issue was a hardware issue, and not the BIOS merely c
 
 I messed around with moving around the hard drive positions, unplugging and plugging in cables, no dice. This issue is definitely at the hardware level, however, and there are several causes:
 
-* Bad cable. I only have a single cable, an SAS connector on both sides. 
-* No power to the hard drives. I will test to see if they light up later. 
-* Motherboard not working. Maybe the motherboard plug isn't working, but I tried both of them...
+-   Bad cable. I only have a single cable, an SAS connector on both sides.
+-   No power to the hard drives. I will test to see if they light up later.
+-   Motherboard not working. Maybe the motherboard plug isn't working, but I tried both of them...
 
 It's definitely not defective hard drives, as this happens with both of the hard drives I am testing with, both of which are new. However, they rely on the same cable and same power supply (they attatch to a seperate board which has a cable connecting that to the motherboard and another connecting it to the power supply)
 
-Upon doing some further research, I found a related [youtube video](https://youtu.be/Qa3qvzEjDyE?t=197). According to this video, the port I am trying to attatch this to is controlled by the RAID controller, so RAID must be enabled, although I can use RAID 0 for RAID without any of the special RAID features or complications. 
+Upon doing some further research, I found a related [youtube video](https://youtu.be/Qa3qvzEjDyE?t=197). According to this video, the port I am trying to attatch this to is controlled by the RAID controller, so RAID must be enabled, although I can use RAID 0 for RAID without any of the special RAID features or complications.
 
 I enabled the RAID controller, and now the BIOS can see the hard drives:
 
@@ -133,27 +126,27 @@ However, when I actually inspect these drives via a live usb, they don't appear 
 
 ![](images/livecantseedrives.jpg)
 
-It sees the hard drives as 0 byte, empty drives, which I can't do anything. 
+It sees the hard drives as 0 byte, empty drives, which I can't do anything.
 
 I need to get into the raid controller bios.
 
-I found a relevant [manual](https://dl.dell.com/manuals/all-products/esuprt_software/esuprt_it_ops_datcentr_mgmt/enterprise-client-solution-resources_white-papers_en-us.pdf) which says that when booting, pressing Control + I to enter the raid configuration screen. 
+I found a relevant [manual](https://dl.dell.com/manuals/all-products/esuprt_software/esuprt_it_ops_datcentr_mgmt/enterprise-client-solution-resources_white-papers_en-us.pdf) which says that when booting, pressing Control + I to enter the raid configuration screen.
 
 I am wondering if there is an option to bypass raid entirely, as I have no need for any of it's features, and striped will limit me to the size of the smallest disk.
 
-Alright, since I skimmed the manual, I missed something. There are actually three different ways to get to the raid controller interface, depending on what raid controller you have installed. I tested all methods, but the only one that worked was entering the boot options menu, and then going to device configuration. 
+Alright, since I skimmed the manual, I missed something. There are actually three different ways to get to the raid controller interface, depending on what raid controller you have installed. I tested all methods, but the only one that worked was entering the boot options menu, and then going to device configuration.
 
 Then, I was met with a screen like this:
 
 ![](images/deviceconfig.jpg)
 
-I browsed around a little bit, and although it could see the physical drives, there was no option to create a volume or do anything with the disks. I think this is because I have two different disks, an nvme SSD, and a sata HDD. 
+I browsed around a little bit, and although it could see the physical drives, there was no option to create a volume or do anything with the disks. I think this is because I have two different disks, an nvme SSD, and a sata HDD.
 
-This is frustrating. I (might) need to buy another disk, or buy parts to make the disks work via a SATA connection. 
+This is frustrating. I (might) need to buy another disk, or buy parts to make the disks work via a SATA connection.
 
-I did more research and found a relevant [support article](https://www.dell.com/support/kbdoc/en-us/000146646/how-to-manage-your-onboard-lsi-3008-raid-controllers-in-the-unified-extensible-firmware-interface-uefi-configuration-of-your-dell-system) ([wayback machine](https://web.archive.org/web/20230808171810/https://www.dell.com/support/kbdoc/en-us/000146646/how-to-manage-your-onboard-lsi-3008-raid-controllers-in-the-unified-extensible-firmware-interface-uefi-configuration-of-your-dell-system)) detailing how to use the raid controller and it seems I missed something. It's seems that creating volume is not in the drives section, but rather in controller configuration. 
+I did more research and found a relevant [support article](https://www.dell.com/support/kbdoc/en-us/000146646/how-to-manage-your-onboard-lsi-3008-raid-controllers-in-the-unified-extensible-firmware-interface-uefi-configuration-of-your-dell-system) ([wayback machine](https://web.archive.org/web/20230808171810/https://www.dell.com/support/kbdoc/en-us/000146646/how-to-manage-your-onboard-lsi-3008-raid-controllers-in-the-unified-extensible-firmware-interface-uefi-configuration-of-your-dell-system)) detailing how to use the raid controller and it seems I missed something. It's seems that creating volume is not in the drives section, but rather in controller configuration.
 
-Apparently, there is also a command line software designed to work with this raid controller (that works on linux, of course). 
+Apparently, there is also a command line software designed to work with this raid controller (that works on linux, of course).
 
 [Manual](https://docs.broadcom.com/doc/12353382) ([wayback machine](http://web.archive.org/web/20230808175803/https://docs.broadcom.com/doc/12353382))
 
@@ -163,35 +156,35 @@ Apparently, there is also a command line software designed to work with this rai
 
 [Guides by Huawei](https://support.huawei.com/enterprise/en/doc/EDOC1000004186/917a9193/downloading-and-installing-sas3ircu)
 
-But I don't really want to use raid. I just want to pass through the disks, or something like that. Upon doing some research, I might be able to put the card into Host Bus Adapter (HBA) mode. In this mode, it will just pass through the disks. 
+But I don't really want to use raid. I just want to pass through the disks, or something like that. Upon doing some research, I might be able to put the card into Host Bus Adapter (HBA) mode. In this mode, it will just pass through the disks.
 
 Based on some precursory research, this may not be an options in the settings that it comes with, and I may need to [flash the firmware](https://www.servethehome.com/flash-lsi-sas-3008-hba-e-g-ibm-m1215-mode/) ([wayback link](http://web.archive.org/web/20230605105352/https://www.servethehome.com/flash-lsi-sas-3008-hba-e-g-ibm-m1215-mode/))
 
-Firmware flashing is scary. Unlike playing with operating systems, if done wrong, firmware flashing can brick (make useless) devices. So I will have to research very carefully. 
+Firmware flashing is scary. Unlike playing with operating systems, if done wrong, firmware flashing can brick (make useless) devices. So I will have to research very carefully.
 
-So first, what is this "IT" mode I keep seeing when I research how to passthrough devices. IT mode stands for "initiator target" and  it presents each drive individually to the host. 
+So first, what is this "IT" mode I keep seeing when I research how to passthrough devices. IT mode stands for "initiator target" and it presents each drive individually to the host.
 
-"IR" stands for integrated RAID, when raid is integrated into the motherboard. I don't have this. 
+"IR" stands for integrated RAID, when raid is integrated into the motherboard. I don't have this.
 
-And finally, "HBA" stands for host bus adapter mode. Devices that do this (they can be more than just drive connectors) connect any other kind of device to the motherboard directly. 
+And finally, "HBA" stands for host bus adapter mode. Devices that do this (they can be more than just drive connectors) connect any other kind of device to the motherboard directly.
 
-So I have to find the relevant "IT" firmware. 
+So I have to find the relevant "IT" firmware.
 
-But first, I need out exactly what device I have. 
+But first, I need out exactly what device I have.
 
 According to the output of lspci, the controller is: `01:00.0 Serial Attached SCSI controller: Broadcom / LSI SAS3008 PCI-Express Fusion-MPT SAS-3 (rev 02)`
 
-I found a relevant [youtube video](https://www.youtube.com/watch?v=A54VuVNVX5M) which applies to my exact server model (T7910), but it doesn't list where to find the files, and the flashing utility. 
+I found a relevant [youtube video](https://www.youtube.com/watch?v=A54VuVNVX5M) which applies to my exact server model (T7910), but it doesn't list where to find the files, and the flashing utility.
 
 Based on some research, it seems that the SAS 3008 and the SAS 9300 HBA have the same hardware, just differing firmware. According to [one article](https://www.storagereview.com/review/supermicro-lsi-sas3008-hba-review), "Supermicro LSI SAS3008 HBAs (which share the same controller as the LSI 9300-8i HBAs)".
 
 The drivers for this can be found on the [broadcom website](https://www.broadcom.com/site-search?page=1&per_page=100&q=9300_8i_Package)
 
-I will need to do research into what the "phases" are. I think they are releases/versions? Anyway, I downloaded the P15 version, and I went through it. It appears to contain all the rom files that will be flashed to the device. 
+I will need to do research into what the "phases" are. I think they are releases/versions? Anyway, I downloaded the P15 version, and I went through it. It appears to contain all the rom files that will be flashed to the device.
 
-* SAS9300_8i_IT.bin
-* mptsas3.rom
-* mpt3x64.rom
+-   SAS9300_8i_IT.bin
+-   mptsas3.rom
+-   mpt3x64.rom
 
 However, this zip archive appears to only contain the windows flashing utilities. I need to find the linux flashing utility.
 
@@ -199,64 +192,61 @@ Alright, I've located the sas3flash binaries: [broadcom website](https://www.bro
 
 Based on looking at `sas3flash -help`, I should be able to use the same commands as the uefi binary, following the instructions on the flash the firmware guide linked above.
 
-
 I booted from a live usb, and attempted to flash the rom.
 
+On the first step of flashing the firmware, wiping it, I get an error.
 
-On the first step of flashing the firmware, wiping it, I get an error. 
-
-```{.default}
+``` default
 ./sas3flash -c 0 -o -e 6 -l log7 
-	Adapter Selected is a Avago SAS: SAS3008(C0)
+    Adapter Selected is a Avago SAS: SAS3008(C0)
 
-	Executing Operation: Erase Flash
+    Executing Operation: Erase Flash
 
-	Erasing Flash Region...
+    Erasing Flash Region...
 
-	ERROR: Erase Flash Operation Failed!
+    ERROR: Erase Flash Operation Failed!
 
-	Resetting Adapter...
-	Reset Successful!
+    Resetting Adapter...
+    Reset Successful!
 
-	Due to Exception Command not Executed. IOCStatus=0x47ca, IOCLogInfo=0x0
-	Finished Processing Commands Successfully.
-	Exiting SAS3Flash.
+    Due to Exception Command not Executed. IOCStatus=0x47ca, IOCLogInfo=0x0
+    Finished Processing Commands Successfully.
+    Exiting SAS3Flash.
 ```
 
-I suspect this error is related to me not messing around with the jumper cables before hand, but I can't find them. 
+I suspect this error is related to me not messing around with the jumper cables before hand, but I can't find them.
 
+I also can't flash the IT firmware, and I am assuming this is because it requires that you wipe the firmware first.
 
-I also can't flash the IT firmware, and I am assuming this is because it requires that you wipe the firmware first. 
-
-```{.default}
+``` default
 ./sas3flash -o -f SAS9300_8i_IT.bin -b mptsas3.rom -b mpt3x64.rom -l flashing.log 
-	Adapter Selected is a Avago SAS: SAS3008(C0)
+    Adapter Selected is a Avago SAS: SAS3008(C0)
 
-	Executing Operation: Flash Firmware Image
+    Executing Operation: Flash Firmware Image
 
-		Firmware Image has a Valid Checksum. 
-		Firmware Version 16.00.10.00
-		Firmware Image compatible with Controller. 
+        Firmware Image has a Valid Checksum. 
+        Firmware Version 16.00.10.00
+        Firmware Image compatible with Controller. 
 
-		Valid NVDATA Image found. 
-		NVDATA Major Version 0e.01 
-		Checking for a compatible NVData image... 
+        Valid NVDATA Image found. 
+        NVDATA Major Version 0e.01 
+        Checking for a compatible NVData image... 
 
-		NVDATA Device ID and Chip Revision match verified.
-		NVDATA Versions Compatible.
-		Valid Initialization Image verified.
-		Valid BootLoader Image verified.
+        NVDATA Device ID and Chip Revision match verified.
+        NVDATA Versions Compatible.
+        Valid Initialization Image verified.
+        Valid BootLoader Image verified.
 
-		ERROR: Cannot Flash IT Firmware over IR Firmware!
+        ERROR: Cannot Flash IT Firmware over IR Firmware!
 
-		Firmware Image Validation Failed! 
+        Firmware Image Validation Failed! 
 
-	Due to error remaining commands will not be executed.
-	Unable to Process Commands.
-	Exiting SAS3Flash.
+    Due to error remaining commands will not be executed.
+    Unable to Process Commands.
+    Exiting SAS3Flash.
 ```
 
-However, after doing some research, it appears that only the dos and efi versions of sas3flash are able to flash IT firmware over IR firmware, according to the official [broadcom website](https://www.broadcom.com/support/knowledgebase/1211161501344/flashing-firmware-and-bios-on-lsi-sas-hbas). ON that site, there is a compatibility table, meaning I need to use the either the efi version, or the dos version. I should have noticed how the existing guides used either the efi version or the dos version. 
+However, after doing some research, it appears that only the dos and efi versions of sas3flash are able to flash IT firmware over IR firmware, according to the official [broadcom website](https://www.broadcom.com/support/knowledgebase/1211161501344/flashing-firmware-and-bios-on-lsi-sas-hbas). ON that site, there is a compatibility table, meaning I need to use the either the efi version, or the dos version. I should have noticed how the existing guides used either the efi version or the dos version.
 
 So I set up a USB with the efi version of the flasher, and I attempted to get into the boot menu... only for it not to work. I press F12, or F8 then F12The screen says something along the lines of "Entering the one time boot configuration", before taking me to the "cannot find hard drive" screen. I have no idea why it's not working, as it has worked before.
 
@@ -264,60 +254,58 @@ According to one [forum post](https://forums.tomsguide.com/threads/cant-get-into
 
 ## Memory
 
-This comes with two 16 gb sticks, one in each cpu. 
+This comes with two 16 gb sticks, one in each cpu.
 
-I bought 6 more 16 GB ecc sticks, so I will have a total of 128 GB of memory. 	
+I bought 6 more 16 GB ecc sticks, so I will have a total of 128 GB of memory.
 
-In order to ensure that dual channel works, I will need to put them in the right spots. Now, the previous [manual](https://dl.dell.com/topicspdf/precision-t7910-workstation_owners-manual_en-us.pdf) that I found has a chart detailing on the channel configuration, but that chart is very complex. Lower down in the manual, in the "errors and warnings" section, there is a error that could appear that makes things very clear to me. 
+In order to ensure that dual channel works, I will need to put them in the right spots. Now, the previous [manual](https://dl.dell.com/topicspdf/precision-t7910-workstation_owners-manual_en-us.pdf) that I found has a chart detailing on the channel configuration, but that chart is very complex. Lower down in the manual, in the "errors and warnings" section, there is a error that could appear that makes things very clear to me.
 
-"Warning: Non-optimal memory population detected. For increased memory bandwidth populate DIMM connectors with white latches
-before those with black latches."
+"Warning: Non-optimal memory population detected. For increased memory bandwidth populate DIMM connectors with white latches before those with black latches."
 
-That makes things very simple for me. 
+That makes things very simple for me.
 
-I added the ram. And now my system won't boot at all. I don't get any monitor output. I asked around, and someone mentioned that it could be dust in the ram socket cores, so I will have to take them out, blow the dust out, and then reseat the ram. 	
+I added the ram. And now my system won't boot at all. I don't get any monitor output. I asked around, and someone mentioned that it could be dust in the ram socket cores, so I will have to take them out, blow the dust out, and then reseat the ram.
+
+The same user helping me also said that it might be an issue with extreme memory profiles (xmp), a feature that adjusts how memory works on intel cpus, and that I should disable it from a working bios.
 
 # Software
 
 ## Operating system
 
-I was originally going to choose a RHEL compatible distro, but then RHEL made changes put the status of those in limbo. 
+I was originally going to choose a RHEL compatible distro, but then RHEL made changes put the status of those in limbo.
 
 I am currently deciding between:
 
-* Ubuntu
-* Debian
-* RHEL (via a developer subscription)
-* A RHEL rebuild
-  - Rocky Linux
-  - Alma Linux
-  - One of the academic distros, like scientific linux
-* Centos Stream
+-   Ubuntu
+-   Debian
+-   RHEL (via a developer subscription)
+-   A RHEL rebuild
+    -   Rocky Linux
+    -   Alma Linux
+    -   One of the academic distros, like scientific linux
+-   Centos Stream
 
-The important thing is that it's a stable release distro with automatic updates. I don't want to have to do too much manual maintainence. 
-
+The important thing is that it's a stable release distro with automatic updates. I don't want to have to do too much manual maintainence.
 
 ## Software Suite
 
 I want an easy install, but I also want lots of features. Here are some things I have looked at:
 
-* Proxmox VE
-* Xen Orchestra
-* Openstack 
-* [Canonicals LXD UI](https://github.com/canonical/lxd-ui)
-* Ovirt
-* Harvester
-* OpenVZ
+-   Proxmox VE
+-   Xen Orchestra
+-   Openstack
+-   [Canonicals LXD UI](https://github.com/canonical/lxd-ui)
+-   Ovirt
+-   Harvester
+-   OpenVZ
 
 ## Openstack
 
-
-Currently, openstack appeals to me a lot. Although I originally wanted to do a bare metal install, I now realize that that is too time consuming and not realistic, so I am most likely going to use one of the automated methods of installation. 
+Currently, openstack appeals to me a lot. Although I originally wanted to do a bare metal install, I now realize that that is too time consuming and not realistic, so I am most likely going to use one of the automated methods of installation.
 
 [Kolla ansible](https://docs.openstack.org/kolla-ansible/latest/)
 
-
-They have an easy [deployment guide](https://docs.openstack.org/kolla-ansible/latest/user/quickstart.html) for an all in one node, perfect for my single server. 
+They have an easy [deployment guide](https://docs.openstack.org/kolla-ansible/latest/user/quickstart.html) for an all in one node, perfect for my single server.
 
 I will definitely not use every service, but I do want to use openstack because of the sheer number of services it offers. Openstack offers every single feature of other virtualization platforms, at the cost of complexity. Here are the features that made me decide I needed that complexity.
 
@@ -327,37 +315,35 @@ Openstack has a previous generation web ui, horizon, and a newer generation web 
 
 ![](https://external-content.duckduckgo.com/iu/?u=http%3A%2F%2Fwww.itzgeek.com%2Fwp-content%2Fuploads%2F2015%2F07%2FOpenStack-Configure-Horizon-Instance-Console.jpg&f=1&nofb=1&ipt=c31c95fcc86ecd2a334a098fddcf51cbdad6b8c3b3d1bd1257b28dbc4b7cb17e&ipo=images)
 
-And they have some special features, like giving you a visual layout of network topology. 
+And they have some special features, like giving you a visual layout of network topology.
 
 ![](https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fi.ytimg.com%2Fvi%2Fz6ftW7fUdp4%2Fmaxresdefault.jpg&f=1&nofb=1&ipt=4e02ee4eb9751d8f6d2ae8693ca223d0626deef5779ec2fe01e614be210a4c5e&ipo=images)
 
-
-### Multi tenancy. 
+### Multi tenancy.
 
 The most important feature of openstack, in my opinion, is it's multi tenant architechture. Unliek proxmox, which is designed for a single organization, openstack is designed in such a way that you can create extra users, which get their own allocation of resources.
 
 So when I go to college, if anyone wants a VPS to play around in, I can just allocate them a few resources, and then they get their own web ui for playing with servers and networking.
 
-Many public cloud services are actually using openstack in the background for it's public tenant architecture. Openstack's dashboards can be rebranded to be your own company: 
+Many public cloud services are actually using openstack in the background for it's public tenant architecture. Openstack's dashboards can be rebranded to be your own company:
 
 ![](https://www.scalecloud.co.uk/wp-content/uploads/2017/02/vnc-console.png)
 
 ### Bare metal nodes
 
-Openstack saves a lot of trouble by immensely abstracting almost all the manual work that goes into putting together a modern cloud. 
+Openstack saves a lot of trouble by immensely abstracting almost all the manual work that goes into putting together a modern cloud.
 
-It takes it a step further, with it's ability to treat physical, bare metal machines, as virtual machines, even automating the provisioning the same way you can do so for a virtual machine. 
+It takes it a step further, with it's ability to treat physical, bare metal machines, as virtual machines, even automating the provisioning the same way you can do so for a virtual machine.
 
-[The docs](https://docs.openstack.org/newton/admin-guide/baremetal.html) make it sound complex, but it really isn't all that. By leveraging the [nova]() component of openstack, which abstracts the backend drivers of virtual machines (qemu-kvm, xen, or even [hyper-v](https://docs.openstack.org/ocata/config-reference/compute/hypervisor-hyper-v.html)) can be used as backend drivers for nova. 
+[The docs](https://docs.openstack.org/newton/admin-guide/baremetal.html) make it sound complex, but it really isn't all that. By leveraging the [nova]() component of openstack, which abstracts the backend drivers of virtual machines (qemu-kvm, xen, or even [hyper-v](https://docs.openstack.org/ocata/config-reference/compute/hypervisor-hyper-v.html)) can be used as backend drivers for nova.
 
 However, when combined with [ironic](https://docs.openstack.org/ironic/latest/) openstack's service to configure bare metal nodes, nova can also use bare metal as a driver for compute nodes. This integrates further with services like magnum...
-
 
 ### Magnum
 
 Magnum is openstack's kubernetes-as-as-service. It provisions nodes using nova, with kubernetes clusters.
 
-Now here is where I get greedy. Do I need kubernetes? No. Will kubernetes even be useful on a single server setup? No. Do I want kubernetes? Yes. 
+Now here is where I get greedy. Do I need kubernetes? No. Will kubernetes even be useful on a single server setup? No. Do I want kubernetes? Yes.
 
 Here is a video demonstration, where someone uses the web ui to create a cluster using magnum.
 
@@ -365,22 +351,19 @@ Here is a video demonstration, where someone uses the web ui to create a cluster
 
 In addition to that, because openstack magnum uses openstack heat, which provisions nodes from templates, it can be used to do things like auto install nvidia drivers and container runtime.
 
-{{< video https://www.youtube.com/embed/P4z2Hdh0l4g
-    start="262"
->}}
+{{< video https://www.youtube.com/embed/P4z2Hdh0l4g start="262" >}}
 
-This video is a bit outdated, so heat and magnum are much more mature since then, and have only gained more features. 
-
+This video is a bit outdated, so heat and magnum are much more mature since then, and have only gained more features.
 
 ### Api and Automation
 
 Openstack is designed from the ground up to be a cloud. It has first class support for their api, and everything that can be done from the UI can also be done from either the command line, or the [api](https://docs.openstack.org/api-quick-start/).
 
-This advanced api makes it easier for other software to interact with openstack. For example, the rancher kubernetes cluster manager supports [openstack](https://rke.docs.rancher.com/config-options/cloud-providers/openstack) as a cloud provider. It is capable of requesting nodes, provisioning them, and then setting up a kubernetes cluster entirely from the rancher web gui. 
+This advanced api makes it easier for other software to interact with openstack. For example, the rancher kubernetes cluster manager supports [openstack](https://rke.docs.rancher.com/config-options/cloud-providers/openstack) as a cloud provider. It is capable of requesting nodes, provisioning them, and then setting up a kubernetes cluster entirely from the rancher web gui.
 
 ### Zun
-Openstack zun is the container service for openstack. It doesn't run them in virtual machines, but instead directly on metal. It's likely that when I want to run containerized services for actual usage, this is what I will be using instead of kubernetes since I will be using a single server, and thus won't be able to get the benefits of kubernetes. The benefit I see form using containers is that because I have an nvidia desktop gpu, I won't be able to use vgpu, a feature that lets you divide the gpu between virtual machines. However, containers have no such limitation. 
 
+Openstack zun is the container service for openstack. It doesn't run them in virtual machines, but instead directly on metal. It's likely that when I want to run containerized services for actual usage, this is what I will be using instead of kubernetes since I will be using a single server, and thus won't be able to get the benefits of kubernetes. The benefit I see form using containers is that because I have an nvidia desktop gpu, I won't be able to use vgpu, a feature that lets you divide the gpu between virtual machines. However, containers have no such limitation.
 
 ## Installing Openstack
 
@@ -400,13 +383,6 @@ I do not need all of those features. I pretty much just want virtualized compute
 
 I will do more research into what I want and what I don't want, and edit the ansible playbook accordingly.
 
+However, this method of deployment seems to require two NIC's (network interface cards). I think I have both, but just in case, I noted another method of deployment, [openstack ansible](https://docs.openstack.org/openstack-ansible/latest/) (yeah the naming isn't the greatest), which deploys openstack without using containers, it actaully installs and configures the services on the host operating system.
 
-However, this method of deployment seems to require two NIC's (network interface cards). I think I have both, but just in case, I noted another method of deployment, [openstack ansible](https://docs.openstack.org/openstack-ansible/latest/) (yeah the naming isn't the greatest), which deploys openstack without using containers, it actaully installs and configures the services on the host operating system. 
-
-The openstack ansible [All in one](https://docs.openstack.org/openstack-ansible/latest/user/aio/quickstart.html) deployment, doesn't seem to have the same requirement of two NIC's. 
-
-
-
-
-
-
+The openstack ansible [All in one](https://docs.openstack.org/openstack-ansible/latest/user/aio/quickstart.html) deployment, doesn't seem to have the same requirement of two NIC's.
