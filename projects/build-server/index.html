@@ -169,7 +169,6 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   </ul></li>
   <li><a href="#software" id="toc-software" class="nav-link" data-scroll-target="#software">Software</a>
   <ul class="collapse">
-  <li><a href="#operating-system" id="toc-operating-system" class="nav-link" data-scroll-target="#operating-system">Operating system</a></li>
   <li><a href="#software-suite" id="toc-software-suite" class="nav-link" data-scroll-target="#software-suite">Software Suite</a></li>
   <li><a href="#openstack" id="toc-openstack" class="nav-link" data-scroll-target="#openstack">Openstack</a>
   <ul class="collapse">
@@ -180,7 +179,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#api-and-automation" id="toc-api-and-automation" class="nav-link" data-scroll-target="#api-and-automation">Api and Automation</a></li>
   <li><a href="#zun" id="toc-zun" class="nav-link" data-scroll-target="#zun">Zun</a></li>
   </ul></li>
-  <li><a href="#installing-openstack" id="toc-installing-openstack" class="nav-link" data-scroll-target="#installing-openstack">Installing Openstack</a></li>
+  <li><a href="#installing-openstack" id="toc-installing-openstack" class="nav-link" data-scroll-target="#installing-openstack">Installing Openstack</a>
+  <ul class="collapse">
+  <li><a href="#operating-system" id="toc-operating-system" class="nav-link" data-scroll-target="#operating-system">Operating system</a></li>
+  <li><a href="#kolla-ansible" id="toc-kolla-ansible" class="nav-link" data-scroll-target="#kolla-ansible">Kolla-ansible</a></li>
+  </ul></li>
   </ul></li>
   </ul>
 </nav>
@@ -372,6 +375,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>However, after doing some research, it appears that only the dos and efi versions of sas3flash are able to flash IT firmware over IR firmware, according to the official <a href="https://www.broadcom.com/support/knowledgebase/1211161501344/flashing-firmware-and-bios-on-lsi-sas-hbas">broadcom website</a>. ON that site, there is a compatibility table, meaning I need to use the either the efi version, or the dos version. I should have noticed how the existing guides used either the efi version or the dos version.</p>
 <p>So I set up a USB with the efi version of the flasher, and I attempted to get into the boot menu… only for it not to work. I press F12, or F8 then F12The screen says something along the lines of “Entering the one time boot configuration”, before taking me to the “cannot find hard drive” screen. I have no idea why it’s not working, as it has worked before.</p>
 <p>According to one <a href="https://forums.tomsguide.com/threads/cant-get-into-bios-or-windows-f2-and-f12-do-not-work.422868/">forum post</a>, the issue has something to do with the CD Rom drive, and I should try removing it. However, that question and suggestion is relating to laptops, not workstations, so it might not work for me.</p>
+<p>Okay, I figured out what the issue was. I had unplugged the drives, but when I plugged them back in, they were not seated properly, and that made them get confused.</p>
+<p>Now that I could get to the boot menu, I could boot my sas3flash efi file. Except I couldn’t. It simply errored. I attempted to boot on it on my laptop to make sure that it was not an issue with the desktop and not the efi setup, and it errored there as well.</p>
+<p>However, after I booted to a linux distro, I found that I could see the drives, independent of the raid controller. For whatever, reason, my flashing appears to have worked, even if it didn’t. Now that I have drives installed, I can finally begin to set up the software.</p>
 </section>
 <section id="memory" class="level2">
 <h2 class="anchored" data-anchor-id="memory">Memory</h2>
@@ -382,28 +388,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>That makes things very simple for me.</p>
 <p>I added the ram. And now my system won’t boot at all. I don’t get any monitor output. I asked around, and someone mentioned that it could be dust in the ram socket cores, so I will have to take them out, blow the dust out, and then reseat the ram.</p>
 <p>The same user helping me also said that it might be an issue with extreme memory profiles (xmp), a feature that adjusts how memory works on intel cpus, and that I should disable it from a working bios.</p>
+<p>Okay, I figured out what the issue was. The issue was that I did not seat the memory properly.</p>
+<p>Once I had set the memory, I ran the memory test built in to the bios, and after some time it finished without any errors.</p>
 </section>
 </section>
 <section id="software" class="level1">
 <h1>Software</h1>
-<section id="operating-system" class="level2">
-<h2 class="anchored" data-anchor-id="operating-system">Operating system</h2>
-<p>I was originally going to choose a RHEL compatible distro, but then RHEL made changes put the status of those in limbo.</p>
-<p>I am currently deciding between:</p>
-<ul>
-<li>Ubuntu</li>
-<li>Debian</li>
-<li>RHEL (via a developer subscription)</li>
-<li>A RHEL rebuild
-<ul>
-<li>Rocky Linux</li>
-<li>Alma Linux</li>
-<li>One of the academic distros, like scientific linux</li>
-</ul></li>
-<li>Centos Stream</li>
-</ul>
-<p>The important thing is that it’s a stable release distro with automatic updates. I don’t want to have to do too much manual maintainence.</p>
-</section>
 <section id="software-suite" class="level2">
 <h2 class="anchored" data-anchor-id="software-suite">Software Suite</h2>
 <p>I want an easy install, but I also want lots of features. Here are some things I have looked at:</p>
@@ -475,9 +465,46 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>I do not need all of those features. I pretty much just want virtualized compute, networking, containers, and kubernetes. I don’t need things like an S3 compatible block storage, a relational database, or an app store. Okay, but maybe I want them.</p>
 <p>I will do more research into what I want and what I don’t want, and edit the ansible playbook accordingly.</p>
 <p>However, this method of deployment seems to require two NIC’s (network interface cards). I think I have both, but just in case, I noted another method of deployment, <a href="https://docs.openstack.org/openstack-ansible/latest/">openstack ansible</a> (yeah the naming isn’t the greatest), which deploys openstack without using containers, it actaully installs and configures the services on the host operating system.</p>
-<p>The openstack ansible <a href="https://docs.openstack.org/openstack-ansible/latest/user/aio/quickstart.html">All in one</a> deployment, doesn’t seem to have the same requirement of two NIC’s.</p>
+<p>The openstack ansible <a href="https://docs.openstack.org/openstack-ansible/latest/user/aio/quickstart.html">All in one</a> deployment, doesn’t seem to have the same requirement of two NIC’s, which I do have.</p>
+<section id="operating-system" class="level3">
+<h3 class="anchored" data-anchor-id="operating-system">Operating system</h3>
+<p>But first, I do need to select on an operating system. Openstack is flexible and versatile, and it can be installed on multiple operating systems.</p>
+<p>I was originally going to choose a RHEL compatible distro, but then RHEL made changes put the status of those in limbo.</p>
+<p>I am currently deciding between:</p>
+<ul>
+<li>Ubuntu</li>
+<li>Debian</li>
+<li>RHEL (via a developer subscription)</li>
+<li>A RHEL rebuild
+<ul>
+<li>Rocky Linux</li>
+<li>Alma Linux</li>
+<li>One of the academic distros, like scientific linux</li>
+</ul></li>
+<li>Centos Stream</li>
+</ul>
+<p>The important thing is that it’s a stable release distro with automatic updates. I don’t want to have to do too much manual maintainence. Ideally, I also want this distro to have newerish packages, in case I want to do some tinkering with the underlying OS, and I also want the distro to have a stable release that goes on for longer than my college years. From what I’ve heard, upgrading from one release of an OS to another can be a frustrating process, and I don’t want to have to do this while I’m in the middle of school.</p>
+<p>The RHEL rebuilds do appeal to me, but they also come with extra complications, like selinux that I don’t really want to have to deal with.</p>
+<p>But after much deliberation, I’ve decided on Rocky Linux. Rocky Linux 9 is officially supported by <a href="https://docs.openstack.org/kolla-ansible/latest/user/support-matrix.html">kolla ansible</a>. In addition to that, Rock Linux 9 will be <a href="https://endoflife.date/rocky-linux">supported for a good deal of time</a>, with the release being officially supported for 3 years and a bit, and that release will continue to receive security updates for 5 more years after that. More than enough to last me through college.</p>
+<p>The install was very simple. I thought I would experience issues because of the Nvidia GPU, as I had been having issues with graphical monitor output with other distros, but I didn’t. A GUI appeared for me, and the install process was exceedingly simple, even simpler than debian or other distros I’ve tried. Of course, the disadvantage was that I couldn’t configure everything, like there was no option to set up users other than root, but it was very quick.</p>
+<p>Now, I have RHEL installed.</p>
+<p>To make management easier, I will install my favorite web administration system, <a href="../../guides/cockpit-setup/">cockpit</a>. This will also enable me to do remote management operations with a gui, things like partitioning the disks.</p>
+<p>Now that I have rocky linux installed, I can install openstack using kolla-ansible.</p>
+</section>
+<section id="kolla-ansible" class="level3">
+<h3 class="anchored" data-anchor-id="kolla-ansible">Kolla-ansible</h3>
+<p>I will be following the <a href="https://docs.openstack.org/kolla-ansible/latest/user/quickstart.html">quick start guide</a></p>
+<p>I will briefly go over what I am doing here, edited for my usecase. The first few steps are copy and pasted from the guide linked above.</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>sudo dnf install git python3-devel libffi-devel gcc openssl-devel python3-libselinux</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb4"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>pip install 'ansible&gt;=6,&lt;8'</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb5"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>pip install git+https://opendev.org/openstack/kolla-ansible@master</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb6"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>sudo mkdir -p /etc/kolla</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>sudo chown $USER:$USER /etc/kolla</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb7"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>cp -r /home/moonpie/.local/share/kolla-ansible/etc_examples/kolla/* /etc/kolla</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb8"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>cp /home/moonpie/.local/share/kolla-ansible/ansible/inventory/all-in-one /home/moonpie/</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 
 
+</section>
 </section>
 </section>
 
