@@ -1,5 +1,5 @@
 ---
-title: "Building my own Server"
+title: "Building my own Server Part 1 — Hardware"
 date: "2023-8-1"
 categories: [linux]
 format:
@@ -64,17 +64,19 @@ I also did research into some youtube videos.
 
 The important thing to note about the memory upgrading process is that the memory shroud (cover) does not interfere with other processes.
 
+Anyway, I also did more research, attempting to find more manuals and whatnot.
+
+Linked on [this page](https://www.dell.com/support/home/en-us/product-support/product/precision-t7910-workstation/docs) I found a [proper manual](https://dl.dell.com/topicspdf/precision-t7910-workstation_owners-manual_en-us.pdf) which gave visual instructions on how to do things like remove the memory shroud.
+
 ## GPU
 
 However, I am trying to add the gpu, so I can get monitor output, so I can run testing suites to ensure the computer is in proper working order.
 
-However, the gpu does not seem to have screw slots for holding it in place. Rather than that, the entire thing rests on a single screw, as shown below.
-
-![](images/singlescrew.jpg)
-
-But the GPU, is inserted:
+The GPU, is inserted:
 
 ![](images/gpuin.jpg)
+
+![](images/gpuscrewed.jpg)
 
 After plugging the gpu power in:
 
@@ -84,17 +86,8 @@ I can turn the machine on and get monitor output:
 
 ![](images/monitoroutput.jpg)
 
-Next step is to run the system diagnostics on the memory I currently have. Thankfully, I have an extra keyboard I can connect it to. It's a small bluetooth one, closer to a remote than something meant for typing, but it will do nicely.
+Next step is to run the system diagnostics on the memory I currently have. Thankfully, I have an extra keyboard I can connect it to.
 
-Anyway, I also did more research, attempting to find more manuals and whatnot.
-
-Linked on [this page](https://www.dell.com/support/home/en-us/product-support/product/precision-t7910-workstation/docs) I found a [proper manual](https://dl.dell.com/topicspdf/precision-t7910-workstation_owners-manual_en-us.pdf) which gave visual instructions on how to do things like remove the memory shroud.
-
-Too bad it still doesn't detail how to install the gpu. I just know I'm not doing it right, the servers I worked with at cirrascale had a screw that would actually hold the gpu in place. It doesn't make sense to simply have the gpu be resting. I may simply give up, and find some nuts and attatch them to the back of the screws, locking the gpu into place.
-
-Later, I found out that it was very simple, and I'm frustrated I missed it. I simply had to reverse the direction of the screw, and screw it in from the other side, like so:
-
-![](images/gpuscrewed.jpg)
 
 ## Hard Drives
 
@@ -277,171 +270,4 @@ The same user helping me also said that it might be an issue with extreme memory
 Okay, I figured out what the issue was. The issue was that I did not seat the memory properly.
 
 Once I had set the memory, I ran the memory test built in to the bios, and after some time it finished without any errors. 
-
-# Software
-
-## Software Suite
-
-I want an easy install, but I also want lots of features. Here are some things I have looked at:
-
--   Proxmox VE
--   Xen Orchestra
--   Openstack
--   [Canonicals LXD UI](https://github.com/canonical/lxd-ui)
--   Ovirt
--   Harvester
--   OpenVZ
-
-## Openstack
-
-Currently, openstack appeals to me a lot. Although I originally wanted to do a bare metal install, I now realize that that is too time consuming and not realistic, so I am most likely going to use one of the automated methods of installation.
-
-[Kolla ansible](https://docs.openstack.org/kolla-ansible/latest/)
-
-They have an easy [deployment guide](https://docs.openstack.org/kolla-ansible/latest/user/quickstart.html) for an all in one node, perfect for my single server.
-
-I will definitely not use every service, but I do want to use openstack because of the sheer number of services it offers. Openstack offers every single feature of other virtualization platforms, at the cost of complexity. Here are the features that made me decide I needed that complexity.
-
-### Skyline/Horizon
-
-Openstack has a previous generation web ui, horizon, and a newer generation web ui, skyline. These web ui's offer all the features of other web based virtualization platforms like proxmox, but they also let you configure the other things of openstack.
-
-![](https://external-content.duckduckgo.com/iu/?u=http%3A%2F%2Fwww.itzgeek.com%2Fwp-content%2Fuploads%2F2015%2F07%2FOpenStack-Configure-Horizon-Instance-Console.jpg&f=1&nofb=1&ipt=c31c95fcc86ecd2a334a098fddcf51cbdad6b8c3b3d1bd1257b28dbc4b7cb17e&ipo=images)
-
-And they have some special features, like giving you a visual layout of network topology.
-
-![](https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fi.ytimg.com%2Fvi%2Fz6ftW7fUdp4%2Fmaxresdefault.jpg&f=1&nofb=1&ipt=4e02ee4eb9751d8f6d2ae8693ca223d0626deef5779ec2fe01e614be210a4c5e&ipo=images)
-
-### Multi tenancy.
-
-The most important feature of openstack, in my opinion, is it's multi tenant architechture. Unliek proxmox, which is designed for a single organization, openstack is designed in such a way that you can create extra users, which get their own allocation of resources.
-
-So when I go to college, if anyone wants a VPS to play around in, I can just allocate them a few resources, and then they get their own web ui for playing with servers and networking.
-
-Many public cloud services are actually using openstack in the background for it's public tenant architecture. Openstack's dashboards can be rebranded to be your own company:
-
-![](https://www.scalecloud.co.uk/wp-content/uploads/2017/02/vnc-console.png)
-
-### Bare metal nodes
-
-Openstack saves a lot of trouble by immensely abstracting almost all the manual work that goes into putting together a modern cloud.
-
-It takes it a step further, with it's ability to treat physical, bare metal machines, as virtual machines, even automating the provisioning the same way you can do so for a virtual machine.
-
-[The docs](https://docs.openstack.org/newton/admin-guide/baremetal.html) make it sound complex, but it really isn't all that. By leveraging the [nova]() component of openstack, which abstracts the backend drivers of virtual machines (qemu-kvm, xen, or even [hyper-v](https://docs.openstack.org/ocata/config-reference/compute/hypervisor-hyper-v.html)) can be used as backend drivers for nova.
-
-However, when combined with [ironic](https://docs.openstack.org/ironic/latest/) openstack's service to configure bare metal nodes, nova can also use bare metal as a driver for compute nodes. This integrates further with services like magnum...
-
-### Magnum
-
-Magnum is openstack's kubernetes-as-as-service. It provisions nodes using nova, with kubernetes clusters.
-
-Now here is where I get greedy. Do I need kubernetes? No. Will kubernetes even be useful on a single server setup? No. Do I want kubernetes? Yes.
-
-Here is a video demonstration, where someone uses the web ui to create a cluster using magnum.
-
-{{< video https://www.youtube.com/watch?v=QvS4nDYE2r0&t=160s >}}
-
-In addition to that, because openstack magnum uses openstack heat, which provisions nodes from templates, it can be used to do things like auto install nvidia drivers and container runtime.
-
-{{< video https://www.youtube.com/embed/P4z2Hdh0l4g start="262" >}}
-
-This video is a bit outdated, so heat and magnum are much more mature since then, and have only gained more features.
-
-### Api and Automation
-
-Openstack is designed from the ground up to be a cloud. It has first class support for their api, and everything that can be done from the UI can also be done from either the command line, or the [api](https://docs.openstack.org/api-quick-start/).
-
-This advanced api makes it easier for other software to interact with openstack. For example, the rancher kubernetes cluster manager supports [openstack](https://rke.docs.rancher.com/config-options/cloud-providers/openstack) as a cloud provider. It is capable of requesting nodes, provisioning them, and then setting up a kubernetes cluster entirely from the rancher web gui.
-
-### Zun
-
-Openstack zun is the container service for openstack. It doesn't run them in virtual machines, but instead directly on metal. It's likely that when I want to run containerized services for actual usage, this is what I will be using instead of kubernetes since I will be using a single server, and thus won't be able to get the benefits of kubernetes. The benefit I see form using containers is that because I have an nvidia desktop gpu, I won't be able to use vgpu, a feature that lets you divide the gpu between virtual machines. However, containers have no such limitation.
-
-## Installing Openstack
-
-I've decided to use the kolla-ansible project to install openstack. It works by using ansible to deploy docker containers, which the openstack services run in.
-
-They have a quickstart guide:
-
-<https://docs.openstack.org/kolla-ansible/latest/user/quickstart.html>
-
-And the ansible playbook can be found here:
-
-<https://opendev.org/openstack/kolla-ansible>
-
-And they provide a [sample ansible inventory](https://opendev.org/openstack/kolla-ansible/src/branch/master/ansible/inventory/multinode) for the all in one node.
-
-I do not need all of those features. I pretty much just want virtualized compute, networking, containers, and kubernetes. I don't need things like an S3 compatible block storage, a relational database, or an app store. Okay, but maybe I want them.
-
-I will do more research into what I want and what I don't want, and edit the ansible playbook accordingly.
-
-However, this method of deployment seems to require two NIC's (network interface cards). I think I have both, but just in case, I noted another method of deployment, [openstack ansible](https://docs.openstack.org/openstack-ansible/latest/) (yeah the naming isn't the greatest), which deploys openstack without using containers, it actaully installs and configures the services on the host operating system.
-
-The openstack ansible [All in one](https://docs.openstack.org/openstack-ansible/latest/user/aio/quickstart.html) deployment, doesn't seem to have the same requirement of two NIC's, which I do have. 
-
-
-### Operating system
-
-But first, I do need to select on an operating system. Openstack is flexible and versatile, and it can be installed on multiple operating systems. 
-
-I was originally going to choose a RHEL compatible distro, but then RHEL made changes put the status of those in limbo.
-
-I am currently deciding between:
-
--   Ubuntu
--   Debian
--   RHEL (via a developer subscription)
--   A RHEL rebuild
-    -   Rocky Linux
-    -   Alma Linux
-    -   One of the academic distros, like scientific linux
--   Centos Stream
-
-The important thing is that it's a stable release distro with automatic updates. I don't want to have to do too much manual maintainence. Ideally, I also want this distro to have newerish packages, in case I want to do some tinkering with the underlying OS, and I also want the distro to have a stable release that goes on for longer than my college years. From what I've heard, upgrading from one release of an OS to another can be a frustrating process, and I don't want to have to do this while I'm in the middle of school. 
-
-The RHEL rebuilds do appeal to me, but they also come with extra complications, like selinux that I don't really want to have to deal with. 
-
-But after much deliberation, I've decided on Rocky Linux. Rocky Linux 9 is officially supported by [kolla ansible](https://docs.openstack.org/kolla-ansible/latest/user/support-matrix.html). In addition to that, Rock Linux 9 will be [supported for a good deal of time](https://endoflife.date/rocky-linux), with the release being officially supported for 3 years and a bit, and that release will continue to receive security updates for 5 more years after that. More than enough to last me through college. 
-
-The install was very simple. I thought I would experience issues because of the Nvidia GPU, as I had been having issues with graphical monitor output with other distros, but I didn't. A GUI appeared for me, and the install process was exceedingly simple, even simpler than debian or other distros I've tried. Of course, the disadvantage was that I couldn't configure everything, like there was no option to set up users other than root, but it was very quick.
-
-Now, I have RHEL installed. 
-
-To make management easier, I will install my favorite web administration system, [cockpit](../../guides/cockpit-setup/). This will also enable me to do remote management operations with a gui, things like partitioning the disks. 
-
-Now that I have rocky linux installed, I can install openstack using kolla-ansible.
-
-### Kolla-ansible
-
-I will be following the [quick start guide](https://docs.openstack.org/kolla-ansible/latest/user/quickstart.html)
-
-I will briefly go over what I am doing here, edited for my usecase. The first few steps are copy and pasted from the guide linked above. 
-
-```{.default}
-sudo dnf install git python3-devel libffi-devel gcc openssl-devel python3-libselinux
-```
-
-```{.default}
-pip install 'ansible>=6,<8'
-```
-
-```{.default}
-pip install git+https://opendev.org/openstack/kolla-ansible@master
-```
-
-```{.default}
-sudo mkdir -p /etc/kolla
-sudo chown $USER:$USER /etc/kolla
-```
-
-```{.default}
-cp -r /home/moonpie/.local/share/kolla-ansible/etc_examples/kolla/* /etc/kolla
-```
-
-```{.default}
-cp /home/moonpie/.local/share/kolla-ansible/ansible/inventory/all-in-one /home/moonpie/
-```
-
-
 
