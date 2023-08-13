@@ -252,6 +252,12 @@ So I set up a USB with the efi version of the flasher, and I attempted to get in
 
 According to one [forum post](https://forums.tomsguide.com/threads/cant-get-into-bios-or-windows-f2-and-f12-do-not-work.422868/), the issue has something to do with the CD Rom drive, and I should try removing it. However, that question and suggestion is relating to laptops, not workstations, so it might not work for me.
 
+Okay, I figured out what the issue was. I had unplugged the drives, but when I plugged them back in, they were not seated properly, and that made them get confused. 
+
+Now that I could get to the boot menu, I could boot my sas3flash efi file. Except I couldn't. It simply errored. I attempted to boot on it on my laptop to make sure that it was not an issue with the desktop and not the efi setup, and it errored there as well. 
+
+However, after I booted to a linux distro, I found that I could see the drives, independent of the raid controller. For whatever, reason, my flashing appears to have worked, even if it didn't. Now that I have drives installed, I can finally begin to set up the software. 
+
 ## Memory
 
 This comes with two 16 gb sticks, one in each cpu.
@@ -268,24 +274,11 @@ I added the ram. And now my system won't boot at all. I don't get any monitor ou
 
 The same user helping me also said that it might be an issue with extreme memory profiles (xmp), a feature that adjusts how memory works on intel cpus, and that I should disable it from a working bios.
 
+Okay, I figured out what the issue was. The issue was that I did not seat the memory properly.
+
+Once I had set the memory, I ran the memory test built in to the bios, and after some time it finished without any errors. 
+
 # Software
-
-## Operating system
-
-I was originally going to choose a RHEL compatible distro, but then RHEL made changes put the status of those in limbo.
-
-I am currently deciding between:
-
--   Ubuntu
--   Debian
--   RHEL (via a developer subscription)
--   A RHEL rebuild
-    -   Rocky Linux
-    -   Alma Linux
-    -   One of the academic distros, like scientific linux
--   Centos Stream
-
-The important thing is that it's a stable release distro with automatic updates. I don't want to have to do too much manual maintainence.
 
 ## Software Suite
 
@@ -385,4 +378,70 @@ I will do more research into what I want and what I don't want, and edit the ans
 
 However, this method of deployment seems to require two NIC's (network interface cards). I think I have both, but just in case, I noted another method of deployment, [openstack ansible](https://docs.openstack.org/openstack-ansible/latest/) (yeah the naming isn't the greatest), which deploys openstack without using containers, it actaully installs and configures the services on the host operating system.
 
-The openstack ansible [All in one](https://docs.openstack.org/openstack-ansible/latest/user/aio/quickstart.html) deployment, doesn't seem to have the same requirement of two NIC's.
+The openstack ansible [All in one](https://docs.openstack.org/openstack-ansible/latest/user/aio/quickstart.html) deployment, doesn't seem to have the same requirement of two NIC's, which I do have. 
+
+
+### Operating system
+
+But first, I do need to select on an operating system. Openstack is flexible and versatile, and it can be installed on multiple operating systems. 
+
+I was originally going to choose a RHEL compatible distro, but then RHEL made changes put the status of those in limbo.
+
+I am currently deciding between:
+
+-   Ubuntu
+-   Debian
+-   RHEL (via a developer subscription)
+-   A RHEL rebuild
+    -   Rocky Linux
+    -   Alma Linux
+    -   One of the academic distros, like scientific linux
+-   Centos Stream
+
+The important thing is that it's a stable release distro with automatic updates. I don't want to have to do too much manual maintainence. Ideally, I also want this distro to have newerish packages, in case I want to do some tinkering with the underlying OS, and I also want the distro to have a stable release that goes on for longer than my college years. From what I've heard, upgrading from one release of an OS to another can be a frustrating process, and I don't want to have to do this while I'm in the middle of school. 
+
+The RHEL rebuilds do appeal to me, but they also come with extra complications, like selinux that I don't really want to have to deal with. 
+
+But after much deliberation, I've decided on Rocky Linux. Rocky Linux 9 is officially supported by [kolla ansible](https://docs.openstack.org/kolla-ansible/latest/user/support-matrix.html). In addition to that, Rock Linux 9 will be [supported for a good deal of time](https://endoflife.date/rocky-linux), with the release being officially supported for 3 years and a bit, and that release will continue to receive security updates for 5 more years after that. More than enough to last me through college. 
+
+The install was very simple. I thought I would experience issues because of the Nvidia GPU, as I had been having issues with graphical monitor output with other distros, but I didn't. A GUI appeared for me, and the install process was exceedingly simple, even simpler than debian or other distros I've tried. Of course, the disadvantage was that I couldn't configure everything, like there was no option to set up users other than root, but it was very quick.
+
+Now, I have RHEL installed. 
+
+To make management easier, I will install my favorite web administration system, [cockpit](../../guides/cockpit-setup/). This will also enable me to do remote management operations with a gui, things like partitioning the disks. 
+
+Now that I have rocky linux installed, I can install openstack using kolla-ansible.
+
+### Kolla-ansible
+
+I will be following the [quick start guide](https://docs.openstack.org/kolla-ansible/latest/user/quickstart.html)
+
+I will briefly go over what I am doing here, edited for my usecase. The first few steps are copy and pasted from the guide linked above. 
+
+```{.default}
+sudo dnf install git python3-devel libffi-devel gcc openssl-devel python3-libselinux
+```
+
+```{.default}
+pip install 'ansible>=6,<8'
+```
+
+```{.default}
+pip install git+https://opendev.org/openstack/kolla-ansible@master
+```
+
+```{.default}
+sudo mkdir -p /etc/kolla
+sudo chown $USER:$USER /etc/kolla
+```
+
+```{.default}
+cp -r /home/moonpie/.local/share/kolla-ansible/etc_examples/kolla/* /etc/kolla
+```
+
+```{.default}
+cp /home/moonpie/.local/share/kolla-ansible/ansible/inventory/all-in-one /home/moonpie/
+```
+
+
+
