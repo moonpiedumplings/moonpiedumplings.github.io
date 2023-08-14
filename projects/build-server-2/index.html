@@ -175,6 +175,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <ul class="collapse">
   <li><a href="#operating-system" id="toc-operating-system" class="nav-link" data-scroll-target="#operating-system">Operating system</a></li>
   <li><a href="#kolla-ansible" id="toc-kolla-ansible" class="nav-link" data-scroll-target="#kolla-ansible">Kolla-ansible</a></li>
+  <li><a href="#got-sidetracked-networking" id="toc-got-sidetracked-networking" class="nav-link" data-scroll-target="#got-sidetracked-networking">Got sidetracked, networking</a></li>
   </ul></li>
   </ul></li>
   </ul>
@@ -321,8 +322,21 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="sourceCode" id="cb6"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>cp /home/moonpie/.local/share/kolla-ansible/ansible/inventory/all-in-one /home/moonpie/</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Now, this is the initial setup. I need to customize these things to my liking.</p>
 <p>Usernames and passwords a are easy, but I need to make sure the networking is right, especially since my setup will be so unorthodox. Because I am setting this up on my home network, I won’t have public internet access, as my router using <a href="https://en.wikipedia.org/wiki/Network_address_translation">NAT</a></p>
+</section>
+<section id="got-sidetracked-networking" class="level3">
+<h3 class="anchored" data-anchor-id="got-sidetracked-networking">Got sidetracked, networking</h3>
 <p>It requires that I set my two network interfaces to two things: default network interface for everything else, and the neutron external interface.</p>
 <p>The neutron external interface can be any physical interface, but internally, it is referred to as br-ex. This interface is responsible for letting the virtual machines interact with the internet.</p>
+<p>Anyway, I had a spare router lying around, and I flashed it with <a href="https://www.freshtomato.org/">freshtomato</a> for some more advanced features. I hooked it up to my existing router, so it would be behind NAT, but now I have extra ethernet ports, so I can have a private subnet with my laptop, and the openstack stuff.</p>
+<p>I was curious if tomato offered an easy way to expose services to the internet, from behind NAT, something like integration with Cloudfare’s tunnels, but they didn’t.</p>
+<p>However, another idea has occured upon me: Why not just host the public parts of openstack… on the public. I could rent a VPS, and host openstack neutron, and maybe the openstack dashboards on the public.</p>
+<p>For example, my current vps provdider <a href="https://webdock.io/en/docs/general-information/billing-and-pricing/additional-products#additional-/-reserved-ip-addresses">webdock</a>, gives out a range (/124) of ipv6 addresses, 16 total. Based on the pricing on that page, 1.75 Euros for an additional ipv4 address, I think I can safely assume that ipv4 addresses are more expensive, out of what I am wiling to spend, because of their scarcity.</p>
+<p>However, if I can install openstack neutron on a cheap vps, thenH I will be able to give public ipv6 access to the virtual machines, which sounds like a very neat setup.</p>
+<p>Since my home server won’t have public internet access I am guessing I have to start by creating a virtual network that links the two machines together, that way they can see eachother and cluster.</p>
+<p>Openstack has some interesting diagrams: <a href="https://docs.openstack.org/install-guide/environment-networking.html" class="uri">https://docs.openstack.org/install-guide/environment-networking.html</a>. But I can’t find anything conclusive.</p>
+<p>Since I have a router running tomato, I am thinking that I can vpn the entire router into the other machine, so that the vps I am accessing can access everything in the tomato subnet, meaning I won’t have to configure the server itself. The downside is that everything will be vpn’ed, but with a 4 TB upload limit, I’m not too concerned about that right now.</p>
+<p>But sadly, webdock seems to be sold out of kvm vps’s, which have better compatibility with docker, so I will probably go looking for another platform.</p>
+<p>Anyway, tomato seems to have a wireguard client installed, so I will use that, since wireguard is the fastest vpn client/server available. I found a <a href="https://golb.hplar.ch/2019/01/expose-server-vpn.html">nice guide</a> on setting up pure wireguard. However, it doesn’t discuss connecting the subnet of a router to the vps. I did find another <a href="https://gist.github.com/insdavm/b1034635ab23b8839bf957aa406b5e39">guide</a> that did.</p>
 
 
 </section>
