@@ -182,9 +182,28 @@ Now, this is the initial setup. I need to customize these things to my liking.
 
 Usernames and passwords a are easy, but I need to make sure the networking is right, especially since my setup will be so unorthodox. Because I am setting this up on my home network, I won't have public internet access, as my router using [NAT](https://en.wikipedia.org/wiki/Network_address_translation)
 
+### Got sidetracked, networking
+
 It requires that I set my two network interfaces to two things: default network interface for everything else, and the neutron external interface. 
 
 The neutron external interface can be any physical interface, but internally, it is referred to as br-ex. This interface is responsible for letting the virtual machines interact with the internet. 
 
+Anyway, I had a spare router lying around, and I flashed it with [freshtomato](https://www.freshtomato.org/) for some more advanced features. I hooked it up to my existing router, so it would be behind NAT, but now I have extra ethernet ports, so I can have a private subnet with my laptop, and the openstack stuff.
 
+I was curious if tomato offered an easy way to expose services to the internet, from behind NAT, something like integration with Cloudfare's tunnels, but they didn't.
 
+However, another idea has occured upon me: Why not just host the public parts of openstack... on the public. I could rent a VPS, and host openstack neutron, and maybe the openstack dashboards on the public. 
+
+For example, my current vps provdider [webdock](https://webdock.io/en/docs/general-information/billing-and-pricing/additional-products#additional-/-reserved-ip-addresses), gives out a range (/124) of ipv6 addresses, 16 total. Based on the pricing on that page, 1.75 Euros for an additional ipv4 address, I think I can safely assume that ipv4 addresses are more expensive, out of what I am wiling to spend, because of their scarcity. 
+
+However, if I can install openstack neutron on a cheap vps, thenH I will be able to give public ipv6 access to the virtual machines, which sounds like a very neat setup. 
+
+Since my home server won't have public internet access I am guessing I have to start by creating a virtual network that links the two machines together, that way they can see eachother and cluster. 
+
+Openstack has some interesting diagrams: <https://docs.openstack.org/install-guide/environment-networking.html>. But I can't find anything conclusive. 
+
+Since I have a router running tomato, I am thinking that I can vpn the entire router into the other machine, so that the vps I am accessing can access everything in the tomato subnet, meaning I won't have to configure the server itself. The downside is that everything will be vpn'ed, but with a 4 TB upload limit, I'm not too concerned about that right now.
+
+But sadly, webdock seems to be sold out of kvm vps's, which have better compatibility with docker, so I will probably go looking for another platform. 
+
+Anyway, tomato seems to have a wireguard client installed, so I will use that, since wireguard is the fastest vpn client/server available. I found a [nice guide](https://golb.hplar.ch/2019/01/expose-server-vpn.html) on setting up pure wireguard. However, it doesn't discuss connecting the subnet of a router to the vps. I did find another [guide](https://gist.github.com/insdavm/b1034635ab23b8839bf957aa406b5e39) that did. 
