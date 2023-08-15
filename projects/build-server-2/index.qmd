@@ -223,6 +223,25 @@ Okay, contabo wins. I was gonna do an actual comparison between multiple vps pro
 
 I don't want to spend money, but this is a nice deal. 
 
-Also, contabo offers 32 TB out, and unlimiited in. This is definitely the correct choice. 
+Also, contabo offers 32 TB out, and unlimiited in. This is definitely a very good choice. 
 
 After visiting <https://test-ipv6.com/> and realizing that my home residential wifi does not have ipv6 enabled by default (although there is an option in the router settings), I realize that the college dorms may not have ipv6 support. In that case, vpning into the remote server, which does have ipv6 support, would give me ipv6 support. 
+
+Now that I have a vps, I am trying to get wireguard working, by testing with my laptop I started out with the guide from ubuntu, but that doesn't work. In addition to not having access to subnets I can only access on my laptop from my server, not even the vpn is working correctly:
+
+```{.default}
+moonpie@lizard:~> curl --interface wgA ifconfig.me
+curl: (7) Failed to connect to ifconfig.me port 80 after 1 ms: Couldn't connect to server
+```
+
+I found another [guide](https://www.laroberto.com/remote-lan-access-with-wireguard/) but yet again, it's another A-B-C guide. 
+
+I found a promising [stackexchange answer](https://unix.stackexchange.com/questions/602267/wireguard-connection-between-two-lans-with-wireguard-boxes-behind-routers) with an interesting commmand I have tried:
+
+```{.default}
+ip route add 192.168.122.0/24 via 10.10.9.0 dev wgB
+```
+
+Where the 192.168.122.0/24 is the subnet I am trying to expose.
+
+Okay, at this piont, I understand what I want to do pretty well. I think I will use the A-B-C guides as a template, except I only need A-B, and the router needs to eb the device that is configured not to have a permanent, static ip address, like the clients are. 
