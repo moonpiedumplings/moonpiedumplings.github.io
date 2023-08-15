@@ -364,8 +364,16 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </table>
 <p>Okay, contabo wins. I was gonna do an actual comparison between multiple vps providers, but contabo has great specs, and it is trusted by people when I have asked around.</p>
 <p>I don’t want to spend money, but this is a nice deal.</p>
-<p>Also, contabo offers 32 TB out, and unlimiited in. This is definitely the correct choice.</p>
+<p>Also, contabo offers 32 TB out, and unlimiited in. This is definitely a very good choice.</p>
 <p>After visiting <a href="https://test-ipv6.com/" class="uri">https://test-ipv6.com/</a> and realizing that my home residential wifi does not have ipv6 enabled by default (although there is an option in the router settings), I realize that the college dorms may not have ipv6 support. In that case, vpning into the remote server, which does have ipv6 support, would give me ipv6 support.</p>
+<p>Now that I have a vps, I am trying to get wireguard working, by testing with my laptop I started out with the guide from ubuntu, but that doesn’t work. In addition to not having access to subnets I can only access on my laptop from my server, not even the vpn is working correctly:</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>moonpie@lizard:~&gt; curl --interface wgA ifconfig.me</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>curl: (7) Failed to connect to ifconfig.me port 80 after 1 ms: Couldn't connect to server</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>I found another <a href="https://www.laroberto.com/remote-lan-access-with-wireguard/">guide</a> but yet again, it’s another A-B-C guide.</p>
+<p>I found a promising <a href="https://unix.stackexchange.com/questions/602267/wireguard-connection-between-two-lans-with-wireguard-boxes-behind-routers">stackexchange answer</a> with an interesting commmand I have tried:</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>ip route add 192.168.122.0/24 via 10.10.9.0 dev wgB</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Where the 192.168.122.0/24 is the subnet I am trying to expose.</p>
+<p>Okay, at this piont, I understand what I want to do pretty well. I think I will use the A-B-C guides as a template, except I only need A-B, and the router needs to eb the device that is configured not to have a permanent, static ip address, like the clients are.</p>
 
 
 </section>
