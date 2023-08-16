@@ -279,3 +279,47 @@ Curl has a feature to bind to a specific interface, and when I try to test a con
 
 Libvirt offers [several networking options](https://jamielinux.com/docs/libvirt-networking-handbook/). Bridged is where all virtual machines get public ip addresses. Routed is similar, but they don't get their own interface, and it works on wirelessly connected devices. And finally, NAT, what I am using does not give virtual machines publicly accessible ip addresses. 
 
+Instead of running it on my actual laptop, I will try to run the vpn on the debian virtual machine instead. 
+
+I set up wireguard again, one side on the vps I am renting:
+
+```{.ini filename="/etc/wireguard/wgB.conf"}
+[Interface]
+Address = 10.10.9.1/31
+PostUp = wg set %i private-key /etc/wireguard/%i.key
+ListenPort = 51000
+
+[Peer]
+# alpha site
+PublicKey = e763iTZmmMcx7HufUOi5vzmQJ5ZhYBuuqnXh/2ViBjA=
+AllowedIPs = 10.10.10.0/24,10.10.9.0/31,192.168.122.0/24
+
+```
+
+And another side on my virtual machine:
+
+```{.ini filename="/etc/wireguard/wgA.conf"}
+[Interface]
+Address = 10.10.9.1/31
+PostUp = wg set %i private-key /etc/wireguard/%i.key
+ListenPort = 51000
+
+[Peer]
+# alpha site
+PublicKey = e763iTZmmMcx7HufUOi5vzmQJ5ZhYBuuqnXh/2ViBjA=
+AllowedIPs = 10.10.10.0/24,10.10.9.0/31,192.168.122.0/24
+```
+
+And the wireguard default route didn't work, so I removed it, and then added the route manually using the ip route tool.
+
+When everything was done, my VPS could ping the ip address of my virtual machine, but not my laptop. 
+
+```{.default}
+[root@vmi1403809 ~]# ping 192.168.122.201 # virtual machine ip
+PING 192.168.122.201 (192.168.122.201) 56(84) bytes of data.
+[root@vmi1403809 ~]# ping 192.168.122.1 # laptop ip
+PING 192.168.122.1 (192.168.122.1) 56(84) bytes of data.
+# it just sits here forever.
+```
+
+Well, this is better than a strange error. However, I don't know where to go next from here.
