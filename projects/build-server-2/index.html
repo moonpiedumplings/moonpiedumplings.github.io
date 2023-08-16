@@ -392,6 +392,45 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>curl: (7) Failed to connect to 192.168.122.201 port 9090 after 0 ms: Couldn't connect to server</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Curl has a feature to bind to a specific interface, and when I try to test a connection using the wgA interface, it can’t connect. At first, I’m annoyed, but in hindsight, this makes sense. Only through the virbr0 interface, can I access the virtual machiens. And the virtual machines, are actually behind their own NAT. They are not public, so why would I be able to ping them?</p>
 <p>Libvirt offers <a href="https://jamielinux.com/docs/libvirt-networking-handbook/">several networking options</a>. Bridged is where all virtual machines get public ip addresses. Routed is similar, but they don’t get their own interface, and it works on wirelessly connected devices. And finally, NAT, what I am using does not give virtual machines publicly accessible ip addresses.</p>
+<p>Instead of running it on my actual laptop, I will try to run the vpn on the debian virtual machine instead.</p>
+<p>I set up wireguard again, one side on the vps I am renting:</p>
+<div class="code-with-filename">
+<div class="code-with-filename-file">
+<pre><strong>/etc/wireguard/wgB.conf</strong></pre>
+</div>
+<div class="sourceCode" id="cb11"><pre class="sourceCode ini code-with-copy"><code class="sourceCode ini"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="kw">[Interface]</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="dt">Address </span><span class="ot">=</span><span class="st"> 10.10.9.1/31</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="dt">PostUp </span><span class="ot">=</span><span class="st"> wg set %i private-key /etc/wireguard/%i.key</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="dt">ListenPort </span><span class="ot">=</span><span class="st"> </span><span class="dv">51000</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a><span class="kw">[Peer]</span></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a><span class="co"># alpha site</span></span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a><span class="dt">PublicKey </span><span class="ot">=</span><span class="st"> e763iTZmmMcx7HufUOi5vzmQJ5ZhYBuuqnXh/2ViBjA=</span></span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a><span class="dt">AllowedIPs </span><span class="ot">=</span><span class="st"> 10.10.10.0/24,10.10.9.0/31,192.168.122.0/24</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>And another side on my virtual machine:</p>
+<div class="code-with-filename">
+<div class="code-with-filename-file">
+<pre><strong>/etc/wireguard/wgA.conf</strong></pre>
+</div>
+<div class="sourceCode" id="cb12"><pre class="sourceCode ini code-with-copy"><code class="sourceCode ini"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="kw">[Interface]</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="dt">Address </span><span class="ot">=</span><span class="st"> 10.10.9.1/31</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="dt">PostUp </span><span class="ot">=</span><span class="st"> wg set %i private-key /etc/wireguard/%i.key</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="dt">ListenPort </span><span class="ot">=</span><span class="st"> </span><span class="dv">51000</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a><span class="kw">[Peer]</span></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a><span class="co"># alpha site</span></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a><span class="dt">PublicKey </span><span class="ot">=</span><span class="st"> e763iTZmmMcx7HufUOi5vzmQJ5ZhYBuuqnXh/2ViBjA=</span></span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a><span class="dt">AllowedIPs </span><span class="ot">=</span><span class="st"> 10.10.10.0/24,10.10.9.0/31,192.168.122.0/24</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>And the wireguard default route didn’t work, so I removed it, and then added the route manually using the ip route tool.</p>
+<p>When everything was done, my VPS could ping the ip address of my virtual machine, but not my laptop.</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>[root@vmi1403809 ~]# ping 192.168.122.201 # virtual machine ip</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>PING 192.168.122.201 (192.168.122.201) 56(84) bytes of data.</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>[root@vmi1403809 ~]# ping 192.168.122.1 # laptop ip</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>PING 192.168.122.1 (192.168.122.1) 56(84) bytes of data.</span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a># it just sits here forever.</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Well, this is better than a strange error. However, I don’t know where to go next from here.</p>
 
 
 </section>
