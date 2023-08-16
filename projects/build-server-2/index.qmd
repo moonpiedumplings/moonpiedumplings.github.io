@@ -245,3 +245,37 @@ ip route add 192.168.122.0/24 via 10.10.9.0 dev wgB
 Where the 192.168.122.0/24 is the subnet I am trying to expose.
 
 Okay, at this piont, I understand what I want to do pretty well. I think I will use the A-B-C guides as a template, except I only need A-B, and the router needs to eb the device that is configured not to have a permanent, static ip address, like the clients are. 
+
+I got lucky when I was browsing lemmy, and I found [forum comment](https://programming.dev/comment/1943135) related to my exact issue, which then links to a [stackexchange question](https://unix.stackexchange.com/questions/638889/make-local-resources-available-when-connected-to-wireguard-vpn), in which the top answer uses information they sourced from this [guide](https://www.procustodibus.com/blog/2020/11/wireguard-point-to-site-config/)
+
+I attempted to follow the latter guide, using a simple setup. My laptop, would be my "router", and I was attempting to expose the vlan subnet created by the libvirt virtual machine manager to my remote server, a vps hosted on contabo. 
+
+Ironically, I got the connection to work, but in the wrong direction. My vps could ping my remote server, but my remote server could not ping the virtual machines on my laptop. Interestingl, it could ping my laptop using the ip of the virbr0 virtual network adapter that libvirt creates for a vlan. 
+
+I'm guessing that this didn't work because I'm doing this somewhat backwards, with the device that the 
+
+I am guessing because I am doing this somewhat backwards, where the device exposing the lan is behind nat, whereas it is the other way around in the guides that I have seen.
+
+```{.default}
+root@vmi1403809 ~]# ping 192.168.122.1
+PING 192.168.122.1 (192.168.122.1) 56(84) bytes of data.
+64 bytes from 192.168.122.1: icmp_seq=1 ttl=64 time=46.5 ms
+[root@vmi1403809 ~]# ping 192.168.122.201
+PING 192.168.122.201 (192.168.122.201) 56(84) bytes of data.
+From 10.10.9.0 icmp_seq=1 Destination Port Unreachable
+```
+
+The first is the ip address of my laptop, and the second is the ip address of my debian virtual machine, which is running on my laptop. 
+
+
+```{.default}
+moonpie@lizard:~/vscode/moonpiedumplings.github.io> curl --insecure  http://192.168.122.201:9090
+<html><head><title>Moved</title></head><body>Please use TLS</body></html>
+moonpie@lizard:~/vscode/moonpiedumplings.github.io> curl --insecure  http://192.168.122.201:9090 --interface wgA
+curl: (7) Failed to connect to 192.168.122.201 port 9090 after 0 ms: Couldn't connect to server
+````
+
+Curl has a feature to bind to a specific interface, and when I try to test a connection using the wgA interface, it can't connect. At first, I'm annoyed, but in hindsight, this makes sense. Only through the virbr0 interface, can I access the virtual machiens. And the virtual machines, are actually behind their own NAT. They are not public, so why would I be able to ping them? 
+
+Libvirt offers [several networking options](https://jamielinux.com/docs/libvirt-networking-handbook/). Bridged is where all virtual machines get public ip addresses. Routed is similar, but they don't get their own interface, and it works on wirelessly connected devices. And finally, NAT, what I am using does not give virtual machines publicly accessible ip addresses. 
+
