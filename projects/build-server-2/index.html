@@ -438,7 +438,75 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>Anyway, I find this deeply ironic. I originally wanted to deploy wireguard to my router to avoid any kind of complex networking, but because I didn’t have physical access to my router, I was testing on machines with more complex networking, which caused things to not work. This affirms my decision to set up wireguard on my router, rather than on my server, especially since kolla-ansible uses docker to deploy.</p>
 <p>Anyway, I will have to look into split tunneling or whatnot, because I may not want to vpn everything.</p>
 <p>The <a href="https://wiki.freshtomato.org/doku.php/wireguard_on_freshtomato">freshtomato</a> wiki contains info on how to configure wireguard, including doing things like having it start on boot.</p>
-<p>Sadly, the wg-quick command doesn’t seem to be available on the router, but that’s not really a big deal. I can just write a small script which sets this up, using the instructions from the arch wiki article.</p>
+<p>Sadly, the wg-quick command doesn’t seem to be available on the router, but that’s not really a big deal. I can just write a small script which sets this up, using the instructions from the arch wiki article, or even just using wg-quick, because it tells you what steps it is taking to up the wireguard interface.</p>
+<p>Here is the wg-quick file on my server:</p>
+<div class="sourceCode" id="cb14"><pre class="sourceCode ini code-with-copy"><code class="sourceCode ini"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="kw">[Interface]</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="dt">Address </span><span class="ot">=</span><span class="st"> 10.10.9.1/31</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a><span class="dt">PostUp </span><span class="ot">=</span><span class="st"> wg set %i private-key /etc/wireguard/%i.key</span></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a><span class="dt">ListenPort </span><span class="ot">=</span><span class="st"> </span><span class="dv">51000</span></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a><span class="kw">[Peer]</span></span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a><span class="co"># alpha site</span></span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a><span class="dt">PublicKey </span><span class="ot">=</span><span class="st"> e763iTZmmMcx7HufUOi5vzmQJ5ZhYBuuqnXh/2ViBjA=</span></span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a><span class="dt">AllowedIPs </span><span class="ot">=</span><span class="st"> 10.10.10.0/24,10.10.9.0/31,192.168.122.0/24</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Interestingly, I didn’t have to add a specific route using <code>ip</code>. Once nat is set up correctly on one device, the, it somehow knows where to go. I only need to add allowed ips.</p>
+<p>Here is configuration file for my “router” (still just testing with virtual machines).</p>
+<div class="code-with-filename">
+<div class="code-with-filename-file">
+<pre><strong>/etc/wireguard/wgA.conf</strong></pre>
+</div>
+<div class="sourceCode" id="cb15"><pre class="sourceCode ini code-with-copy"><code class="sourceCode ini"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="kw">[Interface]</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="dt">PreUp </span><span class="ot">=</span><span class="st"> sysctl net.ipv4.ip_forward=1</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a><span class="dt">PreUp </span><span class="ot">=</span><span class="st"> iptables -t nat -A POSTROUTING -o enp1s0 -j MASQUERADE</span></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a><span class="dt">PreUp </span><span class="ot">=</span><span class="st"> iptables -A FORWARD -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT</span></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a><span class="dt">PostUp </span><span class="ot">=</span><span class="st"> wg set %i private-key /etc/wireguard/%i.key</span></span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a><span class="dt">PostUp </span><span class="ot">=</span><span class="st"> iptables -A FORWARD -i %i -o enp1s0 -j ACCEPT</span></span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a><span class="dt">Address </span><span class="ot">=</span><span class="st"> 10.10.9.0/31</span></span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a><span class="dt">ListenPort </span><span class="ot">=</span><span class="st"> </span><span class="dv">51000</span></span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a><span class="kw">[Peer]</span></span>
+<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a><span class="co"># Remote Server</span></span>
+<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a><span class="dt">PublicKey </span><span class="ot">=</span><span class="st"> pxCx+cEs6hoI4EE+XdE4lQiLkJRbG4JGQwXz6d/hZDM=</span></span>
+<span id="cb15-13"><a href="#cb15-13" aria-hidden="true" tabindex="-1"></a><span class="dt">AllowedIPs </span><span class="ot">=</span><span class="st"> 10.10.9.0/31</span></span>
+<span id="cb15-14"><a href="#cb15-14" aria-hidden="true" tabindex="-1"></a><span class="dt">Endpoint </span><span class="ot">=</span><span class="st"> 154.12.245.181:51000</span></span>
+<span id="cb15-15"><a href="#cb15-15" aria-hidden="true" tabindex="-1"></a><span class="dt">PersistentKeepalive </span><span class="ot">=</span><span class="st"> </span><span class="dv">25</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Here are the steps my “router” takes when I use <code>wg-quick up wgA</code></p>
+<div class="sourceCode" id="cb16"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>root@debian:/home/moonpie# wg-quick up wgA</span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>[#] sysctl net.ipv4.ip_forward=1</span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>net.ipv4.ip_forward = 1</span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>[#] iptables -t nat -A POSTROUTING -o enp1s0 -j MASQUERADE</span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>[#] iptables -A FORWARD -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT</span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>[#] ip link add wgA type wireguard</span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a>[#] wg setconf wgA /dev/fd/63</span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a>[#] ip -4 address add 10.10.9.0/31 dev wgA</span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a>[#] ip link set mtu 1420 up dev wgA</span>
+<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a>[#] wg set wgA private-key /etc/wireguard/wgA.key</span>
+<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a>[#] iptables -A FORWARD -i wgA -o enp1s0 -j ACCEPT</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>In this case, wgA is the wireguard interface, and enp1s0 is the interface I want to configure NAT on, so that I can access the subnet behind it.</p>
+<p>The best feature of this wireguard setup is that, since it doesn’t route everything through the vpn tunnel like I was initially expecting, meaning I won’t have to worry about bandwidth or speed, since I won’t be routing all traffic through my router to a remote router.</p>
+<p>In addition to all this, I can use nmap to make sure that my remote server can actually see the other services, as they are behind a kind of NAT.</p>
+<div class="sourceCode" id="cb17"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>root@vmi1403809 wireguard]# nmap -sV 192.168.122.1</span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>Starting Nmap 7.91 ( https://nmap.org ) at 2023-08-18 11:29 PDT</span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>Nmap scan report for 192.168.122.1</span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>Host is up (0.068s latency).</span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>Not shown: 997 closed ports</span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>PORT     STATE SERVICE         VERSION</span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>53/tcp   open  domain          dnsmasq 2.89</span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a>8000/tcp open  http            SimpleHTTPServer 0.6 (Python 3.11.4)</span>
+<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a>9090/tcp open  ssl/zeus-admin?</span>
+<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a>1 service unrecognized despite returning data. If you know the service/version, please submit the following fingerprint at https://nmap.org/cgi-bin/submit.cgi?new-service :</span>
+<span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a>SF-Port9090-TCP:V=7.91%T=SSL%I=7%D=8/18%Time=64DFB8E1%P=x86_64-redhat-linu</span>
+<span id="cb17-12"><a href="#cb17-12" aria-hidden="true" tabindex="-1"></a>...</span>
+<span id="cb17-13"><a href="#cb17-13" aria-hidden="true" tabindex="-1"></a>... For some reason nmap can't detect cockpit so it's just 20 lines of this nonsense.</span>
+<span id="cb17-14"><a href="#cb17-14" aria-hidden="true" tabindex="-1"></a>...</span>
+<span id="cb17-15"><a href="#cb17-15" aria-hidden="true" tabindex="-1"></a>20\x20\x20\x20\x20\x20}\n</span>
+<span id="cb17-16"><a href="#cb17-16" aria-hidden="true" tabindex="-1"></a>SF:\x20\x20\x20\x20\x20\x20\x20\x20p\x20");</span>
+<span id="cb17-17"><a href="#cb17-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-18"><a href="#cb17-18" aria-hidden="true" tabindex="-1"></a>Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .</span>
+<span id="cb17-19"><a href="#cb17-19" aria-hidden="true" tabindex="-1"></a>Nmap done: 1 IP address (1 host up) scanned in 186.81 seconds</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Nmap detects my python http server, and cockpit.</p>
+<p>Alright, next I want to configure firewall usage. I don’t want the remote wireguard server to have access to everything on my “home” network. I am likely going to do this by creating vlan’s, which can be <a href="https://hobo.house/2016/03/10/build-secure-vlan-networks-with-shibby-tomato-router-firmware/">wifi</a>, by creating virtual wireless, or <a href="https://wiki.freshtomato.org/doku.php/advanced-vlan">ethernet</a>, by making it so that certain ethernet ports are trapped in a vlan. With this setup, I can ensure that my server is kept isolated from the rest of my devices, in case it gets compromised. (Although doing it this way is kinda pointless since I may be using a VPN on my devices, running through that same server to get around college wifi restrictions, if they exist).</p>
 
 
 </section>
