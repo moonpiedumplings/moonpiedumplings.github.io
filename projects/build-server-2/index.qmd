@@ -339,4 +339,94 @@ Anyway, I will have to look into split tunneling or whatnot, because I may not w
 
 The [freshtomato](https://wiki.freshtomato.org/doku.php/wireguard_on_freshtomato) wiki contains info on how to configure wireguard, including doing things like having it start on boot. 
 
-Sadly, the wg-quick command doesn't seem to be available on the router, but that's not really a big deal. I can just write a small script which sets this up, using the instructions from the arch wiki article.
+Sadly, the wg-quick command doesn't seem to be available on the router, but that's not really a big deal. I can just write a small script which sets this up, using the instructions from the arch wiki article, or even just using wg-quick, because it tells you what steps it is taking to up the wireguard interface. 
+
+
+Here is the wg-quick file on my server:
+
+```{.ini}
+[Interface]
+Address = 10.10.9.1/31
+PostUp = wg set %i private-key /etc/wireguard/%i.key
+ListenPort = 51000
+
+[Peer]
+# alpha site
+PublicKey = e763iTZmmMcx7HufUOi5vzmQJ5ZhYBuuqnXh/2ViBjA=
+AllowedIPs = 10.10.10.0/24,10.10.9.0/31,192.168.122.0/24
+```
+
+Interestingly, I didn't have to add a specific route using `ip`. Once nat is set up correctly on one device, the, it somehow knows where to go. I only need to add allowed ips. 
+
+Here is configuration file for my "router" (still just testing with virtual machines). 
+
+```{.ini filename="/etc/wireguard/wgA.conf"}
+[Interface]
+PreUp = sysctl net.ipv4.ip_forward=1
+PreUp = iptables -t nat -A POSTROUTING -o enp1s0 -j MASQUERADE
+PreUp = iptables -A FORWARD -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
+PostUp = wg set %i private-key /etc/wireguard/%i.key
+PostUp = iptables -A FORWARD -i %i -o enp1s0 -j ACCEPT
+Address = 10.10.9.0/31
+ListenPort = 51000
+
+[Peer]
+# Remote Server
+PublicKey = pxCx+cEs6hoI4EE+XdE4lQiLkJRbG4JGQwXz6d/hZDM=
+AllowedIPs = 10.10.9.0/31
+Endpoint = 154.12.245.181:51000
+PersistentKeepalive = 25
+```
+
+Here are the steps my "router"  takes when I use `wg-quick up wgA`
+
+
+```{.default}
+root@debian:/home/moonpie# wg-quick up wgA
+[#] sysctl net.ipv4.ip_forward=1
+net.ipv4.ip_forward = 1
+[#] iptables -t nat -A POSTROUTING -o enp1s0 -j MASQUERADE
+[#] iptables -A FORWARD -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
+[#] ip link add wgA type wireguard
+[#] wg setconf wgA /dev/fd/63
+[#] ip -4 address add 10.10.9.0/31 dev wgA
+[#] ip link set mtu 1420 up dev wgA
+[#] wg set wgA private-key /etc/wireguard/wgA.key
+[#] iptables -A FORWARD -i wgA -o enp1s0 -j ACCEPT
+```
+
+In this case, wgA is the wireguard interface, and enp1s0 is the interface I want to configure NAT on, so that I can access the subnet behind it. 
+
+The best feature of this wireguard setup is that, since it doesn't route everything through the vpn tunnel like I was initially expecting, meaning I won't have to worry about bandwidth or speed, since I won't be routing all traffic through my router to a remote router. 
+
+In addition to all this, I can use nmap to make sure that my remote server can actually see the other services, as they are behind a kind of NAT.
+
+```{.default}
+root@vmi1403809 wireguard]# nmap -sV 192.168.122.1
+Starting Nmap 7.91 ( https://nmap.org ) at 2023-08-18 11:29 PDT
+Nmap scan report for 192.168.122.1
+Host is up (0.068s latency).
+Not shown: 997 closed ports
+PORT     STATE SERVICE         VERSION
+53/tcp   open  domain          dnsmasq 2.89
+8000/tcp open  http            SimpleHTTPServer 0.6 (Python 3.11.4)
+9090/tcp open  ssl/zeus-admin?
+1 service unrecognized despite returning data. If you know the service/version, please submit the following fingerprint at https://nmap.org/cgi-bin/submit.cgi?new-service :
+SF-Port9090-TCP:V=7.91%T=SSL%I=7%D=8/18%Time=64DFB8E1%P=x86_64-redhat-linu
+...
+... For some reason nmap can't detect cockpit so it's just 20 lines of this nonsense.
+...
+20\x20\x20\x20\x20\x20}\n
+SF:\x20\x20\x20\x20\x20\x20\x20\x20p\x20");
+
+Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 186.81 seconds
+```
+
+Nmap detects my python http server, and cockpit. 
+
+Alright, next I want to configure firewall usage. I don't want the remote wireguard server to have access to everything on my "home" network. I am likely going to do this by creating vlan's, which can be [wifi](https://hobo.house/2016/03/10/build-secure-vlan-networks-with-shibby-tomato-router-firmware/), by creating virtual wireless, or [ethernet](https://wiki.freshtomato.org/doku.php/advanced-vlan), by making it so that certain ethernet ports are trapped in a vlan. With this setup, I can ensure that my server is kept isolated from the rest of my devices, in case it gets compromised. (Although doing it this way is kinda pointless since I may be using a VPN on my devices, running through that same server to get around college wifi restrictions, if they exist).
+
+
+
+
