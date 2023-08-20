@@ -601,6 +601,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb23-9"><a href="#cb23-9" aria-hidden="true" tabindex="-1"></a>Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .</span>
 <span id="cb23-10"><a href="#cb23-10" aria-hidden="true" tabindex="-1"></a>Nmap done: 1 IP address (1 host up) scanned in 7.78 seconds</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>For testing purposes, I run a simple http server using <code>python -m http.server</code> which launches this service in port 8000.</p>
+<p>Alright, upon later investigation, it appears I was both right and wrong.</p>
+<p>The <code>iptables -A FORWARD -i wg-stack -o br2 -j ACCEPT</code> only accepts <em>forwarded</em> packets, giving it access to devices in the br2 vlan, whereas input in the one that makes it respond to ping probes or show servcies. This is actually good, because my router won’t be exposed to my rented server, only the subnet behind it will. Without a policy to accept input packets, the router won’t even respond to ping probes.</p>
+<p>However, I do have one final thing to handle:</p>
+<div class="sourceCode" id="cb24"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>root@unknown:/jffs# ./wg-stack.sh </span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>RTNETLINK answers: Network is unreachable</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>However, when I run all the steps individually, this error doesn’t occur. This error occurs when I run the <code>ip link set mtu 1420 up dev wg-stack</code>, before the previous step in the script, assigning the ip address to the interface, isn’t done. I am guessing that the script runs too quickly, and some steps are run before the previous step is complete. I simply need to add a <code>sleep</code> command, which inserts an artificial wait in the process.</p>
 
 
 </section>
