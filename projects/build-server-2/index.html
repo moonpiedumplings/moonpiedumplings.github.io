@@ -508,6 +508,99 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb17-19"><a href="#cb17-19" aria-hidden="true" tabindex="-1"></a>Nmap done: 1 IP address (1 host up) scanned in 186.81 seconds</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Nmap detects my python http server, and cockpit.</p>
 <p>Alright, next I want to configure firewall usage. I don’t want the remote wireguard server to have access to everything on my “home” network. I am likely going to do this by creating vlan’s, which can be <a href="https://hobo.house/2016/03/10/build-secure-vlan-networks-with-shibby-tomato-router-firmware/">wifi</a>, by creating virtual wireless, or <a href="https://wiki.freshtomato.org/doku.php/advanced-vlan">ethernet</a>, by making it so that certain ethernet ports are trapped in a vlan. With this setup, I can ensure that my server is kept isolated from the rest of my devices, in case it gets compromised. (Although doing it this way is kinda pointless since I may be using a VPN on my devices, running through that same server to get around college wifi restrictions, if they exist).</p>
+<p>So I setup wireguard on my server:</p>
+<div class="code-with-filename">
+<div class="code-with-filename-file">
+<pre><strong>/etc/wireguard/wg-stack.conf</strong></pre>
+</div>
+<div class="sourceCode" id="cb18"><pre class="sourceCode ini code-with-copy"><code class="sourceCode ini"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="kw">[Interface]</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="dt">Address </span><span class="ot">=</span><span class="st"> 10.10.11.1/24</span></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a><span class="dt">PostUp </span><span class="ot">=</span><span class="st"> wg set %i private-key /etc/wireguard/%i.key</span></span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a><span class="dt">ListenPort </span><span class="ot">=</span><span class="st"> </span><span class="dv">51000</span></span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a><span class="kw">[Peer]</span></span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a><span class="co"># My router</span></span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a><span class="dt">PublicKey </span><span class="ot">=</span><span class="st"> mFyQQk8/w7AhLSEtJKkcNhMNLPcyBMFHu02TI+OUj2Y=</span></span>
+<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a><span class="dt">AllowedIPs </span><span class="ot">=</span><span class="st"> 10.10.11.0/24,192.168.17.0/24</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>And here is the wg-stack.sh script that will be run on my router:</p>
+<div class="code-with-filename">
+<div class="code-with-filename-file">
+<pre><strong>wg-stack.sh</strong></pre>
+</div>
+<div class="sourceCode" id="cb19"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a># enabled by default</span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>#echo 1 &gt; /proc/sys/net/ipv4/conf/br2/forwarding</span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>#iptables -t nat -A POSTROUTING -o br2 -j MASQUERADE</span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>#iptables -A FORWARD -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT</span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>modprobe wireguard</span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a>ip link add wg-stack type wireguard</span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a>wg setconf wg-stack /jffs/wg-stack-setconf</span>
+<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a>ip -4 address add 10.10.11.0/24 dev wg-stack</span>
+<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a>ip link set mtu 1420 up dev wg-stack</span>
+<span id="cb19-11"><a href="#cb19-11" aria-hidden="true" tabindex="-1"></a>iptables -A FORWARD -i wg-stack -o br2 -j ACCEPT</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Some of the rules were enabled by default, so I commented them out.</p>
+<p>And here is the wg-stack-setconf file that the above script calls upon:</p>
+<div class="code-with-filename">
+<div class="code-with-filename-file">
+<pre><strong>/jffs/wg-stack-setconf</strong></pre>
+</div>
+<div class="sourceCode" id="cb20"><pre class="sourceCode ini code-with-copy"><code class="sourceCode ini"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="kw">[Interface]</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a><span class="dt">PrivateKey </span><span class="ot">=</span><span class="st"> </span><span class="kw">NO</span></span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a><span class="co">#Address = 10.10.0.0/24</span></span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a><span class="dt">ListenPort </span><span class="ot">=</span><span class="st"> </span><span class="dv">51000</span></span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a><span class="kw">[Peer]</span></span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Contabo VPS</span></span>
+<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a><span class="dt">PublicKey </span><span class="ot">=</span><span class="st"> xO2fVY8uh4SDx5VH+24Mxx+WIXSnfY3Vw9CDBW7cMnY=</span></span>
+<span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a><span class="dt">AllowedIPs </span><span class="ot">=</span><span class="st"> 10.10.11.0/24</span></span>
+<span id="cb20-10"><a href="#cb20-10" aria-hidden="true" tabindex="-1"></a><span class="dt">Endpoint </span><span class="ot">=</span><span class="st"> 154.12.245.181:51000</span></span>
+<span id="cb20-11"><a href="#cb20-11" aria-hidden="true" tabindex="-1"></a><span class="dt">PersistentKeepalive </span><span class="ot">=</span><span class="st"> </span><span class="dv">25</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>I have to manually specify the private key, because the <code>wg setconf</code> can’t run abitrary commands.</p>
+<p>This works… one way.</p>
+<div class="sourceCode" id="cb21"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>root@unknown:/jffs# ping 10.10.11.1</span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>PING 10.10.11.1 (10.10.11.1): 56 data bytes</span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>64 bytes from 10.10.11.1: seq=0 ttl=64 time=43.491 ms</span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>root@unknown:/jffs# curl 10.10.11.1:8000</span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>&lt;!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd"&gt;</span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a>&lt;html&gt;</span>
+<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a>....</span>
+<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a>.... I ran a simple http server to test if my router could see ports of my server.</span>
+<span id="cb21-9"><a href="#cb21-9" aria-hidden="true" tabindex="-1"></a>....</span>
+<span id="cb21-10"><a href="#cb21-10" aria-hidden="true" tabindex="-1"></a>&lt;/html&gt;</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>However, when my server attempts to ping or curl my router, it simply waits forever. I think this may have something to do with firewalll rules, where the router is refusing to respond to even ping connections.</p>
+<p>After doing some more research, it appears my iptables rules deny all connections to my router, and I can attempt to access subnets other than my router itself, but they just redirect to my router:</p>
+<div class="sourceCode" id="cb22"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>[root@vmi1403809 ~]# ping 192.168.17.152</span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>PING 192.168.17.152 (192.168.17.152) 56(84) bytes of data.</span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>64 bytes from 192.168.17.152: icmp_seq=1 ttl=63 time=41.9 ms</span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>[root@vmi1403809 ~]# curl 192.168.17.152:8000</span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a>curl: (7) Failed to connect to 192.168.17.152 port 8000: No route to host</span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a>[root@vmi1403809 ~]# nmap -sV 192.168.17.152</span>
+<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a>Starting Nmap 7.91 ( https://nmap.org ) at 2023-08-19 20:18 PDT</span>
+<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a>Nmap scan report for 192.168.17.152</span>
+<span id="cb22-9"><a href="#cb22-9" aria-hidden="true" tabindex="-1"></a>Host is up (0.043s latency).</span>
+<span id="cb22-10"><a href="#cb22-10" aria-hidden="true" tabindex="-1"></a>Not shown: 999 filtered ports</span>
+<span id="cb22-11"><a href="#cb22-11" aria-hidden="true" tabindex="-1"></a>PORT   STATE  SERVICE VERSION</span>
+<span id="cb22-12"><a href="#cb22-12" aria-hidden="true" tabindex="-1"></a>22/tcp closed ssh</span>
+<span id="cb22-13"><a href="#cb22-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-14"><a href="#cb22-14" aria-hidden="true" tabindex="-1"></a>Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .</span>
+<span id="cb22-15"><a href="#cb22-15" aria-hidden="true" tabindex="-1"></a>Nmap done: 1 IP address (1 host up) scanned in 5.53 seconds</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>The nmap scan is especially strange, considering I am using my laptop to test, which doesn’t have an ssh server running. My router however, does, but it also has an http server running (the web management interface), which nmap doesn’t seem to see. I am guessing my router is not playing the role of NAT properly.</p>
+<p>Nope, I was wrong. The problem was not my router firewall, but rather my computer firewall. I forgot that unlike Arch Linux, the Arch Linux based linux distribution I was using, CachyOS did come with a firewall enabled.</p>
+<p>After disabling the firewall:</p>
+<div class="sourceCode" id="cb23"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>[root@vmi1403809 ~]# nmap -sV 192.168.17.152</span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>Starting Nmap 7.91 ( https://nmap.org ) at 2023-08-20 03:21 PDT</span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>Nmap scan report for 192.168.17.152</span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>Host is up (0.042s latency).</span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a>Not shown: 999 closed ports</span>
+<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a>PORT     STATE SERVICE VERSION</span>
+<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a>8000/tcp open  http    SimpleHTTPServer 0.6 (Python 3.11.4)</span>
+<span id="cb23-8"><a href="#cb23-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-9"><a href="#cb23-9" aria-hidden="true" tabindex="-1"></a>Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .</span>
+<span id="cb23-10"><a href="#cb23-10" aria-hidden="true" tabindex="-1"></a>Nmap done: 1 IP address (1 host up) scanned in 7.78 seconds</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>For testing purposes, I run a simple http server using <code>python -m http.server</code> which launches this service in port 8000.</p>
 
 
 </section>
