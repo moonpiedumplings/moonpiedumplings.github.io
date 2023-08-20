@@ -430,5 +430,122 @@ Nmap detects my python http server, and cockpit.
 Alright, next I want to configure firewall usage. I don't want the remote wireguard server to have access to everything on my "home" network. I am likely going to do this by creating vlan's, which can be [wifi](https://hobo.house/2016/03/10/build-secure-vlan-networks-with-shibby-tomato-router-firmware/), by creating virtual wireless, or [ethernet](https://wiki.freshtomato.org/doku.php/advanced-vlan), by making it so that certain ethernet ports are trapped in a vlan. With this setup, I can ensure that my server is kept isolated from the rest of my devices, in case it gets compromised. (Although doing it this way is kinda pointless since I may be using a VPN on my devices, running through that same server to get around college wifi restrictions, if they exist).
 
 
+So I setup wireguard on my server:
+
+
+```{.ini filename="/etc/wireguard/wg-stack.conf"}
+[Interface]
+Address = 10.10.11.1/24
+PostUp = wg set %i private-key /etc/wireguard/%i.key
+ListenPort = 51000
+
+[Peer]
+# My router
+PublicKey = mFyQQk8/w7AhLSEtJKkcNhMNLPcyBMFHu02TI+OUj2Y=
+AllowedIPs = 10.10.11.0/24,192.168.17.0/24
+```
+
+
+And here is the wg-stack.sh script that will be run on my router:
+
+```{.default filename="wg-stack.sh"}
+# enabled by default
+#echo 1 > /proc/sys/net/ipv4/conf/br2/forwarding
+
+#iptables -t nat -A POSTROUTING -o br2 -j MASQUERADE
+#iptables -A FORWARD -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
+modprobe wireguard
+ip link add wg-stack type wireguard
+wg setconf wg-stack /jffs/wg-stack-setconf
+ip -4 address add 10.10.11.0/24 dev wg-stack
+ip link set mtu 1420 up dev wg-stack
+iptables -A FORWARD -i wg-stack -o br2 -j ACCEPT
+```
+
+Some of the rules were enabled by default, so I commented them out. 
+
+And here is the wg-stack-setconf file that the above script calls upon:
+
+```{.ini filename="/jffs/wg-stack-setconf"}
+[Interface]
+PrivateKey = NO
+#Address = 10.10.0.0/24
+ListenPort = 51000
+
+[Peer]
+# Contabo VPS
+PublicKey = xO2fVY8uh4SDx5VH+24Mxx+WIXSnfY3Vw9CDBW7cMnY=
+AllowedIPs = 10.10.11.0/24
+Endpoint = 154.12.245.181:51000
+PersistentKeepalive = 25
+```
+
+I have to manually specify the private key, because the `wg setconf` can't run abitrary commands. 
+
+This works... one way.
+
+```{.default}
+root@unknown:/jffs# ping 10.10.11.1
+PING 10.10.11.1 (10.10.11.1): 56 data bytes
+64 bytes from 10.10.11.1: seq=0 ttl=64 time=43.491 ms
+root@unknown:/jffs# curl 10.10.11.1:8000
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+....
+.... I ran a simple http server to test if my router could see ports of my server.
+....
+</html>
+```
+
+However, when my server attempts to ping or curl my router, it simply waits forever. I think this may have something to do with firewalll rules, where the router is refusing to respond to even ping connections. 
+
+After doing some more research, it appears my iptables rules deny all connections to my router, and I can attempt to access subnets other than my router itself, but they just redirect to my router:
+
+```{.default}
+[root@vmi1403809 ~]# ping 192.168.17.152
+PING 192.168.17.152 (192.168.17.152) 56(84) bytes of data.
+64 bytes from 192.168.17.152: icmp_seq=1 ttl=63 time=41.9 ms
+[root@vmi1403809 ~]# curl 192.168.17.152:8000
+curl: (7) Failed to connect to 192.168.17.152 port 8000: No route to host
+[root@vmi1403809 ~]# nmap -sV 192.168.17.152
+Starting Nmap 7.91 ( https://nmap.org ) at 2023-08-19 20:18 PDT
+Nmap scan report for 192.168.17.152
+Host is up (0.043s latency).
+Not shown: 999 filtered ports
+PORT   STATE  SERVICE VERSION
+22/tcp closed ssh
+
+Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 5.53 seconds
+```
+
+The nmap scan is especially strange, considering I am using my laptop to test, which doesn't have an ssh server running. My router however, does, but it also has an http server running (the web management interface), which nmap doesn't seem to see. I am guessing my router is not playing the role of NAT properly. 
+
+Nope, I was wrong. The problem was not my router firewall, but rather my computer firewall. I forgot that unlike Arch Linux, the Arch Linux based linux distribution I was using, CachyOS did come with a firewall enabled. 
+
+After disabling the firewall:
+
+```{.default}
+[root@vmi1403809 ~]# nmap -sV 192.168.17.152
+Starting Nmap 7.91 ( https://nmap.org ) at 2023-08-20 03:21 PDT
+Nmap scan report for 192.168.17.152
+Host is up (0.042s latency).
+Not shown: 999 closed ports
+PORT     STATE SERVICE VERSION
+8000/tcp open  http    SimpleHTTPServer 0.6 (Python 3.11.4)
+
+Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 7.78 seconds
+```
+
+For testing purposes, I run a simple http server using `python -m http.server` which launches this service in port 8000. 
+
+
+
+
+
+
+
+
 
 
