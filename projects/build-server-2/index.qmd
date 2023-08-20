@@ -540,6 +540,20 @@ Nmap done: 1 IP address (1 host up) scanned in 7.78 seconds
 
 For testing purposes, I run a simple http server using `python -m http.server` which launches this service in port 8000. 
 
+Alright, upon later investigation, it appears I was both right and wrong. 
+
+The `iptables -A FORWARD -i wg-stack -o br2 -j ACCEPT` only accepts *forwarded* packets, giving it access to devices in the br2 vlan, whereas input in the one that makes it respond to ping probes or show servcies. This is actually good, because my router won't be exposed to my rented server, only the subnet behind it will. Without a policy to accept input packets, the router won't even respond to ping probes. 
+
+However, I do have one final thing to handle: 
+
+```{.default}
+root@unknown:/jffs# ./wg-stack.sh 
+RTNETLINK answers: Network is unreachable
+```
+
+However, when I run all the steps individually, this error doesn't occur. This error occurs when I run the `ip link set mtu 1420 up dev wg-stack`, before the previous step in the script, assigning the ip address to the interface, isn't done. I am guessing that the script runs too quickly, and some steps are run before the previous step is complete. I simply need to add a `sleep` command, which inserts an artificial wait in the process. 
+
+
 
 
 
