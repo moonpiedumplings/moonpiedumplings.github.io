@@ -553,10 +553,43 @@ RTNETLINK answers: Network is unreachable
 
 However, when I run all the steps individually, this error doesn't occur. This error occurs when I run the `ip link set mtu 1420 up dev wg-stack`, before the previous step in the script, assigning the ip address to the interface, isn't done. I am guessing that the script runs too quickly, and some steps are run before the previous step is complete. I simply need to add a `sleep` command, which inserts an artificial wait in the process. 
 
+With all said and done, here is the script I have placed on my router:
+
+```{.default filename="/jffs/wg-stack.sh"}
+modprobe wireguard
+sleep 2s
+ip link add wg-stack type wireguard
+sleep 2s
+wg setconf wg-stack /jffs/wg-stack-setconf
+sleep 2s
+ip -4 address add 10.10.11.0/24 dev wg-stack
+sleep 3s
+ip link set mtu 1420 up dev wg-stack
+sleep 2s
+iptables -A FORWARD -i wg-stack -o br2 -j ACCEPT
+```
+
+And following the advice of the [freshtomato wiki](https://wiki.freshtomato.org/doku.php/wireguard_on_freshtomato#running_wireguard_at_boot), I have placed this script in the firewall section:
 
 
+`until [ $(ping -c 1 -A -W 5 -q google.com &>/dev/null && echo 1 || echo 0) -eq 1 ]; do sleep 5; done; /jffs/wg-stack.sh`
+
+On my remote server, I can simply enable the wg-quick service
 
 
+`systemctl enable wg-quick@wg-stack`
+
+And now wireguard will be started automatically on both my router and the server. 
+
+
+## Back to Kolla-Ansible
+
+
+Of course, this now makes my kolla-ansible installation more complex. Because I have now have two servers, to distribute to, and I also to deal with having to wireguard into my servers in order to be able to ssh into them. 
+
+Beyond that, I have switched from a single node installation, to a multi node installation. 
+
+I'm going to start with building my ansible inventory. Because my server is on a seperate vlan, and won't 
 
 
 
