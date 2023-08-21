@@ -177,6 +177,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#kolla-ansible" id="toc-kolla-ansible" class="nav-link" data-scroll-target="#kolla-ansible">Kolla-ansible</a></li>
   <li><a href="#networking" id="toc-networking" class="nav-link" data-scroll-target="#networking">Networking</a></li>
   </ul></li>
+  <li><a href="#back-to-kolla-ansible" id="toc-back-to-kolla-ansible" class="nav-link" data-scroll-target="#back-to-kolla-ansible">Back to Kolla-Ansible</a></li>
   </ul></li>
   </ul>
 </nav>
@@ -607,9 +608,37 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="sourceCode" id="cb24"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>root@unknown:/jffs# ./wg-stack.sh </span>
 <span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>RTNETLINK answers: Network is unreachable</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>However, when I run all the steps individually, this error doesn’t occur. This error occurs when I run the <code>ip link set mtu 1420 up dev wg-stack</code>, before the previous step in the script, assigning the ip address to the interface, isn’t done. I am guessing that the script runs too quickly, and some steps are run before the previous step is complete. I simply need to add a <code>sleep</code> command, which inserts an artificial wait in the process.</p>
-
-
+<p>With all said and done, here is the script I have placed on my router:</p>
+<div class="code-with-filename">
+<div class="code-with-filename-file">
+<pre><strong>/jffs/wg-stack.sh</strong></pre>
+</div>
+<div class="sourceCode" id="cb25"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>modprobe wireguard</span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>sleep 2s</span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>ip link add wg-stack type wireguard</span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a>sleep 2s</span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a>wg setconf wg-stack /jffs/wg-stack-setconf</span>
+<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a>sleep 2s</span>
+<span id="cb25-7"><a href="#cb25-7" aria-hidden="true" tabindex="-1"></a>ip -4 address add 10.10.11.0/24 dev wg-stack</span>
+<span id="cb25-8"><a href="#cb25-8" aria-hidden="true" tabindex="-1"></a>sleep 3s</span>
+<span id="cb25-9"><a href="#cb25-9" aria-hidden="true" tabindex="-1"></a>ip link set mtu 1420 up dev wg-stack</span>
+<span id="cb25-10"><a href="#cb25-10" aria-hidden="true" tabindex="-1"></a>sleep 2s</span>
+<span id="cb25-11"><a href="#cb25-11" aria-hidden="true" tabindex="-1"></a>iptables -A FORWARD -i wg-stack -o br2 -j ACCEPT</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>And following the advice of the <a href="https://wiki.freshtomato.org/doku.php/wireguard_on_freshtomato#running_wireguard_at_boot">freshtomato wiki</a>, I have placed this script in the firewall section:</p>
+<p><code>until [ $(ping -c 1 -A -W 5 -q google.com &amp;&gt;/dev/null &amp;&amp; echo 1 || echo 0) -eq 1 ]; do sleep 5; done; /jffs/wg-stack.sh</code></p>
+<p>On my remote server, I can simply enable the wg-quick service</p>
+<p><code>systemctl enable wg-quick@wg-stack</code></p>
+<p>And now wireguard will be started automatically on both my router and the server.</p>
 </section>
+</section>
+<section id="back-to-kolla-ansible" class="level2">
+<h2 class="anchored" data-anchor-id="back-to-kolla-ansible">Back to Kolla-Ansible</h2>
+<p>Of course, this now makes my kolla-ansible installation more complex. Because I have now have two servers, to distribute to, and I also to deal with having to wireguard into my servers in order to be able to ssh into them.</p>
+<p>Beyond that, I have switched from a single node installation, to a multi node installation.</p>
+<p>I’m going to start with building my ansible inventory. Because my server is on a seperate vlan, and won’t</p>
+
+
 </section>
 </section>
 
