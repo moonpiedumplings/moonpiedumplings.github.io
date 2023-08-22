@@ -176,8 +176,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#operating-system" id="toc-operating-system" class="nav-link" data-scroll-target="#operating-system">Operating system</a></li>
   <li><a href="#kolla-ansible" id="toc-kolla-ansible" class="nav-link" data-scroll-target="#kolla-ansible">Kolla-ansible</a></li>
   <li><a href="#networking" id="toc-networking" class="nav-link" data-scroll-target="#networking">Networking</a></li>
-  </ul></li>
   <li><a href="#back-to-kolla-ansible" id="toc-back-to-kolla-ansible" class="nav-link" data-scroll-target="#back-to-kolla-ansible">Back to Kolla-Ansible</a></li>
+  </ul></li>
   </ul></li>
   </ul>
 </nav>
@@ -469,7 +469,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a><span class="co"># Remote Server</span></span>
 <span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a><span class="dt">PublicKey </span><span class="ot">=</span><span class="st"> pxCx+cEs6hoI4EE+XdE4lQiLkJRbG4JGQwXz6d/hZDM=</span></span>
 <span id="cb15-13"><a href="#cb15-13" aria-hidden="true" tabindex="-1"></a><span class="dt">AllowedIPs </span><span class="ot">=</span><span class="st"> 10.10.9.0/31</span></span>
-<span id="cb15-14"><a href="#cb15-14" aria-hidden="true" tabindex="-1"></a><span class="dt">Endpoint </span><span class="ot">=</span><span class="st"> 154.12.245.181:51000</span></span>
+<span id="cb15-14"><a href="#cb15-14" aria-hidden="true" tabindex="-1"></a><span class="dt">Endpoint </span><span class="ot">=</span><span class="st"> &lt;VPS IP&gt;:51000</span></span>
 <span id="cb15-15"><a href="#cb15-15" aria-hidden="true" tabindex="-1"></a><span class="dt">PersistentKeepalive </span><span class="ot">=</span><span class="st"> </span><span class="dv">25</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Here are the steps my “router” takes when I use <code>wg-quick up wgA</code></p>
@@ -556,7 +556,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Contabo VPS</span></span>
 <span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a><span class="dt">PublicKey </span><span class="ot">=</span><span class="st"> xO2fVY8uh4SDx5VH+24Mxx+WIXSnfY3Vw9CDBW7cMnY=</span></span>
 <span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a><span class="dt">AllowedIPs </span><span class="ot">=</span><span class="st"> 10.10.11.0/24</span></span>
-<span id="cb20-10"><a href="#cb20-10" aria-hidden="true" tabindex="-1"></a><span class="dt">Endpoint </span><span class="ot">=</span><span class="st"> 154.12.245.181:51000</span></span>
+<span id="cb20-10"><a href="#cb20-10" aria-hidden="true" tabindex="-1"></a><span class="dt">Endpoint </span><span class="ot">=</span><span class="st"> &lt;VPS IP&gt;:51000</span></span>
 <span id="cb20-11"><a href="#cb20-11" aria-hidden="true" tabindex="-1"></a><span class="dt">PersistentKeepalive </span><span class="ot">=</span><span class="st"> </span><span class="dv">25</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>I have to manually specify the private key, because the <code>wg setconf</code> can’t run abitrary commands.</p>
@@ -650,15 +650,31 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>With this, I can ssh into my <code>moonstack</code> machine from anywhere in the world.</p>
 <p>And because ansible can read the ssh config, I can simply plug the host nicknames into my ansible inventory, and my ansible can configure them, from anywhere in the world.</p>
 </section>
-</section>
-<section id="back-to-kolla-ansible" class="level2">
-<h2 class="anchored" data-anchor-id="back-to-kolla-ansible">Back to Kolla-Ansible</h2>
+<section id="back-to-kolla-ansible" class="level3">
+<h3 class="anchored" data-anchor-id="back-to-kolla-ansible">Back to Kolla-Ansible</h3>
 <p>Of course, this now makes my kolla-ansible installation more complex. Because I have now have two servers, to distribute to, and I also to deal with having to wireguard into my servers in order to be able to ssh into them.</p>
 <p>Beyond that, I have switched from a single node installation, to a multi node installation.</p>
 <p>Now that I have ssh and networking set up, I need to select the features and functions of my nodes.</p>
 <p>Kolla-ansible sorts nodes into 4 types.</p>
+<ul>
+<li>Control: These run the dashboards, api and the like.</li>
+<li>Networking: This runs the loadbalancers, virtual networking, and the like</li>
+<li>Compute: VM’s and containers are hosted here</li>
+<li>Storage: Various types of storage are on this node.</li>
+</ul>
+<p>From the the <a href="https://opendev.org/openstack/kolla-ansible/src/branch/master/etc/kolla/globals.yml">kolla-ansible globals</a>:</p>
+<div class="sourceCode" id="cb27"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a># This is the raw interface given to neutron as its external network port. Even</span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>    # though an IP address can exist on this interface, it will be unusable in most</span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>    # configurations. It is recommended this interface not be configured with any IP</span>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a>    # addresses for that reason.</span>
+<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a>    #neutron_external_interface: "eth1"</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Based on this, it appears that if I attempt to use the singlular ethernet interface on my vps, then I will end up breaking my setup, as that ethernet interface will stop working normally.</p>
+<p>I found something interesting on the <a href="https://docs.openstack.org/kolla-ansible/latest/reference/networking/neutron.html#example-shared-interface">openstack docs</a>. Apparently, this setup is possible, but “non trivial” to set up persistently, however, it is automated by Kayobe.</p>
+<p>I went through <a href="https://docs.openstack.org/kayobe/latest/deployment.html">kayobe’s documentation</a>, and found a <a href="https://www.youtube.com/watch?v=teWgCm6Aq1c">youtube tutorial</a>, and the deployment looks to be much more complex than kolla-ansible, which is frustrating to discover.</p>
+<p>Despite Kolla-ansible’s claims of creating a bridge interface and virtual ethernet’s persistently being “non-trivial”, I think they are easier to set up than the alternative options available me.</p>
 
 
+</section>
 </section>
 </section>
 
