@@ -582,6 +582,27 @@ On my remote server, I can simply enable the wg-quick service
 And now wireguard will be started automatically on both my router and the server. 
 
 
+Because my home server, is not accessible to the internet, I must proxy the connection through the contabo vps before I can get in. My ssh config uses the `ProxyJump` feature to proxy the connection from one vps into another. 
+
+```{.default filename="~/.ssh/config"}
+Host moontron
+                HostName VPS IP
+                port 22
+                user root
+                IdentityFile /home/moonpie/.ssh/moontron
+Host moonstack
+                Hostname 192.168.17.197
+                port 22
+                user root
+                IdentityFile /home/moonpie/.ssh/moonstack
+                ProxyJump moontron
+```
+
+With this, I can ssh into my `moonstack` machine from anywhere in the world.
+
+And because ansible can read the ssh config, I can simply plug the host nicknames into my ansible inventory, and my ansible can configure them, from anywhere in the world. 
+
+
 ## Back to Kolla-Ansible
 
 
@@ -589,10 +610,6 @@ Of course, this now makes my kolla-ansible installation more complex. Because I 
 
 Beyond that, I have switched from a single node installation, to a multi node installation. 
 
-I'm going to start with building my ansible inventory. Because my server is on a seperate vlan, and won't 
+Now that I have ssh and networking set up, I need to select the features and functions of my nodes. 
 
-
-
-
-
-
+Kolla-ansible sorts nodes into 4 types. 
