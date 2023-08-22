@@ -630,13 +630,33 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>On my remote server, I can simply enable the wg-quick service</p>
 <p><code>systemctl enable wg-quick@wg-stack</code></p>
 <p>And now wireguard will be started automatically on both my router and the server.</p>
+<p>Because my home server, is not accessible to the internet, I must proxy the connection through the contabo vps before I can get in. My ssh config uses the <code>ProxyJump</code> feature to proxy the connection from one vps into another.</p>
+<div class="code-with-filename">
+<div class="code-with-filename-file">
+<pre><strong>~/.ssh/config</strong></pre>
+</div>
+<div class="sourceCode" id="cb26"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a>Host moontron</span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>                HostName VPS IP</span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>                port 22</span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a>                user root</span>
+<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a>                IdentityFile /home/moonpie/.ssh/moontron</span>
+<span id="cb26-6"><a href="#cb26-6" aria-hidden="true" tabindex="-1"></a>Host moonstack</span>
+<span id="cb26-7"><a href="#cb26-7" aria-hidden="true" tabindex="-1"></a>                Hostname 192.168.17.197</span>
+<span id="cb26-8"><a href="#cb26-8" aria-hidden="true" tabindex="-1"></a>                port 22</span>
+<span id="cb26-9"><a href="#cb26-9" aria-hidden="true" tabindex="-1"></a>                user root</span>
+<span id="cb26-10"><a href="#cb26-10" aria-hidden="true" tabindex="-1"></a>                IdentityFile /home/moonpie/.ssh/moonstack</span>
+<span id="cb26-11"><a href="#cb26-11" aria-hidden="true" tabindex="-1"></a>                ProxyJump moontron</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>With this, I can ssh into my <code>moonstack</code> machine from anywhere in the world.</p>
+<p>And because ansible can read the ssh config, I can simply plug the host nicknames into my ansible inventory, and my ansible can configure them, from anywhere in the world.</p>
 </section>
 </section>
 <section id="back-to-kolla-ansible" class="level2">
 <h2 class="anchored" data-anchor-id="back-to-kolla-ansible">Back to Kolla-Ansible</h2>
 <p>Of course, this now makes my kolla-ansible installation more complex. Because I have now have two servers, to distribute to, and I also to deal with having to wireguard into my servers in order to be able to ssh into them.</p>
 <p>Beyond that, I have switched from a single node installation, to a multi node installation.</p>
-<p>I’m going to start with building my ansible inventory. Because my server is on a seperate vlan, and won’t</p>
+<p>Now that I have ssh and networking set up, I need to select the features and functions of my nodes.</p>
+<p>Kolla-ansible sorts nodes into 4 types.</p>
 
 
 </section>
