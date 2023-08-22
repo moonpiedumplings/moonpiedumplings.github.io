@@ -374,7 +374,7 @@ ListenPort = 51000
 # Remote Server
 PublicKey = pxCx+cEs6hoI4EE+XdE4lQiLkJRbG4JGQwXz6d/hZDM=
 AllowedIPs = 10.10.9.0/31
-Endpoint = 154.12.245.181:51000
+Endpoint = <VPS IP>:51000
 PersistentKeepalive = 25
 ```
 
@@ -476,7 +476,7 @@ ListenPort = 51000
 # Contabo VPS
 PublicKey = xO2fVY8uh4SDx5VH+24Mxx+WIXSnfY3Vw9CDBW7cMnY=
 AllowedIPs = 10.10.11.0/24
-Endpoint = 154.12.245.181:51000
+Endpoint = <VPS IP>:51000
 PersistentKeepalive = 25
 ```
 
@@ -602,8 +602,7 @@ With this, I can ssh into my `moonstack` machine from anywhere in the world.
 
 And because ansible can read the ssh config, I can simply plug the host nicknames into my ansible inventory, and my ansible can configure them, from anywhere in the world. 
 
-
-## Back to Kolla-Ansible
+### Back to Kolla-Ansible
 
 
 Of course, this now makes my kolla-ansible installation more complex. Because I have now have two servers, to distribute to, and I also to deal with having to wireguard into my servers in order to be able to ssh into them. 
@@ -613,3 +612,28 @@ Beyond that, I have switched from a single node installation, to a multi node in
 Now that I have ssh and networking set up, I need to select the features and functions of my nodes. 
 
 Kolla-ansible sorts nodes into 4 types. 
+
+* Control: These run the dashboards, api and the like.
+* Networking: This runs the loadbalancers, virtual networking, and the like
+* Compute: VM's and containers are hosted here
+* Storage: Various types of storage are on this node. 
+
+From the the [kolla-ansible globals](https://opendev.org/openstack/kolla-ansible/src/branch/master/etc/kolla/globals.yml):
+
+
+```{.default}
+# This is the raw interface given to neutron as its external network port. Even
+	# though an IP address can exist on this interface, it will be unusable in most
+	# configurations. It is recommended this interface not be configured with any IP
+	# addresses for that reason.
+	#neutron_external_interface: "eth1"
+```
+
+Based on this, it appears that if I attempt to use the singlular ethernet interface on my vps, then I will end up breaking my setup, as that ethernet interface will stop working normally.
+
+
+I found something interesting on the [openstack docs](https://docs.openstack.org/kolla-ansible/latest/reference/networking/neutron.html#example-shared-interface). Apparently, this setup is possible, but "non trivial" to set up persistently, however, it is automated by Kayobe.
+
+I went through [kayobe's documentation](https://docs.openstack.org/kayobe/latest/deployment.html), and found a [youtube tutorial](https://www.youtube.com/watch?v=teWgCm6Aq1c), and the deployment looks to be much more complex than kolla-ansible, which is frustrating to discover. 
+
+Despite Kolla-ansible's claims of creating a bridge interface and virtual ethernet's persistently being "non-trivial", I think they are easier to set up than the alternative options available me.
