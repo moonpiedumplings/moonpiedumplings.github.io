@@ -714,8 +714,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>But this isn’t good enough for me. <code>ip</code> is not persistent (although it is scriptable, and I can rerun every boot), unlike NetworkManager configurations.</p>
 <p>How can I create a veth interface using networkmanager?</p>
 <p>I did some searching around, and it seems like at some point, <a href="https://networkmanager.dev/blog/networkmanager-1-30/">networkmanager added this option</a>. To create a veth interface, you must set the property, veth.peer when you create an interface.</p>
-<p>So like so (currently untested)</p>
-<p><code>nmcli con add type ethernet ifname veth0 con-name veth0 --set veth.peer veth1</code></p>
+<p>So like so (tested and working)</p>
+<p><code>nmcli con add type ethernet ifname veth0 con-name veth0 veth.peer veth1</code></p>
 <p>However, I am still confused. The docs make it unclear: Do I give neutron a veth to use for it’s purposes, and use the bridge for network access, or do I give it the bridge, and use the veth created on the bridge to get internet connectivity for myself?</p>
 <p>Based on the earlier linked devstack article, it looks like it’s not a linux bridge that’s created, but a openvswitch bridge that’s created, and then something akin to a veth is given to the host device to use for normal networking. However, kolla-ansible doesn’t seem to make this kind of setup too easy…</p>
 <p>I did some testing, and I was able to add a macvtap interface on a veth interface.</p>
@@ -746,6 +746,24 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>Based on the <a href="https://docs.openstack.org/kolla-ansible/latest/reference/networking/neutron.html#openvswitch-ml2-ovs">kolla docs</a> and the <a href="https://github.com/openstack/kolla-ansible/blob/master/etc/kolla/globals.yml#L161">git repo</a>, it seems like kolla-ansible does support linuxbridge.</p>
 <p>So I have two options: nested bridges, or setting up the main bridge and giving it to openstack, or somehow configuring the main openstack bridge in the middle of the install. I could modify the ansible playbooks to add the necessary veth interfaces in the middle of the install, but the issue is that kolla-ansible deploys everything in docker, and from a cursory look through, I can’t immediately figure out how to configure stuff outside the docker containers.</p>
 <p>The next thing I will try is having a macvtap interface be a port of a bridge, as I haven’t tried that yet. If it works, I can play with the bridge, and see if I can do the veth interface trick, but rather than on a normal bridge, on a bridge that’s on a macvtap interface.</p>
+<p>I did further testing with macvtap. On a debian libvirt virtual machine, using the NAT networking in order to make testing easy, I created a a macvtap interface and then plugged it into a bridge. However, it sat at “configuring ip” forever. But, if I manually assigned it an ip, then I could access it remotely, like from the host machine, from the bridges new ip, but I couldn’t do the reverse. Ping and curl, when asked to use that interface, didn’t work.</p>
+<p>I am wondering if this is a firewall issue. Maybe packet forwarding by sysctl or iptables isn’t enabled?</p>
+<p>I attempted to add a veth interface to the bridge that has macvtap as a port. Same as the bridge, dhcp and auto configuring ip didn’t work, but I could give it what I believed to be a static ip — except I couldn’t access this static ip, or send stuff through it.</p>
+<p>A bridge under macvtap doesn’t appear to work fully.</p>
+<p>What about a bridge under a bridge? I created a bridge, plugged a veth into it, and made the veth on the other end a port of a new bridge. Rather than let it sit on “configuring ip”, I gave it a static ip. Same issue… until I ran:</p>
+<pre><code>root@debian:/home/moonpie# iptables -I DOCKER-USER -j ACCEPT
+root@debian:/home/moonpie# curl google.com --interface bridge1
+&lt;HTML&gt;&lt;HEAD&gt;&lt;meta http-equiv="content-type" content="text/html;charset=utf-8"&gt;
+&lt;TITLE&gt;301 Moved&lt;/TITLE&gt;&lt;/HEAD&gt;&lt;BODY&gt;
+&lt;H1&gt;301 Moved&lt;/H1&gt;
+The document has moved
+&lt;A HREF="http://www.google.com/"&gt;here&lt;/A&gt;.
+&lt;/BODY&gt;&lt;/HTML&gt;
+root@debian:/home/moonpie# </code></pre>
+<p>In this case, bridge0 is my primary bridge, and bridge1 is the “bridge under the bridge”. I added an iptables rule to accept EVERYTHING, and it worked, making me think that the firewall is the issue for macvtap/lan as well.</p>
+<p>I attempted to create a veth interface attached to the bridge interface, and I was suprised to see that it already got it’s own public ip. So apparently, it was iptables getting in the way. However, an iptables policy of “literally accept everything” isn’t very secure, so I need to isolate the necessary rules to have a nested bridge work.</p>
+<p>I am guessing that it’s probably something related to packet forwarding, and I need to configure iptables to happily send the packets from a difference ip through the main bridge without touching them.</p>
+<p>Alright, so after creating a macvtap interface, I realize something: it can send requests out, but I can’t actually access it.</p>
 
 
 </section>
