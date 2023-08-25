@@ -638,7 +638,56 @@ I went through [kayobe's documentation](https://docs.openstack.org/kayobe/latest
 
 Despite Kolla-ansible's claims of creating a bridge interface and virtual ethernet's persistently being "non-trivial", I think they are easier to set up than the alternative options available me.
 
-Or alternatively, I could switch to [openstack-ansible](https://docs.openstack.org/project-deploy-guide/openstack-ansible/latest/).
+Both [openstack-ansible](https://docs.openstack.org/project-deploy-guide/openstack-ansible/latest/), and kayobe, simply aren't as well documented. So it's back to networking.
 
 
-I've did a little bit of research into openstack 
+I found a [useful article from Red Hat](https://developers.redhat.com/blog/2018/10/22/introduction-to-linux-interfaces-for-virtual-networking), which is a very good overview of what virtual network interfaces I have available to me on a modern linux sysytem. 
+
+The two that it looks like I need to pick, are either macvlan, or bridge mode. Both of those modes allow you to create virtual ethernet interfaces
+
+Because Rocky Linux uses networkmanager, I will use the nmcli tool to do stuff. 
+
+```{.default}
+nmcli connection add type macvlan dev enp1s0 mode bridge tap yes ifname macvtap0
+....
+
+
+ip a
+....
+4: macvtap0@enp1s0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq_codel state UP group default qlen 500
+    link/ether 56:19:3c:7a:b7:e5 brd ff:ff:ff:ff:ff:ff
+    inet 192.168.122.78/24 brd 192.168.122.255 scope global dynamic noprefixroute macvtap0
+       valid_lft 3344sec preferred_lft 3344sec
+    inet6 fe80::2c2:9892:c942:1fec/64 scope link noprefixroute 
+       valid_lft forever preferred_lft forever
+```
+
+This simply creates a device and all, which is able to get ip's from the external world, and in this case, the parent ethernet interface can still be used normally. 
+
+
+You can disable automatic configuration of ipv4/v6 with
+
+```{.default}
+nmcli connection modify macvlan-macvtap0 ipv6.method "disabled"
+nmcli connection modify macvlan-macvtap0 ipv4.method "disabled"
+```
+
+Which I will probably need, as I won't be paying for another ipv4 address. 
+
+The nice thing about using NetworkManager is that configuration using NetworkManager is persistent across reboots. Although I don't want to jump to conclusions, it's possible that "non-trivial to set up in a persistent manner" is based on older information.
+
+I further expermimented with macvlan. Since openstack will probably be doing more advanced networking, I attempted to create another macvtap device with the parent being the already existing macvtap device. It got created, but it didn't get internet access, nor did it automatically get it's own ip address.  I don't know what this means when it comes to how openstack neutron will interact with it, as neutron may want to do something like that. 
+
+I found a [wordpress blogpost](https://desertislandit.wordpress.com/2016/02/08/neutron-a-flat-network-in-a-single-node-single-nic-openstack-environment-kilo-on-ubuntu-14-0-4/) [archive](https://web.archive.org/web/20230824205310/https://desertislandit.wordpress.com/2016/02/08/neutron-a-flat-network-in-a-single-node-single-nic-openstack-environment-kilo-on-ubuntu-14-0-4/). In this blog, someone uses the openvswitch to create a bridge, in the necessary setup for neutron to be able to do stuff.
+
+Based on what that setup looks like, it doesn't look like neutron is given an interface that is a slave to the bridge, but it looks like an interface which is under the bridge is created for my machine to use normally, while neutron consumes the bridge itself for usage and creation of more virtual interfaces. However, this guide is for deploying openstack neutron on bare metal, and kolla-ansible works by deploying in docker containers. 
+
+
+I found [another relevant doc](https://docs.openstack.org/project-deploy-guide/openstack-ansible/newton/app-config-test.html) on the openstack website, about using creating an all in one node using vlan's, bridge interfaces. If I can figure out how do do this in networkmanager, I think it will actually work
+
+
+The eth0.10 format creates a tagged vlan interface. 
+
+
+I found a relevant document [devstack with a single NIC](https://docs.openstack.org/devstack/latest/guides/neutron.html). Devstack is a way of testing openstack for development purposes and it seems that they've anticipated that people deploy openstack from devices like a laptop, which only have one NIC. Their method involves using Open vSwitch to create a bridge, making the main ethernet interface a slave to the bridge, and then configuring the bridge accordingly, giving the new slave an ip address, and using that. 
+
