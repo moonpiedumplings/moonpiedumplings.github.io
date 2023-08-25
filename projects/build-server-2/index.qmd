@@ -717,9 +717,9 @@ How can I create a veth interface using networkmanager?
 
 I did some searching around, and it seems like at some point, [networkmanager added this option](https://networkmanager.dev/blog/networkmanager-1-30/). To create a veth interface, you must set the property, veth.peer when you create an interface. 
 
-So like so (currently untested)
+So like so (tested and working)
 
-`nmcli con add type ethernet ifname veth0 con-name veth0 --set veth.peer veth1`
+`nmcli con add type ethernet ifname veth0 con-name veth0 veth.peer veth1`
 
 However, I am still confused. The docs make it unclear: Do I give neutron a veth to use for it's purposes, and use the bridge for network access, or do I give it the bridge, and use the veth created on the bridge to get internet connectivity for myself? 
 
@@ -754,6 +754,7 @@ So the next test is to see if I can put a bridge interface on a veth interface. 
 
 I attempted to add a bridge with the veth1 interface as a port, but the bridge sits forever on "configuring ip". 
 
+
 So based on this experimentation, it seems as if that linux bridge is used as the main one. 
 
 
@@ -768,3 +769,34 @@ So I have two options: nested bridges, or setting up the main bridge and giving 
 
 The next thing I will try is having a macvtap interface be a port of a bridge, as I haven't tried that yet. If it works, I can play with the bridge, and see if I can do the veth interface trick, but rather than on a normal bridge, on a bridge that's on a macvtap interface. 
 
+
+I did further testing with macvtap. On a debian libvirt virtual machine, using the NAT networking in order to make testing easy, I created a a macvtap interface and then plugged it into a bridge. However, it sat at "configuring ip" forever. But, if I manually assigned it an ip, then I could access it remotely, like from the host machine, from the bridges new ip, but I couldn't do the reverse. Ping and curl, when asked to use that interface, didn't work. 
+
+I am wondering if this is a firewall issue. Maybe packet forwarding by sysctl or iptables isn't enabled?
+
+I attempted to add a veth interface to the bridge that has macvtap as a port. Same as the bridge, dhcp and auto configuring ip didn't work, but I could give it what I believed to be a static ip — except I couldn't access this static ip, or send stuff through it. 
+
+A bridge under macvtap doesn't appear to work fully.
+
+What about a bridge under a bridge? I created a bridge, plugged a veth into it, and made the veth on the other end a port of a new bridge. Rather than let it sit on "configuring ip", I gave it a static ip. Same issue... until I ran:
+
+
+```
+root@debian:/home/moonpie# iptables -I DOCKER-USER -j ACCEPT
+root@debian:/home/moonpie# curl google.com --interface bridge1
+<HTML><HEAD><meta http-equiv="content-type" content="text/html;charset=utf-8">
+<TITLE>301 Moved</TITLE></HEAD><BODY>
+<H1>301 Moved</H1>
+The document has moved
+<A HREF="http://www.google.com/">here</A>.
+</BODY></HTML>
+root@debian:/home/moonpie# 
+```
+
+In this case, bridge0 is my primary bridge, and bridge1 is the "bridge under the bridge". I added an iptables rule to accept EVERYTHING, and it worked, making me think that the firewall is the issue for macvtap/lan as well. 
+
+I attempted to create a veth interface attached to the bridge interface, and I was suprised to see that it already got it's own public ip. So apparently, it was iptables getting in the way. However, an iptables policy of "literally accept everything" isn't very secure, so I need to isolate the necessary rules to have a nested bridge work. 
+
+I am guessing that it's probably something related to packet forwarding, and I need to configure iptables to happily send the packets from a difference ip through the main bridge without touching them. 
+
+Alright, so after creating a macvtap interface, I realize something: it can send requests out, but I can't actually access it. 
