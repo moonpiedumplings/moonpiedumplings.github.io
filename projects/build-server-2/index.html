@@ -700,6 +700,52 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>I found <a href="https://docs.openstack.org/project-deploy-guide/openstack-ansible/newton/app-config-test.html">another relevant doc</a> on the openstack website, about using creating an all in one node using vlan’s, bridge interfaces. If I can figure out how do do this in networkmanager, I think it will actually work</p>
 <p>The eth0.10 format creates a tagged vlan interface.</p>
 <p>I found a relevant document <a href="https://docs.openstack.org/devstack/latest/guides/neutron.html">devstack with a single NIC</a>. Devstack is a way of testing openstack for development purposes and it seems that they’ve anticipated that people deploy openstack from devices like a laptop, which only have one NIC. Their method involves using Open vSwitch to create a bridge, making the main ethernet interface a slave to the bridge, and then configuring the bridge accordingly, giving the new slave an ip address, and using that.</p>
+<p>I experimented with bridges. Using cockpit’s networkmanager configuration allows you to seamlessly create a bridge which you can still use as a normal ethernet interface for some reason. It even preserves existing ip configuration. But gives me an unanswered question: If bridges are more featureful by default, and can also be used for normal connectivity, why not <em>always</em> use a bridge? More features are better, right?</p>
+<p>Anyway, I was able to create a veth pair, enslave one to the bridge, and then the nonenslaved veth interface could be used as a normal ethernet interface.</p>
+<p>Steps:</p>
+<p>Use cockpit-networkmanager to create a bridge, and add the ethernet interface as a port.</p>
+<div class="sourceCode" id="cb30"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a>sudo ip link add veth0 type veth peer name veth1</span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>sudo ip link set veth0 master br0</span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a>sudo ip link set veth0 up</span>
+<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a>sudo ip link set veth1 up</span>
+<span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a>sudo nmcli connection add type ethernet ifname veth1 con-name veth1</span>
+<span id="cb30-6"><a href="#cb30-6" aria-hidden="true" tabindex="-1"></a>sudo nmcli connection up veth1</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>And then that interface can be used normally. It got it’s own ip via dhcp from my router, and now my computer’s ethernet interface has two ip’s.</p>
+<p>But this isn’t good enough for me. <code>ip</code> is not persistent (although it is scriptable, and I can rerun every boot), unlike NetworkManager configurations.</p>
+<p>How can I create a veth interface using networkmanager?</p>
+<p>I did some searching around, and it seems like at some point, <a href="https://networkmanager.dev/blog/networkmanager-1-30/">networkmanager added this option</a>. To create a veth interface, you must set the property, veth.peer when you create an interface.</p>
+<p>So like so (currently untested)</p>
+<p><code>nmcli con add type ethernet ifname veth0 con-name veth0 --set veth.peer veth1</code></p>
+<p>However, I am still confused. The docs make it unclear: Do I give neutron a veth to use for it’s purposes, and use the bridge for network access, or do I give it the bridge, and use the veth created on the bridge to get internet connectivity for myself?</p>
+<p>Based on the earlier linked devstack article, it looks like it’s not a linux bridge that’s created, but a openvswitch bridge that’s created, and then something akin to a veth is given to the host device to use for normal networking. However, kolla-ansible doesn’t seem to make this kind of setup too easy…</p>
+<p>I did some testing, and I was able to add a macvtap interface on a veth interface.</p>
+<div class="sourceCode" id="cb31"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a>nmcli connection add type macvlan dev veth1 mode bridge tap yes ifname macvtap0 </span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>Connection 'macvlan-macvtap0' (d2ea3d24-f831-4508-b2cf-c448e64afe2a) successfully added.</span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a>[moonpie@cachyos-x8664 moonpiedumplings.github.io]$ ip a</span>
+<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a>... irrelevant stuff omitted. </span>
+<span id="cb31-5"><a href="#cb31-5" aria-hidden="true" tabindex="-1"></a>7: macvtap0@veth1: &lt;BROADCAST,MULTICAST,UP,LOWER_UP&gt; mtu 1500 qdisc fq_codel state UP group default qlen 500</span>
+<span id="cb31-6"><a href="#cb31-6" aria-hidden="true" tabindex="-1"></a>    link/ether 66:4b:2e:a7:22:f2 brd ff:ff:ff:ff:ff:ff</span>
+<span id="cb31-7"><a href="#cb31-7" aria-hidden="true" tabindex="-1"></a>    inet 192.168.17.251/24 brd 192.168.17.255 scope global dynamic noprefixroute macvtap0</span>
+<span id="cb31-8"><a href="#cb31-8" aria-hidden="true" tabindex="-1"></a>       valid_lft 86395sec preferred_lft 86395sec</span>
+<span id="cb31-9"><a href="#cb31-9" aria-hidden="true" tabindex="-1"></a>    inet6 fe80::5541:1541:5340:ebbc/64 scope link noprefixroute </span>
+<span id="cb31-10"><a href="#cb31-10" aria-hidden="true" tabindex="-1"></a>       valid_lft forever preferred_lft forever</span>
+<span id="cb31-11"><a href="#cb31-11" aria-hidden="true" tabindex="-1"></a>[moonpie@cachyos-x8664 moonpiedumplings.github.io]$ curl google.com --interface macvtap0</span>
+<span id="cb31-12"><a href="#cb31-12" aria-hidden="true" tabindex="-1"></a>&lt;HTML&gt;&lt;HEAD&gt;&lt;meta http-equiv="content-type" content="text/html;charset=utf-8"&gt;</span>
+<span id="cb31-13"><a href="#cb31-13" aria-hidden="true" tabindex="-1"></a>&lt;TITLE&gt;301 Moved&lt;/TITLE&gt;&lt;/HEAD&gt;&lt;BODY&gt;</span>
+<span id="cb31-14"><a href="#cb31-14" aria-hidden="true" tabindex="-1"></a>&lt;H1&gt;301 Moved&lt;/H1&gt;</span>
+<span id="cb31-15"><a href="#cb31-15" aria-hidden="true" tabindex="-1"></a>The document has moved</span>
+<span id="cb31-16"><a href="#cb31-16" aria-hidden="true" tabindex="-1"></a>&lt;A HREF="http://www.google.com/"&gt;here&lt;/A&gt;.</span>
+<span id="cb31-17"><a href="#cb31-17" aria-hidden="true" tabindex="-1"></a>&lt;/BODY&gt;&lt;/HTML&gt;</span>
+<span id="cb31-18"><a href="#cb31-18" aria-hidden="true" tabindex="-1"></a>[moonpie@cachyos-x8664 moonpiedumplings.github.io]$ </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Putting a macvtap interface on a veth interface shows that veth interfaces are more versatile than macvtap interfaces, able to do things like allocate more ip address to sub interfaces.</p>
+<p>So the next test is to see if I can put a bridge interface on a veth interface. If I can put a bridge interface on a veth interface, than openstack neutron can put a bridge interface on a veth interface, meaning I can simply give neutron a veth to consume.</p>
+<p>I attempted to add a bridge with the veth1 interface as a port, but the bridge sits forever on “configuring ip”.</p>
+<p>So based on this experimentation, it seems as if that linux bridge is used as the main one.</p>
+<p>There doesn’t appear to be a way to use an existing linux bridge as neutron’s interface, at least not with kolla-ansible. But this does give me a funny idea: what if I install kolla-ansible, lose network connectivity, and then use VNC access to the VPS to finish the configuration manually?</p>
+<p>I don’t think this would work though. I can’t guarantee that network connectivity will be maintained for the entirity of the setup, and if the connection was broken halfway through, then the entire thing could shatter.</p>
+<p>Based on the <a href="https://docs.openstack.org/kolla-ansible/latest/reference/networking/neutron.html#openvswitch-ml2-ovs">kolla docs</a> and the <a href="https://github.com/openstack/kolla-ansible/blob/master/etc/kolla/globals.yml#L161">git repo</a>, it seems like kolla-ansible does support linuxbridge.</p>
+<p>So I have two options: nested bridges, or setting up the main bridge and giving it to openstack, or somehow configuring the main openstack bridge in the middle of the install. I could modify the ansible playbooks to add the necessary veth interfaces in the middle of the install, but the issue is that kolla-ansible deploys everything in docker, and from a cursory look through, I can’t immediately figure out how to configure stuff outside the docker containers.</p>
+<p>The next thing I will try is having a macvtap interface be a port of a bridge, as I haven’t tried that yet. If it works, I can play with the bridge, and see if I can do the veth interface trick, but rather than on a normal bridge, on a bridge that’s on a macvtap interface.</p>
 
 
 </section>
