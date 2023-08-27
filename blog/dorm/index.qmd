@@ -1,0 +1,76 @@
+---
+title: "Getting situated in my dorms"
+description: ""
+date: "2023-78-27"
+categories: [linux]
+execute:
+  freeze: false
+---
+
+For my college, I am going to California State University, Northridge (CSUN). In addition to bringing along normal supplies, I also brought my homelab along. 
+
+![](https://media.discordapp.net/attachments/1084930216314556476/1145222722616578148/IMG_20230826_220529.jpg)
+
+On the right, is a desktop comuputer, which would be the server I am using for my homelab things.
+
+On top of that, is my router, which I have configured to wireguard vpn into a VPS I am renting. In addition to that, the router will connect via ethernet to campus internet, and then give me internet, which I have found to be suprisingly faster than accessing campus wifi via internet. 
+
+
+To the left, is my laptop, which I have "docked" there. It connects up to my monitor and keyboard:
+
+![](https://media.discordapp.net/attachments/1084930216314556476/1145222722922745896/IMG_20230826_220522.jpg)
+
+
+However, the ethernet isn't currently activated. Apparently, you have to submit a maintenence request for them to turn it on. And since the maintenence workers don't work on weekends, I have to wait until monday. 
+
+One thing that would really suck is if it wasn't just the wifi that used eduroam to authenticate, but also the ethernet. 
+
+Eduroam wifi requires special tools to authenticate, and it's possible that my router may not have these tools installed. 
+
+I visited <https://test-ipv6.com>  in order to test ipv6 networking:
+
+![](https://media.discordapp.net/attachments/749116247245062164/1145420511581573210/image.png)
+
+I did some futher testing. Both my phone, my laptop, and my other laptop had different public ip addresses. Except they weren't truly public:
+
+```
+[moonpie@cachyos-x8664 moonpiedumplings.github.io]$ nmap -sV 130.166.192.250
+Starting Nmap 7.94 ( https://nmap.org ) at 2023-08-27 11:10 PDT
+Note: Host seems down. If it is really up, but blocking our ping probes, try -Pn
+Nmap done: 1 IP address (0 hosts up) scanned in 3.07 seconds
+[moonpie@cachyos-x8664 moonpiedumplings.github.io]$ nmap -Pn 130.166.192.250
+Starting Nmap 7.94 ( https://nmap.org ) at 2023-08-27 11:10 PDT
+sits here forever
+```
+
+It seems that, despite the machines having public ip addresses, there is a a firewall in place to prevent any access from the external world. So it isn't truly a "public" ip address. 
+
+The output of `ip a` agrees with this. 
+
+```
+[moonpie@cachyos-x8664 ~]$ ip a
+... extraneous stuff omitted for brevity
+...
+3: wlan0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default qlen 1000
+    link/ether 4c:d5:77:2d:b2:6d brd ff:ff:ff:ff:ff:ff
+    inet 10.40.66.133/20 brd 10.40.79.255 scope global dynamic noprefixroute wlan0
+       valid_lft 26229sec preferred_lft 26229sec
+    inet6 fe80::e25c:14be:fd65:8944/64 scope link noprefixroute 
+       valid_lft forever preferred_lft forever
+```
+
+So despite having private ip addresses, each and every ip address maps to a public ip address.
+
+Apparently the whole of [130.166.0.0/16](https://www.whois.com/whois/130.166.0.0) is owned by CSUN. 
+
+This is honestly a tragedy. Entire countries don't have ipv4, only v6 because the US hoards v4 addresses, like in this case, what could be one or a few NAT's is instead an ip address for every device.
+
+
+As for speed: 
+
+![](https://media.discordapp.net/attachments/749116247245062164/1145419395548598433/image.png)
+
+Pretty good, but it's 11 AM when I did this. That's more than double the speeds I was seeing last night, something around 110 down and 20 up. I may rerun the test again at a more congested time just to make sure. 
+
+
+Overall, the setup is niceish, but not having ethernet working immediately is frustrating. 
