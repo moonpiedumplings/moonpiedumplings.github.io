@@ -1,0 +1,77 @@
+---
+title: "The CSUN game room has pretty locked down computers..."
+description: "A sequel to my adventures on a cruise ship"
+date: "2023-6-21"
+categories: [windows, cybersecurity]
+execute:
+  freeze: auto
+---
+
+My first class at Cal State Northridge (CSUN) happened today.
+
+It was pretty exciting, but after class, I wandered around to stave off boredom. I ended up finding the [CSUN game room](https://www.csun.edu/src/games-room), which was a pretty sick setup. Although one side was a game room with a few pool tables and other table games, and beyond that, couches and game consoles, the other side was setup similar to the [computer cafe's](https://en.wikipedia.org/wiki/PC_bang) which are still popular in South Korea. 
+
+Obviously I needed to asses their security. Because of my [experience with the cruise ship computers](../cruise-ship-computers/), I somewhat knew what I needed to do. The windows UI on the machines in the CSUN game room, is locked down. 
+
+Rather than the normal window's interface, it was a proprietary interface specially dedicated to games. I could not even open a browser. 
+
+In addition to that, none of the keyboard shortcuts worked. Windows + R (run dialog). Or Windows + E (explorer).
+
+So similar to the cruise ships, my initial goal was to restart the windows UI. For some strange reason, the windows UI is located under the program explorer.exe, which is the same program as the filebrowser. On the cruise ship, finding and launching this program is how I restarted the windows UI. 
+
+However, I quickly discovered something interesting. When launching discord through the locked down UI, the edge browser would launch for half a second, and then disappear, the tab closing itself. I launched a new tab before it closed, and edge stayed open...
+
+
+Once edge was open, the first thing I tried was chromium's Control + O open file dialog. 
+
+However, I couldn't open things, and more interestingly, the right click, and any other methods of accessing the context menu I tried, were blocked. 
+
+![](https://media.discordapp.net/attachments/1145897518270517291/1145898301032501358/AIL4fc_t_UdiZErKWvs9V5pkh38GP9rMPKZJBQzB5IpeA4UQVR6Z95iY2rHtGl8YSu7HEEZZt9b8QqIRVY7eEKAnf6VWHHIeu07hCVfE1754XbNmZxzvHMXtc6udDudz5cmfwN08MI45gWd7_mVi9a6SonX4nUYGjF9wE8edCBkT8R9z73vjZC9SZIRgCaHMe1WgKMe4Zybsu3YO0Nx5WTN4ucjQTVEfGSkWkt1utbVhTrI2yto6uBkFMKL42nqjJYSAIYR4hROEtefRTo_6M3q9Dihfh1KKIaRHfXnVWaYwwqpV3tITMNDccFO7GO_qAoSAvCEDeizkUS1N82sfN9qhODzPoVrKKO_DUAoU1I9VNaBK0g9dgGzggLFuwx7PGGpIVBoSSxVZpgXOcBsEiOFUYC5nwFD90WLFin8Bhcni-Qh9RrpUt_AthR4zOrgoL1eiDY-uU30VO0cyyBmroNOKbO9ca45N9SoiZWX09H3MKp89tZN4I5vh78JY..png)
+
+
+So I tried to download another file browser. Blocked:
+
+![](https://media.discordapp.net/attachments/1145897518270517291/1145898644642484284/AIL4fc_O5NomLeCXnydmTtLdmezKLzP75FuMdYnHSuD31jjZcnYb-DqOOD5apK7FdJhWY36cZm7H1nmIP8UalRPjKOoP8hHULeWlJnVL3Hw_XjpewJnT1RDpE7t5Ytu1RoPuj3tAQi5ULoYOg9DGeU52hUYpX7RSHj5GRzK9oLftc7DUYYJKYWjQ12M5ccFTjcH41DOBMgH_oDOoWkxj2nvdIkKooNfnvI-unpIKTEIGED-KCDtEr8EkGFmPuZy4Cod0OsgJdrSAMJTjOguYqznoP10dRBcTnZpYeeXGai6PfiRzzzkaZFCVDe0Rx9LX6PzBjpgAEaNjMsFbcMafVp_ShGwVEeosrsMgNbJBjA426q_6UWAflJdSohLQV28oypsnaHQngst4pwayaPR6oRMVAdYhqlo8Tx2qAEPUk4ZMqeog5yEVX1NTfwLTR_6Zy5qlBzaMF5JVNkUFCO7tKtHifBqFyBQc8s5QYjxgl4txGhDbyP3lJ6HvS79b..png)
+
+But interesting, I could click the "open downloads folder" and get the proper windows file browser open. In this file browser, I could simply single click on applications to open them. 
+
+
+I located explorer.exe, the program which launched the windows UI on the cruise ship computers, and...
+
+![](https://media.discordapp.net/attachments/1145897518270517291/1145904889935962304/AIL4fc9ofWb0xdlHoF1s2IjUWf95XdaFI6k3TBqNgbySg-w0coa1eqFnADRrR0d-9m9NPruhi1CLplD2rSyBfIoVFcuM_NEdzmJ9_TZ7SbnUqCUfDjiEA6ut5MER7x4Pa2PzdadRhSs-1gDRvUXmDae347OfPFavXATHIZMyvObc16wvoEX2cPXL0wz5sA6nptI3I8pbDIPxP0hifIKzU3LMUvu9rsRMnPHRJspyrEGiKrG-FMU9za4JYJ2yQvGSWt9mNzTtxh8gXDcNKqKjj2zADnJDB-nFij3NAhhsUF-HjoTAvRPoBigKhjypkjaH8Id7NgbmTV4UHMMCm8ANOIXmi6a30IZOVhZQnHvwZmy9yOUhlJKyQTnBKkiszGZVZ1C23u8x-9bfPcfrCNm929S8_PHtmIKpb7F0lVk8F9TpKy4RLFRYGSMCHQzxcP8xBgHCNVUkluryZIubG75a9_jVbS6PisinkMl80iargQOsNhHDgsmNqGe2oSWv..png)
+
+
+For whatever reason, launching the explorer.exe program simply results in another instance of the filebrowser launching, rather than the windows UI launching. So I decided to try some other stuff.
+
+
+![](https://media.discordapp.net/attachments/1145897518270517291/1145899637899808798/AIL4fc98jpQGgHr4PP0h4xyHlIpMUhFTqbFKr3-hiek0hMcgCGC763GgqUM7g3mI0EVquELg6fP7Gt9dlZc_XGQ5SdOWo1NDt9iio5jMu92lx3Ss1IKI47JBKWG9jhVLqumIyhBB4lOpYE0eq7fLpT9GZLsyP4whc8ZOnPgL40CnthFdhHqgHzlnknJ7iUB8aGIpJZu3CAHFQO4IqMKZw7n9BE4-wBmHdGKZ1gJWoQ5qqSt26vKfeFb6Ts7yljShZ66V_silB5fCV-c3gns7B-I8oV9Gv14nhQA146jHaq4JGsCNAq5TmcMd84GSdYjYFBN8gK0YHJZfvFFCF-2wUkapbiYxOzFn_W59bPqM6wz1tn3IT_E-ZBJwO_-t5mJzMPdw_oIc16DMs9LfpkEYIA1Ixh-uiYb15c4Q5PiuJwJbzqoo1hXFyu4la9bgTAXWQlB6GUhUtbs9M3835ZhN_BSHmU8X3k4zw5JBf44lDVuLN_ZjKS9-jDFw4pwH..png)
+
+
+![](https://media.discordapp.net/attachments/1145897518270517291/1145900260837822525/AIL4fc-RJj9KtnYLIHmBdE8xVpPPd8oDBTO-oUXgnMcVpuukkMcJmWeEtQqg0rytLC_VC0wdO8Q0VhwXtg5QxKX9F53zEETn7U4VKefN0_yuOjzwT01tZ9FHJUes5gpnVPJtWa5iPDduQK82qMbaiduAIbrM0uy9XJd7czRszFGOKlJbVJyaIa83CIINV436BRfY7EQux5UGdRv8HhwzD-8bbWJE01fGh5dErEPf2IK4EswYq1SjadiZjK4-Wc6fmDyqkwRKO9FFwD-YAp0BEe7N9Cqa8E_cddFuA-57BYVVRQP3JReDk1aaMqRpyBp1whZcypxPd8HEX4LDTF1lKv8rsK24BWjAkYJHrmJA3A2TWRO4qTTzfi84ZLNxVij93M72o5LfAnT2yw_ZMLoMsJnzhBY0bxqpmysRl8jH4e0DF8HazP3CzyMN92YhndibUY2O-LmuW1vEBzRRZq8v1OOntxrb-Myjm-35XUEc2lXgV1onUHd_MgI7nZvz..png)
+
+I tried a few things. Powershell, command prompt, registry editor, no dice. 
+
+I went down the list of apps in `C:\Windows`, checking things out, when I found something interesting unblocked: 
+
+
+![](https://media.discordapp.net/attachments/1145897518270517291/1145900496746451024/AIL4fc9MTmcuuc7a0BIO1_mnefpdZEXsGl23HkEUX2nS3eWkWaQ7ZBL09OlI8KeA6x0KFvPpMB31tN7OrkhSPbp84gUX-1RHUIY2soxA0dIhuM3DwZFVkeMhOc77ZoLFr6zYPQgbFeTPykSYoGFhLuuZtIww7Dyx_rEfzEAVRcpbwx0DkRnECbd-qV5pHzjpRIUQ2Ov_twyLcOzzKu7uWeye2Ie3GeKk2-Rn9X2-rddfvaAKSBNUFK5513XmUx7adbFpdw8pulwlsB-C8mvJXk0P6lC6w0ZyOu8y_d7eCxk3TaX18f2wnku98V71rvnzNCccdvy79ctVvvCnpCXCaHJKuOEUw2qtxskRjcW-LNM92G00SWA6mLdebjTNmWz8ys4Kh1ULrIFVSuFd8Qhy97VyhfxpY_1S4JdI-7nQutGG6pAtp1cSpkD0y86Jc9ogCnpmCmAFeyoev20tevGFWTfF6Mi4ckcSmLVototyjN08l5LJ95HXHaJC-19i..png)
+
+The strangest thing about being able to launch this application, window's "Computer Management" app, located at compmgmt.msc is that it requies administrative privileges to simply launch. 
+
+When first bootup, the computer autologins to a default user called "User". Apparently, the default user was an administrator. 
+
+From here, I can get to "task scheduler". Because I am already an administrator for some reason, I am able to schedule tasks, which can be any abitrary thing.
+
+However, this isn't really a big deal when it comes to access of this machine itself. All these computers at this pc cafe use image based deployments, and I am presuming these images are immutable so any system changes I make would be reset the moment I log out. 
+
+However, with administrative access within the network, I could do things like a Denial-of-Service attack, by eating up bandwidth, or I could seek lateral movement through the network, if the machines aren't isolated properly. 
+
+
+There were multiple ways this kind of access could have been prevented. Why do the users logged in need administrative access? All they are doing is using discord and playing games, they don't need administrative access. 
+
+Another thing that could have been done is simply preventing me from launching compmgmt.msc, the same way powershell or cmd are prevented.
+
+And finally, they could have used a browser other than edge. The browser on that system is not intended for normal browsing, but rather it's intended for logging into your online accounts, like Discord or the video game providers. Since that's the case, why use a fully featured browser that lets you open a file browser? There exist browsers that are far more locked down, and cannot do things like browse files, only open a single webpage — perfect for this usecase. 
+
+
+
