@@ -1,0 +1,61 @@
+---
+title: "Attempting to get secure boot and bootable BTRFS snapshots"
+date: "2023-8-29"
+categories: [linux, cybersecurity]
+format:
+  html:
+    code-fold: true
+    code-summary: "Show the code"
+    code-block-background: true
+execute:
+  freeze: true
+---
+
+I've been at this for some time now, so I will document what I have done, and further steps. 
+Essentially, I am trying to do what [this person](https://wejn.org/2021/09/fixing-grub-verification-requested-nobody-cares/) [archive](https://web.archive.org/web/20230609152526/https://wejn.org/2021/09/fixing-grub-verification-requested-nobody-cares/) has done. 
+
+They go more into depth on the setup that we are both using, but essentially, I the only unencrypted part of my system is the grub efi binary. Normally, the kernels and kernel modules are also left unencrypted, and because of that, they must be signed in order to prevent an attacker from modifying them on the hard drive, either by removing the hard drive, or booting another operating system, like by a USB drive. Signing is a process that uses complex math to ensure that the computer can verify the authenticity of a file. 
+
+Normally, since the kernels are left unencrypted (and to cut off another avenue of attack on running systems), the kernels are signed in order to ensure that they haven't been modified. However, in my setup, since only grub is left unencrypted, it's the only thing that can be signed.
+
+But for some reason, grub still attempts to verify the kernels even when it doesn't need to. This is my struggle of getting it to *not* do that. 
+
+The first thing I did sign grub. I followed the insturctions on the [Arch Wiki](https://wiki.archlinux.org/title/Unified_Extensible_Firmware_Interface/Secure_Boot#Assisted_process_with_sbctl). Except, rather than signing the kernels, I only signed grub. 
+
+I enabled secure boot, and reboted. Grub loaded up, and asked me for my password, but then gave me an error and put me into a rescue shell. 
+
+```
+error: prohibited by secure boot policy
+```
+
+So I did some searching around. I found someone with the same issue on the [Arch Linux BBS](https://bbs.archlinux.org/viewtopic.php?id=282076). On that page, someone (reply #4) said that an update of grub (grub version 2.06, to be specific) had a change in policy where grub would refuse to load unsigned font files when in secure mode. This is good. There have been CVE's (security vulnerabilities/issues) in the past where grub loading a malicious grub.cfg or font file can be exploited to make grub do things it's not supposed to. 
+
+Except one tiny problem: Grub stores all configuration and font files in /boot/grub, which is encrypted in my setup. An attacker would not be able to modify it, so therefore I have no need to verify it. It's actually a hassle to verify all this stuff, because they are tracked by BTRFS, and will be restored. 
+
+After some more research, I decided to install grub with the shim-lock option.
+
+But I got another error:
+
+```
+error: verification requested, but nobody cares: (cryptouid:uidhere/boot/grub/x86_64-efi/normal.mod)
+```
+
+Normal mod was not signed.
+
+Apparently, as long as secure boot it enabled, grub still attempts to verify the files. I did some searching around, before finding [this article](https://wejn.org/2021/09/fixing-grub-verification-requested-nobody-cares/), which I also linked above. They used sed (text finder and replacer) to replace some things in the grub *binary*. 
+
+```
+sed 's/SecureBoot/SecureB00t' grubx64.efi
+```
+
+Except, after I ran this command:
+
+```
+[root@lizard boot]# sbctl verify
+Verifying file database and EFI images in /boot/efi...
+✓ /boot/efi/EFI/cachyos/grubx64.efi is signed
+```
+
+The grub binary *stayed* signed. Even after modification. What? Shouldn't the grub binary being modified, break the signatures? Unless it does (I haven't rebooted yet), and it's just that the the sbctl tool doesn't check whether or not the signatures are valid. 
+
+Regardless, I can't know until I test. 
