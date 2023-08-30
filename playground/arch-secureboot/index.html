@@ -6,9 +6,9 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
-<meta name="description" content="Guides I’ve written. I keep this on the internet, so I can easily send these to people that need help.">
+<meta name="dcterms.date" content="2023-08-29">
 
-<title>Jeffrey Fonseca - Guides</title>
+<title>Jeffrey Fonseca - Attempting to get secure boot and bootable BTRFS snapshots</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -24,24 +24,22 @@ ul.task-list li input[type="checkbox"] {
 </style>
 
 
-<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
-<script src="../site_libs/quarto-nav/headroom.min.js"></script>
-<script src="../site_libs/clipboard/clipboard.min.js"></script>
-<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
-<script src="../site_libs/quarto-search/fuse.min.js"></script>
-<script src="../site_libs/quarto-search/quarto-search.js"></script>
-<meta name="quarto:offset" content="../">
-<script src="../site_libs/quarto-listing/list.min.js"></script>
-<script src="../site_libs/quarto-listing/quarto-listing.js"></script>
-<script src="../site_libs/quarto-html/quarto.js"></script>
-<script src="../site_libs/quarto-html/popper.min.js"></script>
-<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
-<script src="../site_libs/quarto-html/anchor.min.js"></script>
-<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../site_libs/quarto-html/quarto-syntax-highlighting-dark.css" rel="stylesheet" id="quarto-text-highlighting-styles">
-<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
-<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="dark">
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<script src="../../site_libs/quarto-html/quarto.js"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="dark">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -62,40 +60,9 @@ ul.task-list li input[type="checkbox"] {
     "search-label": "Search"
   }
 }</script>
-<script>
 
-  window.document.addEventListener("DOMContentLoaded", function (_event) {
-    const listingTargetEl = window.document.querySelector('#listing-listing .list');
-    if (!listingTargetEl) {
-      // No listing discovered, do not attach.
-      return; 
-    }
 
-    const options = {
-      valueNames: ['listing-date','listing-title','listing-author',{ data: ['index'] },{ data: ['categories'] },{ data: ['listing-date-sort'] },{ data: ['listing-title-sort'] }],
-      
-      searchColumns: ["listing-date","listing-title","listing-author"],
-    };
-
-    window['quarto-listings'] = window['quarto-listings'] || {};
-    window['quarto-listings']['listing-listing'] = new List('listing-listing', options);
-
-    if (window['quarto-listing-loaded']) {
-      window['quarto-listing-loaded']();
-    }
-  });
-
-  window.addEventListener('hashchange',() => {
-    if (window['quarto-listing-loaded']) {
-      window['quarto-listing-loaded']();
-    }
-  })
-  </script>
-
-  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
-  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
-
-<link rel="stylesheet" href="../styles.css">
+<link rel="stylesheet" href="../../styles.css">
 </head>
 
 <body class="nav-fixed">
@@ -105,7 +72,7 @@ ul.task-list li input[type="checkbox"] {
     <nav class="navbar navbar-expand-lg navbar-dark ">
       <div class="navbar-container container-fluid">
       <div class="navbar-brand-container">
-    <a class="navbar-brand" href="../index.html">
+    <a class="navbar-brand" href="../../index.html">
     <span class="navbar-title">Jeffrey Fonseca</span>
     </a>
   </div>
@@ -116,23 +83,23 @@ ul.task-list li input[type="checkbox"] {
           <div class="collapse navbar-collapse" id="navbarCollapse">
             <ul class="navbar-nav navbar-nav-scroll me-auto">
   <li class="nav-item">
-    <a class="nav-link" href="../index.html" rel="" target="">
+    <a class="nav-link" href="../../index.html" rel="" target="">
  <span class="menu-text">Home</span></a>
   </li>  
   <li class="nav-item">
-    <a class="nav-link" href="../projects/index.html" rel="" target="">
+    <a class="nav-link" href="../../projects/index.html" rel="" target="">
  <span class="menu-text">Projects</span></a>
   </li>  
   <li class="nav-item">
-    <a class="nav-link" href="../blog/index.html" rel="" target="">
+    <a class="nav-link" href="../../blog/index.html" rel="" target="">
  <span class="menu-text">Blog</span></a>
   </li>  
   <li class="nav-item">
-    <a class="nav-link" href="../playground/index.html" rel="" target="">
+    <a class="nav-link" href="../../playground/index.html" rel="" target="">
  <span class="menu-text">Playground</span></a>
   </li>  
   <li class="nav-item">
-    <a class="nav-link active" href="../guides/index.html" rel="" target="" aria-current="page">
+    <a class="nav-link" href="../../guides/index.html" rel="" target="">
  <span class="menu-text">Guides</span></a>
   </li>  
 </ul>
@@ -150,144 +117,67 @@ ul.task-list li input[type="checkbox"] {
     </nav>
 </header>
 <!-- content -->
-<header id="title-block-header" class="quarto-title-block default page-columns page-full">
-  <div class="quarto-title-banner page-columns page-full">
-    <div class="quarto-title column-page-left">
-      <h1 class="title">Guides</h1>
-                  <div>
-        <div class="description">
-          Guides I’ve written. I keep this on the internet, so I can easily send these to people that need help.
-        </div>
-      </div>
-                </div>
-  </div>
-    
-  
-  <div class="quarto-title-meta">
-
-      
-    
-      
-    </div>
-    
-  
-  </header><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-full page-navbar">
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
 <!-- sidebar -->
 <!-- margin-sidebar -->
     <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
         
-    <h5 class="quarto-listing-category-title">Categories</h5><div class="quarto-listing-category category-default"><div class="category" data-category="">All <span class="quarto-category-count">(7)</span></div><div class="category" data-category="aws">aws <span class="quarto-category-count">(1)</span></div><div class="category" data-category="devops">devops <span class="quarto-category-count">(2)</span></div><div class="category" data-category="docker">docker <span class="quarto-category-count">(1)</span></div><div class="category" data-category="ec2">ec2 <span class="quarto-category-count">(1)</span></div><div class="category" data-category="git">git <span class="quarto-category-count">(2)</span></div><div class="category" data-category="linux">linux <span class="quarto-category-count">(5)</span></div><div class="category" data-category="nginx">nginx <span class="quarto-category-count">(1)</span></div><div class="category" data-category="nix">nix <span class="quarto-category-count">(1)</span></div></div></div>
+    </div>
 <!-- main -->
-<main class="content quarto-banner-title-block column-page-left" id="quarto-document-content">
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Attempting to get secure boot and bootable BTRFS snapshots</h1>
+  <div class="quarto-categories">
+    <div class="quarto-category">linux</div>
+    <div class="quarto-category">cybersecurity</div>
+  </div>
+  </div>
 
 
 
+<div class="quarto-title-meta">
+
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">August 29, 2023</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+</header>
+
+<p>I’ve been at this for some time now, so I will document what I have done, and further steps. Essentially, I am trying to do what <a href="https://wejn.org/2021/09/fixing-grub-verification-requested-nobody-cares/">this person</a> <a href="https://web.archive.org/web/20230609152526/https://wejn.org/2021/09/fixing-grub-verification-requested-nobody-cares/">archive</a> has done.</p>
+<p>They go more into depth on the setup that we are both using, but essentially, I the only unencrypted part of my system is the grub efi binary. Normally, the kernels and kernel modules are also left unencrypted, and because of that, they must be signed in order to prevent an attacker from modifying them on the hard drive, either by removing the hard drive, or booting another operating system, like by a USB drive. Signing is a process that uses complex math to ensure that the computer can verify the authenticity of a file.</p>
+<p>Normally, since the kernels are left unencrypted (and to cut off another avenue of attack on running systems), the kernels are signed in order to ensure that they haven’t been modified. However, in my setup, since only grub is left unencrypted, it’s the only thing that can be signed.</p>
+<p>But for some reason, grub still attempts to verify the kernels even when it doesn’t need to. This is my struggle of getting it to <em>not</em> do that.</p>
+<p>The first thing I did sign grub. I followed the insturctions on the <a href="https://wiki.archlinux.org/title/Unified_Extensible_Firmware_Interface/Secure_Boot#Assisted_process_with_sbctl">Arch Wiki</a>. Except, rather than signing the kernels, I only signed grub.</p>
+<p>I enabled secure boot, and reboted. Grub loaded up, and asked me for my password, but then gave me an error and put me into a rescue shell.</p>
+<pre><code>error: prohibited by secure boot policy</code></pre>
+<p>So I did some searching around. I found someone with the same issue on the <a href="https://bbs.archlinux.org/viewtopic.php?id=282076">Arch Linux BBS</a>. On that page, someone (reply #4) said that an update of grub (grub version 2.06, to be specific) had a change in policy where grub would refuse to load unsigned font files when in secure mode. This is good. There have been CVE’s (security vulnerabilities/issues) in the past where grub loading a malicious grub.cfg or font file can be exploited to make grub do things it’s not supposed to.</p>
+<p>Except one tiny problem: Grub stores all configuration and font files in /boot/grub, which is encrypted in my setup. An attacker would not be able to modify it, so therefore I have no need to verify it. It’s actually a hassle to verify all this stuff, because they are tracked by BTRFS, and will be restored.</p>
+<p>After some more research, I decided to install grub with the shim-lock option.</p>
+<p>But I got another error:</p>
+<pre><code>error: verification requested, but nobody cares: (cryptouid:uidhere/boot/grub/x86_64-efi/normal.mod)</code></pre>
+<p>Normal mod was not signed.</p>
+<p>Apparently, as long as secure boot it enabled, grub still attempts to verify the files. I did some searching around, before finding <a href="https://wejn.org/2021/09/fixing-grub-verification-requested-nobody-cares/">this article</a>, which I also linked above. They used sed (text finder and replacer) to replace some things in the grub <em>binary</em>.</p>
+<pre><code>sed 's/SecureBoot/SecureB00t' grubx64.efi</code></pre>
+<p>Except, after I ran this command:</p>
+<pre><code>[root@lizard boot]# sbctl verify
+Verifying file database and EFI images in /boot/efi...
+✓ /boot/efi/EFI/cachyos/grubx64.efi is signed</code></pre>
+<p>The grub binary <em>stayed</em> signed. Even after modification. What? Shouldn’t the grub binary being modified, break the signatures? Unless it does (I haven’t rebooted yet), and it’s just that the the sbctl tool doesn’t check whether or not the signatures are valid.</p>
+<p>Regardless, I can’t know until I test.</p>
 
 
 
-
-
-<div class="quarto-listing quarto-listing-container-table" id="listing-listing">
-
-<table class="quarto-listing-table table">
-<thead>
-<tr>
-<th>
-Date
-</th>
-<th>
-Title
-</th>
-<th>
-Author
-</th>
-</tr>
-</thead>
-<tbody class="list">
-<tr data-index="0" data-categories="linux" data-listing-date-sort="1691366400000" data-listing-file-modified-sort="1693355703576" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="2" data-listing-title-sort="Tmux" data-listing-filename-sort="index.qmd">
-<td>
-<span class="listing-date">Aug 7, 2023</span>
-</td>
-<td>
-<a href="../guides/tmux/index.html" class="title listing-title">Tmux</a>
-</td>
-<td>
-<span class="listing-author"></span>
-</td>
-</tr>
-<tr data-index="1" data-categories="git" data-listing-date-sort="1687910400000" data-listing-file-modified-sort="1693355703576" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="4" data-listing-title-sort="Git" data-listing-filename-sort="index.qmd">
-<td>
-<span class="listing-date">Jun 28, 2023</span>
-</td>
-<td>
-<a href="../guides/git/index.html" class="title listing-title">Git</a>
-</td>
-<td>
-<span class="listing-author"></span>
-</td>
-</tr>
-<tr data-index="2" data-categories="linux" data-listing-date-sort="1686787200000" data-listing-file-modified-sort="1693355703580" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="5" data-listing-title-sort="Urestricted Wifi/Hotspot as long as you have one unlimited device" data-listing-filename-sort="index.qmd">
-<td>
-<span class="listing-date">Jun 15, 2023</span>
-</td>
-<td>
-<a href="../guides/unrestricted-tethering/index.html" class="title listing-title">Urestricted Wifi/Hotspot as long as you have one unlimited device</a>
-</td>
-<td>
-<span class="listing-author"></span>
-</td>
-</tr>
-<tr data-index="3" data-categories="nix,git" data-listing-date-sort="1686441600000" data-listing-file-modified-sort="1693355703576" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="4" data-listing-title-sort="Installing the nix package manager and how it's useful" data-listing-filename-sort="index.qmd">
-<td>
-<span class="listing-date">Jun 11, 2023</span>
-</td>
-<td>
-<a href="../guides/nix-fun/index.html" class="title listing-title">Installing the nix package manager and how it’s useful</a>
-</td>
-<td>
-<span class="listing-author"></span>
-</td>
-</tr>
-<tr data-index="4" data-categories="linux,devops,nginx" data-listing-date-sort="1677542400000" data-listing-file-modified-sort="1693355703576" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="4" data-listing-title-sort="Nginx proxy manager" data-listing-filename-sort="index.qmd">
-<td>
-<span class="listing-date">Feb 28, 2023</span>
-</td>
-<td>
-<a href="../guides/npm/index.html" class="title listing-title">Nginx proxy manager</a>
-</td>
-<td>
-<span class="listing-author"></span>
-</td>
-</tr>
-<tr data-index="5" data-categories="linux,devops" data-listing-date-sort="1676332800000" data-listing-file-modified-sort="1693355703576" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="2" data-listing-title-sort="How to get a subdomain from duckdns" data-listing-filename-sort="index.qmd">
-<td>
-<span class="listing-date">Feb 14, 2023</span>
-</td>
-<td>
-<a href="../guides/duckdns/index.html" class="title listing-title">How to get a subdomain from duckdns</a>
-</td>
-<td>
-<span class="listing-author"></span>
-</td>
-</tr>
-<tr data-index="6" data-categories="aws,ec2,docker,linux" data-listing-date-sort="1664496000000" data-listing-file-modified-sort="1693355703564" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="3" data-listing-title-sort="Setting up cockpit" data-listing-filename-sort="index.qmd">
-<td>
-<span class="listing-date">Sep 30, 2022</span>
-</td>
-<td>
-<a href="../guides/cockpit-setup/index.html" class="title listing-title">Setting up cockpit</a>
-</td>
-<td>
-<span class="listing-author"></span>
-</td>
-</tr>
-</tbody>
-
-</table>
-<div class="listing-no-matching d-none">
-No matching items
-</div>
-</div></main> <!-- /main -->
+</main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">
 window.document.addEventListener("DOMContentLoaded", function (event) {
   const toggleBodyColorMode = (bsSheetEl) => {
