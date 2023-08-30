@@ -153,6 +153,22 @@ ul.task-list li input[type="checkbox"] {
 
 </header>
 
+<div class="callout callout-style-default callout-important callout-titled">
+<div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-1-contents" aria-controls="callout-1" aria-expanded="true" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+If these steps are followed blindly, you risk compromising your security
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-1" class="callout-1-contents callout-collapse collapse show">
+<div class="callout-body-container callout-body">
+<p>Do not do what I did unless you have a similar setup to what I have, which is full disk encryption, with /boot/efi being the efi system partition, and the only unencrypted part of the system. This means that everything in /boot, including things like kernels, or grub configurations and supportive files.</p>
+</div>
+</div>
+</div>
 <p>I’ve been at this for some time now, so I will document what I have done, and further steps. Essentially, I am trying to do what <a href="https://wejn.org/2021/09/fixing-grub-verification-requested-nobody-cares/">this person</a> <a href="https://web.archive.org/web/20230609152526/https://wejn.org/2021/09/fixing-grub-verification-requested-nobody-cares/">archive</a> has done.</p>
 <p>They go more into depth on the setup that we are both using, but essentially, I the only unencrypted part of my system is the grub efi binary. Normally, the kernels and kernel modules are also left unencrypted, and because of that, they must be signed in order to prevent an attacker from modifying them on the hard drive, either by removing the hard drive, or booting another operating system, like by a USB drive. Signing is a process that uses complex math to ensure that the computer can verify the authenticity of a file.</p>
 <p>Normally, since the kernels are left unencrypted (and to cut off another avenue of attack on running systems), the kernels are signed in order to ensure that they haven’t been modified. However, in my setup, since only grub is left unencrypted, it’s the only thing that can be signed.</p>
@@ -173,7 +189,14 @@ ul.task-list li input[type="checkbox"] {
 Verifying file database and EFI images in /boot/efi...
 ✓ /boot/efi/EFI/cachyos/grubx64.efi is signed</code></pre>
 <p>The grub binary <em>stayed</em> signed. Even after modification. What? Shouldn’t the grub binary being modified, break the signatures? Unless it does (I haven’t rebooted yet), and it’s just that the the sbctl tool doesn’t check whether or not the signatures are valid.</p>
-<p>Regardless, I can’t know until I test.</p>
+<p>Regardless, I can’t know until I test, and I didn’t bother. I simmply resigned the the grub binary, but it still didn’t work.</p>
+<p>I forgot to install grub with the <code>--disable-shim-lock</code> option.</p>
+<p>Before this, I nuked the /boot/efi directory to ensure that nothing extraneous was left. For some reason, cachyos (arch based distro I am using), installs grub twice, once at /boot/efi/EFI/boot and another at /boot/efi/EFI/cachyos. Having only one grub binary further simplifies this process.</p>
+<p>So my full steps would be (requires root):</p>
+<pre><code>grub-install --target=x86_64-efi --efi-directory=/boot/efi --disable-shim-lock
+sed -i 's/boot/efi/EFI/cachyos/' grubx64.efi</code></pre>
+<p>An unorthodox grub hack, but it works.</p>
+<p>If a grub update ever breaks this, or maybe just to futureproof this, then I’ll probably just use Arch’s PKGBUILD, makepkg, and patch tools to patch the <a href="https://github.com/rhboot/grub2/blob/205b7b44bb2a7911f1e8c1ce22d66c111a4b429e/grub-core/kern/efi/sb.c#L42">grub_efi_get_secureboot function of sb.c</a> so that grub always thinks it’s not in secure boot. I think I would only need to change one line, <code>return secureboot</code>, or maybe reset the variable to what I want at the end of the function, but I’m not too familier with C code at the moment. I can read it, given context, but I’ve not written it yet.</p>
 
 
 
