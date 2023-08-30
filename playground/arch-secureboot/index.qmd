@@ -11,6 +11,11 @@ execute:
   freeze: true
 ---
 
+::: {.callout-important collapse="false"}
+## If these steps are followed blindly, you risk compromising your security
+Do not do what I did unless you have a similar setup to what I have, which is full disk encryption, with /boot/efi being the efi system partition, and the only unencrypted part of the system. This means that everything in /boot, including things like kernels, or grub configurations and supportive files. 
+:::
+
 I've been at this for some time now, so I will document what I have done, and further steps. 
 Essentially, I am trying to do what [this person](https://wejn.org/2021/09/fixing-grub-verification-requested-nobody-cares/) [archive](https://web.archive.org/web/20230609152526/https://wejn.org/2021/09/fixing-grub-verification-requested-nobody-cares/) has done. 
 
@@ -58,4 +63,19 @@ Verifying file database and EFI images in /boot/efi...
 
 The grub binary *stayed* signed. Even after modification. What? Shouldn't the grub binary being modified, break the signatures? Unless it does (I haven't rebooted yet), and it's just that the the sbctl tool doesn't check whether or not the signatures are valid. 
 
-Regardless, I can't know until I test. 
+Regardless, I can't know until I test, and I didn't bother. I simmply resigned the the grub binary, but it still didn't work.
+
+I forgot to install grub with the `--disable-shim-lock` option.
+
+Before this, I nuked the /boot/efi directory to ensure that nothing extraneous was left. For some reason, cachyos (arch based distro I am using), installs grub twice, once at /boot/efi/EFI/boot and another at /boot/efi/EFI/cachyos. Having only one grub binary further simplifies this process. 
+
+So my full steps would be (requires root):
+
+```
+grub-install --target=x86_64-efi --efi-directory=/boot/efi --disable-shim-lock
+sed -i 's/boot/efi/EFI/cachyos/' grubx64.efi
+```
+
+An unorthodox grub hack, but it works. 
+
+If a grub update ever breaks this, or maybe just to futureproof this, then I'll probably just use Arch's PKGBUILD, makepkg, and patch tools to patch the   [grub_efi_get_secureboot function of sb.c](https://github.com/rhboot/grub2/blob/205b7b44bb2a7911f1e8c1ce22d66c111a4b429e/grub-core/kern/efi/sb.c#L42) so that grub always thinks it's not in secure boot. I think I would only need to change one line, `return secureboot`, or maybe reset the variable to what I want at the end of the function, but I'm not too familier with C code at the moment. I can read it, given context, but I've not written it yet.
