@@ -3,30 +3,45 @@ title: "Automated Upgrades Inject"
 date: "2023-8-26"
 categories: [linux, cybersecurity]
 author: "Jeffrey Fonseca"
+
 format:
   html:
     code-fold: true
     code-summary: "Show the code"
     code-block-background: true
+  docx: 
+    title: "Inject 3 — Automation"
+    date: "2023-8-26"
+    author: "Jefrey Fonseca, Linux Team"
 execute:
   freeze: true
 ---
 
+Jeffrey Fonseca
+
+Linux Team
+
+8/26/2023
+
+Inject 3 — Automation
+
 Objective: Create a script or other system that automates updates, ran every 24 hours
 
 
-# Fedora
+I have created a systemd timer and unit file that run every 24 hours, designed for a variety of linux distros with different package managers.
 
-I have created a systemd timer and unit file that run every 24 hours, designed for our Fedora 38 Machine:
 
-```{.ini filename="/etc/systemd/system/dnfupdate.service"}
+When these files are placed in their respective locations, the system will run the command `bash -c 'dnf update -y && dnf upgrade -y'` daily. 
+
+
+```{.ini filename="/etc/systemd/system/autoupdate.service" .code-overflow-wrap}
 [Unit]
 Description=Dnf autoupdate service
 After=network.target
 
 [Service]
 Type=simple
-ExecStart=/bin/bash -c 'dnf update -y && dnf upgrade -y'
+ExecStart=/bin/bash -c "bash -c 'dnf update -y && dnf upgrade -y' || bash -c 'DEBIAN_FRONTEND=noninteractive apt update -y && DEBIAN_FRONTEND=noninteractive apt upgrade -y' || bash -c 'pacman -Syu --noconfirm'"
 Restart=never
 
 [Install]
@@ -34,7 +49,7 @@ WantedBy=multi-user.target
 ```
 
 
-```{.ini filename="/etc/systemd/system/dnfupdate.timer"}
+```{.ini filename="/etc/systemd/system/autoupdate.timer"}
 [Unit]
 Description=Dnf autoupdate timer.
 
@@ -46,4 +61,4 @@ Persistent=true
 WantedBy=timers.target
 ```
 
-When these files are placed in their respective locations, the system will run the command `bash -c 'dnf update -y && dnf upgrade -y'` daily. 
+
