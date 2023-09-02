@@ -1,0 +1,49 @@
+---
+title: "Automated Upgrades Inject"
+date: "2023-8-26"
+categories: [linux, cybersecurity]
+author: "Jeffrey Fonseca"
+format:
+  html:
+    code-fold: true
+    code-summary: "Show the code"
+    code-block-background: true
+execute:
+  freeze: true
+---
+
+Objective: Create a script or other system that automates updates, ran every 24 hours
+
+
+# Fedora
+
+I have created a systemd timer and unit file that run every 24 hours, designed for our Fedora 38 Machine:
+
+```{.ini filename="/etc/systemd/system/dnfupdate.service"}
+[Unit]
+Description=Dnf autoupdate service
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/bin/bash -c 'dnf update -y && dnf upgrade -y'
+Restart=never
+
+[Install]
+WantedBy=multi-user.target
+```
+
+
+```{.ini filename="/etc/systemd/system/dnfupdate.timer"}
+[Unit]
+Description=Dnf autoupdate timer.
+
+[Timer]
+OnCalendar=daily
+Persistent=true
+
+[Install]
+WantedBy=timers.target
+```
+
+When these files are placed in their respective locations, the system will run the command `bash -c 'dnf update -y && dnf upgrade -y'` daily. 
