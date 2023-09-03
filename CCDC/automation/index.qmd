@@ -17,11 +17,7 @@ execute:
   freeze: true
 ---
 
-Jeffrey Fonseca
-
 Linux Team
-
-8/26/2023
 
 Inject 3 — Automation
 
@@ -31,12 +27,12 @@ Objective: Create a script or other system that automates updates, ran every 24 
 I have created a systemd timer and unit file that run every 24 hours, designed for a variety of linux distros with different package managers.
 
 
-When these files are placed in their respective locations, the system will run the update commands of various pacakge managers. Distros unsupported by a package manager will simply fail to run for that package manager.ast 
+When these files are placed in their respective locations, the system will run the update commands of various pacakge managers. Distros unsupported by a package manager will simply fail to run for that package manager.
 
 
 ```{.ini filename="/etc/systemd/system/autoupdate.service" .code-overflow-wrap}
 [Unit]
-Description=Dnf autoupdate service
+Description=autoupdate service
 After=network.target
 
 [Service]
@@ -51,7 +47,7 @@ WantedBy=multi-user.target
 
 ```{.ini filename="/etc/systemd/system/autoupdate.timer"}
 [Unit]
-Description=Dnf autoupdate timer.
+Description=autoupgrade timer.
 
 [Timer]
 OnCalendar=daily
