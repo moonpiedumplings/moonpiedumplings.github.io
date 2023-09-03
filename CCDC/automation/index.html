@@ -194,19 +194,17 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 </header>
 
-<p>Jeffrey Fonseca</p>
 <p>Linux Team</p>
-<p>8/26/2023</p>
 <p>Inject 3 — Automation</p>
 <p>Objective: Create a script or other system that automates updates, ran every 24 hours</p>
 <p>I have created a systemd timer and unit file that run every 24 hours, designed for a variety of linux distros with different package managers.</p>
-<p>When these files are placed in their respective locations, the system will run the update commands of various pacakge managers. Distros unsupported by a package manager will simply fail to run for that package manager.ast</p>
+<p>When these files are placed in their respective locations, the system will run the update commands of various pacakge managers. Distros unsupported by a package manager will simply fail to run for that package manager.</p>
 <div class="code-with-filename">
 <div class="code-with-filename-file">
 <pre><strong>/etc/systemd/system/autoupdate.service</strong></pre>
 </div>
 <div class="sourceCode" id="cb1"><pre class="sourceCode ini code-overflow-wrap code-with-copy"><code class="sourceCode ini"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">[Unit]</span></span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="dt">Description</span><span class="ot">=</span><span class="st">Dnf autoupdate service</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="dt">Description</span><span class="ot">=</span><span class="st">autoupdate service</span></span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="dt">After</span><span class="ot">=</span><span class="st">network.target</span></span>
 <span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="kw">[Service]</span></span>
@@ -222,7 +220,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <pre><strong>/etc/systemd/system/autoupdate.timer</strong></pre>
 </div>
 <div class="sourceCode" id="cb2"><pre class="sourceCode ini code-with-copy"><code class="sourceCode ini"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">[Unit]</span></span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="dt">Description</span><span class="ot">=</span><span class="st">Dnf autoupdate timer.</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="dt">Description</span><span class="ot">=</span><span class="st">autoupgrade timer.</span></span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="kw">[Timer]</span></span>
 <span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="dt">OnCalendar</span><span class="ot">=</span><span class="st">daily</span></span>
