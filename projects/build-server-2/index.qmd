@@ -182,7 +182,7 @@ Now, this is the initial setup. I need to customize these things to my liking.
 
 Usernames and passwords a are easy, but I need to make sure the networking is right, especially since my setup will be so unorthodox. Because I am setting this up on my home network, I won't have public internet access, as my router using [NAT](https://en.wikipedia.org/wiki/Network_address_translation)
 
-### Networking
+### Router Networking
 
 It requires that I set my two network interfaces to two things: default network interface for everything else, and the neutron external interface. 
 
@@ -602,7 +602,7 @@ With this, I can ssh into my `moonstack` machine from anywhere in the world.
 
 And because ansible can read the ssh config, I can simply plug the host nicknames into my ansible inventory, and my ansible can configure them, from anywhere in the world. 
 
-### Back to Kolla-Ansible
+### VPS Networking
 
 
 Of course, this now makes my kolla-ansible installation more complex. Because I have now have two servers, to distribute to, and I also to deal with having to wireguard into my servers in order to be able to ssh into them. 
@@ -644,6 +644,8 @@ Both [openstack-ansible](https://docs.openstack.org/project-deploy-guide/opensta
 I found a [useful article from Red Hat](https://developers.redhat.com/blog/2018/10/22/introduction-to-linux-interfaces-for-virtual-networking), which is a very good overview of what virtual network interfaces I have available to me on a modern linux sysytem. 
 
 The two that it looks like I need to pick, are either macvlan, or bridge mode. Both of those modes allow you to create virtual ethernet interfaces
+
+#### Macvtap
 
 Because Rocky Linux uses networkmanager, I will use the nmcli tool to do stuff. 
 
@@ -692,6 +694,8 @@ The eth0.10 format creates a tagged vlan interface.
 I found a relevant document [devstack with a single NIC](https://docs.openstack.org/devstack/latest/guides/neutron.html). Devstack is a way of testing openstack for development purposes and it seems that they've anticipated that people deploy openstack from devices like a laptop, which only have one NIC. Their method involves using Open vSwitch to create a bridge, making the main ethernet interface a slave to the bridge, and then configuring the bridge accordingly, giving the new slave an ip address, and using that. 
 
 
+#### Bridge + Veth
+
 I experimented with bridges. Using cockpit's networkmanager configuration allows you to seamlessly create a bridge which you can still use as a normal ethernet interface for some reason. It even preserves existing ip configuration. But gives me an unanswered question: If bridges are more featureful by default, and can also be used for normal connectivity, why not *always* use a bridge? More features are better, right?
 
 Anyway, I was able to create a veth pair, enslave one to the bridge, and then the nonenslaved veth interface could be used as a normal ethernet interface. 
@@ -719,7 +723,31 @@ I did some searching around, and it seems like at some point, [networkmanager ad
 
 So like so (tested and working)
 
-`nmcli con add type ethernet ifname veth0 con-name veth0 veth.peer veth1`
+`nmcli con add type veth ifname veth0 con-name veth0 veth.peer veth1`
+
+And to add a veth interface to a bridge using nmcli:
+
+`nmcli connection add type bridge-slave ifname veth1 master bridge0`
+
+Nope, this doesn't seem to work. 
+
+That creates a new connection, and breaks a lot. Now trying:
+
+`nmcli connection modify veth1 master bridge0`
+
+It didn't work, because veth1 seems not to be managed by networkmanager. 
+
+Or alternatively, maybe I can create a veth already enslaved to a bridge.
+
+I tried this `nmcli con add type veth ifname veth0 con-name veth0 peer veth1 master bridge0`, but it didn't work because the wrong veth was added to the bridge. veth0 is added to the bridge, but veth1 is not managed by networkmanager. How can I create a veth interface with the unmanaged veth peer added to the bridge?
+
+Or maybe I am going about this the wrong way. It appears I can force NetworkManager to manage interfaces by using (from [this reddit post](https://old.reddit.com/r/linuxquestions/comments/jemh39/how_can_i_force_networkmanager_to_manage_a_veth/)):
+
+`nmcli device set $IFNAME managed yes`
+
+Once I do this, I can simply use cockpit to add the device to the bridge as a bridge member. And a reboot... and my veth1 device gets nuked. 
+
+So it seems I need to edit NetworkManager configurations to make it that the change is permanent.  
 
 However, I am still confused. The docs make it unclear: Do I give neutron a veth to use for it's purposes, and use the bridge for network access, or do I give it the bridge, and use the veth created on the bridge to get internet connectivity for myself? 
 
