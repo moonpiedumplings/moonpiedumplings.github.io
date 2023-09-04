@@ -1,0 +1,512 @@
+---
+title: "Podman vs Docker"
+date: "2023-9-3"
+categories: [linux, docker]
+format:
+  html:
+    code-fold: true
+    code-summary: "Show the code"
+    code-block-background: true
+execute:
+  freeze: true
+---
+
+So I've been having some trouble, not with docker itself, but the way it interacts with the rest of the system. The big thing is that docker overwrites iptables rules, meaning any other bridges won't work properly unless you set up iptables rules with the -I DOCKER-USER, which specifically sits in front of docker. 
+
+I encountered [this issue](https://discuss.linuxcontainers.org/t/lxd-4-12-container-networking-failure-with-docker/10487/9) with linux containers, where the lxc containers did not have networking when docker was installed.
+
+I also encoutered a similar issue when trying to setup NAT, the instructions on the [arch wiki](https://wiki.archlinux.org/title/Internet_sharing#Enable_NAT) stated that the steps for machines that had docker installed were different but I did not realize this in my previous research.
+
+The hope is that podman will have no such issue. But does podman have every feature of docker?
+
+The first thing to consider is that podman has a docker-compat setup, where it gives you a compatibility command:
+
+```{.default}
+[moonpie@cachyos-x8664 containers]$ docker ps
+Emulate Docker CLI using podman. Create /etc/containers/nodocker to quiet msg.
+CONTAINER ID  IMAGE       COMMAND     CREATED     STATUS      PORTS       NAMES
+```
+
+It's pretty good. Except: 
+
+```{.default}
+[moonpie@cachyos-x8664 registries.conf.d]$ docker pull jc21/nginx-proxy-manager:latest
+Emulate Docker CLI using podman. Create /etc/containers/nodocker to quiet msg.
+Error: short-name "jc21/nginx-proxy-manager:latest" did not resolve to an alias and no unqualified-search registries are defined in "/etc/containers/registries.conf"
+```
+
+Unlike docker, podman does not have the <docker.io> as a default registry. You can still pull with `docker.io/jc21/nginx-proxy-manager`, but it's inconvinient to change every script and whatnot to be like that. 
+
+The Red Hat Enable Sysadmin has a [blog on this](https://www.redhat.com/sysadmin/manage-container-registries). In the "pulling by shortnames" section they changed some podman settings:
+
+```{.init filename="/etc/containers/registries.conf"}
+...
+...
+unqualified-search-registries = ['registry.fedoraproject.org', 'registry.access.redhat.com', 'registry.centos.org', 'docker.io']
+...
+...
+```
+
+This makes it so that podman will search for these images when not specificially told a registry. 
+
+```{.default}
+[moonpie@cachyos-x8664 containers]$ docker pull jc21/nginx-proxy-manager
+Emulate Docker CLI using podman. Create /etc/containers/nodocker to quiet msg.
+? Please select an image: 
+  ▸ registry.fedoraproject.org/jc21/nginx-proxy-manager:latest
+    registry.access.redhat.com/jc21/nginx-proxy-manager:latest
+    registry.centos.org/jc21/nginx-proxy-manager:latest
+    docker.io/jc21/nginx-proxy-manager:latest
+```
+
+Wow, this is pretty cool. It gives you an option to select when you have multiple default registries. If you only have one, then it just immediately defaults to that. 
+
+Podman also has [support for docker-compose](https://www.redhat.com/sysadmin/podman-docker-compose)
+
+Once you have the docker compatibility package installed, simply start the podman service/socket, and docker-compose will work. 
+
+Except, I am wondering, will docker networks work? Podman seems to do something different, with podman pods, which don't behave the same way as docker networks. 
+
+To test, I have created a simple docker-compose.yml, which has two contianers on the same network:
+
+```{.yml}
+version: '3'
+services:
+  alpine_container_1:
+    image: alpine:latest
+    command: ["tail", "-f", "/dev/null"]  # Keeps the container running
+    networks:
+      - my_network
+
+  alpine_container_2:
+    image: alpine:latest
+    command: ["tail", "-f", "/dev/null"]  # Keeps the container running
+    networks:
+      - my_network
+
+networks:
+  my_network:
+```
+
+It seems to work, but....
+
+```{.default}
+[moonpie@cachyos-x8664 podman-docker]$ sudo podman network inspect podman-docker_my_network
+[
+     {
+          "name": "podman-docker_my_network",
+          "id": "0b11ee2d93ccd3427374b667b55dd7c42f12d68d296f6dca2ccad12a491b7e7d",
+          "driver": "bridge",
+          "network_interface": "podman1",
+          "created": "2023-09-03T06:21:14.350164238-07:00",
+          "subnets": [
+               {
+                    "subnet": "10.89.0.0/24",
+                    "gateway": "10.89.0.1"
+               }
+          ],
+          "ipv6_enabled": false,
+          "internal": false,
+          "dns_enabled": true,
+          "labels": {
+               "com.docker.compose.network": "my_network",
+               "com.docker.compose.project": "podman-docker",
+               "com.docker.compose.version": "2.20.3"
+          },
+          "options": {
+               "isolate": "true"
+          },
+          "ipam_options": {
+               "driver": "host-local"
+          }
+     }
+]
+[moonpie@cachyos-x8664 podman-docker]$ 
+```
+
+Whereas, when using `docker network inspect`:
+
+```{.default}
+moonpie@office:~$ docker network inspect mine
+[
+    {
+        "Name": "mine",
+        "Id": "73125f7a201062e8561f6d34110c2fdca2a3e21c423998e58da9ded56222a954",
+        "Created": "2023-02-23T03:57:12.249530356Z",
+        "Scope": "local",
+        "Driver": "bridge",
+        "EnableIPv6": false,
+        "IPAM": {
+            "Driver": "default",
+            "Options": {},
+            "Config": [
+                {
+                    "Subnet": "172.18.0.0/16",
+                    "Gateway": "172.18.0.1"
+                }
+            ]
+        },
+        "Internal": false,
+        "Attachable": false,
+        "Ingress": false,
+        "ConfigFrom": {
+            "Network": ""
+        },
+        "ConfigOnly": false,
+        "Containers": {
+            "01af5e2990ba9c4cee41de65500f72bd2a3c8e373bce373be251cf5a7a4549dd": {
+                "Name": "meshcentral",
+                "EndpointID": "c8b101d499a88d7c9ed0d476fa09915018e58fea0e83b24093b2d8768c12c464",
+                "MacAddress": "02:42:ac:12:00:07",
+                "IPv4Address": "172.18.0.7/16",
+                "IPv6Address": ""
+            },
+            "329b7fd59807573522a92c0e006f9cf92d44133a1f4e197d25f666a66bc5241e": {
+                "Name": "v2ray_proxy_1",
+                "EndpointID": "01ff85e55d6f1c9dee40ec09dbc258a1a5d5ad2728d35e3020d52211c076ebb1",
+                "MacAddress": "02:42:ac:12:00:03",
+                "IPv4Address": "172.18.0.3/16",
+                "IPv6Address": ""
+            },
+        },
+        "Options": {},
+        "Labels": {}
+    }
+]
+```
+
+
+When using docker to to create networks, it tells you the ip addressed fo the containers in a network. Podman doesn't do this. 
+
+But can the containers interact with eachother? 
+
+Yes, they can. While in one container, I could ping the other container. However, I had to get the container ip addresses by creating a shell in the containers, and then running  `ip a` to view the ip addresses first. 
+
+Is there any way to view the container ip addresses from outside the container? Not all containers come with a shell builtin, some don't have it for size purposes, and solely contain what is needed to run whatever application the container is packaging. 
+
+<details><summary>Podman inspect</summary>
+
+```{.default}
+[root@cachyos-x8664 podman-docker]# podman inspect podman-docker-alpine_container_1-1 
+[
+     {
+          "Id": "eae4cc793f5f86b69e81a785cc32df36718250436d67e1b62037414b1d8e53e7",
+          "Created": "2023-09-03T06:21:14.357752403-07:00",
+          "Path": "tail",
+          "Args": [
+               "-f",
+               "/dev/null"
+          ],
+          "State": {
+               "OciVersion": "1.1.0-rc.3",
+               "Status": "running",
+               "Running": true,
+               "Paused": false,
+               "Restarting": false,
+               "OOMKilled": false,
+               "Dead": false,
+               "Pid": 37035,
+               "ConmonPid": 37033,
+               "ExitCode": 0,
+               "Error": "",
+               "StartedAt": "2023-09-03T06:21:14.742250101-07:00",
+               "FinishedAt": "0001-01-01T00:00:00Z",
+               "Health": {
+                    "Status": "",
+                    "FailingStreak": 0,
+                    "Log": null
+               },
+               "CgroupPath": "/machine.slice/libpod-eae4cc793f5f86b69e81a785cc32df36718250436d67e1b62037414b1d8e53e7.scope",
+               "CheckpointedAt": "0001-01-01T00:00:00Z",
+               "RestoredAt": "0001-01-01T00:00:00Z"
+          },
+          "Image": "7e01a0d0a1dcd9e539f8e9bbd80106d59efbdf97293b3d38f5d7a34501526cdb",
+          "ImageDigest": "sha256:7144f7bab3d4c2648d7e59409f15ec52a18006a128c733fcff20d3a4a54ba44a",
+          "ImageName": "docker.io/library/alpine:latest",
+          "Rootfs": "",
+          "Pod": "",
+          "ResolvConfPath": "/run/containers/storage/overlay-containers/eae4cc793f5f86b69e81a785cc32df36718250436d67e1b62037414b1d8e53e7/userdata/resolv.conf",
+          "HostnamePath": "/run/containers/storage/overlay-containers/eae4cc793f5f86b69e81a785cc32df36718250436d67e1b62037414b1d8e53e7/userdata/hostname",
+          "HostsPath": "/run/containers/storage/overlay-containers/eae4cc793f5f86b69e81a785cc32df36718250436d67e1b62037414b1d8e53e7/userdata/hosts",
+          "StaticDir": "/var/lib/containers/storage/overlay-containers/eae4cc793f5f86b69e81a785cc32df36718250436d67e1b62037414b1d8e53e7/userdata",
+          "OCIConfigPath": "/var/lib/containers/storage/overlay-containers/eae4cc793f5f86b69e81a785cc32df36718250436d67e1b62037414b1d8e53e7/userdata/config.json",
+          "OCIRuntime": "crun",
+          "ConmonPidFile": "/run/containers/storage/overlay-containers/eae4cc793f5f86b69e81a785cc32df36718250436d67e1b62037414b1d8e53e7/userdata/conmon.pid",
+          "PidFile": "/run/containers/storage/overlay-containers/eae4cc793f5f86b69e81a785cc32df36718250436d67e1b62037414b1d8e53e7/userdata/pidfile",
+          "Name": "podman-docker-alpine_container_1-1",
+          "RestartCount": 0,
+          "Driver": "overlay",
+          "MountLabel": "",
+          "ProcessLabel": "",
+          "AppArmorProfile": "",
+          "EffectiveCaps": [
+               "CAP_CHOWN",
+               "CAP_DAC_OVERRIDE",
+               "CAP_FOWNER",
+               "CAP_FSETID",
+               "CAP_KILL",
+               "CAP_NET_BIND_SERVICE",
+               "CAP_SETFCAP",
+               "CAP_SETGID",
+               "CAP_SETPCAP",
+               "CAP_SETUID",
+               "CAP_SYS_CHROOT"
+          ],
+          "BoundingCaps": [
+               "CAP_CHOWN",
+               "CAP_DAC_OVERRIDE",
+               "CAP_FOWNER",
+               "CAP_FSETID",
+               "CAP_KILL",
+               "CAP_NET_BIND_SERVICE",
+               "CAP_SETFCAP",
+               "CAP_SETGID",
+               "CAP_SETPCAP",
+               "CAP_SETUID",
+               "CAP_SYS_CHROOT"
+          ],
+          "ExecIDs": [
+               "8354949b4e0bf728dafa7b3e7b857ccce18e953b0f20473dbb06fe6442bf1d12"
+          ],
+          "GraphDriver": {
+               "Name": "overlay",
+               "Data": {
+                    "LowerDir": "/var/lib/containers/storage/overlay/4693057ce2364720d39e57e85a5b8e0bd9ac3573716237736d6470ec5b7b7230/diff",
+                    "MergedDir": "/var/lib/containers/storage/overlay/bbadcba900462960315aa406866164bd58a12573e76140093563525f595b1732/merged",
+                    "UpperDir": "/var/lib/containers/storage/overlay/bbadcba900462960315aa406866164bd58a12573e76140093563525f595b1732/diff",
+                    "WorkDir": "/var/lib/containers/storage/overlay/bbadcba900462960315aa406866164bd58a12573e76140093563525f595b1732/work"
+               }
+          },
+          "Mounts": [],
+          "Dependencies": [],
+          "NetworkSettings": {
+               "EndpointID": "",
+               "Gateway": "",
+               "IPAddress": "",
+               "IPPrefixLen": 0,
+               "IPv6Gateway": "",
+               "GlobalIPv6Address": "",
+               "GlobalIPv6PrefixLen": 0,
+               "MacAddress": "",
+               "Bridge": "",
+               "SandboxID": "",
+               "HairpinMode": false,
+               "LinkLocalIPv6Address": "",
+               "LinkLocalIPv6PrefixLen": 0,
+               "Ports": {},
+               "SandboxKey": "/run/netns/netns-4a204211-d01a-6d0f-bfd3-bfc34e73885e",
+               "Networks": {
+                    "podman-docker_my_network": {
+                         "EndpointID": "",
+                         "Gateway": "10.89.0.1",
+                         "IPAddress": "10.89.0.2",
+                         "IPPrefixLen": 24,
+                         "IPv6Gateway": "",
+                         "GlobalIPv6Address": "",
+                         "GlobalIPv6PrefixLen": 0,
+                         "MacAddress": "b2:af:b4:78:28:1b",
+                         "NetworkID": "podman-docker_my_network",
+                         "DriverOpts": null,
+                         "IPAMConfig": null,
+                         "Links": null,
+                         "Aliases": [
+                              "podman-docker-alpine_container_1-1",
+                              "alpine_container_1",
+                              "eae4cc793f5f"
+                         ]
+                    }
+               }
+          },
+          "Namespace": "",
+          "IsInfra": false,
+          "IsService": false,
+          "KubeExitCodePropagation": "invalid",
+          "lockNumber": 0,
+          "Config": {
+               "Hostname": "eae4cc793f5f",
+               "Domainname": "",
+               "User": "",
+               "AttachStdin": false,
+               "AttachStdout": false,
+               "AttachStderr": false,
+               "Tty": false,
+               "OpenStdin": false,
+               "StdinOnce": false,
+               "Env": [
+                    "TERM=xterm",
+                    "container=podman",
+                    "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+                    "HOME=/root",
+                    "HOSTNAME=eae4cc793f5f"
+               ],
+               "Cmd": [
+                    "tail",
+                    "-f",
+                    "/dev/null"
+               ],
+               "Image": "docker.io/library/alpine:latest",
+               "Volumes": null,
+               "WorkingDir": "/",
+               "Entrypoint": "",
+               "OnBuild": null,
+               "Labels": {
+                    "com.docker.compose.config-hash": "6418caee2d42d6859badadf595f62af5fc514baebd949edbc3b925c9dd53ecc3",
+                    "com.docker.compose.container-number": "1",
+                    "com.docker.compose.depends_on": "",
+                    "com.docker.compose.image": "sha256:7e01a0d0a1dcd9e539f8e9bbd80106d59efbdf97293b3d38f5d7a34501526cdb",
+                    "com.docker.compose.oneoff": "False",
+                    "com.docker.compose.project": "podman-docker",
+                    "com.docker.compose.project.config_files": "/home/moonpie/vscode/moonpiedumplings.github.io/playground/podman-docker/docker-compose.yml",
+                    "com.docker.compose.project.working_dir": "/home/moonpie/vscode/moonpiedumplings.github.io/playground/podman-docker",
+                    "com.docker.compose.service": "alpine_container_1",
+                    "com.docker.compose.version": "2.20.3"
+               },
+               "Annotations": {
+                    "io.container.manager": "libpod",
+                    "org.opencontainers.image.stopSignal": "15"
+               },
+               "StopSignal": 15,
+               "HealthcheckOnFailureAction": "none",
+               "CreateCommand": [
+                    "/usr/bin/podman",
+                    "--log-level=info",
+                    "system",
+                    "service"
+               ],
+               "Umask": "0000",
+               "Timeout": 0,
+               "StopTimeout": 0,
+               "Passwd": true
+          },
+          "HostConfig": {
+               "Binds": [],
+               "CgroupManager": "systemd",
+               "CgroupMode": "private",
+               "ContainerIDFile": "",
+               "LogConfig": {
+                    "Type": "journald",
+                    "Config": null,
+                    "Path": "",
+                    "Tag": "",
+                    "Size": "0B"
+               },
+               "NetworkMode": "bridge",
+               "PortBindings": {},
+               "RestartPolicy": {
+                    "Name": "",
+                    "MaximumRetryCount": 0
+               },
+               "AutoRemove": false,
+               "VolumeDriver": "",
+               "VolumesFrom": null,
+               "CapAdd": [],
+               "CapDrop": [],
+               "Dns": [],
+               "DnsOptions": [],
+               "DnsSearch": [],
+               "ExtraHosts": [],
+               "GroupAdd": [],
+               "IpcMode": "shareable",
+               "Cgroup": "",
+               "Cgroups": "default",
+               "Links": null,
+               "OomScoreAdj": 0,
+               "PidMode": "private",
+               "Privileged": false,
+               "PublishAllPorts": false,
+               "ReadonlyRootfs": false,
+               "SecurityOpt": [],
+               "Tmpfs": {},
+               "UTSMode": "private",
+               "UsernsMode": "",
+               "ShmSize": 65536000,
+               "Runtime": "oci",
+               "ConsoleSize": [
+                    0,
+                    0
+               ],
+               "Isolation": "",
+               "CpuShares": 0,
+               "Memory": 0,
+               "NanoCpus": 0,
+               "CgroupParent": "",
+               "BlkioWeight": 0,
+               "BlkioWeightDevice": null,
+               "BlkioDeviceReadBps": null,
+               "BlkioDeviceWriteBps": null,
+               "BlkioDeviceReadIOps": null,
+               "BlkioDeviceWriteIOps": null,
+               "CpuPeriod": 0,
+               "CpuQuota": 0,
+               "CpuRealtimePeriod": 0,
+               "CpuRealtimeRuntime": 0,
+               "CpusetCpus": "",
+               "CpusetMems": "",
+               "Devices": [],
+               "DiskQuota": 0,
+               "KernelMemory": 0,
+               "MemoryReservation": 0,
+               "MemorySwap": 0,
+               "MemorySwappiness": 0,
+               "OomKillDisable": false,
+               "PidsLimit": 2048,
+               "Ulimits": [
+                    {
+                         "Name": "RLIMIT_NPROC",
+                         "Soft": 4194304,
+                         "Hard": 4194304
+                    }
+               ],
+               "CpuCount": 0,
+               "CpuPercent": 0,
+               "IOMaximumIOps": 0,
+               "IOMaximumBandwidth": 0,
+               "CgroupConf": null
+          }
+     }
+]
+``` 
+
+</details>
+
+I found something, but the output is massive and not easy to read. 
+
+The relevant part: 
+
+```{.default}
+"Networks": {
+                    "podman-docker_my_network": {
+                         "EndpointID": "",
+                         "Gateway": "10.89.0.1",
+                         "IPAddress": "10.89.0.2",
+```
+
+What about rootless? Using the podman-compose I can launch rootless containers. However, according to the [arch wiki](https://wiki.archlinux.org/title/Podman#Additional_dependencies) some extra dependencies are required for dns to work. 
+
+
+After installaling:
+
+Rootless test (podman-compose):
+
+```{.defualt}
+/ # ping podman-docker_alpine_container_2_1
+PING podman-docker_alpine_container_2_1 (10.89.1.5): 56 data bytes
+64 bytes from 10.89.1.5: seq=0 ttl=42 time=0.039 ms
+```
+
+Rootfull test (docker-compose with podman backend):
+
+```{.default}
+/ # ping podman-docker-alpine_container_1-1
+PING podman-docker-alpine_container_1-1 (10.89.0.2): 56 data bytes
+64 bytes from 10.89.0.2: seq=0 ttl=42 time=0.044 ms
+```
+
+So I can't get the ip, but because dns in the container works, they can find eachother that way. Nice. 
+
+Since rootful podman containers using docker-compose work nicely, podman seems more and more appealing to me. 
+
+Another feature of podman  that appeals to me is the [auto updates](https://www.howtogeek.com/devops/how-to-enable-podmans-automatic-container-updates/)
+
+And another feature that makes podman appeal to me is the integration podman has with the cockpit web ui for managing linux systems. Because cockpit is made by Red Hat, who also develops podman, they deprecated docker support and now it only supports podman. 
+
