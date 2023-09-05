@@ -693,62 +693,6 @@ The eth0.10 format creates a tagged vlan interface.
 
 I found a relevant document [devstack with a single NIC](https://docs.openstack.org/devstack/latest/guides/neutron.html). Devstack is a way of testing openstack for development purposes and it seems that they've anticipated that people deploy openstack from devices like a laptop, which only have one NIC. Their method involves using Open vSwitch to create a bridge, making the main ethernet interface a slave to the bridge, and then configuring the bridge accordingly, giving the new slave an ip address, and using that. 
 
-
-#### Bridge + Veth
-
-I experimented with bridges. Using cockpit's networkmanager configuration allows you to seamlessly create a bridge which you can still use as a normal ethernet interface for some reason. It even preserves existing ip configuration. But gives me an unanswered question: If bridges are more featureful by default, and can also be used for normal connectivity, why not *always* use a bridge? More features are better, right?
-
-Anyway, I was able to create a veth pair, enslave one to the bridge, and then the nonenslaved veth interface could be used as a normal ethernet interface. 
-
-Steps:
-
-Use cockpit-networkmanager to create a bridge, and add the ethernet interface as a port. 
-
-```{.default}
-sudo ip link add veth0 type veth peer name veth1
-sudo ip link set veth0 master br0
-sudo ip link set veth0 up
-sudo ip link set veth1 up
-sudo nmcli connection add type ethernet ifname veth1 con-name veth1
-sudo nmcli connection up veth1
-```
-
-And then that interface can be used normally. It got it's own ip via dhcp from my router, and now my computer's ethernet interface has two ip's. 
-
-But this isn't good enough for me. `ip` is not persistent (although it is scriptable, and I can rerun every boot), unlike NetworkManager configurations. 
-
-How can I create a veth interface using networkmanager?
-
-I did some searching around, and it seems like at some point, [networkmanager added this option](https://networkmanager.dev/blog/networkmanager-1-30/). To create a veth interface, you must set the property, veth.peer when you create an interface. 
-
-So like so (tested and working)
-
-`nmcli con add type veth ifname veth0 con-name veth0 veth.peer veth1`
-
-And to add a veth interface to a bridge using nmcli:
-
-`nmcli connection add type bridge-slave ifname veth1 master bridge0`
-
-Nope, this doesn't seem to work. 
-
-That creates a new connection, and breaks a lot. Now trying:
-
-`nmcli connection modify veth1 master bridge0`
-
-It didn't work, because veth1 seems not to be managed by networkmanager. 
-
-Or alternatively, maybe I can create a veth already enslaved to a bridge.
-
-I tried this `nmcli con add type veth ifname veth0 con-name veth0 peer veth1 master bridge0`, but it didn't work because the wrong veth was added to the bridge. veth0 is added to the bridge, but veth1 is not managed by networkmanager. How can I create a veth interface with the unmanaged veth peer added to the bridge?
-
-Or maybe I am going about this the wrong way. It appears I can force NetworkManager to manage interfaces by using (from [this reddit post](https://old.reddit.com/r/linuxquestions/comments/jemh39/how_can_i_force_networkmanager_to_manage_a_veth/)):
-
-`nmcli device set $IFNAME managed yes`
-
-Once I do this, I can simply use cockpit to add the device to the bridge as a bridge member. And a reboot... and my veth1 device gets nuked. 
-
-So it seems I need to edit NetworkManager configurations to make it that the change is permanent.  
-
 However, I am still confused. The docs make it unclear: Do I give neutron a veth to use for it's purposes, and use the bridge for network access, or do I give it the bridge, and use the veth created on the bridge to get internet connectivity for myself? 
 
 Based on the earlier linked devstack article, it looks like it's not a linux bridge that's created, but a openvswitch bridge that's created, and then something akin to a veth is given to the host device to use for normal networking. However, kolla-ansible doesn't seem to make this kind of setup too easy...
@@ -828,3 +772,112 @@ I attempted to create a veth interface attached to the bridge interface, and I w
 I am guessing that it's probably something related to packet forwarding, and I need to configure iptables to happily send the packets from a difference ip through the main bridge without touching them. 
 
 Alright, so after creating a macvtap interface, I realize something: it can send requests out, but I can't actually access it. 
+
+
+#### Bridge + Veth
+
+I experimented with bridges. Using cockpit's networkmanager configuration allows you to seamlessly create a bridge which you can still use as a normal ethernet interface for some reason. It even preserves existing ip configuration. But gives me an unanswered question: If bridges are more featureful by default, and can also be used for normal connectivity, why not *always* use a bridge? More features are better, right?
+
+Anyway, I was able to create a veth pair, enslave one to the bridge, and then the nonenslaved veth interface could be used as a normal ethernet interface. 
+
+Steps:
+
+Use cockpit-networkmanager to create a bridge, and add the ethernet interface as a port. 
+
+```{.default}
+sudo ip link add veth0 type veth peer name veth1
+sudo ip link set veth0 master br0
+sudo ip link set veth0 up
+sudo ip link set veth1 up
+sudo nmcli connection add type ethernet ifname veth1 con-name veth1
+sudo nmcli connection up veth1
+```
+
+And then that interface can be used normally. It got it's own ip via dhcp from my router, and now my computer's ethernet interface has two ip's. 
+
+But this isn't good enough for me. `ip` is not persistent (although it is scriptable, and I can rerun every boot), unlike NetworkManager configurations. 
+
+How can I create a veth interface using networkmanager?
+
+I did some searching around, and it seems like at some point, [networkmanager added this option](https://networkmanager.dev/blog/networkmanager-1-30/). To create a veth interface, you must set the property, veth.peer when you create an interface. 
+
+So like so (tested and working)
+
+`nmcli con add type veth ifname veth0 con-name veth0 veth.peer veth1`
+
+And to add a veth interface to a bridge using nmcli:
+
+`nmcli connection add type bridge-slave ifname veth1 master bridge0`
+
+Nope, this doesn't seem to work. 
+
+That creates a new connection, and breaks a lot. Now trying:
+
+`nmcli connection modify veth1 master bridge0`
+
+It didn't work, because veth1 seems not to be managed by networkmanager. 
+
+Or alternatively, maybe I can create a veth already enslaved to a bridge.
+
+I tried this `nmcli con add type veth ifname veth0 con-name veth0 peer veth1 master bridge0`, but it didn't work because the wrong veth was added to the bridge. veth0 is added to the bridge, but veth1 is not managed by networkmanager. How can I create a veth interface with the unmanaged veth peer added to the bridge?
+
+Or maybe I am going about this the wrong way. It appears I can force NetworkManager to manage interfaces by using (from [this reddit post](https://old.reddit.com/r/linuxquestions/comments/jemh39/how_can_i_force_networkmanager_to_manage_a_veth/)):
+
+`nmcli device set $IFNAME managed yes`
+
+Once I do this, I can simply use cockpit to add the device to the bridge as a bridge member. And a reboot... and my veth1 device gets nuked. 
+
+So it seems I need to edit NetworkManager configurations to make it that the change is permanent.  
+
+But there might be an easier method. Looking at the udev rules:
+
+```{.default filenmae="/usr/lib/udev/rules.d/85-nm-unmanaged-rules"}
+... (shorted for brevity)
+...
+# Virtual Ethernet device pair. Often used to communicate with a peer interface
+# in another net namespace and managed by libvirt, Docker or the like.
+# Generally we don't want to mess with those. One exception would be the
+# full system containers, like LXC or LXD. LXC containers run via libvirt
+# don't use udev, so this doesn't apply. LXD does, though. To deal with the
+# LXD situation, let's treat the devices called eth* as regular ethernet.
+ENV{ID_NET_DRIVER}=="veth", ENV{INTERFACE}!="eth[0-9]*", ENV{NM_UNMANAGED}="1"
+```
+
+These udev rules are set up in a way that veth devices named `eth*` will end up being managed by NetworkManager. This definitely seems exploitable.
+
+So I do: `nmcli con add type veth ifname veth0 con-name veth0 veth.peer eth1`
+
+and sure enough, both interfaces are managed by NetworkManager. Using the web ui, I can add the "veth0" interface to the bridge, and it gets it's own ip and everything. So what's happening here? 
+
+By default, NetworkManager does not manage veth interfaces. But it does manage any interface it does create. When creating a veth interface using NetworkManager, it ends up being a weird scenario where only the main interface is managed, but the peer created is not, and I couldn't do anything with it. But now I can.
+
+I created a macvtap interface on top of the eth0 interface and it automatically get's it's own ipv4 address. I can curl using the --interface macvtap0 option, and I can access services hosting on this machine via the ip address this interface has. 
+
+In addition to all this, it persists past a reboot. 
+
+Now for the ultimate test: Nested bridging. 
+
+Steps: 
+
+Create bridge0 via cockpit and enslave the singular "physical" interface to it using the ui. 
+
+`nmcli con add type veth ifname ethfake0 con-name ethfake0 veth.peer eth1`
+
+add ethfake0 as a port to bridge0 via cockpit.
+
+And now you have two network interfaces. Now I will attempt to do this again, creating a bridge on another bridge. 
+
+And it works. `eth2`, gets internet access. I can also create a macvtap interface on the nested bridge, which works as I'd expect there as well.
+
+This setup even persists a reboot. 
+
+Now?
+
+To do it all again but with a naming scheme that doesn't suck.
+
+To do it all again, but with docker ipables rules getting in the way at the same time. 
+
+Or maybe I can use podman to deploy instead of docker?  
+
+I went through the docs and they say nothing. But the [source code](https://github.com/openstack/kolla-ansible/blob/375ecdde07e2bae25179b2454560389097f0573b/tools/validate-docker-execute.sh#L4) does say something. In the [container engine](https://github.com/openstack/kolla-ansible/blob/375ecdde07e2bae25179b2454560389097f0573b/tools/validate-docker-execute.sh#L4) part of the ansible configuration, there is an option to set what container engine is being used. This means I can set podman instead of docker. 
+
