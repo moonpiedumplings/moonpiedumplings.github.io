@@ -800,7 +800,7 @@ root@debian:/home/moonpie# </code></pre>
 <p>Now for the ultimate test: Nested bridging.</p>
 <p>Steps:</p>
 <p>Create bridge0 via cockpit and enslave the singular “physical” interface to it using the ui.</p>
-<p><code>nmcli con add type veth ifname ethfake0 con-name ethfake0 veth.peer eth1</code></p>
+<p><code>nmcli con add type veth ifname eth0fake0 con-name eth0fake0 veth.peer eth0fake0</code></p>
 <p>add ethfake0 as a port to bridge0 via cockpit.</p>
 <p>And now you have two network interfaces. Now I will attempt to do this again, creating a bridge on another bridge.</p>
 <p>And it works. <code>eth2</code>, gets internet access. I can also create a macvtap interface on the nested bridge, which works as I’d expect there as well.</p>
@@ -810,6 +810,62 @@ root@debian:/home/moonpie# </code></pre>
 <p>To do it all again, but with docker ipables rules getting in the way at the same time.</p>
 <p>Or maybe I can use podman to deploy instead of docker?</p>
 <p>I went through the docs and they say nothing. But the <a href="https://github.com/openstack/kolla-ansible/blob/375ecdde07e2bae25179b2454560389097f0573b/tools/validate-docker-execute.sh#L4">source code</a> does say something. In the <a href="https://github.com/openstack/kolla-ansible/blob/375ecdde07e2bae25179b2454560389097f0573b/tools/validate-docker-execute.sh#L4">container engine</a> part of the ansible configuration, there is an option to set what container engine is being used. This means I can set podman instead of docker.</p>
+<p>However, this feels… A bit too far from standard practice. I will first see if I can get docker working.</p>
+<p>Here is the iptables chains with docker installed:</p>
+<div class="sourceCode" id="cb34"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a>root@debian:/home/moonpie# iptables -L</span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a>Chain INPUT (policy ACCEPT)</span>
+<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a>target     prot opt source               destination         </span>
+<span id="cb34-4"><a href="#cb34-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb34-5"><a href="#cb34-5" aria-hidden="true" tabindex="-1"></a>Chain FORWARD (policy DROP)</span>
+<span id="cb34-6"><a href="#cb34-6" aria-hidden="true" tabindex="-1"></a>target     prot opt source               destination         </span>
+<span id="cb34-7"><a href="#cb34-7" aria-hidden="true" tabindex="-1"></a>DOCKER-USER  all  --  anywhere             anywhere            </span>
+<span id="cb34-8"><a href="#cb34-8" aria-hidden="true" tabindex="-1"></a>DOCKER-ISOLATION-STAGE-1  all  --  anywhere             anywhere            </span>
+<span id="cb34-9"><a href="#cb34-9" aria-hidden="true" tabindex="-1"></a>ACCEPT     all  --  anywhere             anywhere             ctstate RELATED,ESTABLISHED</span>
+<span id="cb34-10"><a href="#cb34-10" aria-hidden="true" tabindex="-1"></a>DOCKER     all  --  anywhere             anywhere            </span>
+<span id="cb34-11"><a href="#cb34-11" aria-hidden="true" tabindex="-1"></a>ACCEPT     all  --  anywhere             anywhere            </span>
+<span id="cb34-12"><a href="#cb34-12" aria-hidden="true" tabindex="-1"></a>ACCEPT     all  --  anywhere             anywhere            </span>
+<span id="cb34-13"><a href="#cb34-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb34-14"><a href="#cb34-14" aria-hidden="true" tabindex="-1"></a>Chain OUTPUT (policy ACCEPT)</span>
+<span id="cb34-15"><a href="#cb34-15" aria-hidden="true" tabindex="-1"></a>target     prot opt source               destination         </span>
+<span id="cb34-16"><a href="#cb34-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb34-17"><a href="#cb34-17" aria-hidden="true" tabindex="-1"></a>Chain DOCKER (1 references)</span>
+<span id="cb34-18"><a href="#cb34-18" aria-hidden="true" tabindex="-1"></a>target     prot opt source               destination         </span>
+<span id="cb34-19"><a href="#cb34-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb34-20"><a href="#cb34-20" aria-hidden="true" tabindex="-1"></a>Chain DOCKER-ISOLATION-STAGE-1 (1 references)</span>
+<span id="cb34-21"><a href="#cb34-21" aria-hidden="true" tabindex="-1"></a>target     prot opt source               destination         </span>
+<span id="cb34-22"><a href="#cb34-22" aria-hidden="true" tabindex="-1"></a>DOCKER-ISOLATION-STAGE-2  all  --  anywhere             anywhere            </span>
+<span id="cb34-23"><a href="#cb34-23" aria-hidden="true" tabindex="-1"></a>RETURN     all  --  anywhere             anywhere            </span>
+<span id="cb34-24"><a href="#cb34-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb34-25"><a href="#cb34-25" aria-hidden="true" tabindex="-1"></a>Chain DOCKER-ISOLATION-STAGE-2 (1 references)</span>
+<span id="cb34-26"><a href="#cb34-26" aria-hidden="true" tabindex="-1"></a>target     prot opt source               destination         </span>
+<span id="cb34-27"><a href="#cb34-27" aria-hidden="true" tabindex="-1"></a>DROP       all  --  anywhere             anywhere            </span>
+<span id="cb34-28"><a href="#cb34-28" aria-hidden="true" tabindex="-1"></a>RETURN     all  --  anywhere             anywhere            </span>
+<span id="cb34-29"><a href="#cb34-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb34-30"><a href="#cb34-30" aria-hidden="true" tabindex="-1"></a>Chain DOCKER-USER (1 references)</span>
+<span id="cb34-31"><a href="#cb34-31" aria-hidden="true" tabindex="-1"></a>target     prot opt source               destination         </span>
+<span id="cb34-32"><a href="#cb34-32" aria-hidden="true" tabindex="-1"></a>RETURN     all  --  anywhere             anywhere            </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>And here is the iptables rules without docker installed:</p>
+<div class="sourceCode" id="cb35"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a>root@debian:/home/moonpie# iptables -L</span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a>Chain INPUT (policy ACCEPT)</span>
+<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a>target     prot opt source               destination         </span>
+<span id="cb35-4"><a href="#cb35-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb35-5"><a href="#cb35-5" aria-hidden="true" tabindex="-1"></a>Chain FORWARD (policy ACCEPT)</span>
+<span id="cb35-6"><a href="#cb35-6" aria-hidden="true" tabindex="-1"></a>target     prot opt source               destination         </span>
+<span id="cb35-7"><a href="#cb35-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb35-8"><a href="#cb35-8" aria-hidden="true" tabindex="-1"></a>Chain OUTPUT (policy ACCEPT)</span>
+<span id="cb35-9"><a href="#cb35-9" aria-hidden="true" tabindex="-1"></a>target     prot opt source               destination         </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Oh. That’s interesting. For whatever reason, docker takes the default forward policy of accept and throws it out the window. Why?</p>
+<p>Since I will be using firewalld as my firewall while it is running, here are the iptables rules with firewall-cmd activated, but no docker:</p>
+<div class="sourceCode" id="cb36"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a>root@debian:/home/moonpie# iptables -L</span>
+<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a>Chain INPUT (policy ACCEPT)</span>
+<span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a>target     prot opt source               destination         </span>
+<span id="cb36-4"><a href="#cb36-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-5"><a href="#cb36-5" aria-hidden="true" tabindex="-1"></a>Chain FORWARD (policy ACCEPT)</span>
+<span id="cb36-6"><a href="#cb36-6" aria-hidden="true" tabindex="-1"></a>target     prot opt source               destination         </span>
+<span id="cb36-7"><a href="#cb36-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-8"><a href="#cb36-8" aria-hidden="true" tabindex="-1"></a>Chain OUTPUT (policy ACCEPT)</span>
+<span id="cb36-9"><a href="#cb36-9" aria-hidden="true" tabindex="-1"></a>target     prot opt source               destination         </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Uh oh. Shouldn’t firewall-cmd change the iptables default input and forward policy to drop? What’s going on here?</p>
 
 
 </section>
