@@ -861,7 +861,7 @@ Steps:
 
 Create bridge0 via cockpit and enslave the singular "physical" interface to it using the ui. 
 
-`nmcli con add type veth ifname ethfake0 con-name ethfake0 veth.peer eth1`
+`nmcli con add type veth ifname eth0fake0 con-name eth0fake0 veth.peer eth0fake0`
 
 add ethfake0 as a port to bridge0 via cockpit.
 
@@ -881,3 +881,75 @@ Or maybe I can use podman to deploy instead of docker?
 
 I went through the docs and they say nothing. But the [source code](https://github.com/openstack/kolla-ansible/blob/375ecdde07e2bae25179b2454560389097f0573b/tools/validate-docker-execute.sh#L4) does say something. In the [container engine](https://github.com/openstack/kolla-ansible/blob/375ecdde07e2bae25179b2454560389097f0573b/tools/validate-docker-execute.sh#L4) part of the ansible configuration, there is an option to set what container engine is being used. This means I can set podman instead of docker. 
 
+However, this feels... A bit too far from standard practice. I will first see if I can get docker working. 
+
+
+Here is the iptables chains with docker installed:
+
+```{.default}
+root@debian:/home/moonpie# iptables -L
+Chain INPUT (policy ACCEPT)
+target     prot opt source               destination         
+
+Chain FORWARD (policy DROP)
+target     prot opt source               destination         
+DOCKER-USER  all  --  anywhere             anywhere            
+DOCKER-ISOLATION-STAGE-1  all  --  anywhere             anywhere            
+ACCEPT     all  --  anywhere             anywhere             ctstate RELATED,ESTABLISHED
+DOCKER     all  --  anywhere             anywhere            
+ACCEPT     all  --  anywhere             anywhere            
+ACCEPT     all  --  anywhere             anywhere            
+
+Chain OUTPUT (policy ACCEPT)
+target     prot opt source               destination         
+
+Chain DOCKER (1 references)
+target     prot opt source               destination         
+
+Chain DOCKER-ISOLATION-STAGE-1 (1 references)
+target     prot opt source               destination         
+DOCKER-ISOLATION-STAGE-2  all  --  anywhere             anywhere            
+RETURN     all  --  anywhere             anywhere            
+
+Chain DOCKER-ISOLATION-STAGE-2 (1 references)
+target     prot opt source               destination         
+DROP       all  --  anywhere             anywhere            
+RETURN     all  --  anywhere             anywhere            
+
+Chain DOCKER-USER (1 references)
+target     prot opt source               destination         
+RETURN     all  --  anywhere             anywhere            
+````
+
+And here is the iptables rules without docker installed:
+
+```{.default}
+root@debian:/home/moonpie# iptables -L
+Chain INPUT (policy ACCEPT)
+target     prot opt source               destination         
+
+Chain FORWARD (policy ACCEPT)
+target     prot opt source               destination         
+
+Chain OUTPUT (policy ACCEPT)
+target     prot opt source               destination         
+```
+
+Oh. That's interesting. For whatever reason, docker takes the default forward policy of accept and throws it out the window. Why? 
+
+
+Since I will be using firewalld as my firewall while it is running, here are the iptables rules with  firewall-cmd activated, but no docker:
+
+```{.default}
+root@debian:/home/moonpie# iptables -L
+Chain INPUT (policy ACCEPT)
+target     prot opt source               destination         
+
+Chain FORWARD (policy ACCEPT)
+target     prot opt source               destination         
+
+Chain OUTPUT (policy ACCEPT)
+target     prot opt source               destination         
+```
+
+Uh oh. Shouldn't firewall-cmd change the iptables default input and forward policy to drop? What's going on here?
