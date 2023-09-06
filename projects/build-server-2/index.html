@@ -922,7 +922,37 @@ root@debian:/home/moonpie# </code></pre>
 <p>Change of plans. Rather than attempting to get away with the bridge also being able to act as a normal interface, I think I will just create two veths attatch them to a singular bridge which does not get an ip address.</p>
 <p>So I create one bridge, create two veth pairs (eth1-veth1, and eth0-veth0), and attempt to curl using eth0. Nothing. I reboot. Same result.</p>
 <p>What?</p>
-<p>I looked at the ip route</p>
+<p>ip route:</p>
+<div class="sourceCode" id="cb40"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a>root@debian:/home/moonpie# ip route</span>
+<span id="cb40-2"><a href="#cb40-2" aria-hidden="true" tabindex="-1"></a>default via 192.168.122.1 dev eth1 proto dhcp src 192.168.122.97 metric 101 </span>
+<span id="cb40-3"><a href="#cb40-3" aria-hidden="true" tabindex="-1"></a>default via 192.168.122.1 dev eth0 proto static metric 425 </span>
+<span id="cb40-4"><a href="#cb40-4" aria-hidden="true" tabindex="-1"></a>192.168.122.0/24 dev eth1 proto kernel scope link src 192.168.122.97 metric 101 </span>
+<span id="cb40-5"><a href="#cb40-5" aria-hidden="true" tabindex="-1"></a>192.168.122.0/24 dev eth0 proto kernel scope link src 192.168.122.4 metric 425 </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb41"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a>[moonpie@rocky ~]$ ip route</span>
+<span id="cb41-2"><a href="#cb41-2" aria-hidden="true" tabindex="-1"></a>default via 192.168.122.1 dev eth1 proto dhcp src 192.168.122.228 metric 101 </span>
+<span id="cb41-3"><a href="#cb41-3" aria-hidden="true" tabindex="-1"></a>default via 192.168.122.1 dev eth0 proto static metric 425 </span>
+<span id="cb41-4"><a href="#cb41-4" aria-hidden="true" tabindex="-1"></a>192.168.122.0/24 dev eth1 proto kernel scope link src 192.168.122.228 metric 101 </span>
+<span id="cb41-5"><a href="#cb41-5" aria-hidden="true" tabindex="-1"></a>192.168.122.0/24 dev eth0 proto kernel scope link src 192.168.122.111 metric 425 </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>iptables:</p>
+<div class="sourceCode" id="cb42"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a>[moonpie@rocky ~]$ sudo iptables -L</span>
+<span id="cb42-2"><a href="#cb42-2" aria-hidden="true" tabindex="-1"></a>Chain INPUT (policy ACCEPT)</span>
+<span id="cb42-3"><a href="#cb42-3" aria-hidden="true" tabindex="-1"></a>target     prot opt source               destination         </span>
+<span id="cb42-4"><a href="#cb42-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb42-5"><a href="#cb42-5" aria-hidden="true" tabindex="-1"></a>Chain FORWARD (policy ACCEPT)</span>
+<span id="cb42-6"><a href="#cb42-6" aria-hidden="true" tabindex="-1"></a>target     prot opt source               destination         </span>
+<span id="cb42-7"><a href="#cb42-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb42-8"><a href="#cb42-8" aria-hidden="true" tabindex="-1"></a>Chain OUTPUT (policy ACCEPT)</span>
+<span id="cb42-9"><a href="#cb42-9" aria-hidden="true" tabindex="-1"></a>target     prot opt source               destination       </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb43"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a>root@debian:/home/moonpie# sudo iptables -L</span>
+<span id="cb43-2"><a href="#cb43-2" aria-hidden="true" tabindex="-1"></a>Chain INPUT (policy ACCEPT)</span>
+<span id="cb43-3"><a href="#cb43-3" aria-hidden="true" tabindex="-1"></a>target     prot opt source               destination         </span>
+<span id="cb43-4"><a href="#cb43-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb43-5"><a href="#cb43-5" aria-hidden="true" tabindex="-1"></a>Chain FORWARD (policy ACCEPT)</span>
+<span id="cb43-6"><a href="#cb43-6" aria-hidden="true" tabindex="-1"></a>target     prot opt source               destination         </span>
+<span id="cb43-7"><a href="#cb43-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb43-8"><a href="#cb43-8" aria-hidden="true" tabindex="-1"></a>Chain OUTPUT (policy ACCEPT)</span>
+<span id="cb43-9"><a href="#cb43-9" aria-hidden="true" tabindex="-1"></a>target     prot opt source               destination         </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Both have firewalls disabled. The only noticable difference between the two is the version of the linux kernel in use. Debian is using <code>Linux debian 6.1.0-11-amd64</code>, whereas rocky is using <code>Linux rocky 5.14.0-284.25.1.el9_2.x86_64</code>.</p>
 
 
 </section>
