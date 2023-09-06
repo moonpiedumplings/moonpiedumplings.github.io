@@ -917,6 +917,12 @@ root@debian:/home/moonpie# </code></pre>
 <span id="cb39-6"><a href="#cb39-6" aria-hidden="true" tabindex="-1"></a><span class="co">#kolla_internal_vip_address: "10.10.10.254"</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>So I can disable high availibility, which I will do and try again.</p>
+<p>Except I’ve encountered an issue when attempt to get this setup. Although eth1 works normally, eth0 (the bridge) will not send any requests. Curl or ping simply time out. However, even more strangely, I can still access cockpit via the ip address that it has setup.</p>
+<p>For whatever reason, this bridge setup behaves different on debian vs on rocky linux. Even after a reboot, it still doesn’t work.</p>
+<p>Change of plans. Rather than attempting to get away with the bridge also being able to act as a normal interface, I think I will just create two veths attatch them to a singular bridge which does not get an ip address.</p>
+<p>So I create one bridge, create two veth pairs (eth1-veth1, and eth0-veth0), and attempt to curl using eth0. Nothing. I reboot. Same result.</p>
+<p>What?</p>
+<p>I looked at the ip route</p>
 
 
 </section>
