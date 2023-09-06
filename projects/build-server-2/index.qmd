@@ -857,17 +857,17 @@ In addition to all this, it persists past a reboot.
 
 Now for the ultimate test: Nested bridging. 
 
-Steps: 
+Steps (assuming [predictable network interface names](https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/8/html/configuring_and_managing_networking/consistent-network-interface-device-naming_configuring-and-managing-networking) are enabled, because then the names eth0 and eth1 are unused): 
 
-Create bridge0 via cockpit and enslave the singular "physical" interface to it using the ui. 
+1. Create eth0 via cockpit and enslave the singular "physical" interface to it using the ui. 
 
-`nmcli con add type veth ifname eth0fake0 con-name eth0fake0 veth.peer eth0fake0`
+2. `nmcli con add type veth ifname veth1 con-name veth1 veth.peer eth1`
 
-add ethfake0 as a port to bridge0 via cockpit.
+3. add veth1 as a port to eth0 via cockpit.
 
 And now you have two network interfaces. Now I will attempt to do this again, creating a bridge on another bridge. 
 
-And it works. `eth2`, gets internet access. I can also create a macvtap interface on the nested bridge, which works as I'd expect there as well.
+And it works. `eth1`, gets internet access. I can also create a macvtap interface on the nested bridge, which works as I'd expect there as well.
 
 This setup even persists a reboot. 
 
@@ -1072,6 +1072,90 @@ target     prot opt source               destination
 ```
 
 Both have firewalls disabled. The only noticable difference between the two is the version of the linux kernel in use. Debian is using `Linux debian 6.1.0-11-amd64`, whereas rocky is using `Linux rocky 5.14.0-284.25.1.el9_2.x86_64`.
+
+There are several things to test. The first is to test a different kernel version, because this could be a kernel bug, relating to linux bridges. 
+
+Another thing to test is if this is a networkmanager bug, so I could attempt to not use networkmanager to create bridges, and instead use ip.
+
+So the first thing I try is a newer kernel. The [ELrepo](http://elrepo.org/tiki/HomePage) is an unofficial repo for Red Hat Enterprise Linux (RHEL, or EL), and clones, like my rocky linux. The steps to add it are on the linked page. 
+
+Then, I nabbed the [`kernel-ml`](http://elrepo.org/tiki/kernel-ml) package, which is the latest stable mainline linux kernel. Now, my rocky linux virtual machine is using `Linux rocky 6.5.1-1.el9.elrepo.x86_64`. 
+
+And same thing. 
+
+So it's probably not a kernel bug. Probably. The possibility that the RHEL, or the ELRepo kernel has some difference that causes this bug, is very low. 
+
+
+When looking at the cockpit page for networking, I see that eth0 (my bridge) is receiving data, but the sending data stays at 0. Strange. 
+
+It probably would have to be a difference between the network configuration between the two distros. Either networkmanager is configured differently by default, or there is a bug in the networking stack. 
+
+For example, in debian:
+
+```{.ini filename="/etc/NetworkManager/NetworkManager.conf" .code-overflow-wrap}
+root@debian:/etc/NetworkManager# cat NetworkManager.conf 
+[main]
+plugins=ifupdown,keyfile
+
+[ifupdown]
+# I changed this from false to true to force NetworkManager to manage every single thing, including the ethernet interface which it didn't do by default. 
+managed=true 
+```
+
+On the other hand, rocky has everything in this file commented out. 
+
+And yup. When I change the relevant options in rocky's NetworkManager.conf, it works now. 
+
+```{.ini filename="/etc/NetworkManager/NetworkManager.conf"}
+.....
+.....
+[main]
+# Default is: 
+#plugins=keyfile,ifcfg-rh
+# commented out, of course. I added ifupdown and didn't remove ifcfg-rh, just in case it's needed, but it shouldn't be. 
+plugins=keyfile,ifcfg-rh,ifupdown
+
+[ifupdown]
+managed=true
+.....
+....
+```
+
+And it works now:
+
+```{.default}
+[root@rocky moonpie]# ping google.com -I eth0 -c 1
+PING google.com (142.250.72.174) from 192.168.122.111 eth0: 56(84) bytes of data.
+64 bytes from lax17s50-in-f14.1e100.net (142.250.72.174): icmp_seq=1 ttl=113 time=4.81 ms
+
+--- google.com ping statistics ---
+1 packets transmitted, 1 received, 0% packet loss, time 0ms
+rtt min/avg/max/mdev = 4.808/4.808/4.808/0.000 ms
+[root@rocky moonpie]# ping google.com -I eth1 -c 1
+PING google.com (142.250.72.174) from 192.168.122.150 eth1: 56(84) bytes of data.
+64 bytes from lax17s50-in-f14.1e100.net (142.250.72.174): icmp_seq=1 ttl=113 time=14.9 ms
+
+--- google.com ping statistics ---
+1 packets transmitted, 1 received, 0% packet loss, time 0ms
+rtt min/avg/max/mdev = 14.887/14.887/14.887/0.000 ms
+```
+
+Why does this work now? 
+
+Just kidding, this setup doesn't survive a reboot. But it survives a reboot on debian?
+
+Okay, I played around a little. The correct order is:
+
+1. Edit NetworkManager.conf
+2. Reboot
+3. Then do bridge changes. 
+
+And this persists beyond a reboot. 
+
+Now I will test an all in one installation on a virtual machine. 
+
+
+
 
 
 
