@@ -1017,3 +1017,17 @@ But I'm not creating a cluster rigth now, and my two node cluster won't be able 
 
 So I can disable high availibility, which I will do and try again. 
 
+Except I've encountered an issue when attempt to get this setup. Although eth1 works normally, eth0 (the bridge) will not send any requests. Curl or ping simply time out. However, even more strangely, I can still access cockpit via the ip address that it has setup.
+
+For whatever reason, this bridge setup behaves different on debian vs on rocky linux. Even after a reboot, it still doesn't work. 
+
+Change of plans. Rather than attempting to get away with the bridge also being able to act as a normal interface, I think I will just create two veths attatch them to a singular bridge which does not get an ip address.
+
+So I create one bridge, create two veth pairs (eth1-veth1, and eth0-veth0), and attempt to curl using eth0. Nothing. I reboot. Same result. 
+
+What? 
+
+I looked at the ip route 
+
+
+
