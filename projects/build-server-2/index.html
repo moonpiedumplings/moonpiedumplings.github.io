@@ -798,12 +798,14 @@ root@debian:/home/moonpie# </code></pre>
 <p>I created a macvtap interface on top of the eth0 interface and it automatically get’s it’s own ipv4 address. I can curl using the –interface macvtap0 option, and I can access services hosting on this machine via the ip address this interface has.</p>
 <p>In addition to all this, it persists past a reboot.</p>
 <p>Now for the ultimate test: Nested bridging.</p>
-<p>Steps:</p>
-<p>Create bridge0 via cockpit and enslave the singular “physical” interface to it using the ui.</p>
-<p><code>nmcli con add type veth ifname eth0fake0 con-name eth0fake0 veth.peer eth0fake0</code></p>
-<p>add ethfake0 as a port to bridge0 via cockpit.</p>
+<p>Steps (assuming <a href="https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/8/html/configuring_and_managing_networking/consistent-network-interface-device-naming_configuring-and-managing-networking">predictable network interface names</a> are enabled, because then the names eth0 and eth1 are unused):</p>
+<ol type="1">
+<li><p>Create eth0 via cockpit and enslave the singular “physical” interface to it using the ui.</p></li>
+<li><p><code>nmcli con add type veth ifname veth1 con-name veth1 veth.peer eth1</code></p></li>
+<li><p>add veth1 as a port to eth0 via cockpit.</p></li>
+</ol>
 <p>And now you have two network interfaces. Now I will attempt to do this again, creating a bridge on another bridge.</p>
-<p>And it works. <code>eth2</code>, gets internet access. I can also create a macvtap interface on the nested bridge, which works as I’d expect there as well.</p>
+<p>And it works. <code>eth1</code>, gets internet access. I can also create a macvtap interface on the nested bridge, which works as I’d expect there as well.</p>
 <p>This setup even persists a reboot.</p>
 <p>Now?</p>
 <p>To do it all again but with a naming scheme that doesn’t suck.</p>
@@ -953,6 +955,71 @@ root@debian:/home/moonpie# </code></pre>
 <span id="cb43-8"><a href="#cb43-8" aria-hidden="true" tabindex="-1"></a>Chain OUTPUT (policy ACCEPT)</span>
 <span id="cb43-9"><a href="#cb43-9" aria-hidden="true" tabindex="-1"></a>target     prot opt source               destination         </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Both have firewalls disabled. The only noticable difference between the two is the version of the linux kernel in use. Debian is using <code>Linux debian 6.1.0-11-amd64</code>, whereas rocky is using <code>Linux rocky 5.14.0-284.25.1.el9_2.x86_64</code>.</p>
+<p>There are several things to test. The first is to test a different kernel version, because this could be a kernel bug, relating to linux bridges.</p>
+<p>Another thing to test is if this is a networkmanager bug, so I could attempt to not use networkmanager to create bridges, and instead use ip.</p>
+<p>So the first thing I try is a newer kernel. The <a href="http://elrepo.org/tiki/HomePage">ELrepo</a> is an unofficial repo for Red Hat Enterprise Linux (RHEL, or EL), and clones, like my rocky linux. The steps to add it are on the linked page.</p>
+<p>Then, I nabbed the <a href="http://elrepo.org/tiki/kernel-ml"><code>kernel-ml</code></a> package, which is the latest stable mainline linux kernel. Now, my rocky linux virtual machine is using <code>Linux rocky 6.5.1-1.el9.elrepo.x86_64</code>.</p>
+<p>And same thing.</p>
+<p>So it’s probably not a kernel bug. Probably. The possibility that the RHEL, or the ELRepo kernel has some difference that causes this bug, is very low.</p>
+<p>When looking at the cockpit page for networking, I see that eth0 (my bridge) is receiving data, but the sending data stays at 0. Strange.</p>
+<p>It probably would have to be a difference between the network configuration between the two distros. Either networkmanager is configured differently by default, or there is a bug in the networking stack.</p>
+<p>For example, in debian:</p>
+<div class="code-with-filename">
+<div class="code-with-filename-file">
+<pre><strong>/etc/NetworkManager/NetworkManager.conf</strong></pre>
+</div>
+<div class="sourceCode" id="cb44"><pre class="sourceCode ini code-overflow-wrap code-with-copy"><code class="sourceCode ini"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a><span class="dt">root@debian:/etc/NetworkManager# cat NetworkManager.conf </span></span>
+<span id="cb44-2"><a href="#cb44-2" aria-hidden="true" tabindex="-1"></a><span class="kw">[main]</span></span>
+<span id="cb44-3"><a href="#cb44-3" aria-hidden="true" tabindex="-1"></a><span class="dt">plugins</span><span class="ot">=</span><span class="st">ifupdown,keyfile</span></span>
+<span id="cb44-4"><a href="#cb44-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb44-5"><a href="#cb44-5" aria-hidden="true" tabindex="-1"></a><span class="kw">[ifupdown]</span></span>
+<span id="cb44-6"><a href="#cb44-6" aria-hidden="true" tabindex="-1"></a><span class="co"># I changed this from false to true to force NetworkManager to manage every single thing, including the ethernet interface which it didn't do by default. </span></span>
+<span id="cb44-7"><a href="#cb44-7" aria-hidden="true" tabindex="-1"></a><span class="dt">managed</span><span class="ot">=</span><span class="kw">true</span><span class="st"> </span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>On the other hand, rocky has everything in this file commented out.</p>
+<p>And yup. When I change the relevant options in rocky’s NetworkManager.conf, it works now.</p>
+<div class="code-with-filename">
+<div class="code-with-filename-file">
+<pre><strong>/etc/NetworkManager/NetworkManager.conf</strong></pre>
+</div>
+<div class="sourceCode" id="cb45"><pre class="sourceCode ini code-with-copy"><code class="sourceCode ini"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a><span class="dt">.....</span></span>
+<span id="cb45-2"><a href="#cb45-2" aria-hidden="true" tabindex="-1"></a><span class="dt">.....</span></span>
+<span id="cb45-3"><a href="#cb45-3" aria-hidden="true" tabindex="-1"></a><span class="kw">[main]</span></span>
+<span id="cb45-4"><a href="#cb45-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Default is: </span></span>
+<span id="cb45-5"><a href="#cb45-5" aria-hidden="true" tabindex="-1"></a><span class="co">#plugins=keyfile,ifcfg-rh</span></span>
+<span id="cb45-6"><a href="#cb45-6" aria-hidden="true" tabindex="-1"></a><span class="co"># commented out, of course. I added ifupdown and didn't remove ifcfg-rh, just in case it's needed, but it shouldn't be. </span></span>
+<span id="cb45-7"><a href="#cb45-7" aria-hidden="true" tabindex="-1"></a><span class="dt">plugins</span><span class="ot">=</span><span class="st">keyfile,ifcfg-rh,ifupdown</span></span>
+<span id="cb45-8"><a href="#cb45-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb45-9"><a href="#cb45-9" aria-hidden="true" tabindex="-1"></a><span class="kw">[ifupdown]</span></span>
+<span id="cb45-10"><a href="#cb45-10" aria-hidden="true" tabindex="-1"></a><span class="dt">managed</span><span class="ot">=</span><span class="kw">true</span></span>
+<span id="cb45-11"><a href="#cb45-11" aria-hidden="true" tabindex="-1"></a><span class="dt">.....</span></span>
+<span id="cb45-12"><a href="#cb45-12" aria-hidden="true" tabindex="-1"></a><span class="dt">....</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>And it works now:</p>
+<div class="sourceCode" id="cb46"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a>[root@rocky moonpie]# ping google.com -I eth0 -c 1</span>
+<span id="cb46-2"><a href="#cb46-2" aria-hidden="true" tabindex="-1"></a>PING google.com (142.250.72.174) from 192.168.122.111 eth0: 56(84) bytes of data.</span>
+<span id="cb46-3"><a href="#cb46-3" aria-hidden="true" tabindex="-1"></a>64 bytes from lax17s50-in-f14.1e100.net (142.250.72.174): icmp_seq=1 ttl=113 time=4.81 ms</span>
+<span id="cb46-4"><a href="#cb46-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb46-5"><a href="#cb46-5" aria-hidden="true" tabindex="-1"></a>--- google.com ping statistics ---</span>
+<span id="cb46-6"><a href="#cb46-6" aria-hidden="true" tabindex="-1"></a>1 packets transmitted, 1 received, 0% packet loss, time 0ms</span>
+<span id="cb46-7"><a href="#cb46-7" aria-hidden="true" tabindex="-1"></a>rtt min/avg/max/mdev = 4.808/4.808/4.808/0.000 ms</span>
+<span id="cb46-8"><a href="#cb46-8" aria-hidden="true" tabindex="-1"></a>[root@rocky moonpie]# ping google.com -I eth1 -c 1</span>
+<span id="cb46-9"><a href="#cb46-9" aria-hidden="true" tabindex="-1"></a>PING google.com (142.250.72.174) from 192.168.122.150 eth1: 56(84) bytes of data.</span>
+<span id="cb46-10"><a href="#cb46-10" aria-hidden="true" tabindex="-1"></a>64 bytes from lax17s50-in-f14.1e100.net (142.250.72.174): icmp_seq=1 ttl=113 time=14.9 ms</span>
+<span id="cb46-11"><a href="#cb46-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb46-12"><a href="#cb46-12" aria-hidden="true" tabindex="-1"></a>--- google.com ping statistics ---</span>
+<span id="cb46-13"><a href="#cb46-13" aria-hidden="true" tabindex="-1"></a>1 packets transmitted, 1 received, 0% packet loss, time 0ms</span>
+<span id="cb46-14"><a href="#cb46-14" aria-hidden="true" tabindex="-1"></a>rtt min/avg/max/mdev = 14.887/14.887/14.887/0.000 ms</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Why does this work now?</p>
+<p>Just kidding, this setup doesn’t survive a reboot. But it survives a reboot on debian?</p>
+<p>Okay, I played around a little. The correct order is:</p>
+<ol type="1">
+<li>Edit NetworkManager.conf</li>
+<li>Reboot</li>
+<li>Then do bridge changes.</li>
+</ol>
+<p>And this persists beyond a reboot.</p>
+<p>Now I will test an all in one installation on a virtual machine.</p>
 
 
 </section>
