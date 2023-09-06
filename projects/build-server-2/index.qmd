@@ -1027,7 +1027,53 @@ So I create one bridge, create two veth pairs (eth1-veth1, and eth0-veth0), and 
 
 What? 
 
-I looked at the ip route 
+ip route:
+
+```{.default}
+root@debian:/home/moonpie# ip route
+default via 192.168.122.1 dev eth1 proto dhcp src 192.168.122.97 metric 101 
+default via 192.168.122.1 dev eth0 proto static metric 425 
+192.168.122.0/24 dev eth1 proto kernel scope link src 192.168.122.97 metric 101 
+192.168.122.0/24 dev eth0 proto kernel scope link src 192.168.122.4 metric 425 
+```
+
+```{.default}
+[moonpie@rocky ~]$ ip route
+default via 192.168.122.1 dev eth1 proto dhcp src 192.168.122.228 metric 101 
+default via 192.168.122.1 dev eth0 proto static metric 425 
+192.168.122.0/24 dev eth1 proto kernel scope link src 192.168.122.228 metric 101 
+192.168.122.0/24 dev eth0 proto kernel scope link src 192.168.122.111 metric 425 
+```
+
+iptables:
+
+```{.default}
+[moonpie@rocky ~]$ sudo iptables -L
+Chain INPUT (policy ACCEPT)
+target     prot opt source               destination         
+
+Chain FORWARD (policy ACCEPT)
+target     prot opt source               destination         
+
+Chain OUTPUT (policy ACCEPT)
+target     prot opt source               destination       
+```
+
+```{.default}
+root@debian:/home/moonpie# sudo iptables -L
+Chain INPUT (policy ACCEPT)
+target     prot opt source               destination         
+
+Chain FORWARD (policy ACCEPT)
+target     prot opt source               destination         
+
+Chain OUTPUT (policy ACCEPT)
+target     prot opt source               destination         
+```
+
+Both have firewalls disabled. The only noticable difference between the two is the version of the linux kernel in use. Debian is using `Linux debian 6.1.0-11-amd64`, whereas rocky is using `Linux rocky 5.14.0-284.25.1.el9_2.x86_64`.
+
+
 
 
 
