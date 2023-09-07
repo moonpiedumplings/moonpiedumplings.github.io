@@ -1017,9 +1017,20 @@ root@debian:/home/moonpie# </code></pre>
 <li>Edit NetworkManager.conf</li>
 <li>Reboot</li>
 <li>Then do bridge changes.</li>
+<li>Reboot just to make sure they persist.</li>
 </ol>
 <p>And this persists beyond a reboot.</p>
 <p>Now I will test an all in one installation on a virtual machine.</p>
+<p>So I set it up… and same issue. I think I may need both a newer kernel, and the nmcli changes.</p>
+<p>I install a newer kernel again, and it works. Wow. I think I may actually be encountering a bug. Fascinating.</p>
+<p>But that’s besides the point. Now I will attempt to do an all in one installation of openstack using kolla ansible.</p>
+<p>The main difficulty I am anticipating is the fact that installing docker changes the forward networking rules, from the default accept to a policy of drop.</p>
+<p>But lucky me, that appears to be a debian thing. My network setup still works even after running the bootstrap step.</p>
+<p>I even ran the pre run and the deploy steps, and they worked fine until I ran out of memory.</p>
+<p>After adding more memory to the virtual machine, it worked:</p>
+<p>After going to the <a href="https://docs.openstack.org/kolla-ansible/latest/user/quickstart.html#using-openstack">“Using Openstack”</a>, and running the post deploy steps to create an admin password, I have an openstack system:</p>
+<p><img src="images/horizonlogin.jpg" class="img-fluid"></p>
+<p>I have no idea how to use this thing. I though it work similarly to proxmox, where I can just upload an iso and then go through the installation process. It seems to be more complex than that.</p>
 
 
 </section>
