@@ -179,7 +179,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#vps-networking" id="toc-vps-networking" class="nav-link" data-scroll-target="#vps-networking">VPS Networking</a></li>
   </ul></li>
   </ul></li>
-  <li><a href="#using-openstack" id="toc-using-openstack" class="nav-link" data-scroll-target="#using-openstack">Using openstack</a></li>
+  <li><a href="#using-openstack" id="toc-using-openstack" class="nav-link" data-scroll-target="#using-openstack">Using openstack</a>
+  <ul class="collapse">
+  <li><a href="#cinder" id="toc-cinder" class="nav-link" data-scroll-target="#cinder">Cinder</a></li>
+  <li><a href="#zun-1" id="toc-zun-1" class="nav-link" data-scroll-target="#zun-1">Zun</a></li>
+  <li><a href="#nova" id="toc-nova" class="nav-link" data-scroll-target="#nova">Nova</a></li>
+  </ul></li>
   </ul>
 </nav>
     </div>
@@ -1040,8 +1045,54 @@ root@debian:/home/moonpie# </code></pre>
 <p>I have no idea how to use this thing. I thought it would work similarly to proxmox, where I can just upload an iso and then go through the installation process. It seems to be more complex than that.</p>
 <p>The first thing I did was attempt to create a network. It asked me for the physical network name, so I attempted to put “eth1” in that box. Apparently, you don’t put the physical interface there. The default physical interface for neutron is called “physnet1”. I put physnet1 there, and attempted to create an “instance” or virtaul machine with that network in use…</p>
 <p>But adding that network was not an option. What?</p>
+<p>Now that I got openstack set up in a virtual machine, I did a lot of experimenation with openstack. The first thing I did was to use kolla-ansible’s <a href="https://github.com/openstack/kolla-ansible/blob/da2d8e8b83e696795f4b9c774fc7e6787a1d700e/tools/init-runonce">init-runonce</a> script which creates an image for use with the cloud, and some demo networks.</p>
+<p>However, for some reason, this init-runonce script creates the “public” network with the completely wrong ip subnet. It creates the public subnet with a 10.0.1.0/24, when in actuality, my public subnet is the libvirt default NAT subnet, 192.168.122.0/24.</p>
+<p>I played a bit more with the init-runonce script, but nothing worked.</p>
+<p>Eventually, I decided to create a provider network on my own. I first sourced <code>/etc/kolla/admin-openrc.sh</code> because this was the only way I could get openstack to authenticate properly.</p>
+<div class="sourceCode" id="cb47"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a>openstack network create --external --share \</span>
+<span id="cb47-2"><a href="#cb47-2" aria-hidden="true" tabindex="-1"></a>  --provider-physical-network physnet1 --provider-network-type flat \</span>
+<span id="cb47-3"><a href="#cb47-3" aria-hidden="true" tabindex="-1"></a>  libvirtnat</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>I then associated the correct subnet, and gateway in the ui. And voila, my virtual machine has internet access. One way. I can ping and curl google.com, but I can’t do the opposite.</p>
+<p>The issue was security groups. By default, block all ingress traffic, but allow all egress traffic. By allowing icmp (ping packets) ingress traffic, I found that I could now ping the VPS I had created.</p>
+<p>To allow all traffic, I can create a security group in the UI, with the “other protocol” selected, and the -1 wildcard on what protocol of traffic to accept. Now, I fully access my VPS.</p>
+<p>On the other hand, I could also just disable firewall on all my VPS’s and use the security groups instead for granular control. Since you can have multiple security groups (what happens if they have conflicting rules?), maybe I could have security rules per service, and then just add an instance to security rules as needed.</p>
+<p>Anyway, so now the other question I have: With provider networks, do I need to have the networking components and the compute components on the same node?</p>
+<p>That would be the next thing to test. Thankfully, kolla-ansible has <a href="https://docs.openstack.org/kolla-ansible/latest/user/multinode.html">multinode</a> deployment instructions as well as single node.</p>
+<p>The other thing I need to consider is how to set static ip’s for the virtual machines, from openstack itself. By default, <em>openstack</em> appears to take over the role of DHCP provider, meaning there is a chance that any ip’s it gets/sets for anything would conflict with my router.</p>
+<p>To create an openstack subnet on my provider network, which uses the external dhcp server:</p>
+<div class="sourceCode" id="cb48"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb48-1"><a href="#cb48-1" aria-hidden="true" tabindex="-1"></a>openstack network set --no-dhcp libvirt-nat</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb49"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a>openstack subnet create --network libvirtnat --subnet-range 192.168.122.0/24 --gateway 192.168.122.1 libvirt-subnet</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb50"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb50-1"><a href="#cb50-1" aria-hidden="true" tabindex="-1"></a>openstack port create --network libvirtnat --fixed-ip subnet=libvirt-subnet,ip-address=192.168.122.1 --disable-port-security dhcp-port</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>But after I did this, I noticed something. Regardless of whether I had a port or a subnet used, the interface ip address did not match the actual ip address in use by the virtual machine. Openstack reporting the wrong ip address, but I could find the correct one by using nmap and scanning the entire libvirt nat subnet, or using <code>ip a</code> in the virtual machine.</p>
+<p>Actually, I don’t even have internet acess when not using this port. For some reason, attempting to put a virtual machine on the public subnet, doesn’t give it any actual internet access.</p>
+<p>I tried something else. In the cockpit networkmanager interface, I realized that I been simply leaving the eth1, the neutron external interface, still active, with an ip address, and everything. And other times, I had been disabling it entirely from networkmanager. Rather than disable it, I simply set just ipv4 and ipv6 addresses to disabled, while still keeping the little toggle in cockpit set to on.</p>
+<p>With this setup, The ip adddress that openstack reported this instance getting, and the ip address on the instance itself matched.</p>
+<p>Also, the subnet had dhcp enabled, using openstack’s dhcp to assign an ip address, from the reserved pool.</p>
+<p>But this ip still isn’t static.</p>
+<p>Except, maybe I don’t need to worry about that. I did some searching around, and on <a href="https://www.reddit.com/r/openstack/comments/10qcgq9/instance_gets_dhcp_from_external_source_neutron/j6psise/">reddit</a> someone mentioned how neutron port security rules prevent an openstack VM from gaining any ip other than the one it has been allocated.</p>
+<p>So basically, each VM get’s a port on the subnet (and the port includes a mac address), and openstack’s dhcp server uses the mac address to give the same port the same ip address every time.</p>
+<p>In order to avoid conflict between the</p>
+<section id="cinder" class="level2">
+<h2 class="anchored" data-anchor-id="cinder">Cinder</h2>
+<p>Configuring cinder seems to require more than simply enabling the service, according to the <a href="https://docs.openstack.org/kolla-ansible/latest/reference/storage/cinder-guide.html">kolla-ansible docs</a>. I’ve selected the nfs storage backend, so I followed the instructions, but there is no nfs service available.</p>
+<p><code>sudo dnf install nfs-utils</code> makes the service available to me.</p>
+<p>And the docs are wrong, the name of the nfs system service is not nfs or nfsd, but actually:</p>
+<p><code>systemctl enable --now nfs-server</code>, at least on rocky linux.</p>
+<p>Cinder seems to be the volume mount feature that a minimal openstack install is missing. With it, I can do things like the</p>
+</section>
+<section id="zun-1" class="level2">
+<h2 class="anchored" data-anchor-id="zun-1">Zun</h2>
+<p>Zun is the container service. <a href="https://docs.openstack.org/kolla-ansible/latest/reference/compute/zun-guide.html" class="uri">https://docs.openstack.org/kolla-ansible/latest/reference/compute/zun-guide.html</a>.</p>
+<p>Configuring this is pretty easy, but it should be noted that the user running kolla-ansible must be a member of the docker group, and I don’t know how to set that up before docker is installed, so you have to run bootstrap first, and then set up users and groups.</p>
+</section>
+<section id="nova" class="level2">
+<h2 class="anchored" data-anchor-id="nova">Nova</h2>
+<p>Nova is one of the default services. By default, it uses libvirt to configure qemu + kvm. This is not satisfactory for me, since I have an nvidia gpu and it is a bit easier to use</p>
+<p><a href="https://docs.openstack.org/nova/2023.1/admin/pci-passthrough.html">PCI device passthrough</a></p>
+<p>I may also want <a href="https://docs.openstack.org/kolla-ansible/latest/reference/compute/libvirt-guide.html#host-vs-containerised-libvirt">an external libvirt</a> daemon, because that may be easier to set up pci device passthrough and whatnot.</p>
 
 
+</section>
 </section>
 
 </main> <!-- /main -->
