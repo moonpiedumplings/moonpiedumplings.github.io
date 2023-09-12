@@ -487,21 +487,28 @@
     "href": "projects/build-server-2/index.html#cinder",
     "title": "Building my own Server Part 2 — Software",
     "section": "Cinder",
-    "text": "Cinder\nConfiguring cinder seems to require more than simply enabling the service, according to the kolla-ansible docs. I’ve selected the nfs storage backend, so I followed the instructions, but there is no nfs service available.\nsudo dnf install nfs-utils makes the service available to me.\nAnd the docs are wrong, the name of the nfs system service is not nfs or nfsd, but actually:\nsystemctl enable --now nfs-server, at least on rocky linux.\nCinder seems to be the volume mount feature that a minimal openstack install is missing. With it, I can do things like the"
+    "text": "Cinder\nConfiguring cinder seems to require more than simply enabling the service, according to the kolla-ansible docs. I’ve selected the nfs storage backend, so I followed the instructions, but there is no nfs service available.\nsudo dnf install nfs-utils makes the service available to me.\nAnd the docs are wrong, the name of the nfs system service is not nfs or nfsd, but actually:\nsystemctl enable --now nfs-server, at least on rocky linux.\nCinder seems to be the volume mount feature that a minimal openstack install is missing. With it, I can do things like the volume mounts that I expected openstack to have by default."
   },
   {
     "objectID": "projects/build-server-2/index.html#zun-1",
     "href": "projects/build-server-2/index.html#zun-1",
     "title": "Building my own Server Part 2 — Software",
     "section": "Zun",
-    "text": "Zun\nZun is the container service. https://docs.openstack.org/kolla-ansible/latest/reference/compute/zun-guide.html.\nConfiguring this is pretty easy, but it should be noted that the user running kolla-ansible must be a member of the docker group, and I don’t know how to set that up before docker is installed, so you have to run bootstrap first, and then set up users and groups."
+    "text": "Zun\nZun is the container service. https://docs.openstack.org/kolla-ansible/latest/reference/compute/zun-guide.html.\nConfiguring this is pretty easy, but it should be noted that the user running kolla-ansible must be a member of the docker group, and I don’t know how to set that up before docker is installed, so you have to run bootstrap first, and then set up users and groups.\nAccording to zun’s policy rules it is not possible to create privileged containers by default. Also, Ubuntu’s launchpad has something about this as well.\nOne thing I am thinking about is how to passthrough gpu’s and other things to containers. If I desire to do something like an AI trainig on docker containers (since a lot is done on kubernetes nvidia clusters), then I would end up using Zun for it."
   },
   {
     "objectID": "projects/build-server-2/index.html#nova",
     "href": "projects/build-server-2/index.html#nova",
     "title": "Building my own Server Part 2 — Software",
     "section": "Nova",
-    "text": "Nova\nNova is one of the default services. By default, it uses libvirt to configure qemu + kvm. This is not satisfactory for me, since I have an nvidia gpu and it is a bit easier to use\nPCI device passthrough\nI may also want an external libvirt daemon, because that may be easier to set up pci device passthrough and whatnot."
+    "text": "Nova\nMain openstack doc for nova\n\nLXC\nNova is one of the default services. By default, it uses libvirt to configure qemu + kvm. This is not satisfactory for me, since I have an nvidia gpu and it is a bit easier to use with containers, such as docker or lxc. Because I don’t have a “server” gpu, I won’t be able to get access to vgpu, a feature which enables you to split a gpu between multiple virtual machines.\nHowever, it is possible to split a gpu between multiple containers even without any special features.\nOne interesting thing is that lxc and docker are just a frontend for a bunch of linux kernel features, so all you need is a supported kernel. According to the arch wiki article for libvirt, you don’t need to install any lxc related tools to actually use libvirt with lxc, you simply point libvirt at the lxc:/// connection. Note Arch linux doesn’t split packages, so everything libvirt needs is probably in one package. On ubuntu, for example, the openstack nova-lxc article mentions how on ubuntu, another package is needed to be installed.\nBut is it even possible to configure a multi hypervisor openstack cloud? One reddit commenter says no. In addition to that, the libvirt_virt_type is of the type “string” rather than the type “list”. This means that I would only be able to put one item here, either kvm or lxc.\nOne thing I could consider doing is running a privileged lxc/lxd container on the main compute node, and then make it another compute node which another virtualization type."
+  },
+  {
+    "objectID": "projects/build-server-2/index.html#gpu-passthrough",
+    "href": "projects/build-server-2/index.html#gpu-passthrough",
+    "title": "Building my own Server Part 2 — Software",
+    "section": "GPU passthrough",
+    "text": "GPU passthrough\nHowever, even if I do that, then\nPCI device passthrough\nBased on this doc, it looks like I need to create flavors for virtual machines, which have the allocated gpu’s set up.\nI may also want an external libvirt daemon, because that may be easier to set up pci device passthrough and whatnot."
   },
   {
     "objectID": "projects/compiling-kasmvnc-on-nixos/index.html",

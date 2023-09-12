@@ -183,7 +183,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <ul class="collapse">
   <li><a href="#cinder" id="toc-cinder" class="nav-link" data-scroll-target="#cinder">Cinder</a></li>
   <li><a href="#zun-1" id="toc-zun-1" class="nav-link" data-scroll-target="#zun-1">Zun</a></li>
-  <li><a href="#nova" id="toc-nova" class="nav-link" data-scroll-target="#nova">Nova</a></li>
+  <li><a href="#nova" id="toc-nova" class="nav-link" data-scroll-target="#nova">Nova</a>
+  <ul class="collapse">
+  <li><a href="#lxc" id="toc-lxc" class="nav-link" data-scroll-target="#lxc">LXC</a></li>
+  </ul></li>
+  <li><a href="#gpu-passthrough" id="toc-gpu-passthrough" class="nav-link" data-scroll-target="#gpu-passthrough">GPU passthrough</a></li>
   </ul></li>
   </ul>
 </nav>
@@ -1078,17 +1082,32 @@ root@debian:/home/moonpie# </code></pre>
 <p><code>sudo dnf install nfs-utils</code> makes the service available to me.</p>
 <p>And the docs are wrong, the name of the nfs system service is not nfs or nfsd, but actually:</p>
 <p><code>systemctl enable --now nfs-server</code>, at least on rocky linux.</p>
-<p>Cinder seems to be the volume mount feature that a minimal openstack install is missing. With it, I can do things like the</p>
+<p>Cinder seems to be the volume mount feature that a minimal openstack install is missing. With it, I can do things like the volume mounts that I expected openstack to have by default.</p>
 </section>
 <section id="zun-1" class="level2">
 <h2 class="anchored" data-anchor-id="zun-1">Zun</h2>
 <p>Zun is the container service. <a href="https://docs.openstack.org/kolla-ansible/latest/reference/compute/zun-guide.html" class="uri">https://docs.openstack.org/kolla-ansible/latest/reference/compute/zun-guide.html</a>.</p>
 <p>Configuring this is pretty easy, but it should be noted that the user running kolla-ansible must be a member of the docker group, and I don’t know how to set that up before docker is installed, so you have to run bootstrap first, and then set up users and groups.</p>
+<p>According to <a href="https://docs.openstack.org/zun/latest/configuration/policy.html">zun’s policy rules</a> it is not possible to create privileged containers by default. Also, <a href="https://blueprints.launchpad.net/zun/+spec/support-zun-create-privileged">Ubuntu’s launchpad</a> has something about this as well.</p>
+<p>One thing I am thinking about is how to passthrough gpu’s and other things to containers. If I desire to do something like an AI trainig on docker containers (since a lot is done on kubernetes nvidia clusters), then I would end up using Zun for it.</p>
 </section>
 <section id="nova" class="level2">
 <h2 class="anchored" data-anchor-id="nova">Nova</h2>
-<p>Nova is one of the default services. By default, it uses libvirt to configure qemu + kvm. This is not satisfactory for me, since I have an nvidia gpu and it is a bit easier to use</p>
+<p><a href="https://docs.openstack.org/nova/latest/">Main openstack doc for nova</a></p>
+<section id="lxc" class="level3">
+<h3 class="anchored" data-anchor-id="lxc">LXC</h3>
+<p>Nova is one of the default services. By default, it uses libvirt to configure qemu + kvm. This is not satisfactory for me, since I have an nvidia gpu and it is a bit easier to use with containers, such as docker or lxc. Because I don’t have a “server” gpu, I won’t be able to get access to vgpu, a feature which enables you to split a gpu between multiple virtual machines.</p>
+<p>However, it is possible to split a gpu between multiple containers even without any special features.</p>
+<p>One interesting thing is that lxc and docker are just a frontend for a bunch of linux kernel features, so all you need is a supported kernel. According to the <a href="https://wiki.archlinux.org/title/Libvirt#Server">arch wiki</a> article for libvirt, you don’t need to install any lxc related tools to actually use libvirt with lxc, you simply point libvirt at the <code>lxc:///</code> connection. Note Arch linux doesn’t split packages, so everything libvirt needs is probably in one package. On ubuntu, for example, the <a href="https://docs.openstack.org/nova/latest/admin/configuration/hypervisor-lxc.html">openstack nova-lxc</a> article mentions how on ubuntu, another package is needed to be installed.</p>
+<p>But is it even possible to configure a multi hypervisor openstack cloud? One <a href="https://www.reddit.com/r/openstack/comments/8hr93t/is_openstack_multihypervisor_configuration_kvm/dym7dtj/">reddit commenter</a> says no. In addition to that, the <a href="https://docs.openstack.org/nova/latest/configuration/config.html#libvirt.virt_type">libvirt_virt_type</a> is of the type “string” rather than the type “list”. This means that I would only be able to put one item here, either kvm or lxc.</p>
+<p>One thing I could consider doing is running a privileged lxc/lxd container on the main compute node, and then make it another compute node which another virtualization type.</p>
+</section>
+</section>
+<section id="gpu-passthrough" class="level2">
+<h2 class="anchored" data-anchor-id="gpu-passthrough">GPU passthrough</h2>
+<p>However, even if I do that, then</p>
 <p><a href="https://docs.openstack.org/nova/2023.1/admin/pci-passthrough.html">PCI device passthrough</a></p>
+<p>Based on this doc, it looks like I need to create flavors for virtual machines, which have the allocated gpu’s set up.</p>
 <p>I may also want <a href="https://docs.openstack.org/kolla-ansible/latest/reference/compute/libvirt-guide.html#host-vs-containerised-libvirt">an external libvirt</a> daemon, because that may be easier to set up pci device passthrough and whatnot.</p>
 
 
