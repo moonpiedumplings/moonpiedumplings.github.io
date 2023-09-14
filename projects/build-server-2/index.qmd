@@ -1176,7 +1176,7 @@ After going to the ["Using Openstack"](https://docs.openstack.org/kolla-ansible/
 
 
 
-# Using openstack
+# Deploying and Using Openstack
 
 
 I have no idea how to use this thing. I thought it would work similarly to proxmox, where I can just upload an iso and then go through the installation process. It seems to be more complex than that. 
@@ -1306,6 +1306,44 @@ I may also want [an external libvirt](https://docs.openstack.org/kolla-ansible/l
 
 I found a [reddit post](https://www.reddit.com/r/openstack/comments/16g7lmj/kolla_ansible_pci_passthrough/) where someone was asking for help about PCI passthrough with kolla-ansible, but no one has replied as of yet. 
 
-# Skyline
+## Skyline
 
-Skyline is the next gen web ui for openstack. By default, only skyline is installed
+Skyline is the next gen web ui for openstack. By default, only horizon, the older ui is installed. 
+
+
+According to this [doc](https://docs.openstack.org/skyline-console/latest/install/docker-install-ubuntu.html) skyline serves on 9999 by default. But according to this [doc](https://docs.openstack.org/skyline-console/latest/configuration/skyline-console-settings.html) skyline serves on port 8088 by default. But:
+
+```{.default}
+nmap scan report for 192.168.122.111
+Host is up (0.000092s latency).
+Not shown: 990 closed tcp ports (reset)
+PORT     STATE SERVICE         VERSION
+22/tcp   open  ssh             OpenSSH 8.7 (protocol 2.0)
+80/tcp   open  http            Apache httpd
+3306/tcp open  mysql           MySQL 5.5.5-10.11.5-MariaDB-log
+4567/tcp open  tram?
+5000/tcp open  http            Apache httpd
+8000/tcp open  http            Apache httpd
+8022/tcp open  ssh             OpenSSH 8.7 (protocol 2.0)
+9090/tcp open  ssl/zeus-admin?
+9998/tcp open  distinct32?
+9999/tcp open  http            nginx
+```
+
+Since only 9999 is up, I decided to visit it, but it timed out. 
+
+
+## Magnum
+
+<https://docs.openstack.org/kolla-ansible/latest/reference/containers/magnum-guide.html>
+
+Seems to be pretty simple to deploy. Needs an insecure option for autoscaling though, which doesn't look too good. 
+
+
+## Multi Node Install
+
+A multi node install is documented here: <https://docs.openstack.org/kolla-ansible/latest/user/multinode.html> 
+
+For convinience purpose, I will have my inventory git tracked, in the same repo as my blog.
+
+One thing I am confused about, is where does the globals.yml file go? In the all in one installation, it goes on the single server, which you both deploy from, and to. But if I am deploying to a different machine, do I put this file on the machines I am deploying to, or the machines I am deploying from?
