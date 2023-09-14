@@ -504,6 +504,27 @@
     "text": "GPU passthrough\nHowever, even if I do that, then\nPCI device passthrough\nBased on this doc, it looks like I need to create flavors for virtual machines, which have the allocated gpu’s set up.\nI may also want an external libvirt daemon, because that may be easier to set up pci device passthrough and whatnot.\nI found a reddit post where someone was asking for help about PCI passthrough with kolla-ansible, but no one has replied as of yet."
   },
   {
+    "objectID": "projects/build-server-2/index.html#skyline",
+    "href": "projects/build-server-2/index.html#skyline",
+    "title": "Building my own Server Part 2 — Software",
+    "section": "Skyline",
+    "text": "Skyline\nSkyline is the next gen web ui for openstack. By default, only horizon, the older ui is installed.\nAccording to this doc skyline serves on 9999 by default. But according to this doc skyline serves on port 8088 by default. But:\nnmap scan report for 192.168.122.111\nHost is up (0.000092s latency).\nNot shown: 990 closed tcp ports (reset)\nPORT     STATE SERVICE         VERSION\n22/tcp   open  ssh             OpenSSH 8.7 (protocol 2.0)\n80/tcp   open  http            Apache httpd\n3306/tcp open  mysql           MySQL 5.5.5-10.11.5-MariaDB-log\n4567/tcp open  tram?\n5000/tcp open  http            Apache httpd\n8000/tcp open  http            Apache httpd\n8022/tcp open  ssh             OpenSSH 8.7 (protocol 2.0)\n9090/tcp open  ssl/zeus-admin?\n9998/tcp open  distinct32?\n9999/tcp open  http            nginx\nSince only 9999 is up, I decided to visit it, but it timed out."
+  },
+  {
+    "objectID": "projects/build-server-2/index.html#magnum-1",
+    "href": "projects/build-server-2/index.html#magnum-1",
+    "title": "Building my own Server Part 2 — Software",
+    "section": "Magnum",
+    "text": "Magnum\nhttps://docs.openstack.org/kolla-ansible/latest/reference/containers/magnum-guide.html\nSeems to be pretty simple to deploy. Needs an insecure option for autoscaling though, which doesn’t look too good."
+  },
+  {
+    "objectID": "projects/build-server-2/index.html#multi-node-install",
+    "href": "projects/build-server-2/index.html#multi-node-install",
+    "title": "Building my own Server Part 2 — Software",
+    "section": "Multi Node Install",
+    "text": "Multi Node Install\nA multi node install is documented here: https://docs.openstack.org/kolla-ansible/latest/user/multinode.html\nFor convinience purpose, I will have my inventory git tracked, in the same repo as my blog.\nOne thing I am confused about, is where does the globals.yml file go? In the all in one installation, it goes on the single server, which you both deploy from, and to. But if I am deploying to a different machine, do I put this file on the machines I am deploying to, or the machines I am deploying from?"
+  },
+  {
     "objectID": "projects/compiling-kasmvnc-on-nixos/index.html",
     "href": "projects/compiling-kasmvnc-on-nixos/index.html",
     "title": "Compiling KasmVNC on NixOS",
