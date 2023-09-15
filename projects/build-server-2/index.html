@@ -1095,6 +1095,7 @@ root@debian:/home/moonpie# </code></pre>
 <p>According to <a href="https://docs.openstack.org/zun/latest/configuration/policy.html">zun’s policy rules</a> it is not possible to create privileged containers by default. Also, <a href="https://blueprints.launchpad.net/zun/+spec/support-zun-create-privileged">Ubuntu’s launchpad</a> has something about this as well.</p>
 <p>One thing I am thinking about is how to passthrough gpu’s and other things to containers. If I desire to do something like an AI trainig on docker containers (since a lot is done on kubernetes nvidia clusters), then I would end up using Zun for it.</p>
 <p>I found an article in <a href="https://github.com/openstack/zun/blob/master/specs/pci-device-model.rst">zun’s git</a> saying that it was in the works, but that document is literally 5 years old…</p>
+<p>I also found another [6 year old document about zun ]</p>
 </section>
 <section id="nova" class="level2">
 <h2 class="anchored" data-anchor-id="nova">Nova</h2>
@@ -1109,16 +1110,17 @@ root@debian:/home/moonpie# </code></pre>
 <p>The main issue with such a setup is how I would handle networking devices. If I run another container on the main compute node, then running it in privileged mode gives it access to <em>all</em> devices, which means all networking devices.</p>
 <p>No wait, this isn’t actually an issue because I can just configure it so that the container uses different network interfaces. It will still see them, which might cause issues, but it won’t be using them.</p>
 <p>So how can I run a privileged container with systemd?</p>
+<p>I found a <a href="https://developers.redhat.com/blog/2019/04/24/how-to-run-systemd-in-a-container">relevant article</a> from Red Hat.</p>
 </section>
 </section>
 <section id="gpu-passthrough" class="level2">
 <h2 class="anchored" data-anchor-id="gpu-passthrough">GPU passthrough</h2>
 <p>However, even if I do that, then</p>
-<p><a href="https://docs.openstack.org/nova/2023.1/admin/pci-passthrough.html">PCI device passthrough</a></p>
+<p><a href="https://docs.openstack.org/nova/latest/admin/pci-passthrough.html">PCI device passthrough</a></p>
 <p>Based on this doc, it looks like I need to create flavors for virtual machines, which have the allocated gpu’s set up.</p>
 <p>I may also want <a href="https://docs.openstack.org/kolla-ansible/latest/reference/compute/libvirt-guide.html#host-vs-containerised-libvirt">an external libvirt</a> daemon, because that may be easier to set up pci device passthrough and whatnot.</p>
 <p>I found a <a href="https://www.reddit.com/r/openstack/comments/16g7lmj/kolla_ansible_pci_passthrough/">reddit post</a> where someone was asking for help about PCI passthrough with kolla-ansible, but no one has replied as of yet.</p>
-<p>A few days later, they replied to their own comment.</p>
+<p>A few days later, they replied to their own post.</p>
 <blockquote class="blockquote">
 <p>Just in case anyone searches for this in the future: the file in /etc/kolla/config/nova needs to be named nova-compute.conf (NOT nova.conf) and then it will be added to the configuration.</p>
 </blockquote>
