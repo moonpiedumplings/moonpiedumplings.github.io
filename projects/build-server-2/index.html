@@ -188,6 +188,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#lxc" id="toc-lxc" class="nav-link" data-scroll-target="#lxc">LXC</a></li>
   </ul></li>
   <li><a href="#gpu-passthrough" id="toc-gpu-passthrough" class="nav-link" data-scroll-target="#gpu-passthrough">GPU passthrough</a></li>
+  <li><a href="#cyborg" id="toc-cyborg" class="nav-link" data-scroll-target="#cyborg">Cyborg</a></li>
   <li><a href="#skyline" id="toc-skyline" class="nav-link" data-scroll-target="#skyline">Skyline</a></li>
   <li><a href="#magnum-1" id="toc-magnum-1" class="nav-link" data-scroll-target="#magnum-1">Magnum</a></li>
   <li><a href="#multi-node-install" id="toc-multi-node-install" class="nav-link" data-scroll-target="#multi-node-install">Multi Node Install</a></li>
@@ -1093,6 +1094,7 @@ root@debian:/home/moonpie# </code></pre>
 <p>Configuring this is pretty easy, but it should be noted that the user running kolla-ansible must be a member of the docker group, and I don’t know how to set that up before docker is installed, so you have to run bootstrap first, and then set up users and groups.</p>
 <p>According to <a href="https://docs.openstack.org/zun/latest/configuration/policy.html">zun’s policy rules</a> it is not possible to create privileged containers by default. Also, <a href="https://blueprints.launchpad.net/zun/+spec/support-zun-create-privileged">Ubuntu’s launchpad</a> has something about this as well.</p>
 <p>One thing I am thinking about is how to passthrough gpu’s and other things to containers. If I desire to do something like an AI trainig on docker containers (since a lot is done on kubernetes nvidia clusters), then I would end up using Zun for it.</p>
+<p>I found an article in <a href="https://github.com/openstack/zun/blob/master/specs/pci-device-model.rst">zun’s git</a> saying that it was in the works, but that document is literally 5 years old…</p>
 </section>
 <section id="nova" class="level2">
 <h2 class="anchored" data-anchor-id="nova">Nova</h2>
@@ -1103,7 +1105,10 @@ root@debian:/home/moonpie# </code></pre>
 <p>However, it is possible to split a gpu between multiple containers even without any special features.</p>
 <p>One interesting thing is that lxc and docker are just a frontend for a bunch of linux kernel features, so all you need is a supported kernel. According to the <a href="https://wiki.archlinux.org/title/Libvirt#Server">arch wiki</a> article for libvirt, you don’t need to install any lxc related tools to actually use libvirt with lxc, you simply point libvirt at the <code>lxc:///</code> connection. Note Arch linux doesn’t split packages, so everything libvirt needs is probably in one package. On ubuntu, for example, the <a href="https://docs.openstack.org/nova/latest/admin/configuration/hypervisor-lxc.html">openstack nova-lxc</a> article mentions how on ubuntu, another package is needed to be installed.</p>
 <p>But is it even possible to configure a multi hypervisor openstack cloud? One <a href="https://www.reddit.com/r/openstack/comments/8hr93t/is_openstack_multihypervisor_configuration_kvm/dym7dtj/">reddit commenter</a> says no. In addition to that, the <a href="https://docs.openstack.org/nova/latest/configuration/config.html#libvirt.virt_type">libvirt_virt_type</a> is of the type “string” rather than the type “list”. This means that I would only be able to put one item here, either kvm or lxc.</p>
-<p>One thing I could consider doing is running a privileged lxc/lxd container on the main compute node, and then make it another compute node which another virtualization type.</p>
+<p>One thing I could consider doing is running a privileged container on the main compute node, and then make it another compute node which another virtualization type.</p>
+<p>The main issue with such a setup is how I would handle networking devices. If I run another container on the main compute node, then running it in privileged mode gives it access to <em>all</em> devices, which means all networking devices.</p>
+<p>No wait, this isn’t actually an issue because I can just configure it so that the container uses different network interfaces. It will still see them, which might cause issues, but it won’t be using them.</p>
+<p>So how can I run a privileged container with systemd?</p>
 </section>
 </section>
 <section id="gpu-passthrough" class="level2">
@@ -1113,6 +1118,14 @@ root@debian:/home/moonpie# </code></pre>
 <p>Based on this doc, it looks like I need to create flavors for virtual machines, which have the allocated gpu’s set up.</p>
 <p>I may also want <a href="https://docs.openstack.org/kolla-ansible/latest/reference/compute/libvirt-guide.html#host-vs-containerised-libvirt">an external libvirt</a> daemon, because that may be easier to set up pci device passthrough and whatnot.</p>
 <p>I found a <a href="https://www.reddit.com/r/openstack/comments/16g7lmj/kolla_ansible_pci_passthrough/">reddit post</a> where someone was asking for help about PCI passthrough with kolla-ansible, but no one has replied as of yet.</p>
+<p>A few days later, they replied to their own comment.</p>
+<blockquote class="blockquote">
+<p>Just in case anyone searches for this in the future: the file in /etc/kolla/config/nova needs to be named nova-compute.conf (NOT nova.conf) and then it will be added to the configuration.</p>
+</blockquote>
+</section>
+<section id="cyborg" class="level2">
+<h2 class="anchored" data-anchor-id="cyborg">Cyborg</h2>
+<p>Cyborg is management of “hardware acceletors”, like FGPA’s, or in my case, gpu’s.</p>
 </section>
 <section id="skyline" class="level2">
 <h2 class="anchored" data-anchor-id="skyline">Skyline</h2>
