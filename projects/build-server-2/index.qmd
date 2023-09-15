@@ -1275,6 +1275,8 @@ According to [zun's policy rules](https://docs.openstack.org/zun/latest/configur
 
 One thing I am thinking about is how to passthrough gpu's and other things to containers. If I desire to do something like an AI trainig on docker containers (since a lot is done on kubernetes nvidia clusters), then I would end up using Zun for it. 
 
+I found an article in [zun's git](https://github.com/openstack/zun/blob/master/specs/pci-device-model.rst) saying that it was in the works, but that document is literally 5 years old...
+
 
 
 ## Nova
@@ -1291,7 +1293,15 @@ One interesting thing is that lxc and docker are just a frontend for a bunch of 
 
 But is it even possible to configure a multi hypervisor openstack cloud? One [reddit commenter](https://www.reddit.com/r/openstack/comments/8hr93t/is_openstack_multihypervisor_configuration_kvm/dym7dtj/) says no. In addition to that, the [libvirt_virt_type](https://docs.openstack.org/nova/latest/configuration/config.html#libvirt.virt_type) is of the type "string" rather than the type "list". This means that I would only be able to put one item here, either kvm or lxc. 
 
-One thing I could consider doing is running a privileged lxc/lxd container on the main compute node, and then make it another compute node which another virtualization type. 
+One thing I could consider doing is running a privileged container on the main compute node, and then make it another compute node which another virtualization type.
+
+The main issue with such a setup is how I would handle networking devices. If I run another container on the main compute node, then running it in privileged mode gives it access to *all* devices, which means all networking devices. 
+
+No wait, this isn't actually an issue because I can just configure it so that the container uses different network interfaces. It will still see them, which might cause issues, but it won't be using them. 
+
+So how can I run a privileged container with systemd? 
+
+
 
 ## GPU passthrough
 
@@ -1305,6 +1315,15 @@ I may also want [an external libvirt](https://docs.openstack.org/kolla-ansible/l
 
 
 I found a [reddit post](https://www.reddit.com/r/openstack/comments/16g7lmj/kolla_ansible_pci_passthrough/) where someone was asking for help about PCI passthrough with kolla-ansible, but no one has replied as of yet. 
+
+A few days later, they replied to their own comment. 
+
+> Just in case anyone searches for this in the future: the file in /etc/kolla/config/nova needs to be named nova-compute.conf (NOT nova.conf) and then it will be added to the configuration.
+
+
+## Cyborg
+
+Cyborg is management of "hardware acceletors", like FGPA's, or in my case, gpu's. 
 
 ## Skyline
 
