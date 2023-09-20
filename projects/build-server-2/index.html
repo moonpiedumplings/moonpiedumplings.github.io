@@ -1170,6 +1170,14 @@ root@debian:/home/moonpie# </code></pre>
 <p>The documentation for configuring neutron using kolla-ansible is <a href="https://docs.openstack.org/kolla-ansible/latest/reference/networking/neutron.html">here</a>.</p>
 <p>I want to enable provider networks for speed for the ipv4 subnet of my router, but I still don’t understand how neutron external subnets, and neutron networking in general works. The main question is this: Can I put virtual machines on an external subnet that is only available to a different networking node?</p>
 <p>It should be possible.</p>
+<p>To list the openstack physical networks, you can run:</p>
+<p><code>openstack network agent list --agent-type L2 agent</code></p>
+<p>To list L3 agents:</p>
+<p><code>openstack network agent list --agent-type L3 agent</code></p>
+<p>I am guessing I can just list all the agents at once.</p>
+<p>On the <a href="https://docs.openstack.org/kolla-ansible/latest/reference/networking/neutron.html#example-multiple-interfaces">kolla-ansible docs for neutron</a>, it mentions that if you have multiple physical networks, you need to name them differently.</p>
+<p>Although never directly stated, I think the docs are assuming that every network (and probably openstack, since neutron is also ran on the compute nodes) will have access to the exact same physical networks. However, in my setup, not every node will have access to the same networks. I think I have to use node-specific configurations to, to ensure that openstack understands that the physical network that my VPS has access to, and the one my server has access to, are not the same.</p>
+<p>The <a href="https://docs.openstack.org/kolla-ansible/latest/user/multinode.html">multinode documention</a> details how to an ansible inventory to declare different variables for each service. Using this, I can replace change the physical interface names from physnet1 to something else. I am thinking physnet4 and physnet6, because of ipv4 and ipv6.</p>
 <p>I also desire to enable vpn-as-a-service.</p>
 </section>
 <section id="multi-node-install" class="level2">
@@ -1197,7 +1205,7 @@ root@debian:/home/moonpie# </code></pre>
 <p><a href="https://contabo.com/blog/ipv6-now-available-for-all-our-customers/" class="uri">https://contabo.com/blog/ipv6-now-available-for-all-our-customers/</a></p>
 <p>According to this article, contabo makes an entire /112 range of ipv6 addresses avaiable to their customers by default. That’s 65535 ip addresses.</p>
 <p>Except this article seems to be outdated.</p>
-<p>According to <a href="https://contabo.com/en/customer-support/faq/#how-can-i-use-ipv6-on-my-server-at-contabo">a newer fa1</a>, the range seems to be /64.</p>
+<p>According to <a href="https://contabo.com/en/customer-support/faq/#how-can-i-use-ipv6-on-my-server-at-contabo">a newer FAQ</a>, the range seems to be /64.</p>
 <p><a href="https://contabo.com/blog/adding-ipv6-connectivity-to-your-server/" class="uri">https://contabo.com/blog/adding-ipv6-connectivity-to-your-server/</a></p>
 <p>According to the above article, contabo has already added ipv6 support, and you simply look at the vps control page to see your available ipv6 address. However, there is no such box on my vps control page.</p>
 <p>I think this may have something to do with the fact that campus internet is not ipv6 capable, so maybe there is no need to show it to me since I would not be able to access it.</p>
@@ -1212,6 +1220,11 @@ root@debian:/home/moonpie# </code></pre>
 <span id="cb53-4"><a href="#cb53-4" aria-hidden="true" tabindex="-1"></a>        /usr/sbin/sysctl</span>
 <span id="cb53-5"><a href="#cb53-5" aria-hidden="true" tabindex="-1"></a>        /usr/bin/echo</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>All it does is change the sysctl parameters to enable ipv6, and it doesn’t actually set it up. Without knowing my default gateway, nothing I do with ipv6 will be able to access the internet.</p>
+<p>Using cockpit and networkmanager, I set my ipv6 address to what was above. The default gateway was fe80::1, which was noted <a href="https://contabo.com/blog/adding-ipv6-connectivity-to-your-server/">here</a>. I tried to ping it and nmap it but I diddn’t see anything.</p>
+<p>For DNS, rather than using contabo’s DNS, I decided to go for google’s two public ipv6 dns’s, <code>2001:4860:4860::8844</code>, and <code>2001:4860:4860::8888</code>. These are noted on <a href="https://developers.google.com/speed/public-dns/docs/using">google’s developer docs</a>.</p>
+<p>Sure enough, when I proxy into my server (I used ssh with the -D option), and go to <a href="https://test-ipv6.com/" class="uri">https://test-ipv6.com/</a> I get this result:</p>
+<p><img src="images/serveripv6.jpg" class="img-fluid"></p>
+<p>My server has a public ipv6 address now. And if I can give this interface a public ipv6 address, then openstack will definitely be able to give any virtual interfaces it creates public ipv6 addresses.</p>
 
 
 </section>
