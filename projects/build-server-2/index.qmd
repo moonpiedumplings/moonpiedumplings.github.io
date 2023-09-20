@@ -1496,3 +1496,13 @@ Sure enough, when I proxy into my server (I used ssh with the -D option), and go
 
 My server has a public ipv6 address now. And if I can give this interface a public ipv6 address, then openstack will definitely be able to give any virtual interfaces it creates public ipv6 addresses. 
 
+
+## Network interfaces
+
+So I realized something. According to the [kolla-ansible architechture guide](https://docs.openstack.org/kolla-ansible/latest/admin/production-architecture-guide.html), ansible cannot recognize interface names with dashes. So because of this, I've decided to rename the wireguard interface from wg-stack to wgstack. 
+
+
+Another thing that looks a bit confusing is the `dns_interface` option, which appears to be used by designate for external dns requests. By default, this interface defaults to the same as the "network_interface", which will not have public internet access on my vps (since I am using the wireguard as that interface). However, since I won't be installing designate, it shouldn't be too much of an issue? 
+
+
+
