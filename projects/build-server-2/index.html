@@ -194,6 +194,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#neutron" id="toc-neutron" class="nav-link" data-scroll-target="#neutron">Neutron</a></li>
   <li><a href="#multi-node-install" id="toc-multi-node-install" class="nav-link" data-scroll-target="#multi-node-install">Multi Node Install</a></li>
   <li><a href="#ipv6-on-contabo" id="toc-ipv6-on-contabo" class="nav-link" data-scroll-target="#ipv6-on-contabo">Ipv6 on Contabo</a></li>
+  <li><a href="#network-interfaces" id="toc-network-interfaces" class="nav-link" data-scroll-target="#network-interfaces">Network interfaces</a></li>
   </ul></li>
   </ul>
 </nav>
@@ -1225,6 +1226,11 @@ root@debian:/home/moonpie# </code></pre>
 <p>Sure enough, when I proxy into my server (I used ssh with the -D option), and go to <a href="https://test-ipv6.com/" class="uri">https://test-ipv6.com/</a> I get this result:</p>
 <p><img src="images/serveripv6.jpg" class="img-fluid"></p>
 <p>My server has a public ipv6 address now. And if I can give this interface a public ipv6 address, then openstack will definitely be able to give any virtual interfaces it creates public ipv6 addresses.</p>
+</section>
+<section id="network-interfaces" class="level2">
+<h2 class="anchored" data-anchor-id="network-interfaces">Network interfaces</h2>
+<p>So I realized something. According to the <a href="https://docs.openstack.org/kolla-ansible/latest/admin/production-architecture-guide.html">kolla-ansible architechture guide</a>, ansible cannot recognize interface names with dashes. So because of this, I’ve decided to rename the wireguard interface from wg-stack to wgstack.</p>
+<p>Another thing that looks a bit confusing is the <code>dns_interface</code> option, which appears to be used by designate for external dns requests. By default, this interface defaults to the same as the “network_interface”, which will not have public internet access on my vps (since I am using the wireguard as that interface). However, since I won’t be installing designate, it shouldn’t be too much of an issue?</p>
 
 
 </section>
