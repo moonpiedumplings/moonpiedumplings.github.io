@@ -1390,6 +1390,22 @@ I want to enable provider networks for speed for the ipv4 subnet of my router, b
 
 It should be possible. 
 
+To list the openstack physical networks, you can run:
+
+`openstack network agent list --agent-type L2 agent`
+
+To list L3 agents:
+
+`openstack network agent list --agent-type L3 agent`
+
+I am guessing I can just list all the agents at once. 
+
+On the [kolla-ansible docs for neutron](https://docs.openstack.org/kolla-ansible/latest/reference/networking/neutron.html#example-multiple-interfaces), it mentions that if you have multiple physical networks, you need to name them differently. 
+
+Although never directly stated, I think the docs are assuming that every network (and probably openstack, since neutron is also ran on the compute nodes) will have access to the exact same physical networks. However, in my setup, not every node will have access to the same networks. I think I have to use node-specific configurations to, to ensure that openstack understands that the physical network that my VPS has access to, and the one my server has access to, are not the same.
+
+The [multinode documention](https://docs.openstack.org/kolla-ansible/latest/user/multinode.html) details how to an ansible inventory to declare different variables for each service. Using this, I can replace change the physical interface names from physnet1 to something else. I am thinking physnet4 and physnet6, because of ipv4 and ipv6. 
+
 I also desire to enable vpn-as-a-service. 
 
 
@@ -1438,7 +1454,7 @@ According to this article, contabo makes an entire /112 range of ipv6 addresses 
 
 Except this article seems to be outdated. 
 
-According to [a newer fa1](https://contabo.com/en/customer-support/faq/#how-can-i-use-ipv6-on-my-server-at-contabo), the range seems to be /64. 
+According to [a newer FAQ](https://contabo.com/en/customer-support/faq/#how-can-i-use-ipv6-on-my-server-at-contabo), the range seems to be /64. 
 
 
 <https://contabo.com/blog/adding-ipv6-connectivity-to-your-server/>
@@ -1470,9 +1486,13 @@ alias enable_ipv6='sed -i "/net.ipv6.conf.all.disable_ipv6.*/d" /etc/sysctl.conf
 All it does is change the sysctl parameters to enable ipv6, and it doesn't actually set it up. Without knowing my default gateway, nothing I do with ipv6 will be able to access the internet. 
 
 
+Using cockpit and networkmanager, I set my ipv6 address to what was above. The default gateway was fe80::1, which was noted [here](https://contabo.com/blog/adding-ipv6-connectivity-to-your-server/). I tried to ping it and nmap it but I diddn't see anything. 
 
+For DNS, rather than using contabo's DNS, I decided to go for google's two public ipv6 dns's, `2001:4860:4860::8844`, and `2001:4860:4860::8888`. These are noted on [google's developer docs](https://developers.google.com/speed/public-dns/docs/using).
 
+Sure enough, when I proxy into my server (I used ssh with the -D option), and go to <https://test-ipv6.com/> I get this result: 
 
+![](images/serveripv6.jpg)
 
-
+My server has a public ipv6 address now. And if I can give this interface a public ipv6 address, then openstack will definitely be able to give any virtual interfaces it creates public ipv6 addresses. 
 
