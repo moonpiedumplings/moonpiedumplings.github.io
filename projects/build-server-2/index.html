@@ -160,7 +160,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
    
   <ul>
   <li><a href="#software" id="toc-software" class="nav-link active" data-scroll-target="#software">Software</a>
-  <ul class="collapse">
+  <ul>
   <li><a href="#software-suite" id="toc-software-suite" class="nav-link" data-scroll-target="#software-suite">Software Suite</a></li>
   <li><a href="#openstack" id="toc-openstack" class="nav-link" data-scroll-target="#openstack">Openstack</a>
   <ul class="collapse">
@@ -176,11 +176,15 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#operating-system" id="toc-operating-system" class="nav-link" data-scroll-target="#operating-system">Operating system</a></li>
   <li><a href="#kolla-ansible" id="toc-kolla-ansible" class="nav-link" data-scroll-target="#kolla-ansible">Kolla-ansible</a></li>
   <li><a href="#router-networking" id="toc-router-networking" class="nav-link" data-scroll-target="#router-networking">Router Networking</a></li>
-  <li><a href="#vps-networking" id="toc-vps-networking" class="nav-link" data-scroll-target="#vps-networking">VPS Networking</a></li>
+  <li><a href="#vps-networking" id="toc-vps-networking" class="nav-link" data-scroll-target="#vps-networking">VPS Networking</a>
+  <ul class="collapse">
+  <li><a href="#macvtap" id="toc-macvtap" class="nav-link" data-scroll-target="#macvtap">Macvtap</a></li>
+  <li><a href="#bridge-veth" id="toc-bridge-veth" class="nav-link" data-scroll-target="#bridge-veth">Bridge + Veth</a></li>
+  </ul></li>
   </ul></li>
   </ul></li>
   <li><a href="#deploying-and-using-openstack" id="toc-deploying-and-using-openstack" class="nav-link" data-scroll-target="#deploying-and-using-openstack">Deploying and Using Openstack</a>
-  <ul class="collapse">
+  <ul>
   <li><a href="#cinder" id="toc-cinder" class="nav-link" data-scroll-target="#cinder">Cinder</a></li>
   <li><a href="#nova" id="toc-nova" class="nav-link" data-scroll-target="#nova">Nova</a>
   <ul class="collapse">
@@ -820,6 +824,7 @@ root@debian:/home/moonpie# </code></pre>
 <li><p>Create eth0 via cockpit and enslave the singular “physical” interface to it using the ui.</p></li>
 <li><p><code>nmcli con add type veth ifname veth1 con-name veth1 veth.peer eth1</code></p></li>
 <li><p>add veth1 as a port to eth0 via cockpit.</p></li>
+<li><p>Use cockpit to disable automatic ip addresses for your bridge, while keeping it enabled.</p></li>
 </ol>
 <p>And now you have two network interfaces. Now I will attempt to do this again, creating a bridge on another bridge.</p>
 <p>And it works. <code>eth1</code>, gets internet access. I can also create a macvtap interface on the nested bridge, which works as I’d expect there as well.</p>
@@ -1176,6 +1181,8 @@ root@debian:/home/moonpie# </code></pre>
 <p>To list L3 agents:</p>
 <p><code>openstack network agent list --agent-type L3 agent</code></p>
 <p>I am guessing I can just list all the agents at once.</p>
+<p><code>openstack network set --binding:host_id=&lt;hostname&gt; &lt;network-name-or-ID&gt;</code></p>
+<p>And to verify: <code>openstack network show &lt;network-name-or-ID&gt; -c binding:host_id</code></p>
 <p>On the <a href="https://docs.openstack.org/kolla-ansible/latest/reference/networking/neutron.html#example-multiple-interfaces">kolla-ansible docs for neutron</a>, it mentions that if you have multiple physical networks, you need to name them differently.</p>
 <p>Although never directly stated, I think the docs are assuming that every network (and probably openstack, since neutron is also ran on the compute nodes) will have access to the exact same physical networks. However, in my setup, not every node will have access to the same networks. I think I have to use node-specific configurations to, to ensure that openstack understands that the physical network that my VPS has access to, and the one my server has access to, are not the same.</p>
 <p>The <a href="https://docs.openstack.org/kolla-ansible/latest/user/multinode.html">multinode documention</a> details how to an ansible inventory to declare different variables for each service. Using this, I can replace change the physical interface names from physnet1 to something else. I am thinking physnet4 and physnet6, because of ipv4 and ipv6.</p>
@@ -1200,7 +1207,19 @@ root@debian:/home/moonpie# </code></pre>
 <p>So I deployed a two node openstack install, and I attempt to create a virtual machine, but I get an error. It’s one of those incomprehensible python errros, but after looking at my virtual machine, they appear to be out of ram.</p>
 <p>This is weird, because I don’t think I have anything enabled but the core openstack services. Currently, I have just two vps’s, a network node with 3 GB of ram and a compute node with 6 Gb of ram.</p>
 <p>Because of the ram usage, I can’t properly test. In order to get more ram, I decided to install libvirt on my “moonstack”, which is going to be the openstack compute node. I find this highly ironic (and not the openstack component), since I am basically setting up my server to run virtual machines in an easier manner to prototype for doing so in a harder manner.</p>
-<p>I am currently attempting to create a virtual machine using libvirt’s ability to do</p>
+<p>Using a combination of cockpit-machines, ssh proxy jumping, and virt-manager’s ability to manage a remote I managed to deploy an all in one, and a network node. Besides the default services, I also enabled magnum, zun (and kuryr, container networking), and cinder (via nfs).</p>
+<p>Here is the memory usage for both nodes:</p>
+<div class="sourceCode" id="cb53"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb53-1"><a href="#cb53-1" aria-hidden="true" tabindex="-1"></a>[root@network-node ~]# free -m</span>
+<span id="cb53-2"><a href="#cb53-2" aria-hidden="true" tabindex="-1"></a>               total        used        free      shared  buff/cache   available</span>
+<span id="cb53-3"><a href="#cb53-3" aria-hidden="true" tabindex="-1"></a>Mem:            7486        2190        2105          15        3538        5295</span>
+<span id="cb53-4"><a href="#cb53-4" aria-hidden="true" tabindex="-1"></a>Swap:           7883           0        7883</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb54"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb54-1"><a href="#cb54-1" aria-hidden="true" tabindex="-1"></a>[root@main-node ~]# free -m</span>
+<span id="cb54-2"><a href="#cb54-2" aria-hidden="true" tabindex="-1"></a>               total        used        free      shared  buff/cache   available</span>
+<span id="cb54-3"><a href="#cb54-3" aria-hidden="true" tabindex="-1"></a>Mem:            7486        6816         273          61         857         669</span>
+<span id="cb54-4"><a href="#cb54-4" aria-hidden="true" tabindex="-1"></a>Swap:           7883          77        7806</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Good. The network node seems to have ample free space, meaning all of my fancy networking will fit just fine on my 8 GB of ram VPS.</p>
+<p>The main node seems to be a little… strangled, but 8 GB is nothgin compared to the 128 GB teh actual install will have.</p>
+<p>Now I need to test openstack network interactions.</p>
 </section>
 <section id="ipv6-on-contabo" class="level2">
 <h2 class="anchored" data-anchor-id="ipv6-on-contabo">Ipv6 on Contabo</h2>
@@ -1218,11 +1237,11 @@ root@debian:/home/moonpie# </code></pre>
 <p><img src="images/ipv6.png" class="img-fluid"></p>
 <p>So, inferring from that, I can tell that my vps’s ipv6 address is “2605:a141:2140:3809:0000:0000:0000:0001”. And if I get a /112 range, then I can tell my range is 2605:a141:2140:3809::/64. Of course, that’s not enough, I also need to know the default gate way for this network… The article above details it for a different subnet, but I don’t know for my own subnet.</p>
 <p>There is a command, <code>enable_ipv6</code> which comes out of the box on the contabo servers, but it doesn’t do anthing:</p>
-<div class="sourceCode" id="cb53"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb53-1"><a href="#cb53-1" aria-hidden="true" tabindex="-1"></a>[root@vmi1403809 ~]# which enable_ipv6</span>
-<span id="cb53-2"><a href="#cb53-2" aria-hidden="true" tabindex="-1"></a>alias enable_ipv6='sed -i "/net.ipv6.conf.all.disable_ipv6.*/d" /etc/sysctl.conf &amp;&amp; sysctl -q -p &amp;&amp; echo 0 &gt; /proc/sys/net/ipv6/conf/all/disable_ipv6'</span>
-<span id="cb53-3"><a href="#cb53-3" aria-hidden="true" tabindex="-1"></a>        /usr/bin/sed</span>
-<span id="cb53-4"><a href="#cb53-4" aria-hidden="true" tabindex="-1"></a>        /usr/sbin/sysctl</span>
-<span id="cb53-5"><a href="#cb53-5" aria-hidden="true" tabindex="-1"></a>        /usr/bin/echo</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb55"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb55-1"><a href="#cb55-1" aria-hidden="true" tabindex="-1"></a>[root@vmi1403809 ~]# which enable_ipv6</span>
+<span id="cb55-2"><a href="#cb55-2" aria-hidden="true" tabindex="-1"></a>alias enable_ipv6='sed -i "/net.ipv6.conf.all.disable_ipv6.*/d" /etc/sysctl.conf &amp;&amp; sysctl -q -p &amp;&amp; echo 0 &gt; /proc/sys/net/ipv6/conf/all/disable_ipv6'</span>
+<span id="cb55-3"><a href="#cb55-3" aria-hidden="true" tabindex="-1"></a>        /usr/bin/sed</span>
+<span id="cb55-4"><a href="#cb55-4" aria-hidden="true" tabindex="-1"></a>        /usr/sbin/sysctl</span>
+<span id="cb55-5"><a href="#cb55-5" aria-hidden="true" tabindex="-1"></a>        /usr/bin/echo</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>All it does is change the sysctl parameters to enable ipv6, and it doesn’t actually set it up. Without knowing my default gateway, nothing I do with ipv6 will be able to access the internet.</p>
 <p>Using cockpit and networkmanager, I set my ipv6 address to what was above. The default gateway was fe80::1, which was noted <a href="https://contabo.com/blog/adding-ipv6-connectivity-to-your-server/">here</a>. I tried to ping it and nmap it but I diddn’t see anything.</p>
 <p>For DNS, rather than using contabo’s DNS, I decided to go for google’s two public ipv6 dns’s, <code>2001:4860:4860::8844</code>, and <code>2001:4860:4860::8888</code>. These are noted on <a href="https://developers.google.com/speed/public-dns/docs/using">google’s developer docs</a>.</p>
