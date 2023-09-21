@@ -4,6 +4,7 @@ date: "2023-8-2"
 categories: [linux]
 format:
   html:
+    toc-depth: 4
     code-fold: true
     code-summary: "Show the code"
     code-block-background: true
@@ -865,6 +866,8 @@ Steps (assuming [predictable network interface names](https://access.redhat.com/
 
 3. add veth1 as a port to eth0 via cockpit.
 
+4. Use cockpit to disable automatic ip addresses for your bridge, while keeping it enabled. 
+
 And now you have two network interfaces. Now I will attempt to do this again, creating a bridge on another bridge. 
 
 And it works. `eth1`, gets internet access. I can also create a macvtap interface on the nested bridge, which works as I'd expect there as well.
@@ -1400,6 +1403,12 @@ To list L3 agents:
 
 I am guessing I can just list all the agents at once. 
 
+`openstack network set --binding:host_id=<hostname> <network-name-or-ID>`
+
+And to verify: `openstack network show <network-name-or-ID> -c binding:host_id`
+
+
+
 On the [kolla-ansible docs for neutron](https://docs.openstack.org/kolla-ansible/latest/reference/networking/neutron.html#example-multiple-interfaces), it mentions that if you have multiple physical networks, you need to name them differently. 
 
 Although never directly stated, I think the docs are assuming that every network (and probably openstack, since neutron is also ran on the compute nodes) will have access to the exact same physical networks. However, in my setup, not every node will have access to the same networks. I think I have to use node-specific configurations to, to ensure that openstack understands that the physical network that my VPS has access to, and the one my server has access to, are not the same.
@@ -1445,8 +1454,29 @@ This is weird, because I don't think I have anything enabled but the core openst
 
 Because of the ram usage, I can't properly test. In order to get more ram, I decided to install libvirt on my "moonstack", which is going to be the openstack compute node. I find this highly ironic (and not the openstack component), since I am basically setting up my server to run virtual machines in an easier manner to prototype for doing so in a harder manner. 
 
-I am currently attempting to create a virtual machine using libvirt's ability to do
+Using a combination of cockpit-machines, ssh proxy jumping, and virt-manager's ability to manage a remote I managed to deploy an all in one, and a network node. Besides the default services, I also enabled magnum, zun (and kuryr, container networking), and cinder (via nfs). 
 
+Here is the memory usage for both nodes:
+
+```{.default}
+[root@network-node ~]# free -m
+               total        used        free      shared  buff/cache   available
+Mem:            7486        2190        2105          15        3538        5295
+Swap:           7883           0        7883
+```
+
+```{.default}
+[root@main-node ~]# free -m
+               total        used        free      shared  buff/cache   available
+Mem:            7486        6816         273          61         857         669
+Swap:           7883          77        7806
+```
+
+Good. The network node seems to have ample free space, meaning all of my fancy networking will fit just fine on my 8 GB of ram VPS.
+
+The main node seems to be a little... strangled, but 8 GB is nothgin compared to the 128 GB teh actual install will have. 
+
+Now I need to test openstack network interactions. 
 
 ## Ipv6 on Contabo 
 
