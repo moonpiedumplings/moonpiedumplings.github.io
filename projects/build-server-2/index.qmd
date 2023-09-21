@@ -1441,6 +1441,12 @@ Also, based on my testing, the globals.yml file goes on the deployment host.
 
 So I deployed a two node openstack install, and I attempt to create a virtual machine, but I get an error. It's one of those incomprehensible python errros, but after looking at my virtual machine, they appear to be out of ram. 
 
+This is weird, because I don't think I have anything enabled but the core openstack services. Currently, I have just two vps's, a network node with 3 GB of ram and a compute node with 6 Gb of ram. 
+
+Because of the ram usage, I can't properly test. In order to get more ram, I decided to install libvirt on my "moonstack", which is going to be the openstack compute node. I find this highly ironic (and not the openstack component), since I am basically setting up my server to run virtual machines in an easier manner to prototype for doing so in a harder manner. 
+
+I am currently attempting to create a virtual machine using libvirt's ability to do
+
 
 ## Ipv6 on Contabo 
 
@@ -1503,6 +1509,4 @@ So I realized something. According to the [kolla-ansible architechture guide](ht
 
 
 Another thing that looks a bit confusing is the `dns_interface` option, which appears to be used by designate for external dns requests. By default, this interface defaults to the same as the "network_interface", which will not have public internet access on my vps (since I am using the wireguard as that interface). However, since I won't be installing designate, it shouldn't be too much of an issue? 
-
-
 
