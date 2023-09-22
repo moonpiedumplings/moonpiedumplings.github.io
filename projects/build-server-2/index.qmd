@@ -1407,6 +1407,33 @@ I am guessing I can just list all the agents at once.
 
 And to verify: `openstack network show <network-name-or-ID> -c binding:host_id`
 
+Just kidding, those commands were given by chatgpt and they fail. Running them returns:
+
+```{.default}
+(venv) [root@thoth ~]# openstack network agent list --agent-type L2 agent
+usage: openstack network agent list [-h] [-f {csv,json,table,value,yaml}] [-c COLUMN] [--quote {all,minimal,none,nonnumeric}] [--noindent]
+                                    [--max-width <integer>] [--fit-width] [--print-empty] [--sort-column SORT_COLUMN] [--sort-ascending | --sort-descending]
+                                    [--agent-type <agent-type>] [--host <host>] [--network <network> | --router <router>] [--long]
+openstack network agent list: error: argument --agent-type: invalid choice: 'L2' (choose from 'bgp', 'dhcp', 'open-vswitch', 'linux-bridge', 'ofa', 'l3', 'loadbalancer', 'metering', 'metadata', 'macvtap', 'nic', 'baremetal')
+```
+
+And just listing all agents (in my 2 node install):
+
+```{.default}
+(venv) [root@thoth ~]# openstack network agent list
++--------------------------------------+--------------------+--------------+-------------------+-------+-------+---------------------------+
+| ID                                   | Agent Type         | Host         | Availability Zone | Alive | State | Binary                    |
++--------------------------------------+--------------------+--------------+-------------------+-------+-------+---------------------------+
+| 2fb24192-27bc-4d4b-8263-cadc1a73c3b0 | DHCP agent         | network-node | nova              | :-)   | UP    | neutron-dhcp-agent        |
+| 429b16e3-bd4f-4507-ae78-6336a12b6b87 | Open vSwitch agent | network-node | None              | :-)   | UP    | neutron-openvswitch-agent |
+| f7e2987b-a6e6-4677-b627-9a32e0508dc9 | Metadata agent     | network-node | None              | :-)   | UP    | neutron-metadata-agent    |
+| fd2a566d-1d47-470d-b0f6-49972b02813a | Open vSwitch agent | main-node    | None              | :-)   | UP    | neutron-openvswitch-agent |
+| ffa989a0-42b4-4184-ba8d-72106ee32c89 | L3 agent           | network-node | nova              | :-)   | UP    | neutron-l3-agent          |
++--------------------------------------+--------------------+--------------+-------------------+-------+-------+---------------------------+
+```
+
+
+
 
 
 On the [kolla-ansible docs for neutron](https://docs.openstack.org/kolla-ansible/latest/reference/networking/neutron.html#example-multiple-interfaces), it mentions that if you have multiple physical networks, you need to name them differently. 
