@@ -1417,7 +1417,7 @@ usage: openstack network agent list [-h] [-f {csv,json,table,value,yaml}] [-c CO
 openstack network agent list: error: argument --agent-type: invalid choice: 'L2' (choose from 'bgp', 'dhcp', 'open-vswitch', 'linux-bridge', 'ofa', 'l3', 'loadbalancer', 'metering', 'metadata', 'macvtap', 'nic', 'baremetal')
 ```
 
-And just listing all agents (in my 2 node install):
+And just listing all agents (in my 2 node install with both with the same subnets):
 
 ```{.default}
 (venv) [root@thoth ~]# openstack network agent list
@@ -1432,15 +1432,95 @@ And just listing all agents (in my 2 node install):
 +--------------------------------------+--------------------+--------------+-------------------+-------+-------+---------------------------+
 ```
 
+I did another install, an all in one node (including networking), and a network node. The all-in-one node has both interfaces on the libvirt NAT subnet, "default", but the network node has it's neutron external interface on a different libvirt NAT subnet.
 
+Here is the networking agent list:
 
+```{.default}
+(venv) [root@thoth ~]# openstack network agent list
++--------------------------------------+--------------------+--------------+-------------------+-------+-------+---------------------------+
+| ID                                   | Agent Type         | Host         | Availability Zone | Alive | State | Binary                    |
++--------------------------------------+--------------------+--------------+-------------------+-------+-------+---------------------------+
+| 07aa201f-08b6-4dc9-ac1c-98af105ad53e | L3 agent           | main-node    | nova              | :-)   | UP    | neutron-l3-agent          |
+| 1afb9cd1-d1d0-4d59-ba58-f291868222da | Metadata agent     | network-node | None              | :-)   | UP    | neutron-metadata-agent    |
+| 349bbed8-3526-4070-affe-a47c2bbe5985 | DHCP agent         | main-node    | nova              | :-)   | UP    | neutron-dhcp-agent        |
+| 69b660b0-1bbc-4474-8668-71308486f3a8 | DHCP agent         | network-node | nova              | :-)   | UP    | neutron-dhcp-agent        |
+| a62c5d36-8101-4ca3-8479-358657684273 | Metadata agent     | main-node    | None              | :-)   | UP    | neutron-metadata-agent    |
+| b6221a20-3543-43c7-9a99-ce143a699702 | Open vSwitch agent | main-node    | None              | :-)   | UP    | neutron-openvswitch-agent |
+| c0bb80a4-c9e7-48a9-a56a-5fa279bfcef0 | Open vSwitch agent | network-node | None              | :-)   | UP    | neutron-openvswitch-agent |
+| d212772f-4996-413c-b8ef-c1e6b5442b22 | L3 agent           | network-node | nova              | :-)   | UP    | neutron-l3-agent          |
++--------------------------------------+--------------------+--------------+-------------------+-------+-------+---------------------------+
+```
 
+How can I ensure that the truly external network I create is attatched to a specific L3 agent?
+
+Chatgpt says to use [availibility zones](https://docs.openstack.org/neutron/latest/admin/ovn/availability_zones.html).
+
+However, one thing I am looking at that might be simpler is a multi regional deployment: <https://docs.openstack.org/kolla-ansible/latest/user/multi-regions.html> 
 
 On the [kolla-ansible docs for neutron](https://docs.openstack.org/kolla-ansible/latest/reference/networking/neutron.html#example-multiple-interfaces), it mentions that if you have multiple physical networks, you need to name them differently. 
 
+The [multinode documention](https://docs.openstack.org/kolla-ansible/latest/user/multinode.html) details how to an ansible inventory to declare different variables for each service. Using this, I can replace change the physical interface names from physnet1 to something else. I am thinking physnet4 and physnet6, because of ipv4 and ipv6. 
+
+I tried this, and no luck. 
+
 Although never directly stated, I think the docs are assuming that every network (and probably openstack, since neutron is also ran on the compute nodes) will have access to the exact same physical networks. However, in my setup, not every node will have access to the same networks. I think I have to use node-specific configurations to, to ensure that openstack understands that the physical network that my VPS has access to, and the one my server has access to, are not the same.
 
-The [multinode documention](https://docs.openstack.org/kolla-ansible/latest/user/multinode.html) details how to an ansible inventory to declare different variables for each service. Using this, I can replace change the physical interface names from physnet1 to something else. I am thinking physnet4 and physnet6, because of ipv4 and ipv6. 
+I also tried a [multi regional](https://docs.openstack.org/kolla-ansible/latest/user/multi-regions.html) deployment. In addition to not working, giving me any kinds of zones to specify, chatgpt possible
+
+
+I did some searching around and I found an [interesting option in the ansible variables](https://github.com/openstack/kolla-ansible/blob/7186f960d93f2e523a2052acd0287e176f7ac927/ansible/group_vars/all.yml#L1132). 
+
+```{.default}
+# Set OVN network availability zones
+neutron_ovn_availability_zones: []
+```
+
+However, I am guessing that I need to enable OVN to use this, so I followed the [kolla-ansible docs for this](https://docs.openstack.org/kolla-ansible/latest/reference/networking/neutron.html). 
+
+
+I set the variable of neutron availibility zones to be edge, on my network only node, and main, on my main compute node. However, it seems like my variables were ignored:
+
+
+``{.default}
+(venv) [root@thoth ~]# openstack network agent list
++--------------------------------------+------------------------------+--------------+-------------------+-------+-------+----------------------------+
+| ID                                   | Agent Type                   | Host         | Availability Zone | Alive | State | Binary                     |
++--------------------------------------+------------------------------+--------------+-------------------+-------+-------+----------------------------+
+| 1ca0eec3-22f3-4680-b4c6-2d6e97ab6b8b | DHCP agent                   | main-node    | nova              | :-)   | UP    | neutron-dhcp-agent         |
+| 3f9fffd2-c3f7-4841-910e-bc73ba95ab53 | L3 agent                     | main-node    | nova              | :-)   | UP    | neutron-l3-agent           |
+| 4a11630f-bbaf-4d8e-87d1-deb209e770fe | Open vSwitch agent           | main-node    | None              | :-)   | UP    | neutron-openvswitch-agent  |
+| 820a9bbb-5279-4889-b511-979b1b7d327e | Open vSwitch agent           | network-node | None              | :-)   | UP    | neutron-openvswitch-agent  |
+| bf317078-bf85-488c-87c3-026a23c8793b | L3 agent                     | network-node | nova              | :-)   | UP    | neutron-l3-agent           |
+| e4e3d75b-55b5-4a1e-8bd2-632d8a37e5b9 | Metadata agent               | network-node | None              | :-)   | UP    | neutron-metadata-agent     |
+| ec64e75e-0e61-434e-908f-e4b9d670adbc | DHCP agent                   | network-node | nova              | :-)   | UP    | neutron-dhcp-agent         |
+| f5ea5528-e482-4609-ae33-09ef2d792b28 | Metadata agent               | main-node    | None              | :-)   | UP    | neutron-metadata-agent     |
+| main-node                            | OVN Controller Gateway agent | main-node    | main              | XXX   | UP    | ovn-controller             |
+| c484098d-fd7d-5d9c-81e5-be62657e571e | OVN Metadata agent           | main-node    | main              | XXX   | UP    | neutron-ovn-metadata-agent |
++--------------------------------------+------------------------------+--------------+-------------------+-------+-------+----------------------------+
+(venv) [root@thoth ~]# openstack availability zone list
++-----------+-------------+
+| Zone Name | Zone Status |
++-----------+-------------+
+| internal  | available   |
+| nova      | available   |
+| nova      | available   |
+| nova      | available   |
+| nova      | available   |
+| main      | available   |
++-----------+-------------+
+(venv) [root@thoth ~]# openstack availability zone list --network
++-----------+-------------+
+| Zone Name | Zone Status |
++-----------+-------------+
+| nova      | available   |
+| nova      | available   |
+| main      | available   |
++-----------+-------------+
+```
+
+And also, when I look in the UI, to create a network, it only lists the "nova" availibility zone hint. This didn't work.
+
 
 I also desire to enable vpn-as-a-service. 
 
@@ -1473,6 +1553,9 @@ fatal: [localhost]: FAILED! => {
 
 I decided to ignore this and power through anyways. 
 
+However, for the post deploy step, I needed to create the /etc/openstack directory and chown it to user so that sudo permissions aren't needed to modify it. 
+
+
 Also, based on my testing, the globals.yml file goes on the deployment host. 
 
 So I deployed a two node openstack install, and I attempt to create a virtual machine, but I get an error. It's one of those incomprehensible python errros, but after looking at my virtual machine, they appear to be out of ram. 
@@ -1504,6 +1587,20 @@ Good. The network node seems to have ample free space, meaning all of my fancy n
 The main node seems to be a little... strangled, but 8 GB is nothgin compared to the 128 GB teh actual install will have. 
 
 Now I need to test openstack network interactions. 
+
+I upgraded the main node to have 16 GB of ram, and I did an all in one installation + a network node. The network node has a second virtio interface, which is attatched to a different NAT subnet. The point of this is to test how openstack networking works when not all network nodes have their neutron external interfaces on the same subnet.
+
+Ram usage:
+```{.default}
+[root@network-node ~]# free -m
+               total        used        free      shared  buff/cache   available
+Mem:            7486        2198        2102          14        3532        5287
+Swap:           7883           0        7883
+[root@main-node ~]# free -m
+               total        used        free      shared  buff/cache   available
+Mem:           15350        8221         558          90        7025        7129
+Swap:           7883           1        7882
+```
 
 ## Ipv6 on Contabo 
 
