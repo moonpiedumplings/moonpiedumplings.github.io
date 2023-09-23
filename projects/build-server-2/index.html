@@ -196,7 +196,6 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#skyline" id="toc-skyline" class="nav-link" data-scroll-target="#skyline">Skyline</a></li>
   <li><a href="#magnum-1" id="toc-magnum-1" class="nav-link" data-scroll-target="#magnum-1">Magnum</a></li>
   <li><a href="#neutron" id="toc-neutron" class="nav-link" data-scroll-target="#neutron">Neutron</a></li>
-  <li><a href="#multi-node-install" id="toc-multi-node-install" class="nav-link" data-scroll-target="#multi-node-install">Multi Node Install</a></li>
   <li><a href="#ipv6-on-contabo" id="toc-ipv6-on-contabo" class="nav-link" data-scroll-target="#ipv6-on-contabo">Ipv6 on Contabo</a></li>
   <li><a href="#network-interfaces" id="toc-network-interfaces" class="nav-link" data-scroll-target="#network-interfaces">Network interfaces</a></li>
   </ul></li>
@@ -1189,7 +1188,7 @@ root@debian:/home/moonpie# </code></pre>
 <span id="cb52-3"><a href="#cb52-3" aria-hidden="true" tabindex="-1"></a>                                    [--max-width &lt;integer&gt;] [--fit-width] [--print-empty] [--sort-column SORT_COLUMN] [--sort-ascending | --sort-descending]</span>
 <span id="cb52-4"><a href="#cb52-4" aria-hidden="true" tabindex="-1"></a>                                    [--agent-type &lt;agent-type&gt;] [--host &lt;host&gt;] [--network &lt;network&gt; | --router &lt;router&gt;] [--long]</span>
 <span id="cb52-5"><a href="#cb52-5" aria-hidden="true" tabindex="-1"></a>openstack network agent list: error: argument --agent-type: invalid choice: 'L2' (choose from 'bgp', 'dhcp', 'open-vswitch', 'linux-bridge', 'ofa', 'l3', 'loadbalancer', 'metering', 'metadata', 'macvtap', 'nic', 'baremetal')</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>And just listing all agents (in my 2 node install):</p>
+<p>And just listing all agents (in my 2 node install with both with the same subnets):</p>
 <div class="sourceCode" id="cb53"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb53-1"><a href="#cb53-1" aria-hidden="true" tabindex="-1"></a>(venv) [root@thoth ~]# openstack network agent list</span>
 <span id="cb53-2"><a href="#cb53-2" aria-hidden="true" tabindex="-1"></a>+--------------------------------------+--------------------+--------------+-------------------+-------+-------+---------------------------+</span>
 <span id="cb53-3"><a href="#cb53-3" aria-hidden="true" tabindex="-1"></a>| ID                                   | Agent Type         | Host         | Availability Zone | Alive | State | Binary                    |</span>
@@ -1200,43 +1199,95 @@ root@debian:/home/moonpie# </code></pre>
 <span id="cb53-8"><a href="#cb53-8" aria-hidden="true" tabindex="-1"></a>| fd2a566d-1d47-470d-b0f6-49972b02813a | Open vSwitch agent | main-node    | None              | :-)   | UP    | neutron-openvswitch-agent |</span>
 <span id="cb53-9"><a href="#cb53-9" aria-hidden="true" tabindex="-1"></a>| ffa989a0-42b4-4184-ba8d-72106ee32c89 | L3 agent           | network-node | nova              | :-)   | UP    | neutron-l3-agent          |</span>
 <span id="cb53-10"><a href="#cb53-10" aria-hidden="true" tabindex="-1"></a>+--------------------------------------+--------------------+--------------+-------------------+-------+-------+---------------------------+</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>I did another install, an all in one node (including networking), and a network node. The all-in-one node has both interfaces on the libvirt NAT subnet, “default”, but the network node has it’s neutron external interface on a different libvirt NAT subnet.</p>
+<p>Here is the networking agent list:</p>
+<div class="sourceCode" id="cb54"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb54-1"><a href="#cb54-1" aria-hidden="true" tabindex="-1"></a>(venv) [root@thoth ~]# openstack network agent list</span>
+<span id="cb54-2"><a href="#cb54-2" aria-hidden="true" tabindex="-1"></a>+--------------------------------------+--------------------+--------------+-------------------+-------+-------+---------------------------+</span>
+<span id="cb54-3"><a href="#cb54-3" aria-hidden="true" tabindex="-1"></a>| ID                                   | Agent Type         | Host         | Availability Zone | Alive | State | Binary                    |</span>
+<span id="cb54-4"><a href="#cb54-4" aria-hidden="true" tabindex="-1"></a>+--------------------------------------+--------------------+--------------+-------------------+-------+-------+---------------------------+</span>
+<span id="cb54-5"><a href="#cb54-5" aria-hidden="true" tabindex="-1"></a>| 07aa201f-08b6-4dc9-ac1c-98af105ad53e | L3 agent           | main-node    | nova              | :-)   | UP    | neutron-l3-agent          |</span>
+<span id="cb54-6"><a href="#cb54-6" aria-hidden="true" tabindex="-1"></a>| 1afb9cd1-d1d0-4d59-ba58-f291868222da | Metadata agent     | network-node | None              | :-)   | UP    | neutron-metadata-agent    |</span>
+<span id="cb54-7"><a href="#cb54-7" aria-hidden="true" tabindex="-1"></a>| 349bbed8-3526-4070-affe-a47c2bbe5985 | DHCP agent         | main-node    | nova              | :-)   | UP    | neutron-dhcp-agent        |</span>
+<span id="cb54-8"><a href="#cb54-8" aria-hidden="true" tabindex="-1"></a>| 69b660b0-1bbc-4474-8668-71308486f3a8 | DHCP agent         | network-node | nova              | :-)   | UP    | neutron-dhcp-agent        |</span>
+<span id="cb54-9"><a href="#cb54-9" aria-hidden="true" tabindex="-1"></a>| a62c5d36-8101-4ca3-8479-358657684273 | Metadata agent     | main-node    | None              | :-)   | UP    | neutron-metadata-agent    |</span>
+<span id="cb54-10"><a href="#cb54-10" aria-hidden="true" tabindex="-1"></a>| b6221a20-3543-43c7-9a99-ce143a699702 | Open vSwitch agent | main-node    | None              | :-)   | UP    | neutron-openvswitch-agent |</span>
+<span id="cb54-11"><a href="#cb54-11" aria-hidden="true" tabindex="-1"></a>| c0bb80a4-c9e7-48a9-a56a-5fa279bfcef0 | Open vSwitch agent | network-node | None              | :-)   | UP    | neutron-openvswitch-agent |</span>
+<span id="cb54-12"><a href="#cb54-12" aria-hidden="true" tabindex="-1"></a>| d212772f-4996-413c-b8ef-c1e6b5442b22 | L3 agent           | network-node | nova              | :-)   | UP    | neutron-l3-agent          |</span>
+<span id="cb54-13"><a href="#cb54-13" aria-hidden="true" tabindex="-1"></a>+--------------------------------------+--------------------+--------------+-------------------+-------+-------+---------------------------+</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>How can I ensure that the truly external network I create is attatched to a specific L3 agent?</p>
+<p>Chatgpt says to use <a href="https://docs.openstack.org/neutron/latest/admin/ovn/availability_zones.html">availibility zones</a>.</p>
+<p>However, one thing I am looking at that might be simpler is a multi regional deployment: <a href="https://docs.openstack.org/kolla-ansible/latest/user/multi-regions.html" class="uri">https://docs.openstack.org/kolla-ansible/latest/user/multi-regions.html</a></p>
 <p>On the <a href="https://docs.openstack.org/kolla-ansible/latest/reference/networking/neutron.html#example-multiple-interfaces">kolla-ansible docs for neutron</a>, it mentions that if you have multiple physical networks, you need to name them differently.</p>
-<p>Although never directly stated, I think the docs are assuming that every network (and probably openstack, since neutron is also ran on the compute nodes) will have access to the exact same physical networks. However, in my setup, not every node will have access to the same networks. I think I have to use node-specific configurations to, to ensure that openstack understands that the physical network that my VPS has access to, and the one my server has access to, are not the same.</p>
 <p>The <a href="https://docs.openstack.org/kolla-ansible/latest/user/multinode.html">multinode documention</a> details how to an ansible inventory to declare different variables for each service. Using this, I can replace change the physical interface names from physnet1 to something else. I am thinking physnet4 and physnet6, because of ipv4 and ipv6.</p>
-<p>I also desire to enable vpn-as-a-service.</p>
-</section>
-<section id="multi-node-install" class="level2">
-<h2 class="anchored" data-anchor-id="multi-node-install">Multi Node Install</h2>
-<p>A multi node install is documented here: <a href="https://docs.openstack.org/kolla-ansible/latest/user/multinode.html" class="uri">https://docs.openstack.org/kolla-ansible/latest/user/multinode.html</a></p>
-<p>For convinience purpose, I will have my inventory git tracked, in the same repo as my blog.</p>
-<p>One thing I am confused about, is where does the globals.yml file go? In the all in one installation, it goes on the single server, which you both deploy from, and to. But if I am deploying to a different machine, do I put this file on the machines I am deploying to, or the machines I am deploying from?</p>
-<p>The other thing I am concerned about is how virtual machines will interact to being on a different node than the primary networking node. If I have a compute node, which doesn’t have access to an external subnet, and a networking node that does, then can I have a virtual machine on the external subnet that only the networking node has access to?</p>
-<p>I have created multiple machines and an ansible inventory.</p>
-<p>But apparently, the deployment host actually is configured a bit, since I got this error:</p>
-<div class="sourceCode" id="cb54"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb54-1"><a href="#cb54-1" aria-hidden="true" tabindex="-1"></a>fatal: [localhost]: FAILED! =&gt; {</span>
-<span id="cb54-2"><a href="#cb54-2" aria-hidden="true" tabindex="-1"></a>    "assertion": "ansible_facts.distribution in host_os_distributions",</span>
-<span id="cb54-3"><a href="#cb54-3" aria-hidden="true" tabindex="-1"></a>    "changed": false,</span>
-<span id="cb54-4"><a href="#cb54-4" aria-hidden="true" tabindex="-1"></a>    "evaluated_to": false,</span>
-<span id="cb54-5"><a href="#cb54-5" aria-hidden="true" tabindex="-1"></a>    "msg": "Host OS distribution Archlinux is not supported. Supported distributions are: CentOS, Debian, openEuler, Rocky, Ubuntu"</span>
-<span id="cb54-6"><a href="#cb54-6" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>I tried this, and no luck.</p>
+<p>Although never directly stated, I think the docs are assuming that every network (and probably openstack, since neutron is also ran on the compute nodes) will have access to the exact same physical networks. However, in my setup, not every node will have access to the same networks. I think I have to use node-specific configurations to, to ensure that openstack understands that the physical network that my VPS has access to, and the one my server has access to, are not the same.</p>
+<p>I also tried a <a href="https://docs.openstack.org/kolla-ansible/latest/user/multi-regions.html">multi regional</a> deployment. In addition to not working, giving me any kinds of zones to specify, chatgpt possible</p>
+<p>I did some searching around and I found an <a href="https://github.com/openstack/kolla-ansible/blob/7186f960d93f2e523a2052acd0287e176f7ac927/ansible/group_vars/all.yml#L1132">interesting option in the ansible variables</a>.</p>
+<div class="sourceCode" id="cb55"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb55-1"><a href="#cb55-1" aria-hidden="true" tabindex="-1"></a># Set OVN network availability zones</span>
+<span id="cb55-2"><a href="#cb55-2" aria-hidden="true" tabindex="-1"></a>neutron_ovn_availability_zones: []</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>However, I am guessing that I need to enable OVN to use this, so I followed the <a href="https://docs.openstack.org/kolla-ansible/latest/reference/networking/neutron.html">kolla-ansible docs for this</a>.</p>
+<p>I set the variable of neutron availibility zones to be edge, on my network only node, and main, on my main compute node. However, it seems like my variables were ignored:</p>
+<p>``{.default} (venv) [root@thoth ~]# openstack network agent list +————————————–+——————————+————–+——————-+——-+——-+—————————-+ | ID | Agent Type | Host | Availability Zone | Alive | State | Binary | +————————————–+——————————+————–+——————-+——-+——-+—————————-+ | 1ca0eec3-22f3-4680-b4c6-2d6e97ab6b8b | DHCP agent | main-node | nova | :-) | UP | neutron-dhcp-agent | | 3f9fffd2-c3f7-4841-910e-bc73ba95ab53 | L3 agent | main-node | nova | :-) | UP | neutron-l3-agent | | 4a11630f-bbaf-4d8e-87d1-deb209e770fe | Open vSwitch agent | main-node | None | :-) | UP | neutron-openvswitch-agent | | 820a9bbb-5279-4889-b511-979b1b7d327e | Open vSwitch agent | network-node | None | :-) | UP | neutron-openvswitch-agent | | bf317078-bf85-488c-87c3-026a23c8793b | L3 agent | network-node | nova | :-) | UP | neutron-l3-agent | | e4e3d75b-55b5-4a1e-8bd2-632d8a37e5b9 | Metadata agent | network-node | None | :-) | UP | neutron-metadata-agent | | ec64e75e-0e61-434e-908f-e4b9d670adbc | DHCP agent | network-node | nova | :-) | UP | neutron-dhcp-agent | | f5ea5528-e482-4609-ae33-09ef2d792b28 | Metadata agent | main-node | None | :-) | UP | neutron-metadata-agent | | main-node | OVN Controller Gateway agent | main-node | main | XXX | UP | ovn-controller | | c484098d-fd7d-5d9c-81e5-be62657e571e | OVN Metadata agent | main-node | main | XXX | UP | neutron-ovn-metadata-agent | +————————————–+——————————+————–+——————-+——-+——-+—————————-+ (venv) [root@thoth ~]# openstack availability zone list +———–+————-+ | Zone Name | Zone Status | +———–+————-+ | internal | available | | nova | available | | nova | available | | nova | available | | nova | available | | main | available | +———–+————-+ (venv) [root@thoth ~]# openstack availability zone list –network +———–+————-+ | Zone Name | Zone Status | +———–+————-+ | nova | available | | nova | available | | main | available | +———–+————-+</p>
+<pre><code>
+And also, when I look in the UI, to create a network, it only lists the "nova" availibility zone hint. This didn't work.
+
+
+I also desire to enable vpn-as-a-service. 
+
+
+## Multi Node Install
+
+A multi node install is documented here: &lt;https://docs.openstack.org/kolla-ansible/latest/user/multinode.html&gt; 
+
+For convinience purpose, I will have my inventory git tracked, in the same repo as my blog.
+
+One thing I am confused about, is where does the globals.yml file go? In the all in one installation, it goes on the single server, which you both deploy from, and to. But if I am deploying to a different machine, do I put this file on the machines I am deploying to, or the machines I am deploying from?
+
+
+The other thing I am concerned about is how virtual machines will interact to being on a different node than the primary networking node. If I have a compute node, which doesn't have access to an external subnet, and a networking node that does, then can I have a virtual machine on the external subnet that only the networking node has access to? 
+
+
+
+I have created multiple machines and an ansible inventory. 
+
+But apparently, the deployment host actually is configured a bit, since I got this error: 
+
+```{.default}
+fatal: [localhost]: FAILED! =&gt; {
+    "assertion": "ansible_facts.distribution in host_os_distributions",
+    "changed": false,
+    "evaluated_to": false,
+    "msg": "Host OS distribution Archlinux is not supported. Supported distributions are: CentOS, Debian, openEuler, Rocky, Ubuntu"
+}</code></pre>
 <p>I decided to ignore this and power through anyways.</p>
+<p>However, for the post deploy step, I needed to create the /etc/openstack directory and chown it to user so that sudo permissions aren’t needed to modify it.</p>
 <p>Also, based on my testing, the globals.yml file goes on the deployment host.</p>
 <p>So I deployed a two node openstack install, and I attempt to create a virtual machine, but I get an error. It’s one of those incomprehensible python errros, but after looking at my virtual machine, they appear to be out of ram.</p>
 <p>This is weird, because I don’t think I have anything enabled but the core openstack services. Currently, I have just two vps’s, a network node with 3 GB of ram and a compute node with 6 Gb of ram.</p>
 <p>Because of the ram usage, I can’t properly test. In order to get more ram, I decided to install libvirt on my “moonstack”, which is going to be the openstack compute node. I find this highly ironic (and not the openstack component), since I am basically setting up my server to run virtual machines in an easier manner to prototype for doing so in a harder manner.</p>
 <p>Using a combination of cockpit-machines, ssh proxy jumping, and virt-manager’s ability to manage a remote I managed to deploy an all in one, and a network node. Besides the default services, I also enabled magnum, zun (and kuryr, container networking), and cinder (via nfs).</p>
 <p>Here is the memory usage for both nodes:</p>
-<div class="sourceCode" id="cb55"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb55-1"><a href="#cb55-1" aria-hidden="true" tabindex="-1"></a>[root@network-node ~]# free -m</span>
-<span id="cb55-2"><a href="#cb55-2" aria-hidden="true" tabindex="-1"></a>               total        used        free      shared  buff/cache   available</span>
-<span id="cb55-3"><a href="#cb55-3" aria-hidden="true" tabindex="-1"></a>Mem:            7486        2190        2105          15        3538        5295</span>
-<span id="cb55-4"><a href="#cb55-4" aria-hidden="true" tabindex="-1"></a>Swap:           7883           0        7883</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="sourceCode" id="cb56"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb56-1"><a href="#cb56-1" aria-hidden="true" tabindex="-1"></a>[root@main-node ~]# free -m</span>
-<span id="cb56-2"><a href="#cb56-2" aria-hidden="true" tabindex="-1"></a>               total        used        free      shared  buff/cache   available</span>
-<span id="cb56-3"><a href="#cb56-3" aria-hidden="true" tabindex="-1"></a>Mem:            7486        6816         273          61         857         669</span>
-<span id="cb56-4"><a href="#cb56-4" aria-hidden="true" tabindex="-1"></a>Swap:           7883          77        7806</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb57"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb57-1"><a href="#cb57-1" aria-hidden="true" tabindex="-1"></a>[root@network-node ~]# free -m</span>
+<span id="cb57-2"><a href="#cb57-2" aria-hidden="true" tabindex="-1"></a>               total        used        free      shared  buff/cache   available</span>
+<span id="cb57-3"><a href="#cb57-3" aria-hidden="true" tabindex="-1"></a>Mem:            7486        2190        2105          15        3538        5295</span>
+<span id="cb57-4"><a href="#cb57-4" aria-hidden="true" tabindex="-1"></a>Swap:           7883           0        7883</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb58"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb58-1"><a href="#cb58-1" aria-hidden="true" tabindex="-1"></a>[root@main-node ~]# free -m</span>
+<span id="cb58-2"><a href="#cb58-2" aria-hidden="true" tabindex="-1"></a>               total        used        free      shared  buff/cache   available</span>
+<span id="cb58-3"><a href="#cb58-3" aria-hidden="true" tabindex="-1"></a>Mem:            7486        6816         273          61         857         669</span>
+<span id="cb58-4"><a href="#cb58-4" aria-hidden="true" tabindex="-1"></a>Swap:           7883          77        7806</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Good. The network node seems to have ample free space, meaning all of my fancy networking will fit just fine on my 8 GB of ram VPS.</p>
 <p>The main node seems to be a little… strangled, but 8 GB is nothgin compared to the 128 GB teh actual install will have.</p>
 <p>Now I need to test openstack network interactions.</p>
+<p>I upgraded the main node to have 16 GB of ram, and I did an all in one installation + a network node. The network node has a second virtio interface, which is attatched to a different NAT subnet. The point of this is to test how openstack networking works when not all network nodes have their neutron external interfaces on the same subnet.</p>
+<p>Ram usage:</p>
+<div class="sourceCode" id="cb59"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb59-1"><a href="#cb59-1" aria-hidden="true" tabindex="-1"></a>[root@network-node ~]# free -m</span>
+<span id="cb59-2"><a href="#cb59-2" aria-hidden="true" tabindex="-1"></a>               total        used        free      shared  buff/cache   available</span>
+<span id="cb59-3"><a href="#cb59-3" aria-hidden="true" tabindex="-1"></a>Mem:            7486        2198        2102          14        3532        5287</span>
+<span id="cb59-4"><a href="#cb59-4" aria-hidden="true" tabindex="-1"></a>Swap:           7883           0        7883</span>
+<span id="cb59-5"><a href="#cb59-5" aria-hidden="true" tabindex="-1"></a>[root@main-node ~]# free -m</span>
+<span id="cb59-6"><a href="#cb59-6" aria-hidden="true" tabindex="-1"></a>               total        used        free      shared  buff/cache   available</span>
+<span id="cb59-7"><a href="#cb59-7" aria-hidden="true" tabindex="-1"></a>Mem:           15350        8221         558          90        7025        7129</span>
+<span id="cb59-8"><a href="#cb59-8" aria-hidden="true" tabindex="-1"></a>Swap:           7883           1        7882</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </section>
 <section id="ipv6-on-contabo" class="level2">
 <h2 class="anchored" data-anchor-id="ipv6-on-contabo">Ipv6 on Contabo</h2>
@@ -1254,11 +1305,11 @@ root@debian:/home/moonpie# </code></pre>
 <p><img src="images/ipv6.png" class="img-fluid"></p>
 <p>So, inferring from that, I can tell that my vps’s ipv6 address is “2605:a141:2140:3809:0000:0000:0000:0001”. And if I get a /112 range, then I can tell my range is 2605:a141:2140:3809::/64. Of course, that’s not enough, I also need to know the default gate way for this network… The article above details it for a different subnet, but I don’t know for my own subnet.</p>
 <p>There is a command, <code>enable_ipv6</code> which comes out of the box on the contabo servers, but it doesn’t do anthing:</p>
-<div class="sourceCode" id="cb57"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb57-1"><a href="#cb57-1" aria-hidden="true" tabindex="-1"></a>[root@vmi1403809 ~]# which enable_ipv6</span>
-<span id="cb57-2"><a href="#cb57-2" aria-hidden="true" tabindex="-1"></a>alias enable_ipv6='sed -i "/net.ipv6.conf.all.disable_ipv6.*/d" /etc/sysctl.conf &amp;&amp; sysctl -q -p &amp;&amp; echo 0 &gt; /proc/sys/net/ipv6/conf/all/disable_ipv6'</span>
-<span id="cb57-3"><a href="#cb57-3" aria-hidden="true" tabindex="-1"></a>        /usr/bin/sed</span>
-<span id="cb57-4"><a href="#cb57-4" aria-hidden="true" tabindex="-1"></a>        /usr/sbin/sysctl</span>
-<span id="cb57-5"><a href="#cb57-5" aria-hidden="true" tabindex="-1"></a>        /usr/bin/echo</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb60"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb60-1"><a href="#cb60-1" aria-hidden="true" tabindex="-1"></a>[root@vmi1403809 ~]# which enable_ipv6</span>
+<span id="cb60-2"><a href="#cb60-2" aria-hidden="true" tabindex="-1"></a>alias enable_ipv6='sed -i "/net.ipv6.conf.all.disable_ipv6.*/d" /etc/sysctl.conf &amp;&amp; sysctl -q -p &amp;&amp; echo 0 &gt; /proc/sys/net/ipv6/conf/all/disable_ipv6'</span>
+<span id="cb60-3"><a href="#cb60-3" aria-hidden="true" tabindex="-1"></a>        /usr/bin/sed</span>
+<span id="cb60-4"><a href="#cb60-4" aria-hidden="true" tabindex="-1"></a>        /usr/sbin/sysctl</span>
+<span id="cb60-5"><a href="#cb60-5" aria-hidden="true" tabindex="-1"></a>        /usr/bin/echo</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>All it does is change the sysctl parameters to enable ipv6, and it doesn’t actually set it up. Without knowing my default gateway, nothing I do with ipv6 will be able to access the internet.</p>
 <p>Using cockpit and networkmanager, I set my ipv6 address to what was above. The default gateway was fe80::1, which was noted <a href="https://contabo.com/blog/adding-ipv6-connectivity-to-your-server/">here</a>. I tried to ping it and nmap it but I diddn’t see anything.</p>
 <p>For DNS, rather than using contabo’s DNS, I decided to go for google’s two public ipv6 dns’s, <code>2001:4860:4860::8844</code>, and <code>2001:4860:4860::8888</code>. These are noted on <a href="https://developers.google.com/speed/public-dns/docs/using">google’s developer docs</a>.</p>
