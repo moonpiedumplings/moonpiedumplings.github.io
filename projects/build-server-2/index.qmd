@@ -1432,6 +1432,8 @@ And just listing all agents (in my 2 node install with both with the same subnet
 +--------------------------------------+--------------------+--------------+-------------------+-------+-------+---------------------------+
 ```
 
+<a id="asking-for-help"></a>
+
 I did another install, an all in one node (including networking), and a network node. The all-in-one node has both interfaces on the libvirt NAT subnet, "default", but the network node has it's neutron external interface on a different libvirt NAT subnet.
 
 Here is the networking agent list:
@@ -1540,7 +1542,27 @@ Error while executing command: BadRequestException: 400, Invalid input for opera
 (venv) [root@thoth kolla]# 
 ```
 
-Although creating a network with the physcial name `physnet1` works, `physnet2` doesn't work. 
+Although creating a network with the physical network `physnet1` works, `physnet2` doesn't work. 
+
+But then, I did something that did work. I edited `/etc/kolla/neutron-server/ml2_conf.ini` on the **main** node, to contain `physnet1,physnet`. This worked, and then I could create a network with `physnet2`. 
+
+
+But if I put an instance on it, does it actually work? Well, I tried to create an image, and it failed but the openstack error is very vague. I have gotten this error due to not enough resources in the past, but based on some quick research, it can happen because of networks not being set up properly, either. 
+
+I decided to look at the logs: 
+
+```{default filename="main-node:/var/logs/kolla/nova/nova-compute.log"}
+...
+2023-09-26 09:48:40.783 7 ERROR nova.compute.manager [instance: 0ef0f1be-e4aa-4140-89af-4402f992f18b] nova.exception.PortBindingFailed: Binding failed for port ee3ee85b-6edf-4ace-a921-10fcca3637b3, please check neutron logs for more information.
+....
+```
+
+Well, that error is pretty explicit. What I am going to do is redeploy, but without the having two servers with the `neutron-server` role, and see if that works. 
+
+So I did the same thing, with only one neutron server, edited openvswitch.ini, and then attempted to create an instance on physnet2. It failed. 
+
+I then created a network on physnet1, and created an instance on that network. It worked, getting an ip which I could access externally and all. What? 
+
 
 
 
