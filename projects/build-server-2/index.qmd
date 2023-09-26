@@ -1489,7 +1489,59 @@ But after looking throught the multinode inventory, I realized that it's not net
 
 Based on this, it seems like that directory is purely for the control nodes, which run neutron-server, the API. 
 
-I still don't understand. 
+Because of this, I decided to add my network node to the neutron-server hosts, which resulted in this directory being created on the server. I then edited the file, but when I tried to create network with the physical net name `physnet2` I got an error.
+
+I found another [config file](https://github.com/openstack/kolla-ansible/blob/f64c86de1ddec947b7c5cf9d262346d7f0d8fce4/ansible/roles/neutron/templates/openvswitch_agent.ini.j2#L18), where the bridges seem to map to physical network names. I edited this file:
+
+
+```{.ini filename="/etc/kolla/neutron-openvswitch-agent/openvswitch-agent.ini"}
+[ovs]
+bridge_mappings = physnet2:br-ex
+```
+
+But I still get the same error.
+
+```{.default}
+(venv) [root@thoth kolla]# openstack network create --external --provider-physical-network physnet2 --provider-network-type flat public1
+Error while executing command: BadRequestException: 400, Invalid input for operation: physical_network 'physnet2' unknown for flat provider network.
+(venv) [root@thoth kolla]# openstack network create --external --provider-physical-network physnet1 --provider-network-type flat public1
++---------------------------+--------------------------------------+
+| Field                     | Value                                |
++---------------------------+--------------------------------------+
+| admin_state_up            | UP                                   |
+| availability_zone_hints   |                                      |
+| availability_zones        |                                      |
+| created_at                | 2023-09-26T03:14:59Z                 |
+| description               |                                      |
+| dns_domain                | None                                 |
+| id                        | 378f8457-c50f-4554-91cf-905d9ec08ac7 |
+| ipv4_address_scope        | None                                 |
+| ipv6_address_scope        | None                                 |
+| is_default                | False                                |
+| is_vlan_transparent       | None                                 |
+| mtu                       | 1500                                 |
+| name                      | public1                              |
+| port_security_enabled     | True                                 |
+| project_id                | 1e28ab734f2d45d986259ee44a54ff42     |
+| provider:network_type     | flat                                 |
+| provider:physical_network | physnet1                             |
+| provider:segmentation_id  | None                                 |
+| qos_policy_id             | None                                 |
+| revision_number           | 1                                    |
+| router:external           | External                             |
+| segments                  | None                                 |
+| shared                    | False                                |
+| status                    | ACTIVE                               |
+| subnets                   |                                      |
+| tags                      |                                      |
+| tenant_id                 | 1e28ab734f2d45d986259ee44a54ff42     |
+| updated_at                | 2023-09-26T03:14:59Z                 |
++---------------------------+--------------------------------------+
+(venv) [root@thoth kolla]# 
+```
+
+Although creating a network with the physcial name `physnet1` works, `physnet2` doesn't work. 
+
 
 
 I also tried a [multi regional](https://docs.openstack.org/kolla-ansible/latest/user/multi-regions.html) deployment. In addition to not working, giving me any kinds of zones to specify, chatgpt possible
@@ -1508,7 +1560,7 @@ However, I am guessing that I need to enable OVN to use this, so I followed the 
 I set the variable of neutron availibility zones to be edge, on my network only node, and main, on my main compute node. However, it seems like my variables were ignored:
 
 
-``{.default}
+```{.default}
 (venv) [root@thoth ~]# openstack network agent list
 +--------------------------------------+------------------------------+--------------+-------------------+-------+-------+----------------------------+
 | ID                                   | Agent Type                   | Host         | Availability Zone | Alive | State | Binary                     |
