@@ -1561,8 +1561,20 @@ Well, that error is pretty explicit. What I am going to do is redeploy, but with
 
 So I did the same thing, with only one neutron server, edited openvswitch.ini, and then attempted to create an instance on physnet2. It failed. 
 
-I then created a network on physnet1, and created an instance on that network. It worked, getting an ip which I could access externally and all. What? 
+I then created a network on physnet1, and created an instance on that network. It worked, getting an ip which I could access externally and all. So at least I have this system halfway working. 
 
+Rather than attempting to put a virtual machine directly on an external network, I instead sought to allocate it a floating ip address. Same error. 
+
+I decided to search the configuration directories for more related to this:
+
+```{.default}
+[root@main-node /etc/kolla]# find . -type f -exec grep -H 'physnet' {} +
+./neutron-server/ml2_conf.ini:flat_networks = physnet1,physnet2
+./neutron-openvswitch-agent/openvswitch_agent.ini:bridge_mappings = physnet1:br-ex
+
+[root@network-node /etc/kolla]# find . -type f -exec grep -H 'physnet' {} +
+./neutron-openvswitch-agent/openvswitch_agent.ini:bridge_mappings = physnet2:br-ex
+```
 
 
 
