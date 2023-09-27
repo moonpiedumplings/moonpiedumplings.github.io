@@ -1561,7 +1561,7 @@ Well, that error is pretty explicit. What I am going to do is redeploy, but with
 
 So I did the same thing, with only one neutron server, edited openvswitch.ini, and then attempted to create an instance on physnet2. It failed. 
 
-I then created a network on physnet1, and created an instance on that network. It worked, getting an ip which I could access externally and all. So at least I have this system halfway working. 
+I then created a network on physnet1, and created an instance on that network. It worked, getting an ip which I could access externally and all. I could also do the same with a floating ip on that network, and it would get external internet access, and I could reach it externally.  So at least I have this system halfway working. 
 
 Rather than attempting to put a virtual machine directly on an external network, I instead sought to allocate it a floating ip address. Same error. 
 
@@ -1576,6 +1576,8 @@ I decided to search the configuration directories for more related to this:
 ./neutron-openvswitch-agent/openvswitch_agent.ini:bridge_mappings = physnet2:br-ex
 ```
 
+
+So I can't be missing a config file, since find seems not to find anything but those two files that I already edited. 
 
 
 I also tried a [multi regional](https://docs.openstack.org/kolla-ansible/latest/user/multi-regions.html) deployment. In addition to not working, giving me any kinds of zones to specify, chatgpt possible
