@@ -1289,7 +1289,7 @@ flat_networks = {% for interface in neutron_external_interface.split(',') %}phys
 <p><code>{default filename="main-node:/var/logs/kolla/nova/nova-compute.log"} ... 2023-09-26 09:48:40.783 7 ERROR nova.compute.manager [instance: 0ef0f1be-e4aa-4140-89af-4402f992f18b] nova.exception.PortBindingFailed: Binding failed for port ee3ee85b-6edf-4ace-a921-10fcca3637b3, please check neutron logs for more information. ....</code></p>
 <p>Well, that error is pretty explicit. What I am going to do is redeploy, but without the having two servers with the <code>neutron-server</code> role, and see if that works.</p>
 <p>So I did the same thing, with only one neutron server, edited openvswitch.ini, and then attempted to create an instance on physnet2. It failed.</p>
-<p>I then created a network on physnet1, and created an instance on that network. It worked, getting an ip which I could access externally and all. So at least I have this system halfway working.</p>
+<p>I then created a network on physnet1, and created an instance on that network. It worked, getting an ip which I could access externally and all. I could also do the same with a floating ip on that network, and it would get external internet access, and I could reach it externally. So at least I have this system halfway working.</p>
 <p>Rather than attempting to put a virtual machine directly on an external network, I instead sought to allocate it a floating ip address. Same error.</p>
 <p>I decided to search the configuration directories for more related to this:</p>
 <div class="sourceCode" id="cb58"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb58-1"><a href="#cb58-1" aria-hidden="true" tabindex="-1"></a>[root@main-node /etc/kolla]# find . -type f -exec grep -H 'physnet' {} +</span>
@@ -1298,6 +1298,7 @@ flat_networks = {% for interface in neutron_external_interface.split(',') %}phys
 <span id="cb58-4"><a href="#cb58-4" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb58-5"><a href="#cb58-5" aria-hidden="true" tabindex="-1"></a>[root@network-node /etc/kolla]# find . -type f -exec grep -H 'physnet' {} +</span>
 <span id="cb58-6"><a href="#cb58-6" aria-hidden="true" tabindex="-1"></a>./neutron-openvswitch-agent/openvswitch_agent.ini:bridge_mappings = physnet2:br-ex</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>So I can’t be missing a config file, since find seems not to find anything but those two files that I already edited.</p>
 <p>I also tried a <a href="https://docs.openstack.org/kolla-ansible/latest/user/multi-regions.html">multi regional</a> deployment. In addition to not working, giving me any kinds of zones to specify, chatgpt possible</p>
 <p>I did some searching around and I found an <a href="https://github.com/openstack/kolla-ansible/blob/7186f960d93f2e523a2052acd0287e176f7ac927/ansible/group_vars/all.yml#L1132">interesting option in the ansible variables</a>.</p>
 <div class="sourceCode" id="cb59"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb59-1"><a href="#cb59-1" aria-hidden="true" tabindex="-1"></a># Set OVN network availability zones</span>
