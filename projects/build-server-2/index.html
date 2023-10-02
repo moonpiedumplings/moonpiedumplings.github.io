@@ -1138,6 +1138,8 @@ root@debian:/home/moonpie# </code></pre>
 <p>And here is the source code for the <a href="https://github.com/openstack/nova/blob/master/nova/conf/pci.py">pci config options for nova</a>.</p>
 <p>Because they are the exact same thing, I am guessing I can use the configuration options <a href="https://docs.openstack.org/nova/latest/admin/pci-passthrough.html">here</a> and <a href="https://docs.openstack.org/nova/latest/configuration/config.html#pci.alias">here</a>.</p>
 <p>Oh, I found something better. The <a href="https://docs.openstack.org/zun/latest/configuration/sample-config.html">sample zun configuration</a> has a pci passthrough options.</p>
+<p>However, the zun step kept failing when I attempted to use kolla-ansible. Apparentlly the master’s release won’t be supporting zun for a while, because they have to update a lot of dependencies or something like that. Here is the <a href="https://github.com/openstack/kolla-ansible/commit/fdc3b122c1039d93190e68d925af21d459b4a4bf">git commit</a> with relevant changes.</p>
+<p>Because of the above, I decided to switch to the 2023.1 release of kolla-ansible, rather than the master release, which it was probably a bad idea to be using.</p>
 </section>
 <section id="cyborg" class="level2">
 <h2 class="anchored" data-anchor-id="cyborg">Cyborg</h2>
@@ -1306,6 +1308,33 @@ flat_networks = {% for interface in neutron_external_interface.split(',') %}phys
 <span id="cb59-5"><a href="#cb59-5" aria-hidden="true" tabindex="-1"></a>[root@network-node /etc/kolla]# find . -type f -exec grep -H 'physnet' {} +</span>
 <span id="cb59-6"><a href="#cb59-6" aria-hidden="true" tabindex="-1"></a>./neutron-openvswitch-agent/openvswitch_agent.ini:bridge_mappings = physnet2:br-ex</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>So I can’t be missing a config file, since find seems not to find anything but those two files that I already edited.</p>
+<p>So, I decided to do something that I probably should have done from the very beginning: I decided to test with a sole network node, with the main node no longer having that role.</p>
+<p>And it didn’t work. I’m not sure yet, but I’m guessing that the default method I was attempting to use for external network interfaction, provider networks, requires that the virtual machine be on the same host as the network is one, since it works by giving virtual machines direct physical access to networks.</p>
+<p>What I did, that works (mostly from <a href="https://github.com/openstack/kolla-ansible/blob/master/tools/init-runonce">init-runonce</a>, the sample setup script):</p>
+<ol type="1">
+<li><code>openstack network create --external --provider-physical-network physnet1 --provider-network-type flat public1</code></li>
+</ol>
+<ul>
+<li>or just do it from the UI, create a flat network with the name, physnet1</li>
+</ul>
+<ol start="2" type="1">
+<li>In the horizon UI, give this subnet the proper options. That’s way easier than trying to edit the command given by init-runonce.</li>
+<li><code>openstack network create demo-net</code></li>
+</ol>
+<ul>
+<li>Create a subnet in the horizon UI</li>
+</ul>
+<ol start="4" type="1">
+<li><code>openstack router create demo-router</code></li>
+<li><code>openstack router add subnet demo-router demo-subnet</code></li>
+<li><code>openstack router set --external-gateway public1 demo-router</code></li>
+</ol>
+<ul>
+<li>Note: according to <a href="https://github.com/openstack/kolla-ansible/blob/master/tools/init-runonce#L131">init-runonce</a>, the command is different for ipv6 external networks.</li>
+</ul>
+<p>Then, you can create an instance on that internal subnet. After the instance is created, you should be able to allocate it a floating ip address. When security groups were set up properly, I could ping and nmap it.</p>
+<p>However, I encountered a hiccup already: The virtual machine does not see it’s ip address, and cannot bind to it for stuff. But that’s a problem for after I verify that this setup works on my full, two network node setup.</p>
+<p>I attempted to set it up this way, but unlike my single network node setup, my virtual machine has no internet access. In addition to that, the floating ip cannot be accessed externally (no ping or nmap).</p>
 <p>At this point, I am very confused, so I decided to send an email to the <a href="https://wiki.openstack.org/wiki/Mailing_Lists">openstack mailing list</a>.</p>
 <p>I searched first, and I found <a href="https://lists.openstack.org/pipermail/openstack-discuss/2022-December/031522.html">a scenario similar to mine</a>. This person had an issue where, when they tried to add more bridges after they have already been deployed, using kolla-ansible’s reconfigure feature and editing the kolla yaml files. Although not the same to my situation, I will look at the logs and see if I am getting similar errors, or the like.</p>
 <p>I also tried a <a href="https://docs.openstack.org/kolla-ansible/latest/user/multi-regions.html">multi regional</a> deployment. In addition to not working, giving me any kinds of zones to specify, chatgpt possible</p>
