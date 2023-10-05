@@ -1,0 +1,341 @@
+---
+title: "Can I do flashcards in revealjs?"
+description: ""
+date: "2023-10-4"
+execute:
+  freeze: false
+format:
+  html:
+    toc: false
+    page-layout: article
+---
+
+So quarto has support for a format called [revealjs](https://quarto.org/docs/presentations/revealjs/). 
+
+Revealjs is basically presentations, like powerpoint or google slides, but in your browser. Although you can also print them to pdf. 
+
+Anyway, I was in need of some flashcards for my class and I wanted to see if I could use revealjs for this. 
+
+
+to create slides, just use a second level header:
+
+```{.markdown}
+## Getting up
+
+- Turn off alarm
+- Get out of bed
+
+## Going to sleep
+
+- Get in bed
+- Count sheep
+```
+
+However, I don't really want a title, so I can simply have the second level header (`##`), without a title, and it still creates another slide. 
+
+By default, lists are revealed all at once. To change this, in your quarto heading options:
+
+```{.yaml}
+format: 
+    revealjs:
+        incremental: true
+```
+
+
+Actually, I like content pauses better. 
+
+```{.markdown}
+## Slide with a pause
+
+content before the pause
+
+. . .
+
+content after the pause
+```
+
+
+Now, how can I randomize slide orders?
+
+According to the [revealjs pull where this feature was implemented](https://github.com/hakimel/reveal.js/pull/1506):
+
+I can have a range of slides, something like:
+
+```{.javascript}
+// for everything
+// Reveal.configure({ random: true });
+
+Reveal.configure({
+                random: {
+                    rangeStart: 5,
+                    rangeEnd: 8
+                }
+            });
+```
+
+No wait, quarto has an option to shuffle the slides.
+
+```{.yml}
+shuffle: true
+```
+
+
+Now, is there a way to randomize the the list? I want the list options to sometimes have the name, and sometimes have the content, and you have to match which with which. 
+
+chatgpt gave me this:
+
+```{.html}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Randomized List on Page Load</title>
+</head>
+<body>
+    <h1>Randomized List</h1>
+    <ul id="randomList">
+        <li>Item 1</li>
+        <li>Item 2</li>
+        <li>Item 3</li>
+        <li>Item 4</li>
+        <li>Item 5</li>
+    </ul>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const list = document.getElementById("randomList");
+            for (let i = list.children.length; i >= 0; i--) {
+                list.appendChild(list.children[Math.random() * i | 0]);
+            }
+        });
+    </script>
+</body>
+</html>
+```
+
+But does it work? : 
+
+```{=html}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Randomized List on Page Load</title>
+</head>
+<body>
+    <h1>Randomized List</h1>
+    <ul id="randomList">
+        <li>Item 1</li>
+        <li>Item 2</li>
+        <li>Item 3</li>
+        <li>Item 4</li>
+        <li>Item 5</li>
+    </ul>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const list = document.getElementById("randomList");
+            for (let i = list.children.length; i >= 0; i--) {
+                list.appendChild(list.children[Math.random() * i | 0]);
+            }
+        });
+    </script>
+</body>
+</html>
+```
+
+But it doesn't work in revealjs, as revealjs won't run show thing incrementally.
+
+Rather than lists, can I just have javascript manipulate classes and divs created by pandoc?
+
+```{.markdown}
+::: {#myCustomBlock .custom-class}
+This is a custom block that can be manipulated by JavaScript.
+:::
+```
+
+This should be able to be changed by pandoc. 
+
+And then I can shuffle them with something like:
+
+```{.javascript}
+    function shuffleBlocks() {
+    const container = document.getElementById("blocksContainer");
+    const blocks = Array.from(container.children);
+    for (let i = blocks.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [blocks[i], blocks[j]] = [blocks[j], blocks[i]];
+    }
+    container.innerHTML = "";
+    blocks.forEach(block => container.appendChild(block));
+}
+
+// Shuffle the blocks when the page loads
+window.addEventListener("DOMContentLoaded", shuffleBlocks);
+```
+
+So to test: 
+
+Shuffle blocks: 
+
+<div id="blockContainer">
+::: {.block}
+This is Block 1.
+:::
+
+::: {.block}
+This is Block 2.
+:::
+
+::: {.block}
+This is Block 3.
+:::
+</div>
+
+```{.html}
+<script>
+    function shuffleBlocks() {
+        const container = document.querySelector("#blockContainer");
+        const blockDivs = Array.from(container.querySelectorAll(".block"));
+        
+        // Shuffle the order of the block divs
+        for (let i = blockDivs.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            const temp = blockDivs[i];
+            blockDivs[i] = blockDivs[j];
+            blockDivs[j] = temp;
+        }
+        
+        // Append shuffled block divs back to the container
+        blockDivs.forEach(blockDiv => {
+            container.appendChild(blockDiv);
+        });
+    }
+
+    // Shuffle the blocks when the page loads
+    window.addEventListener("DOMContentLoaded", shuffleBlocks);
+</script>
+```
+
+```{=html}
+<script>
+    function shuffleBlocks() {
+        const container = document.querySelector("#blockContainer");
+        const blockDivs = Array.from(container.querySelectorAll(".block"));
+        
+        // Shuffle the order of the block divs
+        for (let i = blockDivs.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            const temp = blockDivs[i];
+            blockDivs[i] = blockDivs[j];
+            blockDivs[j] = temp;
+        }
+        
+        // Append shuffled block divs back to the container
+        blockDivs.forEach(blockDiv => {
+            container.appendChild(blockDiv);
+        });
+    }
+
+    // Shuffle the blocks when the page loads
+    window.addEventListener("DOMContentLoaded", shuffleBlocks);
+</script>
+```
+
+
+
+After many iterations with chatgpt, I finally got it to shuffle content. 
+
+
+Now is there a way to scale this across multiple slides? I don't want to have to copy and paste this for the every single block. In fact, can I just make a custom html element that shuffles them?
+
+
+So chatgpt gave me a custom html element class.
+
+
+
+```{=html}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Custom HTML Element - Shuffle Content</title>
+</head>
+<body>
+    <!-- Use the custom <shuffle-content> element -->
+    <shuffle-content>
+        <p>Content 1</p>
+        <p>Content 2</p>
+        <p>Content 3</p>
+        <p>Content 4</p>
+        <p>Content 5</p>
+    </shuffle-content>
+
+    <!-- Define the custom element and its behavior using JavaScript -->
+    <script>
+        // Define the custom element
+        class ShuffleContent extends HTMLElement {
+            constructor() {
+                super();
+            }
+
+            // This method is called when the element is added to the DOM
+            connectedCallback() {
+                this.shuffleChildElements();
+            }
+
+            // Method to shuffle child elements
+            shuffleChildElements() {
+                const children = Array.from(this.children);
+                const shuffledChildren = this.shuffleArray(children);
+
+                // Clear the container
+                this.innerHTML = '';
+
+                // Append shuffled children back to the container
+                shuffledChildren.forEach(child => {
+                    this.appendChild(child);
+                });
+            }
+
+            // Function to shuffle an array using Fisher-Yates algorithm
+            shuffleArray(array) {
+                for (let i = array.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [array[i], array[j]] = [array[j], array[i]];
+                }
+                return array;
+            }
+        }
+
+        // Define the custom element and register it with the browser
+        customElements.define('shuffle-content', ShuffleContent);
+    </script>
+</body>
+</html>
+
+```
+
+
+```{=html}
+ <shuffle-content>
+        <div><p>Content 1</p></div>
+        <div><p>Content 2</p></div>
+        <div><p>Content 3</p></div>
+        <div><p>Content 4</p></div>
+        <div><p>Content 5</p></div>
+    </shuffle-content>
+```
+<shuffled-content>
+[This is good]{#id}
+
+[is this?]{#id}
+</shuffled-content>
+
+
+
+
