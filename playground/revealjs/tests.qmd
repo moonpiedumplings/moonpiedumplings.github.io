@@ -11,6 +11,33 @@ format:
         shuffle: true
 ---
 
+```{=html}
+<script>
+    function shuffleBlocks() {
+        const container = document.querySelector("#blockContainer");
+        const blockDivs = Array.from(container.querySelectorAll(".block"));
+        
+        // Shuffle the order of the block divs
+        for (let i = blockDivs.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            const temp = blockDivs[i];
+            blockDivs[i] = blockDivs[j];
+            blockDivs[j] = temp;
+        }
+        
+        // Append shuffled block divs back to the container
+        blockDivs.forEach(blockDiv => {
+            container.appendChild(blockDiv);
+        });
+    }
+
+    // Shuffle the blocks when the page loads
+    window.addEventListener("DOMContentLoaded", shuffleBlocks);
+</script>
+```
+
+
+
 ##
 
 Ablbedo
@@ -18,6 +45,7 @@ Ablbedo
 . . .
 
 How reflective something is. 
+
 ##
 
 - Get in bed
@@ -46,5 +74,19 @@ How reflective something is.
 </body>
 </html>
 ```
+
+## 
+
+::: {.block}
+This is Block 1.
+:::
+
+::: {.block}
+This is Block 2.
+:::
+
+::: {.block}
+This is Block 3.
+:::
 
 
