@@ -1462,6 +1462,96 @@ Chatgpt says to use [availibility zones](https://docs.openstack.org/neutron/late
 
 However, one thing I am looking at that might be simpler is a multi regional deployment: <https://docs.openstack.org/kolla-ansible/latest/user/multi-regions.html> 
 
+I also tried a [multi regional](https://docs.openstack.org/kolla-ansible/latest/user/multi-regions.html) deployment. In addition to not working, giving me any kinds of zones to specify, chatgpt possible
+
+
+I did some searching around and I found an [interesting option in the ansible variables](https://github.com/openstack/kolla-ansible/blob/7186f960d93f2e523a2052acd0287e176f7ac927/ansible/group_vars/all.yml#L1132). 
+
+```{.default}
+# Set OVN network availability zones
+neutron_ovn_availability_zones: []
+```
+
+However, I am guessing that I need to enable OVN to use this, so I followed the [kolla-ansible docs for this](https://docs.openstack.org/kolla-ansible/latest/reference/networking/neutron.html). 
+
+
+I set the variable of neutron availibility zones to be edge, on my network only node, and main, on my main compute node. However, it seems like my variables were ignored:
+
+
+```{.default}
+(venv) [root@thoth ~]# openstack network agent list
++--------------------------------------+------------------------------+--------------+-------------------+-------+-------+----------------------------+
+| ID                                   | Agent Type                   | Host         | Availability Zone | Alive | State | Binary                     |
++--------------------------------------+------------------------------+--------------+-------------------+-------+-------+----------------------------+
+| 1ca0eec3-22f3-4680-b4c6-2d6e97ab6b8b | DHCP agent                   | main-node    | nova              | :-)   | UP    | neutron-dhcp-agent         |
+| 3f9fffd2-c3f7-4841-910e-bc73ba95ab53 | L3 agent                     | main-node    | nova              | :-)   | UP    | neutron-l3-agent           |
+| 4a11630f-bbaf-4d8e-87d1-deb209e770fe | Open vSwitch agent           | main-node    | None              | :-)   | UP    | neutron-openvswitch-agent  |
+| 820a9bbb-5279-4889-b511-979b1b7d327e | Open vSwitch agent           | network-node | None              | :-)   | UP    | neutron-openvswitch-agent  |
+| bf317078-bf85-488c-87c3-026a23c8793b | L3 agent                     | network-node | nova              | :-)   | UP    | neutron-l3-agent           |
+| e4e3d75b-55b5-4a1e-8bd2-632d8a37e5b9 | Metadata agent               | network-node | None              | :-)   | UP    | neutron-metadata-agent     |
+| ec64e75e-0e61-434e-908f-e4b9d670adbc | DHCP agent                   | network-node | nova              | :-)   | UP    | neutron-dhcp-agent         |
+| f5ea5528-e482-4609-ae33-09ef2d792b28 | Metadata agent               | main-node    | None              | :-)   | UP    | neutron-metadata-agent     |
+| main-node                            | OVN Controller Gateway agent | main-node    | main              | XXX   | UP    | ovn-controller             |
+| c484098d-fd7d-5d9c-81e5-be62657e571e | OVN Metadata agent           | main-node    | main              | XXX   | UP    | neutron-ovn-metadata-agent |
++--------------------------------------+------------------------------+--------------+-------------------+-------+-------+----------------------------+
+(venv) [root@thoth ~]# openstack availability zone list
++-----------+-------------+
+| Zone Name | Zone Status |
++-----------+-------------+
+| internal  | available   |
+| nova      | available   |
+| nova      | available   |
+| nova      | available   |
+| nova      | available   |
+| main      | available   |
++-----------+-------------+
+(venv) [root@thoth ~]# openstack availability zone list --network
++-----------+-------------+
+| Zone Name | Zone Status |
++-----------+-------------+
+| nova      | available   |
+| nova      | available   |
+| main      | available   |
++-----------+-------------+
+```
+
+And also, when I look in the UI, to create a network, it only lists the "nova" availibility zone hint. 
+
+What happened to my edge availability zone?
+
+Anyway, I decided to do more searching. Apparently, the neutron_ovn_zones are set up [here](https://github.com/openstack/kolla-ansible/blob/7186f960d93f2e523a2052acd0287e176f7ac927/ansible/roles/ovn-controller/tasks/setup-ovs.yml#L17), which is ran as long as the host is a member of the `ovn-network-controller` group, which is a [child of the "network" group](https://github.com/openstack/kolla-ansible/blob/master/ansible/inventory/multinode#L743). Based on this, I don't think I need to enable OVN in order to use OVN availability zones. It seems like some portion of OVN is deployed, but only the whole thing is used as a network backend if you enable it. 
+
+So because of this, I attempted to do another deployment with without setting OVN, but just availability zones.
+
+```{.default}
+(venv) [root@thoth ~]# openstack network agent list
++--------------------------------------+--------------------+--------------+-------------------+-------+-------+---------------------------+
+| ID                                   | Agent Type         | Host         | Availability Zone | Alive | State | Binary                    |
++--------------------------------------+--------------------+--------------+-------------------+-------+-------+---------------------------+
+| 750d6eb8-a89b-495e-86ab-65a9235d963c | Open vSwitch agent | network-node | None              | :-)   | UP    | neutron-openvswitch-agent |
+| 7921c839-1935-4d29-888d-8efae2f31aff | L3 agent           | main-node    | nova              | :-)   | UP    | neutron-l3-agent          |
+| 7cb4df27-5d40-429d-816e-8336d7a9867c | Metadata agent     | network-node | None              | :-)   | UP    | neutron-metadata-agent    |
+| ad40304b-b078-434d-bb6d-8e4087f7c7e1 | Open vSwitch agent | main-node    | None              | :-)   | UP    | neutron-openvswitch-agent |
+| b9770fe2-6a6a-4f77-9c5e-c0b058eb6966 | L3 agent           | network-node | nova              | :-)   | UP    | neutron-l3-agent          |
+| d02ba59c-cc43-4a5d-bff0-98bd3713ba53 | Metadata agent     | main-node    | None              | :-)   | UP    | neutron-metadata-agent    |
+| e22251c8-053d-47a7-8980-0e17e2b15341 | DHCP agent         | network-node | nova              | :-)   | UP    | neutron-dhcp-agent        |
+| f46c9a7d-d67b-49bf-9d7a-d9c268fd3229 | DHCP agent         | main-node    | nova              | :-)   | UP    | neutron-dhcp-agent        |
++--------------------------------------+--------------------+--------------+-------------------+-------+-------+---------------------------+
+(venv) [root@thoth ~]# openstack availability zone list
++-----------+-------------+
+| Zone Name | Zone Status |
++-----------+-------------+
+| internal  | available   |
+| nova      | available   |
+| nova      | available   |
+| nova      | available   |
+| nova      | available   |
++-----------+-------------+
+```
+
+This is even worse, now it didn't even create the main availability zone. 
+
+
 On the [kolla-ansible docs for neutron](https://docs.openstack.org/kolla-ansible/latest/reference/networking/neutron.html#example-multiple-interfaces), it mentions that if you have multiple physical networks, you need to name them differently. 
 
 The [multinode documention](https://docs.openstack.org/kolla-ansible/latest/user/multinode.html) details how to an ansible inventory to declare different variables for each service. Using this, I can replace change the physical interface names from physnet1 to something else. I am thinking physnet4 and physnet6, because of ipv4 and ipv6. 
@@ -1611,96 +1701,16 @@ At this point, I am very confused, so I decided to send an email to the [opensta
 I searched first, and I found [a scenario similar to mine](https://lists.openstack.org/pipermail/openstack-discuss/2022-December/031522.html). This person had an issue where, when they tried to add more bridges after they have already been deployed, using kolla-ansible's reconfigure feature and editing the kolla yaml files. Although not the same to my situation, I will look at the logs and see if I am getting similar errors, or the like.
 
 
+A few days later, I changed nothing except for updating the kolla-ansible deployment scripts (I recreated the venv). And it worked.
 
 
-I also tried a [multi regional](https://docs.openstack.org/kolla-ansible/latest/user/multi-regions.html) deployment. In addition to not working, giving me any kinds of zones to specify, chatgpt possible
+![](images/networkingworking.jpg)
 
+I can use floating ip's to put virtual machine's on the network located on the network-node.
 
-I did some searching around and I found an [interesting option in the ansible variables](https://github.com/openstack/kolla-ansible/blob/7186f960d93f2e523a2052acd0287e176f7ac927/ansible/group_vars/all.yml#L1132). 
+Now, at first there was an error when I attempted to put the virtual machine directly on the provider network, but then I changed that network to be a "shared" network and it worked. I think this is what I was missing when I attempted to do it originally, but there are too many variables for me to be able to isolate properly. 
 
-```{.default}
-# Set OVN network availability zones
-neutron_ovn_availability_zones: []
-```
-
-However, I am guessing that I need to enable OVN to use this, so I followed the [kolla-ansible docs for this](https://docs.openstack.org/kolla-ansible/latest/reference/networking/neutron.html). 
-
-
-I set the variable of neutron availibility zones to be edge, on my network only node, and main, on my main compute node. However, it seems like my variables were ignored:
-
-
-```{.default}
-(venv) [root@thoth ~]# openstack network agent list
-+--------------------------------------+------------------------------+--------------+-------------------+-------+-------+----------------------------+
-| ID                                   | Agent Type                   | Host         | Availability Zone | Alive | State | Binary                     |
-+--------------------------------------+------------------------------+--------------+-------------------+-------+-------+----------------------------+
-| 1ca0eec3-22f3-4680-b4c6-2d6e97ab6b8b | DHCP agent                   | main-node    | nova              | :-)   | UP    | neutron-dhcp-agent         |
-| 3f9fffd2-c3f7-4841-910e-bc73ba95ab53 | L3 agent                     | main-node    | nova              | :-)   | UP    | neutron-l3-agent           |
-| 4a11630f-bbaf-4d8e-87d1-deb209e770fe | Open vSwitch agent           | main-node    | None              | :-)   | UP    | neutron-openvswitch-agent  |
-| 820a9bbb-5279-4889-b511-979b1b7d327e | Open vSwitch agent           | network-node | None              | :-)   | UP    | neutron-openvswitch-agent  |
-| bf317078-bf85-488c-87c3-026a23c8793b | L3 agent                     | network-node | nova              | :-)   | UP    | neutron-l3-agent           |
-| e4e3d75b-55b5-4a1e-8bd2-632d8a37e5b9 | Metadata agent               | network-node | None              | :-)   | UP    | neutron-metadata-agent     |
-| ec64e75e-0e61-434e-908f-e4b9d670adbc | DHCP agent                   | network-node | nova              | :-)   | UP    | neutron-dhcp-agent         |
-| f5ea5528-e482-4609-ae33-09ef2d792b28 | Metadata agent               | main-node    | None              | :-)   | UP    | neutron-metadata-agent     |
-| main-node                            | OVN Controller Gateway agent | main-node    | main              | XXX   | UP    | ovn-controller             |
-| c484098d-fd7d-5d9c-81e5-be62657e571e | OVN Metadata agent           | main-node    | main              | XXX   | UP    | neutron-ovn-metadata-agent |
-+--------------------------------------+------------------------------+--------------+-------------------+-------+-------+----------------------------+
-(venv) [root@thoth ~]# openstack availability zone list
-+-----------+-------------+
-| Zone Name | Zone Status |
-+-----------+-------------+
-| internal  | available   |
-| nova      | available   |
-| nova      | available   |
-| nova      | available   |
-| nova      | available   |
-| main      | available   |
-+-----------+-------------+
-(venv) [root@thoth ~]# openstack availability zone list --network
-+-----------+-------------+
-| Zone Name | Zone Status |
-+-----------+-------------+
-| nova      | available   |
-| nova      | available   |
-| main      | available   |
-+-----------+-------------+
-```
-
-And also, when I look in the UI, to create a network, it only lists the "nova" availibility zone hint. 
-
-What happened to my edge availability zone?
-
-Anyway, I decided to do more searching. Apparently, the neutron_ovn_zones are set up [here](https://github.com/openstack/kolla-ansible/blob/7186f960d93f2e523a2052acd0287e176f7ac927/ansible/roles/ovn-controller/tasks/setup-ovs.yml#L17), which is ran as long as the host is a member of the `ovn-network-controller` group, which is a [child of the "network" group](https://github.com/openstack/kolla-ansible/blob/master/ansible/inventory/multinode#L743). Based on this, I don't think I need to enable OVN in order to use OVN availability zones. It seems like some portion of OVN is deployed, but only the whole thing is used as a network backend if you enable it. 
-
-So because of this, I attempted to do another deployment with without setting OVN, but just availability zones.
-
-```{.default}
-(venv) [root@thoth ~]# openstack network agent list
-+--------------------------------------+--------------------+--------------+-------------------+-------+-------+---------------------------+
-| ID                                   | Agent Type         | Host         | Availability Zone | Alive | State | Binary                    |
-+--------------------------------------+--------------------+--------------+-------------------+-------+-------+---------------------------+
-| 750d6eb8-a89b-495e-86ab-65a9235d963c | Open vSwitch agent | network-node | None              | :-)   | UP    | neutron-openvswitch-agent |
-| 7921c839-1935-4d29-888d-8efae2f31aff | L3 agent           | main-node    | nova              | :-)   | UP    | neutron-l3-agent          |
-| 7cb4df27-5d40-429d-816e-8336d7a9867c | Metadata agent     | network-node | None              | :-)   | UP    | neutron-metadata-agent    |
-| ad40304b-b078-434d-bb6d-8e4087f7c7e1 | Open vSwitch agent | main-node    | None              | :-)   | UP    | neutron-openvswitch-agent |
-| b9770fe2-6a6a-4f77-9c5e-c0b058eb6966 | L3 agent           | network-node | nova              | :-)   | UP    | neutron-l3-agent          |
-| d02ba59c-cc43-4a5d-bff0-98bd3713ba53 | Metadata agent     | main-node    | None              | :-)   | UP    | neutron-metadata-agent    |
-| e22251c8-053d-47a7-8980-0e17e2b15341 | DHCP agent         | network-node | nova              | :-)   | UP    | neutron-dhcp-agent        |
-| f46c9a7d-d67b-49bf-9d7a-d9c268fd3229 | DHCP agent         | main-node    | nova              | :-)   | UP    | neutron-dhcp-agent        |
-+--------------------------------------+--------------------+--------------+-------------------+-------+-------+---------------------------+
-(venv) [root@thoth ~]# openstack availability zone list
-+-----------+-------------+
-| Zone Name | Zone Status |
-+-----------+-------------+
-| internal  | available   |
-| nova      | available   |
-| nova      | available   |
-| nova      | available   |
-| nova      | available   |
-+-----------+-------------+
-```
-
-This is even worse, now it didn't even create the main availability zone. 
+Anyway, now I can do both provider and floating ip on the main node. Provider networks are more performant, apparently. 
 
 
 I also desire to enable vpn-as-a-service. But [according to the docs](https://docs.openstack.org/kolla-ansible/latest/reference/networking/neutron-extensions.html#neutron-vpnaas-vpn-as-a-service), that's not too difficult to set up. 
