@@ -1221,6 +1221,74 @@ root@debian:/home/moonpie# </code></pre>
 <p>How can I ensure that the truly external network I create is attatched to a specific L3 agent?</p>
 <p>Chatgpt says to use <a href="https://docs.openstack.org/neutron/latest/admin/ovn/availability_zones.html">availibility zones</a>.</p>
 <p>However, one thing I am looking at that might be simpler is a multi regional deployment: <a href="https://docs.openstack.org/kolla-ansible/latest/user/multi-regions.html" class="uri">https://docs.openstack.org/kolla-ansible/latest/user/multi-regions.html</a></p>
+<p>I also tried a <a href="https://docs.openstack.org/kolla-ansible/latest/user/multi-regions.html">multi regional</a> deployment. In addition to not working, giving me any kinds of zones to specify, chatgpt possible</p>
+<p>I did some searching around and I found an <a href="https://github.com/openstack/kolla-ansible/blob/7186f960d93f2e523a2052acd0287e176f7ac927/ansible/group_vars/all.yml#L1132">interesting option in the ansible variables</a>.</p>
+<div class="sourceCode" id="cb55"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb55-1"><a href="#cb55-1" aria-hidden="true" tabindex="-1"></a># Set OVN network availability zones</span>
+<span id="cb55-2"><a href="#cb55-2" aria-hidden="true" tabindex="-1"></a>neutron_ovn_availability_zones: []</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>However, I am guessing that I need to enable OVN to use this, so I followed the <a href="https://docs.openstack.org/kolla-ansible/latest/reference/networking/neutron.html">kolla-ansible docs for this</a>.</p>
+<p>I set the variable of neutron availibility zones to be edge, on my network only node, and main, on my main compute node. However, it seems like my variables were ignored:</p>
+<div class="sourceCode" id="cb56"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb56-1"><a href="#cb56-1" aria-hidden="true" tabindex="-1"></a>(venv) [root@thoth ~]# openstack network agent list</span>
+<span id="cb56-2"><a href="#cb56-2" aria-hidden="true" tabindex="-1"></a>+--------------------------------------+------------------------------+--------------+-------------------+-------+-------+----------------------------+</span>
+<span id="cb56-3"><a href="#cb56-3" aria-hidden="true" tabindex="-1"></a>| ID                                   | Agent Type                   | Host         | Availability Zone | Alive | State | Binary                     |</span>
+<span id="cb56-4"><a href="#cb56-4" aria-hidden="true" tabindex="-1"></a>+--------------------------------------+------------------------------+--------------+-------------------+-------+-------+----------------------------+</span>
+<span id="cb56-5"><a href="#cb56-5" aria-hidden="true" tabindex="-1"></a>| 1ca0eec3-22f3-4680-b4c6-2d6e97ab6b8b | DHCP agent                   | main-node    | nova              | :-)   | UP    | neutron-dhcp-agent         |</span>
+<span id="cb56-6"><a href="#cb56-6" aria-hidden="true" tabindex="-1"></a>| 3f9fffd2-c3f7-4841-910e-bc73ba95ab53 | L3 agent                     | main-node    | nova              | :-)   | UP    | neutron-l3-agent           |</span>
+<span id="cb56-7"><a href="#cb56-7" aria-hidden="true" tabindex="-1"></a>| 4a11630f-bbaf-4d8e-87d1-deb209e770fe | Open vSwitch agent           | main-node    | None              | :-)   | UP    | neutron-openvswitch-agent  |</span>
+<span id="cb56-8"><a href="#cb56-8" aria-hidden="true" tabindex="-1"></a>| 820a9bbb-5279-4889-b511-979b1b7d327e | Open vSwitch agent           | network-node | None              | :-)   | UP    | neutron-openvswitch-agent  |</span>
+<span id="cb56-9"><a href="#cb56-9" aria-hidden="true" tabindex="-1"></a>| bf317078-bf85-488c-87c3-026a23c8793b | L3 agent                     | network-node | nova              | :-)   | UP    | neutron-l3-agent           |</span>
+<span id="cb56-10"><a href="#cb56-10" aria-hidden="true" tabindex="-1"></a>| e4e3d75b-55b5-4a1e-8bd2-632d8a37e5b9 | Metadata agent               | network-node | None              | :-)   | UP    | neutron-metadata-agent     |</span>
+<span id="cb56-11"><a href="#cb56-11" aria-hidden="true" tabindex="-1"></a>| ec64e75e-0e61-434e-908f-e4b9d670adbc | DHCP agent                   | network-node | nova              | :-)   | UP    | neutron-dhcp-agent         |</span>
+<span id="cb56-12"><a href="#cb56-12" aria-hidden="true" tabindex="-1"></a>| f5ea5528-e482-4609-ae33-09ef2d792b28 | Metadata agent               | main-node    | None              | :-)   | UP    | neutron-metadata-agent     |</span>
+<span id="cb56-13"><a href="#cb56-13" aria-hidden="true" tabindex="-1"></a>| main-node                            | OVN Controller Gateway agent | main-node    | main              | XXX   | UP    | ovn-controller             |</span>
+<span id="cb56-14"><a href="#cb56-14" aria-hidden="true" tabindex="-1"></a>| c484098d-fd7d-5d9c-81e5-be62657e571e | OVN Metadata agent           | main-node    | main              | XXX   | UP    | neutron-ovn-metadata-agent |</span>
+<span id="cb56-15"><a href="#cb56-15" aria-hidden="true" tabindex="-1"></a>+--------------------------------------+------------------------------+--------------+-------------------+-------+-------+----------------------------+</span>
+<span id="cb56-16"><a href="#cb56-16" aria-hidden="true" tabindex="-1"></a>(venv) [root@thoth ~]# openstack availability zone list</span>
+<span id="cb56-17"><a href="#cb56-17" aria-hidden="true" tabindex="-1"></a>+-----------+-------------+</span>
+<span id="cb56-18"><a href="#cb56-18" aria-hidden="true" tabindex="-1"></a>| Zone Name | Zone Status |</span>
+<span id="cb56-19"><a href="#cb56-19" aria-hidden="true" tabindex="-1"></a>+-----------+-------------+</span>
+<span id="cb56-20"><a href="#cb56-20" aria-hidden="true" tabindex="-1"></a>| internal  | available   |</span>
+<span id="cb56-21"><a href="#cb56-21" aria-hidden="true" tabindex="-1"></a>| nova      | available   |</span>
+<span id="cb56-22"><a href="#cb56-22" aria-hidden="true" tabindex="-1"></a>| nova      | available   |</span>
+<span id="cb56-23"><a href="#cb56-23" aria-hidden="true" tabindex="-1"></a>| nova      | available   |</span>
+<span id="cb56-24"><a href="#cb56-24" aria-hidden="true" tabindex="-1"></a>| nova      | available   |</span>
+<span id="cb56-25"><a href="#cb56-25" aria-hidden="true" tabindex="-1"></a>| main      | available   |</span>
+<span id="cb56-26"><a href="#cb56-26" aria-hidden="true" tabindex="-1"></a>+-----------+-------------+</span>
+<span id="cb56-27"><a href="#cb56-27" aria-hidden="true" tabindex="-1"></a>(venv) [root@thoth ~]# openstack availability zone list --network</span>
+<span id="cb56-28"><a href="#cb56-28" aria-hidden="true" tabindex="-1"></a>+-----------+-------------+</span>
+<span id="cb56-29"><a href="#cb56-29" aria-hidden="true" tabindex="-1"></a>| Zone Name | Zone Status |</span>
+<span id="cb56-30"><a href="#cb56-30" aria-hidden="true" tabindex="-1"></a>+-----------+-------------+</span>
+<span id="cb56-31"><a href="#cb56-31" aria-hidden="true" tabindex="-1"></a>| nova      | available   |</span>
+<span id="cb56-32"><a href="#cb56-32" aria-hidden="true" tabindex="-1"></a>| nova      | available   |</span>
+<span id="cb56-33"><a href="#cb56-33" aria-hidden="true" tabindex="-1"></a>| main      | available   |</span>
+<span id="cb56-34"><a href="#cb56-34" aria-hidden="true" tabindex="-1"></a>+-----------+-------------+</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>And also, when I look in the UI, to create a network, it only lists the “nova” availibility zone hint.</p>
+<p>What happened to my edge availability zone?</p>
+<p>Anyway, I decided to do more searching. Apparently, the neutron_ovn_zones are set up <a href="https://github.com/openstack/kolla-ansible/blob/7186f960d93f2e523a2052acd0287e176f7ac927/ansible/roles/ovn-controller/tasks/setup-ovs.yml#L17">here</a>, which is ran as long as the host is a member of the <code>ovn-network-controller</code> group, which is a <a href="https://github.com/openstack/kolla-ansible/blob/master/ansible/inventory/multinode#L743">child of the “network” group</a>. Based on this, I don’t think I need to enable OVN in order to use OVN availability zones. It seems like some portion of OVN is deployed, but only the whole thing is used as a network backend if you enable it.</p>
+<p>So because of this, I attempted to do another deployment with without setting OVN, but just availability zones.</p>
+<div class="sourceCode" id="cb57"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb57-1"><a href="#cb57-1" aria-hidden="true" tabindex="-1"></a>(venv) [root@thoth ~]# openstack network agent list</span>
+<span id="cb57-2"><a href="#cb57-2" aria-hidden="true" tabindex="-1"></a>+--------------------------------------+--------------------+--------------+-------------------+-------+-------+---------------------------+</span>
+<span id="cb57-3"><a href="#cb57-3" aria-hidden="true" tabindex="-1"></a>| ID                                   | Agent Type         | Host         | Availability Zone | Alive | State | Binary                    |</span>
+<span id="cb57-4"><a href="#cb57-4" aria-hidden="true" tabindex="-1"></a>+--------------------------------------+--------------------+--------------+-------------------+-------+-------+---------------------------+</span>
+<span id="cb57-5"><a href="#cb57-5" aria-hidden="true" tabindex="-1"></a>| 750d6eb8-a89b-495e-86ab-65a9235d963c | Open vSwitch agent | network-node | None              | :-)   | UP    | neutron-openvswitch-agent |</span>
+<span id="cb57-6"><a href="#cb57-6" aria-hidden="true" tabindex="-1"></a>| 7921c839-1935-4d29-888d-8efae2f31aff | L3 agent           | main-node    | nova              | :-)   | UP    | neutron-l3-agent          |</span>
+<span id="cb57-7"><a href="#cb57-7" aria-hidden="true" tabindex="-1"></a>| 7cb4df27-5d40-429d-816e-8336d7a9867c | Metadata agent     | network-node | None              | :-)   | UP    | neutron-metadata-agent    |</span>
+<span id="cb57-8"><a href="#cb57-8" aria-hidden="true" tabindex="-1"></a>| ad40304b-b078-434d-bb6d-8e4087f7c7e1 | Open vSwitch agent | main-node    | None              | :-)   | UP    | neutron-openvswitch-agent |</span>
+<span id="cb57-9"><a href="#cb57-9" aria-hidden="true" tabindex="-1"></a>| b9770fe2-6a6a-4f77-9c5e-c0b058eb6966 | L3 agent           | network-node | nova              | :-)   | UP    | neutron-l3-agent          |</span>
+<span id="cb57-10"><a href="#cb57-10" aria-hidden="true" tabindex="-1"></a>| d02ba59c-cc43-4a5d-bff0-98bd3713ba53 | Metadata agent     | main-node    | None              | :-)   | UP    | neutron-metadata-agent    |</span>
+<span id="cb57-11"><a href="#cb57-11" aria-hidden="true" tabindex="-1"></a>| e22251c8-053d-47a7-8980-0e17e2b15341 | DHCP agent         | network-node | nova              | :-)   | UP    | neutron-dhcp-agent        |</span>
+<span id="cb57-12"><a href="#cb57-12" aria-hidden="true" tabindex="-1"></a>| f46c9a7d-d67b-49bf-9d7a-d9c268fd3229 | DHCP agent         | main-node    | nova              | :-)   | UP    | neutron-dhcp-agent        |</span>
+<span id="cb57-13"><a href="#cb57-13" aria-hidden="true" tabindex="-1"></a>+--------------------------------------+--------------------+--------------+-------------------+-------+-------+---------------------------+</span>
+<span id="cb57-14"><a href="#cb57-14" aria-hidden="true" tabindex="-1"></a>(venv) [root@thoth ~]# openstack availability zone list</span>
+<span id="cb57-15"><a href="#cb57-15" aria-hidden="true" tabindex="-1"></a>+-----------+-------------+</span>
+<span id="cb57-16"><a href="#cb57-16" aria-hidden="true" tabindex="-1"></a>| Zone Name | Zone Status |</span>
+<span id="cb57-17"><a href="#cb57-17" aria-hidden="true" tabindex="-1"></a>+-----------+-------------+</span>
+<span id="cb57-18"><a href="#cb57-18" aria-hidden="true" tabindex="-1"></a>| internal  | available   |</span>
+<span id="cb57-19"><a href="#cb57-19" aria-hidden="true" tabindex="-1"></a>| nova      | available   |</span>
+<span id="cb57-20"><a href="#cb57-20" aria-hidden="true" tabindex="-1"></a>| nova      | available   |</span>
+<span id="cb57-21"><a href="#cb57-21" aria-hidden="true" tabindex="-1"></a>| nova      | available   |</span>
+<span id="cb57-22"><a href="#cb57-22" aria-hidden="true" tabindex="-1"></a>| nova      | available   |</span>
+<span id="cb57-23"><a href="#cb57-23" aria-hidden="true" tabindex="-1"></a>+-----------+-------------+</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>This is even worse, now it didn’t even create the main availability zone.</p>
 <p>On the <a href="https://docs.openstack.org/kolla-ansible/latest/reference/networking/neutron.html#example-multiple-interfaces">kolla-ansible docs for neutron</a>, it mentions that if you have multiple physical networks, you need to name them differently.</p>
 <p>The <a href="https://docs.openstack.org/kolla-ansible/latest/user/multinode.html">multinode documention</a> details how to an ansible inventory to declare different variables for each service. Using this, I can replace change the physical interface names from physnet1 to something else. I am thinking physnet4 and physnet6, because of ipv4 and ipv6.</p>
 <p>I tried changing the bridge name, however, nothing changed.</p>
@@ -1244,46 +1312,46 @@ flat_networks = {% for interface in neutron_external_interface.split(',') %}phys
 <div class="code-with-filename-file">
 <pre><strong>/etc/kolla/neutron-openvswitch-agent/openvswitch-agent.ini</strong></pre>
 </div>
-<div class="sourceCode" id="cb56"><pre class="sourceCode ini code-with-copy"><code class="sourceCode ini"><span id="cb56-1"><a href="#cb56-1" aria-hidden="true" tabindex="-1"></a><span class="kw">[ovs]</span></span>
-<span id="cb56-2"><a href="#cb56-2" aria-hidden="true" tabindex="-1"></a><span class="dt">bridge_mappings </span><span class="ot">=</span><span class="st"> physnet2:br-ex</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb59"><pre class="sourceCode ini code-with-copy"><code class="sourceCode ini"><span id="cb59-1"><a href="#cb59-1" aria-hidden="true" tabindex="-1"></a><span class="kw">[ovs]</span></span>
+<span id="cb59-2"><a href="#cb59-2" aria-hidden="true" tabindex="-1"></a><span class="dt">bridge_mappings </span><span class="ot">=</span><span class="st"> physnet2:br-ex</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>But I still get the same error.</p>
-<div class="sourceCode" id="cb57"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb57-1"><a href="#cb57-1" aria-hidden="true" tabindex="-1"></a>(venv) [root@thoth kolla]# openstack network create --external --provider-physical-network physnet2 --provider-network-type flat public1</span>
-<span id="cb57-2"><a href="#cb57-2" aria-hidden="true" tabindex="-1"></a>Error while executing command: BadRequestException: 400, Invalid input for operation: physical_network 'physnet2' unknown for flat provider network.</span>
-<span id="cb57-3"><a href="#cb57-3" aria-hidden="true" tabindex="-1"></a>(venv) [root@thoth kolla]# openstack network create --external --provider-physical-network physnet1 --provider-network-type flat public1</span>
-<span id="cb57-4"><a href="#cb57-4" aria-hidden="true" tabindex="-1"></a>+---------------------------+--------------------------------------+</span>
-<span id="cb57-5"><a href="#cb57-5" aria-hidden="true" tabindex="-1"></a>| Field                     | Value                                |</span>
-<span id="cb57-6"><a href="#cb57-6" aria-hidden="true" tabindex="-1"></a>+---------------------------+--------------------------------------+</span>
-<span id="cb57-7"><a href="#cb57-7" aria-hidden="true" tabindex="-1"></a>| admin_state_up            | UP                                   |</span>
-<span id="cb57-8"><a href="#cb57-8" aria-hidden="true" tabindex="-1"></a>| availability_zone_hints   |                                      |</span>
-<span id="cb57-9"><a href="#cb57-9" aria-hidden="true" tabindex="-1"></a>| availability_zones        |                                      |</span>
-<span id="cb57-10"><a href="#cb57-10" aria-hidden="true" tabindex="-1"></a>| created_at                | 2023-09-26T03:14:59Z                 |</span>
-<span id="cb57-11"><a href="#cb57-11" aria-hidden="true" tabindex="-1"></a>| description               |                                      |</span>
-<span id="cb57-12"><a href="#cb57-12" aria-hidden="true" tabindex="-1"></a>| dns_domain                | None                                 |</span>
-<span id="cb57-13"><a href="#cb57-13" aria-hidden="true" tabindex="-1"></a>| id                        | 378f8457-c50f-4554-91cf-905d9ec08ac7 |</span>
-<span id="cb57-14"><a href="#cb57-14" aria-hidden="true" tabindex="-1"></a>| ipv4_address_scope        | None                                 |</span>
-<span id="cb57-15"><a href="#cb57-15" aria-hidden="true" tabindex="-1"></a>| ipv6_address_scope        | None                                 |</span>
-<span id="cb57-16"><a href="#cb57-16" aria-hidden="true" tabindex="-1"></a>| is_default                | False                                |</span>
-<span id="cb57-17"><a href="#cb57-17" aria-hidden="true" tabindex="-1"></a>| is_vlan_transparent       | None                                 |</span>
-<span id="cb57-18"><a href="#cb57-18" aria-hidden="true" tabindex="-1"></a>| mtu                       | 1500                                 |</span>
-<span id="cb57-19"><a href="#cb57-19" aria-hidden="true" tabindex="-1"></a>| name                      | public1                              |</span>
-<span id="cb57-20"><a href="#cb57-20" aria-hidden="true" tabindex="-1"></a>| port_security_enabled     | True                                 |</span>
-<span id="cb57-21"><a href="#cb57-21" aria-hidden="true" tabindex="-1"></a>| project_id                | 1e28ab734f2d45d986259ee44a54ff42     |</span>
-<span id="cb57-22"><a href="#cb57-22" aria-hidden="true" tabindex="-1"></a>| provider:network_type     | flat                                 |</span>
-<span id="cb57-23"><a href="#cb57-23" aria-hidden="true" tabindex="-1"></a>| provider:physical_network | physnet1                             |</span>
-<span id="cb57-24"><a href="#cb57-24" aria-hidden="true" tabindex="-1"></a>| provider:segmentation_id  | None                                 |</span>
-<span id="cb57-25"><a href="#cb57-25" aria-hidden="true" tabindex="-1"></a>| qos_policy_id             | None                                 |</span>
-<span id="cb57-26"><a href="#cb57-26" aria-hidden="true" tabindex="-1"></a>| revision_number           | 1                                    |</span>
-<span id="cb57-27"><a href="#cb57-27" aria-hidden="true" tabindex="-1"></a>| router:external           | External                             |</span>
-<span id="cb57-28"><a href="#cb57-28" aria-hidden="true" tabindex="-1"></a>| segments                  | None                                 |</span>
-<span id="cb57-29"><a href="#cb57-29" aria-hidden="true" tabindex="-1"></a>| shared                    | False                                |</span>
-<span id="cb57-30"><a href="#cb57-30" aria-hidden="true" tabindex="-1"></a>| status                    | ACTIVE                               |</span>
-<span id="cb57-31"><a href="#cb57-31" aria-hidden="true" tabindex="-1"></a>| subnets                   |                                      |</span>
-<span id="cb57-32"><a href="#cb57-32" aria-hidden="true" tabindex="-1"></a>| tags                      |                                      |</span>
-<span id="cb57-33"><a href="#cb57-33" aria-hidden="true" tabindex="-1"></a>| tenant_id                 | 1e28ab734f2d45d986259ee44a54ff42     |</span>
-<span id="cb57-34"><a href="#cb57-34" aria-hidden="true" tabindex="-1"></a>| updated_at                | 2023-09-26T03:14:59Z                 |</span>
-<span id="cb57-35"><a href="#cb57-35" aria-hidden="true" tabindex="-1"></a>+---------------------------+--------------------------------------+</span>
-<span id="cb57-36"><a href="#cb57-36" aria-hidden="true" tabindex="-1"></a>(venv) [root@thoth kolla]# </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb60"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb60-1"><a href="#cb60-1" aria-hidden="true" tabindex="-1"></a>(venv) [root@thoth kolla]# openstack network create --external --provider-physical-network physnet2 --provider-network-type flat public1</span>
+<span id="cb60-2"><a href="#cb60-2" aria-hidden="true" tabindex="-1"></a>Error while executing command: BadRequestException: 400, Invalid input for operation: physical_network 'physnet2' unknown for flat provider network.</span>
+<span id="cb60-3"><a href="#cb60-3" aria-hidden="true" tabindex="-1"></a>(venv) [root@thoth kolla]# openstack network create --external --provider-physical-network physnet1 --provider-network-type flat public1</span>
+<span id="cb60-4"><a href="#cb60-4" aria-hidden="true" tabindex="-1"></a>+---------------------------+--------------------------------------+</span>
+<span id="cb60-5"><a href="#cb60-5" aria-hidden="true" tabindex="-1"></a>| Field                     | Value                                |</span>
+<span id="cb60-6"><a href="#cb60-6" aria-hidden="true" tabindex="-1"></a>+---------------------------+--------------------------------------+</span>
+<span id="cb60-7"><a href="#cb60-7" aria-hidden="true" tabindex="-1"></a>| admin_state_up            | UP                                   |</span>
+<span id="cb60-8"><a href="#cb60-8" aria-hidden="true" tabindex="-1"></a>| availability_zone_hints   |                                      |</span>
+<span id="cb60-9"><a href="#cb60-9" aria-hidden="true" tabindex="-1"></a>| availability_zones        |                                      |</span>
+<span id="cb60-10"><a href="#cb60-10" aria-hidden="true" tabindex="-1"></a>| created_at                | 2023-09-26T03:14:59Z                 |</span>
+<span id="cb60-11"><a href="#cb60-11" aria-hidden="true" tabindex="-1"></a>| description               |                                      |</span>
+<span id="cb60-12"><a href="#cb60-12" aria-hidden="true" tabindex="-1"></a>| dns_domain                | None                                 |</span>
+<span id="cb60-13"><a href="#cb60-13" aria-hidden="true" tabindex="-1"></a>| id                        | 378f8457-c50f-4554-91cf-905d9ec08ac7 |</span>
+<span id="cb60-14"><a href="#cb60-14" aria-hidden="true" tabindex="-1"></a>| ipv4_address_scope        | None                                 |</span>
+<span id="cb60-15"><a href="#cb60-15" aria-hidden="true" tabindex="-1"></a>| ipv6_address_scope        | None                                 |</span>
+<span id="cb60-16"><a href="#cb60-16" aria-hidden="true" tabindex="-1"></a>| is_default                | False                                |</span>
+<span id="cb60-17"><a href="#cb60-17" aria-hidden="true" tabindex="-1"></a>| is_vlan_transparent       | None                                 |</span>
+<span id="cb60-18"><a href="#cb60-18" aria-hidden="true" tabindex="-1"></a>| mtu                       | 1500                                 |</span>
+<span id="cb60-19"><a href="#cb60-19" aria-hidden="true" tabindex="-1"></a>| name                      | public1                              |</span>
+<span id="cb60-20"><a href="#cb60-20" aria-hidden="true" tabindex="-1"></a>| port_security_enabled     | True                                 |</span>
+<span id="cb60-21"><a href="#cb60-21" aria-hidden="true" tabindex="-1"></a>| project_id                | 1e28ab734f2d45d986259ee44a54ff42     |</span>
+<span id="cb60-22"><a href="#cb60-22" aria-hidden="true" tabindex="-1"></a>| provider:network_type     | flat                                 |</span>
+<span id="cb60-23"><a href="#cb60-23" aria-hidden="true" tabindex="-1"></a>| provider:physical_network | physnet1                             |</span>
+<span id="cb60-24"><a href="#cb60-24" aria-hidden="true" tabindex="-1"></a>| provider:segmentation_id  | None                                 |</span>
+<span id="cb60-25"><a href="#cb60-25" aria-hidden="true" tabindex="-1"></a>| qos_policy_id             | None                                 |</span>
+<span id="cb60-26"><a href="#cb60-26" aria-hidden="true" tabindex="-1"></a>| revision_number           | 1                                    |</span>
+<span id="cb60-27"><a href="#cb60-27" aria-hidden="true" tabindex="-1"></a>| router:external           | External                             |</span>
+<span id="cb60-28"><a href="#cb60-28" aria-hidden="true" tabindex="-1"></a>| segments                  | None                                 |</span>
+<span id="cb60-29"><a href="#cb60-29" aria-hidden="true" tabindex="-1"></a>| shared                    | False                                |</span>
+<span id="cb60-30"><a href="#cb60-30" aria-hidden="true" tabindex="-1"></a>| status                    | ACTIVE                               |</span>
+<span id="cb60-31"><a href="#cb60-31" aria-hidden="true" tabindex="-1"></a>| subnets                   |                                      |</span>
+<span id="cb60-32"><a href="#cb60-32" aria-hidden="true" tabindex="-1"></a>| tags                      |                                      |</span>
+<span id="cb60-33"><a href="#cb60-33" aria-hidden="true" tabindex="-1"></a>| tenant_id                 | 1e28ab734f2d45d986259ee44a54ff42     |</span>
+<span id="cb60-34"><a href="#cb60-34" aria-hidden="true" tabindex="-1"></a>| updated_at                | 2023-09-26T03:14:59Z                 |</span>
+<span id="cb60-35"><a href="#cb60-35" aria-hidden="true" tabindex="-1"></a>+---------------------------+--------------------------------------+</span>
+<span id="cb60-36"><a href="#cb60-36" aria-hidden="true" tabindex="-1"></a>(venv) [root@thoth kolla]# </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Although creating a network with the physical network <code>physnet1</code> works, <code>physnet2</code> doesn’t work.</p>
 <p>But then, I did something that did work. I edited <code>/etc/kolla/neutron-server/ml2_conf.ini</code> on the <strong>main</strong> node, to contain <code>physnet1,physnet</code>. This worked, and then I could create a network with <code>physnet2</code>.</p>
 <p>But if I put an instance on it, does it actually work? Well, I tried to create an image, and it failed but the openstack error is very vague. I have gotten this error due to not enough resources in the past, but based on some quick research, it can happen because of networks not being set up properly, either.</p>
@@ -1292,21 +1360,21 @@ flat_networks = {% for interface in neutron_external_interface.split(',') %}phys
 <div class="code-with-filename-file">
 <pre><strong>main-node:/var/logs/kolla/nova/nova-compute.log</strong></pre>
 </div>
-<div class="sourceCode" id="cb58"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb58-1"><a href="#cb58-1" aria-hidden="true" tabindex="-1"></a>...</span>
-<span id="cb58-2"><a href="#cb58-2" aria-hidden="true" tabindex="-1"></a>2023-09-26 09:48:40.783 7 ERROR nova.compute.manager [instance: 0ef0f1be-e4aa-4140-89af-4402f992f18b] nova.exception.PortBindingFailed: Binding failed for port ee3ee85b-6edf-4ace-a921-10fcca3637b3, please check neutron logs for more information.</span>
-<span id="cb58-3"><a href="#cb58-3" aria-hidden="true" tabindex="-1"></a>....</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb61"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb61-1"><a href="#cb61-1" aria-hidden="true" tabindex="-1"></a>...</span>
+<span id="cb61-2"><a href="#cb61-2" aria-hidden="true" tabindex="-1"></a>2023-09-26 09:48:40.783 7 ERROR nova.compute.manager [instance: 0ef0f1be-e4aa-4140-89af-4402f992f18b] nova.exception.PortBindingFailed: Binding failed for port ee3ee85b-6edf-4ace-a921-10fcca3637b3, please check neutron logs for more information.</span>
+<span id="cb61-3"><a href="#cb61-3" aria-hidden="true" tabindex="-1"></a>....</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Well, that error is pretty explicit. What I am going to do is redeploy, but without the having two servers with the <code>neutron-server</code> role, and see if that works.</p>
 <p>So I did the same thing, with only one neutron server, edited openvswitch.ini, and then attempted to create an instance on physnet2. It failed.</p>
 <p>I then created a network on physnet1, and created an instance on that network. It worked, getting an ip which I could access externally and all. I could also do the same with a floating ip on that network, and it would get external internet access, and I could reach it externally. So at least I have this system halfway working.</p>
 <p>Rather than attempting to put a virtual machine directly on an external network, I instead sought to allocate it a floating ip address. Same error.</p>
 <p>I decided to search the configuration directories for more related to this:</p>
-<div class="sourceCode" id="cb59"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb59-1"><a href="#cb59-1" aria-hidden="true" tabindex="-1"></a>[root@main-node /etc/kolla]# find . -type f -exec grep -H 'physnet' {} +</span>
-<span id="cb59-2"><a href="#cb59-2" aria-hidden="true" tabindex="-1"></a>./neutron-server/ml2_conf.ini:flat_networks = physnet1,physnet2</span>
-<span id="cb59-3"><a href="#cb59-3" aria-hidden="true" tabindex="-1"></a>./neutron-openvswitch-agent/openvswitch_agent.ini:bridge_mappings = physnet1:br-ex</span>
-<span id="cb59-4"><a href="#cb59-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb59-5"><a href="#cb59-5" aria-hidden="true" tabindex="-1"></a>[root@network-node /etc/kolla]# find . -type f -exec grep -H 'physnet' {} +</span>
-<span id="cb59-6"><a href="#cb59-6" aria-hidden="true" tabindex="-1"></a>./neutron-openvswitch-agent/openvswitch_agent.ini:bridge_mappings = physnet2:br-ex</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb62"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb62-1"><a href="#cb62-1" aria-hidden="true" tabindex="-1"></a>[root@main-node /etc/kolla]# find . -type f -exec grep -H 'physnet' {} +</span>
+<span id="cb62-2"><a href="#cb62-2" aria-hidden="true" tabindex="-1"></a>./neutron-server/ml2_conf.ini:flat_networks = physnet1,physnet2</span>
+<span id="cb62-3"><a href="#cb62-3" aria-hidden="true" tabindex="-1"></a>./neutron-openvswitch-agent/openvswitch_agent.ini:bridge_mappings = physnet1:br-ex</span>
+<span id="cb62-4"><a href="#cb62-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb62-5"><a href="#cb62-5" aria-hidden="true" tabindex="-1"></a>[root@network-node /etc/kolla]# find . -type f -exec grep -H 'physnet' {} +</span>
+<span id="cb62-6"><a href="#cb62-6" aria-hidden="true" tabindex="-1"></a>./neutron-openvswitch-agent/openvswitch_agent.ini:bridge_mappings = physnet2:br-ex</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>So I can’t be missing a config file, since find seems not to find anything but those two files that I already edited.</p>
 <p>So, I decided to do something that I probably should have done from the very beginning: I decided to test with a sole network node, with the main node no longer having that role.</p>
 <p>And it didn’t work. I’m not sure yet, but I’m guessing that the default method I was attempting to use for external network interfaction, provider networks, requires that the virtual machine be on the same host as the network is one, since it works by giving virtual machines direct physical access to networks.</p>
@@ -1337,74 +1405,11 @@ flat_networks = {% for interface in neutron_external_interface.split(',') %}phys
 <p>I attempted to set it up this way, but unlike my single network node setup, my virtual machine has no internet access. In addition to that, the floating ip cannot be accessed externally (no ping or nmap).</p>
 <p>At this point, I am very confused, so I decided to send an email to the <a href="https://wiki.openstack.org/wiki/Mailing_Lists">openstack mailing list</a>.</p>
 <p>I searched first, and I found <a href="https://lists.openstack.org/pipermail/openstack-discuss/2022-December/031522.html">a scenario similar to mine</a>. This person had an issue where, when they tried to add more bridges after they have already been deployed, using kolla-ansible’s reconfigure feature and editing the kolla yaml files. Although not the same to my situation, I will look at the logs and see if I am getting similar errors, or the like.</p>
-<p>I also tried a <a href="https://docs.openstack.org/kolla-ansible/latest/user/multi-regions.html">multi regional</a> deployment. In addition to not working, giving me any kinds of zones to specify, chatgpt possible</p>
-<p>I did some searching around and I found an <a href="https://github.com/openstack/kolla-ansible/blob/7186f960d93f2e523a2052acd0287e176f7ac927/ansible/group_vars/all.yml#L1132">interesting option in the ansible variables</a>.</p>
-<div class="sourceCode" id="cb60"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb60-1"><a href="#cb60-1" aria-hidden="true" tabindex="-1"></a># Set OVN network availability zones</span>
-<span id="cb60-2"><a href="#cb60-2" aria-hidden="true" tabindex="-1"></a>neutron_ovn_availability_zones: []</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>However, I am guessing that I need to enable OVN to use this, so I followed the <a href="https://docs.openstack.org/kolla-ansible/latest/reference/networking/neutron.html">kolla-ansible docs for this</a>.</p>
-<p>I set the variable of neutron availibility zones to be edge, on my network only node, and main, on my main compute node. However, it seems like my variables were ignored:</p>
-<div class="sourceCode" id="cb61"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb61-1"><a href="#cb61-1" aria-hidden="true" tabindex="-1"></a>(venv) [root@thoth ~]# openstack network agent list</span>
-<span id="cb61-2"><a href="#cb61-2" aria-hidden="true" tabindex="-1"></a>+--------------------------------------+------------------------------+--------------+-------------------+-------+-------+----------------------------+</span>
-<span id="cb61-3"><a href="#cb61-3" aria-hidden="true" tabindex="-1"></a>| ID                                   | Agent Type                   | Host         | Availability Zone | Alive | State | Binary                     |</span>
-<span id="cb61-4"><a href="#cb61-4" aria-hidden="true" tabindex="-1"></a>+--------------------------------------+------------------------------+--------------+-------------------+-------+-------+----------------------------+</span>
-<span id="cb61-5"><a href="#cb61-5" aria-hidden="true" tabindex="-1"></a>| 1ca0eec3-22f3-4680-b4c6-2d6e97ab6b8b | DHCP agent                   | main-node    | nova              | :-)   | UP    | neutron-dhcp-agent         |</span>
-<span id="cb61-6"><a href="#cb61-6" aria-hidden="true" tabindex="-1"></a>| 3f9fffd2-c3f7-4841-910e-bc73ba95ab53 | L3 agent                     | main-node    | nova              | :-)   | UP    | neutron-l3-agent           |</span>
-<span id="cb61-7"><a href="#cb61-7" aria-hidden="true" tabindex="-1"></a>| 4a11630f-bbaf-4d8e-87d1-deb209e770fe | Open vSwitch agent           | main-node    | None              | :-)   | UP    | neutron-openvswitch-agent  |</span>
-<span id="cb61-8"><a href="#cb61-8" aria-hidden="true" tabindex="-1"></a>| 820a9bbb-5279-4889-b511-979b1b7d327e | Open vSwitch agent           | network-node | None              | :-)   | UP    | neutron-openvswitch-agent  |</span>
-<span id="cb61-9"><a href="#cb61-9" aria-hidden="true" tabindex="-1"></a>| bf317078-bf85-488c-87c3-026a23c8793b | L3 agent                     | network-node | nova              | :-)   | UP    | neutron-l3-agent           |</span>
-<span id="cb61-10"><a href="#cb61-10" aria-hidden="true" tabindex="-1"></a>| e4e3d75b-55b5-4a1e-8bd2-632d8a37e5b9 | Metadata agent               | network-node | None              | :-)   | UP    | neutron-metadata-agent     |</span>
-<span id="cb61-11"><a href="#cb61-11" aria-hidden="true" tabindex="-1"></a>| ec64e75e-0e61-434e-908f-e4b9d670adbc | DHCP agent                   | network-node | nova              | :-)   | UP    | neutron-dhcp-agent         |</span>
-<span id="cb61-12"><a href="#cb61-12" aria-hidden="true" tabindex="-1"></a>| f5ea5528-e482-4609-ae33-09ef2d792b28 | Metadata agent               | main-node    | None              | :-)   | UP    | neutron-metadata-agent     |</span>
-<span id="cb61-13"><a href="#cb61-13" aria-hidden="true" tabindex="-1"></a>| main-node                            | OVN Controller Gateway agent | main-node    | main              | XXX   | UP    | ovn-controller             |</span>
-<span id="cb61-14"><a href="#cb61-14" aria-hidden="true" tabindex="-1"></a>| c484098d-fd7d-5d9c-81e5-be62657e571e | OVN Metadata agent           | main-node    | main              | XXX   | UP    | neutron-ovn-metadata-agent |</span>
-<span id="cb61-15"><a href="#cb61-15" aria-hidden="true" tabindex="-1"></a>+--------------------------------------+------------------------------+--------------+-------------------+-------+-------+----------------------------+</span>
-<span id="cb61-16"><a href="#cb61-16" aria-hidden="true" tabindex="-1"></a>(venv) [root@thoth ~]# openstack availability zone list</span>
-<span id="cb61-17"><a href="#cb61-17" aria-hidden="true" tabindex="-1"></a>+-----------+-------------+</span>
-<span id="cb61-18"><a href="#cb61-18" aria-hidden="true" tabindex="-1"></a>| Zone Name | Zone Status |</span>
-<span id="cb61-19"><a href="#cb61-19" aria-hidden="true" tabindex="-1"></a>+-----------+-------------+</span>
-<span id="cb61-20"><a href="#cb61-20" aria-hidden="true" tabindex="-1"></a>| internal  | available   |</span>
-<span id="cb61-21"><a href="#cb61-21" aria-hidden="true" tabindex="-1"></a>| nova      | available   |</span>
-<span id="cb61-22"><a href="#cb61-22" aria-hidden="true" tabindex="-1"></a>| nova      | available   |</span>
-<span id="cb61-23"><a href="#cb61-23" aria-hidden="true" tabindex="-1"></a>| nova      | available   |</span>
-<span id="cb61-24"><a href="#cb61-24" aria-hidden="true" tabindex="-1"></a>| nova      | available   |</span>
-<span id="cb61-25"><a href="#cb61-25" aria-hidden="true" tabindex="-1"></a>| main      | available   |</span>
-<span id="cb61-26"><a href="#cb61-26" aria-hidden="true" tabindex="-1"></a>+-----------+-------------+</span>
-<span id="cb61-27"><a href="#cb61-27" aria-hidden="true" tabindex="-1"></a>(venv) [root@thoth ~]# openstack availability zone list --network</span>
-<span id="cb61-28"><a href="#cb61-28" aria-hidden="true" tabindex="-1"></a>+-----------+-------------+</span>
-<span id="cb61-29"><a href="#cb61-29" aria-hidden="true" tabindex="-1"></a>| Zone Name | Zone Status |</span>
-<span id="cb61-30"><a href="#cb61-30" aria-hidden="true" tabindex="-1"></a>+-----------+-------------+</span>
-<span id="cb61-31"><a href="#cb61-31" aria-hidden="true" tabindex="-1"></a>| nova      | available   |</span>
-<span id="cb61-32"><a href="#cb61-32" aria-hidden="true" tabindex="-1"></a>| nova      | available   |</span>
-<span id="cb61-33"><a href="#cb61-33" aria-hidden="true" tabindex="-1"></a>| main      | available   |</span>
-<span id="cb61-34"><a href="#cb61-34" aria-hidden="true" tabindex="-1"></a>+-----------+-------------+</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>And also, when I look in the UI, to create a network, it only lists the “nova” availibility zone hint.</p>
-<p>What happened to my edge availability zone?</p>
-<p>Anyway, I decided to do more searching. Apparently, the neutron_ovn_zones are set up <a href="https://github.com/openstack/kolla-ansible/blob/7186f960d93f2e523a2052acd0287e176f7ac927/ansible/roles/ovn-controller/tasks/setup-ovs.yml#L17">here</a>, which is ran as long as the host is a member of the <code>ovn-network-controller</code> group, which is a <a href="https://github.com/openstack/kolla-ansible/blob/master/ansible/inventory/multinode#L743">child of the “network” group</a>. Based on this, I don’t think I need to enable OVN in order to use OVN availability zones. It seems like some portion of OVN is deployed, but only the whole thing is used as a network backend if you enable it.</p>
-<p>So because of this, I attempted to do another deployment with without setting OVN, but just availability zones.</p>
-<div class="sourceCode" id="cb62"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb62-1"><a href="#cb62-1" aria-hidden="true" tabindex="-1"></a>(venv) [root@thoth ~]# openstack network agent list</span>
-<span id="cb62-2"><a href="#cb62-2" aria-hidden="true" tabindex="-1"></a>+--------------------------------------+--------------------+--------------+-------------------+-------+-------+---------------------------+</span>
-<span id="cb62-3"><a href="#cb62-3" aria-hidden="true" tabindex="-1"></a>| ID                                   | Agent Type         | Host         | Availability Zone | Alive | State | Binary                    |</span>
-<span id="cb62-4"><a href="#cb62-4" aria-hidden="true" tabindex="-1"></a>+--------------------------------------+--------------------+--------------+-------------------+-------+-------+---------------------------+</span>
-<span id="cb62-5"><a href="#cb62-5" aria-hidden="true" tabindex="-1"></a>| 750d6eb8-a89b-495e-86ab-65a9235d963c | Open vSwitch agent | network-node | None              | :-)   | UP    | neutron-openvswitch-agent |</span>
-<span id="cb62-6"><a href="#cb62-6" aria-hidden="true" tabindex="-1"></a>| 7921c839-1935-4d29-888d-8efae2f31aff | L3 agent           | main-node    | nova              | :-)   | UP    | neutron-l3-agent          |</span>
-<span id="cb62-7"><a href="#cb62-7" aria-hidden="true" tabindex="-1"></a>| 7cb4df27-5d40-429d-816e-8336d7a9867c | Metadata agent     | network-node | None              | :-)   | UP    | neutron-metadata-agent    |</span>
-<span id="cb62-8"><a href="#cb62-8" aria-hidden="true" tabindex="-1"></a>| ad40304b-b078-434d-bb6d-8e4087f7c7e1 | Open vSwitch agent | main-node    | None              | :-)   | UP    | neutron-openvswitch-agent |</span>
-<span id="cb62-9"><a href="#cb62-9" aria-hidden="true" tabindex="-1"></a>| b9770fe2-6a6a-4f77-9c5e-c0b058eb6966 | L3 agent           | network-node | nova              | :-)   | UP    | neutron-l3-agent          |</span>
-<span id="cb62-10"><a href="#cb62-10" aria-hidden="true" tabindex="-1"></a>| d02ba59c-cc43-4a5d-bff0-98bd3713ba53 | Metadata agent     | main-node    | None              | :-)   | UP    | neutron-metadata-agent    |</span>
-<span id="cb62-11"><a href="#cb62-11" aria-hidden="true" tabindex="-1"></a>| e22251c8-053d-47a7-8980-0e17e2b15341 | DHCP agent         | network-node | nova              | :-)   | UP    | neutron-dhcp-agent        |</span>
-<span id="cb62-12"><a href="#cb62-12" aria-hidden="true" tabindex="-1"></a>| f46c9a7d-d67b-49bf-9d7a-d9c268fd3229 | DHCP agent         | main-node    | nova              | :-)   | UP    | neutron-dhcp-agent        |</span>
-<span id="cb62-13"><a href="#cb62-13" aria-hidden="true" tabindex="-1"></a>+--------------------------------------+--------------------+--------------+-------------------+-------+-------+---------------------------+</span>
-<span id="cb62-14"><a href="#cb62-14" aria-hidden="true" tabindex="-1"></a>(venv) [root@thoth ~]# openstack availability zone list</span>
-<span id="cb62-15"><a href="#cb62-15" aria-hidden="true" tabindex="-1"></a>+-----------+-------------+</span>
-<span id="cb62-16"><a href="#cb62-16" aria-hidden="true" tabindex="-1"></a>| Zone Name | Zone Status |</span>
-<span id="cb62-17"><a href="#cb62-17" aria-hidden="true" tabindex="-1"></a>+-----------+-------------+</span>
-<span id="cb62-18"><a href="#cb62-18" aria-hidden="true" tabindex="-1"></a>| internal  | available   |</span>
-<span id="cb62-19"><a href="#cb62-19" aria-hidden="true" tabindex="-1"></a>| nova      | available   |</span>
-<span id="cb62-20"><a href="#cb62-20" aria-hidden="true" tabindex="-1"></a>| nova      | available   |</span>
-<span id="cb62-21"><a href="#cb62-21" aria-hidden="true" tabindex="-1"></a>| nova      | available   |</span>
-<span id="cb62-22"><a href="#cb62-22" aria-hidden="true" tabindex="-1"></a>| nova      | available   |</span>
-<span id="cb62-23"><a href="#cb62-23" aria-hidden="true" tabindex="-1"></a>+-----------+-------------+</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>This is even worse, now it didn’t even create the main availability zone.</p>
+<p>A few days later, I changed nothing except for updating the kolla-ansible deployment scripts (I recreated the venv). And it worked.</p>
+<p><img src="images/networkingworking.jpg" class="img-fluid"></p>
+<p>I can use floating ip’s to put virtual machine’s on the network located on the network-node.</p>
+<p>Now, at first there was an error when I attempted to put the virtual machine directly on the provider network, but then I changed that network to be a “shared” network and it worked. I think this is what I was missing when I attempted to do it originally, but there are too many variables for me to be able to isolate properly.</p>
+<p>Anyway, now I can do both provider and floating ip on the main node. Provider networks are more performant, apparently.</p>
 <p>I also desire to enable vpn-as-a-service. But <a href="https://docs.openstack.org/kolla-ansible/latest/reference/networking/neutron-extensions.html#neutron-vpnaas-vpn-as-a-service">according to the docs</a>, that’s not too difficult to set up.</p>
 </section>
 <section id="multi-node-install" class="level2">
