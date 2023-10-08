@@ -1822,7 +1822,7 @@ However, on the reverse DNS page, my vps's ipv6 address is shown:
 ![](images/ipv6.png)
 
 
-So, inferring from that, I can tell that my vps's ipv6 address is "2605:a141:2140:3809:0000:0000:0000:0001". And if I get a /112 range, then I can tell my range is 2605:a141:2140:3809::/64. Of course, that's not enough, I also need to know the default gate way for this network... The article above details it for a different subnet, but I don't know for my own subnet. 
+So, inferring from that, I can tell that my vps's ipv6 address is "2605:a141:2140:3809:0000:0000:0000:0001". And if I get a /64 range, then I can tell my range is 2605:a141:2140:3809::/64. Of course, that's not enough, I also need to know the default gate way for this network... The article above details it for a different subnet, but I don't know for my own subnet. 
 
 There is a command, `enable_ipv6` which comes out of the box on the contabo servers, but it doesn't do anthing:
 
@@ -1845,8 +1845,13 @@ Sure enough, when I proxy into my server (I used ssh with the -D option), and go
 
 ![](images/serveripv6.jpg)
 
-My server has a public ipv6 address now. And if I can give this interface a public ipv6 address, then openstack will definitely be able to give any virtual interfaces it creates public ipv6 addresses. 
+My server has a public ipv6 address now. And if I can give this interface a public ipv6 address, then openstack will definitely be able to give any virtual interfaces it creates public ipv6 addresses.  
 
+Later, I realized that the way openstack allocates floating ip addresses, is by contacting an external dhcp server, so I have to create my own dhcp server. 
+
+In addition to that, if I want to access the ipv6 services from my VPS, then I will need to have an ipv6 address configured. 
+
+The arch wiki has some instructions for setting up [dnsmasq](https://wiki.archlinux.org/title/Dnsmasq), a lightweight, easy to configure dhcp server. 
 
 ## Network interfaces
 
