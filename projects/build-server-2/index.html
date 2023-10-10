@@ -185,6 +185,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   </ul></li>
   <li><a href="#deploying-and-using-openstack" id="toc-deploying-and-using-openstack" class="nav-link" data-scroll-target="#deploying-and-using-openstack">Deploying and Using Openstack</a>
   <ul>
+  <li><a href="#monitoring" id="toc-monitoring" class="nav-link" data-scroll-target="#monitoring">Monitoring</a></li>
   <li><a href="#cinder" id="toc-cinder" class="nav-link" data-scroll-target="#cinder">Cinder</a></li>
   <li><a href="#nova" id="toc-nova" class="nav-link" data-scroll-target="#nova">Nova</a>
   <ul class="collapse">
@@ -1089,6 +1090,10 @@ root@debian:/home/moonpie# </code></pre>
 <p>Except, maybe I don’t need to worry about that. I did some searching around, and on <a href="https://www.reddit.com/r/openstack/comments/10qcgq9/instance_gets_dhcp_from_external_source_neutron/j6psise/">reddit</a> someone mentioned how neutron port security rules prevent an openstack VM from gaining any ip other than the one it has been allocated.</p>
 <p>So basically, each VM get’s a port on the subnet (and the port includes a mac address), and openstack’s dhcp server uses the mac address to give the same port the same ip address every time.</p>
 <p>In order to avoid conflict between the</p>
+<section id="monitoring" class="level2">
+<h2 class="anchored" data-anchor-id="monitoring">Monitoring</h2>
+<p>https://github.com/openstack-exporter/openstack-exporter</p>
+</section>
 <section id="cinder" class="level2">
 <h2 class="anchored" data-anchor-id="cinder">Cinder</h2>
 <p>Configuring cinder seems to require more than simply enabling the service, according to the <a href="https://docs.openstack.org/kolla-ansible/latest/reference/storage/cinder-guide.html">kolla-ansible docs</a>. I’ve selected the nfs storage backend, so I followed the instructions, but there is no nfs service available.</p>
