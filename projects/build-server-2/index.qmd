@@ -1712,6 +1712,8 @@ Now, at first there was an error when I attempted to put the virtual machine dir
 
 Anyway, now I can do both provider and floating ip on the main node. Provider networks are more performant, apparently. 
 
+However, one reddit user says that [ipv6 does not work when port security is enabled](https://www.reddit.com/r/openstack/comments/zkogoe/ipv6_is_not_working_when_ml2_port_security_is/). I need to investigate this more closely.
+
 
 I also desire to enable vpn-as-a-service. But [according to the docs](https://docs.openstack.org/kolla-ansible/latest/reference/networking/neutron-extensions.html#neutron-vpnaas-vpn-as-a-service), that's not too difficult to set up. 
 
@@ -1849,9 +1851,12 @@ My server has a public ipv6 address now. And if I can give this interface a publ
 
 Later, I realized that the way openstack allocates floating ip addresses, is by contacting an external dhcp server, so I have to create my own dhcp server. 
 
+
 In addition to that, if I want to access the ipv6 services from my VPS, then I will need to have an ipv6 address configured. 
 
 The arch wiki has some instructions for setting up [dnsmasq](https://wiki.archlinux.org/title/Dnsmasq), a lightweight, easy to configure dhcp server. 
+
+For testing, I decided to use the subnet `fd00::/8` for the private ipv6 subnet I will be testing on. 
 
 ## Network interfaces
 
