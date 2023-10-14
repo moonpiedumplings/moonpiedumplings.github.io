@@ -1719,6 +1719,60 @@ Anyway, now I can do both provider and floating ip on the main node. Provider ne
 
 However, one reddit user says that [ipv6 does not work when port security is enabled](https://www.reddit.com/r/openstack/comments/zkogoe/ipv6_is_not_working_when_ml2_port_security_is/). I need to investigate this more closely.
 
+I began to test to see if I could create an ipv6 floating ip:
+
+```{.default}
+(venv) [root@intmain-node ~]# openstack floating ip create public1
+Error while executing command: BadRequestException: 400, Bad floatingip request: Network d5eaee4c-5a21-48f6-8b7b-a73f956bbeb9 does not contain any IPv4 subnet.
+```
+
+Acording to the [docs](https://docs.openstack.org/neutron/latest/admin/config-ipv6.html#nat-floating-ips), floating ip addresses do not support ipv6. 
+
+I asked around, and apparently, you are supposed to use [subnet pools](https://docs.openstack.org/neutron/latest/admin/config-subnet-pools.html) for this. 
+
+I first attempted to create one with my libvirt nat subnet:
+
+```{.default}
+(venv) [root@intmain-node ~]# openstack subnet pool create --share --pool-prefix fd00::0/8  --default-prefix-length 8 demo-subnetpool6
+BadRequestException: 400: Client Error for url: http://192.168.124.112:9696/v2.0/subnetpools, Illegal prefix bounds: default_prefixlen=8, min_prefixlen=64.
+```
+
+Apparently, openstack doesn't support prefix lengths smaller than /64. That's perfectly ok, as my "production" deployment will have that subnet. But my libvirt nat subnet, I made it a /8, which probably wasn't a good idea. 
+
+I later changed my libvirt subnet to be smaller, but the subnet pools appeared to behave similarly to normal subnets, with me not being able to put a virtual machine on the remote network. 
+
+
+Chatgpt suggests that I do a more complex setup, where I basically create a physical network, subnet pool, and then allocate a portion of that subnet pool to a non-external network? I recorded the commands it gave so I can replicate them:
+
+```{.default}
+openstack subnet pool create --default-prefix-length <Prefix_Length> --pool-prefix <CIDR> --name external-pool
+openstack network create --external --provider-network-type flat --provider-physical-network <Physical_Network> --provider-segment <Segment_ID> external-net
+openstack subnet create --network external-net --subnet-pool external-pool --no-dhcp external-subnet
+openstack network create my-project-net
+openstack subnet create --network my-project-net --subnet-pool external-pool my-project-subnet
+openstack server create --flavor <Flavor> --image <Image> --nic net-id=my-project-net my-vm
+```
+
+
+I was attempting to do this from the UI, where I noticed that there was now an option to create a subnet from an existing pool, rather than specifying a number. But It fails with: 
+
+```{.default}
+ Error: Failed to create subnet "None" for network "demo-sixnet". Details
+Failed to allocate subnet: Cannot allocate requested subnet from the available set of prefixes. Neutron server returns request_ids: ['req-dccfaaae-c4e6-4bbc-99cc-3e5a9a49a467']
+```
+
+I don't know why this happens yet. I tried with both a /64, which is the same as the subnet above, and several smaller values, like 
+
+
+Another thing I will attempt to experiment with is working with ports directly. I might be able to create a port on a subnet, and directly attatch it to a virtual machine. 
+
+I attempted to connect a port from the ipv6 subnet to a virtual machine directly:
+
+```{.default}
+Unexpected API Error. Please report this at http://bugs.launchpad.net/nova/ and attach the Nova API log if possible. <class 'nova.exception_Remote.PortBindingFailed_Remote'> (HTTP 500)
+```
+
+I will have to investigate the logs futher. 
 
 I also desire to enable vpn-as-a-service. But [according to the docs](https://docs.openstack.org/kolla-ansible/latest/reference/networking/neutron-extensions.html#neutron-vpnaas-vpn-as-a-service), that's not too difficult to set up. 
 
