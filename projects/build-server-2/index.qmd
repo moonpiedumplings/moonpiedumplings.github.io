@@ -1761,10 +1761,14 @@ I was attempting to do this from the UI, where I noticed that there was now an o
 Failed to allocate subnet: Cannot allocate requested subnet from the available set of prefixes. Neutron server returns request_ids: ['req-dccfaaae-c4e6-4bbc-99cc-3e5a9a49a467']
 ```
 
-I don't know why this happens yet. I tried with both a /64, which is the same as the subnet above, and several smaller values, like 
+I don't know why this happens yet. I tried with both a /64, which is the same as the subnet above, and several smaller values, like /128, the smallest it would let me work with, and it still failed.
+
+I found an interesting [article from the openinfra blog](https://superuser.openinfra.dev/articles/disable-nat-ipv4-openstack/) ([archive](https://web.archive.org/web/20231015073139/https://superuser.openinfra.dev/articles/disable-nat-ipv4-openstack/)) about how to disable NAT for the ipv4 subnets, but it appears to be written for the older openstack, before the unified cli. 
 
 
 Another thing I will attempt to experiment with is working with ports directly. I might be able to create a port on a subnet, and directly attatch it to a virtual machine. 
+
+
 
 I attempted to connect a port from the ipv6 subnet to a virtual machine directly:
 
