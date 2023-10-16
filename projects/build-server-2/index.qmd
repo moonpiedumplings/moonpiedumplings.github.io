@@ -1765,10 +1765,12 @@ I don't know why this happens yet. I tried with both a /64, which is the same as
 
 I found an interesting [article from the openinfra blog](https://superuser.openinfra.dev/articles/disable-nat-ipv4-openstack/) ([archive](https://web.archive.org/web/20231015073139/https://superuser.openinfra.dev/articles/disable-nat-ipv4-openstack/)) about how to disable NAT for the ipv4 subnets, but it appears to be written for the older openstack, before the unified cli. 
 
+According to the blog, however, it says that the address scopes are *mandatory* if you want to have this setup. Here are the [mikata (older release)](https://docs.openstack.org/mitaka/networking-guide/config-address-scopes.html), and here are the [latest](https://docs.openstack.org/neutron/latest/contributor/internals/address_scopes.html) docs from the openstack docs. 
+
+Based on those 
+
 
 Another thing I will attempt to experiment with is working with ports directly. I might be able to create a port on a subnet, and directly attatch it to a virtual machine. 
-
-
 
 I attempted to connect a port from the ipv6 subnet to a virtual machine directly:
 
@@ -1776,7 +1778,10 @@ I attempted to connect a port from the ipv6 subnet to a virtual machine directly
 Unexpected API Error. Please report this at http://bugs.launchpad.net/nova/ and attach the Nova API log if possible. <class 'nova.exception_Remote.PortBindingFailed_Remote'> (HTTP 500)
 ```
 
-I will have to investigate the logs futher. 
+I will have to investigate the logs futher, but I suspect that it simply isn't possible to allocate ports to machines that aren't on the same network.
+
+
+Another person mentioned how they used [BGP](https://docs.openstack.org/neutron/latest/admin/config-bgp-dynamic-routing.html) to get this working, but I don't know what BGP is. It seems this setup requires address scopes. 
 
 I also desire to enable vpn-as-a-service. But [according to the docs](https://docs.openstack.org/kolla-ansible/latest/reference/networking/neutron-extensions.html#neutron-vpnaas-vpn-as-a-service), that's not too difficult to set up. 
 
