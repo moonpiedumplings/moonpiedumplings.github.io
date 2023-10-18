@@ -1767,7 +1767,20 @@ I found an interesting [article from the openinfra blog](https://superuser.openi
 
 According to the blog, however, it says that the address scopes are *mandatory* if you want to have this setup. Here are the [mikata (older release)](https://docs.openstack.org/mitaka/networking-guide/config-address-scopes.html), and here are the [latest](https://docs.openstack.org/neutron/latest/contributor/internals/address_scopes.html) docs from the openstack docs. 
 
-Based on those 
+Based on the address scope guide, I tried following that. But when I get to one of the later steps:
+
+```{.default}
+(venv) [root@intmain-node ~]# openstack subnet create --ip-version 6 --ipv6-ra-mode slaac --ipv6-address-mode slaac --subnet-pool subnet-pool-ip6 --prefix-length 128 --network network2 subnet-ip6-2
+HttpException: 500: Server Error for url: http://192.168.124.112:9696/v2.0/subnets, Failed to allocate subnet: Insufficient prefix space to allocate subnet size /128.
+```
+
+Both /64 and /128 give me the same error. On one hand, I want to increase the size of my libvirt subnet, however, then that would not be representative of my real scenario, where I will only have a /64 subnet. 
+
+Linked in the address scopes doc, is a [video](https://www.youtube.com/watch?v=j5hy11YlSOU). That video is not very helpful, but in links to it's [presentation](https://www.slideshare.net/eyepv6/deploying-ipv6-in-openstack-environments), hosted on a site called slideshare. Slideshare recommends similar presentations, and I saw two others, [this one](https://www.slideshare.net/ritchey98/openstack-neutron-ipv6-lessons), and [this one](https://www.slideshare.net/vietstack/deploying-ipv6-on-openstack). 
+
+Both articles mention that with SLAAC (what is slaac?), only a /64 prefix is used. 
+
+Anyway, I still lack understanding of why this is ahppenign. Maybe a /64 is the minimum size I can allocate? But then why would the UI have options for smaller subnet sizes? Anyways, I am going to test it out by chaging my libvirt subnet to be something bigger, like a /56. 
 
 
 Another thing I will attempt to experiment with is working with ports directly. I might be able to create a port on a subnet, and directly attatch it to a virtual machine. 
