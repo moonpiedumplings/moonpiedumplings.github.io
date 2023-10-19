@@ -196,7 +196,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#cyborg" id="toc-cyborg" class="nav-link" data-scroll-target="#cyborg">Cyborg</a></li>
   <li><a href="#skyline" id="toc-skyline" class="nav-link" data-scroll-target="#skyline">Skyline</a></li>
   <li><a href="#magnum-1" id="toc-magnum-1" class="nav-link" data-scroll-target="#magnum-1">Magnum</a></li>
-  <li><a href="#neutron" id="toc-neutron" class="nav-link" data-scroll-target="#neutron">Neutron</a></li>
+  <li><a href="#neutron" id="toc-neutron" class="nav-link" data-scroll-target="#neutron">Neutron</a>
+  <ul class="collapse">
+  <li><a href="#ipv6" id="toc-ipv6" class="nav-link" data-scroll-target="#ipv6">IPv6</a></li>
+  </ul></li>
   <li><a href="#multi-node-install" id="toc-multi-node-install" class="nav-link" data-scroll-target="#multi-node-install">Multi Node Install</a></li>
   <li><a href="#ipv6-on-contabo" id="toc-ipv6-on-contabo" class="nav-link" data-scroll-target="#ipv6-on-contabo">Ipv6 on Contabo</a></li>
   <li><a href="#network-interfaces" id="toc-network-interfaces" class="nav-link" data-scroll-target="#network-interfaces">Network interfaces</a></li>
@@ -1416,6 +1419,8 @@ flat_networks = {% for interface in neutron_external_interface.split(',') %}phys
 <p>Now, at first there was an error when I attempted to put the virtual machine directly on the provider network, but then I changed that network to be a “shared” network and it worked. I think this is what I was missing when I attempted to do it originally, but there are too many variables for me to be able to isolate properly.</p>
 <p>Anyway, now I can do both provider and floating ip on the main node. Provider networks are more performant, apparently.</p>
 <p>However, one reddit user says that <a href="https://www.reddit.com/r/openstack/comments/zkogoe/ipv6_is_not_working_when_ml2_port_security_is/">ipv6 does not work when port security is enabled</a>. I need to investigate this more closely.</p>
+<section id="ipv6" class="level3">
+<h3 class="anchored" data-anchor-id="ipv6">IPv6</h3>
 <p>I began to test to see if I could create an ipv6 floating ip:</p>
 <div class="sourceCode" id="cb63"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb63-1"><a href="#cb63-1" aria-hidden="true" tabindex="-1"></a>(venv) [root@intmain-node ~]# openstack floating ip create public1</span>
 <span id="cb63-2"><a href="#cb63-2" aria-hidden="true" tabindex="-1"></a>Error while executing command: BadRequestException: 400, Bad floatingip request: Network d5eaee4c-5a21-48f6-8b7b-a73f956bbeb9 does not contain any IPv4 subnet.</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -1454,6 +1459,7 @@ flat_networks = {% for interface in neutron_external_interface.split(',') %}phys
 <p>I will have to investigate the logs futher, but I suspect that it simply isn’t possible to allocate ports to machines that aren’t on the same network.</p>
 <p>Another person mentioned how they used <a href="https://docs.openstack.org/neutron/latest/admin/config-bgp-dynamic-routing.html">BGP</a> to get this working, but I don’t know what BGP is. It seems this setup requires address scopes. s</p>
 <p>I also desire to enable vpn-as-a-service. But <a href="https://docs.openstack.org/kolla-ansible/latest/reference/networking/neutron-extensions.html#neutron-vpnaas-vpn-as-a-service">according to the docs</a>, that’s not too difficult to set up.</p>
+</section>
 </section>
 <section id="multi-node-install" class="level2">
 <h2 class="anchored" data-anchor-id="multi-node-install">Multi Node Install</h2>
