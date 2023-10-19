@@ -1782,6 +1782,9 @@ Both articles mention that with SLAAC (what is slaac?), only a /64 prefix is use
 
 Anyway, I still lack understanding of why this is ahppenign. Maybe a /64 is the minimum size I can allocate? But then why would the UI have options for smaller subnet sizes? Anyways, I am going to test it out by chaging my libvirt subnet to be something bigger, like a /56. 
 
+I attempted to upsize my subnet to a /64, but I kept getting an error. The error was somethign about dnsmasq (dhcp server), and it requiring a minimum subnet prefix size of /64. I turned off dhcpv6, and only then was I able to create an ipv6 /56 subnet. Only tangentally related, but maybe the openstack is having a similar issue? 
+
+I tried creating a subnet with dhcp disabled, same issue. 
 
 Another thing I will attempt to experiment with is working with ports directly. I might be able to create a port on a subnet, and directly attatch it to a virtual machine. 
 
