@@ -1800,7 +1800,22 @@ Unexpected API Error. Please report this at http://bugs.launchpad.net/nova/ and 
 I will have to investigate the logs futher, but I suspect that it simply isn't possible to allocate ports to machines that aren't on the same network.
 
 
-Another person mentioned how they used [BGP](https://docs.openstack.org/neutron/latest/admin/config-bgp-dynamic-routing.html) to get this working, but I don't know what BGP is. It seems this setup requires address scopes. s
+Another person mentioned how they used [BGP](https://docs.openstack.org/neutron/latest/admin/config-bgp-dynamic-routing.html) to get this working, but I don't know what BGP is. It seems this setup requires address scopes.
+
+
+I spent some time talking on discord (did I link the openstack discord here?). I was told it's not possible, by someone who seems pretty knowledgable. They said that with ipv6, devices are expected, and recommended to have a unique ip address. Link to [relevant doc](https://datatracker.ietf.org/doc/html/rfc5902).
+
+However, I still find this hard to believe, since some [blog posts](https://blogs.infoblox.com/ipv6-coe/you-thought-there-was-no-nat-for-ipv6-but-nat-still-exists/), mention the existance of an ipv6 nat.
+
+I have a new idea: the router has a subnet, and this subnet is exposed via a vpn. Packets are forwarded to this subnet. Because this subnet is located on the same physical node, there is no need to worry about the more compex pieces of openstack networking. 
+
+One reddit user [says that this is possible if ebtables are disabled](https://www.reddit.com/r/WireGuard/comments/lwkksi/using_ipv6_from_a_vps_provider_in_my_home_network/).
+
+Okay, later the person I was talking to on discord mentioned that it is indeed possible, but not with NAT, but instead with BGP.
+
+I asked what to search for since docs aren't too good, and they said:
+
+> Openstack neutron OVN/OVS BGP north/south traffic ipv6 🙂 Should give you plenty documentation.
 
 I also desire to enable vpn-as-a-service. But [according to the docs](https://docs.openstack.org/kolla-ansible/latest/reference/networking/neutron-extensions.html#neutron-vpnaas-vpn-as-a-service), that's not too difficult to set up. 
 
