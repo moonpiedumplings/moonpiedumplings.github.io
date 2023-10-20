@@ -1457,7 +1457,16 @@ flat_networks = {% for interface in neutron_external_interface.split(',') %}phys
 <p>I attempted to connect a port from the ipv6 subnet to a virtual machine directly:</p>
 <div class="sourceCode" id="cb68"><pre class="sourceCode default code-overflow-wrap code-with-copy"><code class="sourceCode default"><span id="cb68-1"><a href="#cb68-1" aria-hidden="true" tabindex="-1"></a>Unexpected API Error. Please report this at http://bugs.launchpad.net/nova/ and attach the Nova API log if possible. &lt;class 'nova.exception_Remote.PortBindingFailed_Remote'&gt; (HTTP 500)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>I will have to investigate the logs futher, but I suspect that it simply isn’t possible to allocate ports to machines that aren’t on the same network.</p>
-<p>Another person mentioned how they used <a href="https://docs.openstack.org/neutron/latest/admin/config-bgp-dynamic-routing.html">BGP</a> to get this working, but I don’t know what BGP is. It seems this setup requires address scopes. s</p>
+<p>Another person mentioned how they used <a href="https://docs.openstack.org/neutron/latest/admin/config-bgp-dynamic-routing.html">BGP</a> to get this working, but I don’t know what BGP is. It seems this setup requires address scopes.</p>
+<p>I spent some time talking on discord (did I link the openstack discord here?). I was told it’s not possible, by someone who seems pretty knowledgable. They said that with ipv6, devices are expected, and recommended to have a unique ip address. Link to <a href="https://datatracker.ietf.org/doc/html/rfc5902">relevant doc</a>.</p>
+<p>However, I still find this hard to believe, since some <a href="https://blogs.infoblox.com/ipv6-coe/you-thought-there-was-no-nat-for-ipv6-but-nat-still-exists/">blog posts</a>, mention the existance of an ipv6 nat.</p>
+<p>I have a new idea: the router has a subnet, and this subnet is exposed via a vpn. Packets are forwarded to this subnet. Because this subnet is located on the same physical node, there is no need to worry about the more compex pieces of openstack networking.</p>
+<p>One reddit user <a href="https://www.reddit.com/r/WireGuard/comments/lwkksi/using_ipv6_from_a_vps_provider_in_my_home_network/">says that this is possible if ebtables are disabled</a>.</p>
+<p>Okay, later the person I was talking to on discord mentioned that it is indeed possible, but not with NAT, but instead with BGP.</p>
+<p>I asked what to search for since docs aren’t too good, and they said:</p>
+<blockquote class="blockquote">
+<p>Openstack neutron OVN/OVS BGP north/south traffic ipv6 🙂 Should give you plenty documentation.</p>
+</blockquote>
 <p>I also desire to enable vpn-as-a-service. But <a href="https://docs.openstack.org/kolla-ansible/latest/reference/networking/neutron-extensions.html#neutron-vpnaas-vpn-as-a-service">according to the docs</a>, that’s not too difficult to set up.</p>
 </section>
 </section>
