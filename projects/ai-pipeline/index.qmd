@@ -1,0 +1,82 @@
+---
+title: "Building an ML pipeline"
+date: "2023-10-23"
+categories: [linux]
+format:
+  html:
+    code-fold: true
+    code-summary: "Show the code"
+    code-block-background: true
+execute:
+  freeze: true
+---
+
+For my Black Studies and Culture class (AFRS 100), the class mainly consists of a single major project, which we are given free reign about. So obviously, I made mine related to computer science. 
+
+
+There is a very good documentary, called “Coded Bias”, on Netflix. In it, MIT researcher Joy Buolamwini discovers that existing facial recognition AI struggle to differentiate black people properly, or sometimes to even recognize them as a face. 
+
+The film also goes further in depth, like how facial recognition is being increasingly used to surveil populations. It gives the example of in the UK, where a facial recognition AI is employed to catch “criminals,” but the AI has the same issue of not being able to differentiate between black people, which leads to innocent people being accosted. 
+
+Of course, innocent white people also got accosted by this system. And there were also people who sought to protect their own face, but then were pulled over simply for desiring privacy. However, black people are definitely affected worse than other groups by systems such as this. The combination of the sheer apathy towards marginalized groups in the creation of facial recognition AI, and the already existing racism present in policing systems multiplies to create something much worse. Now, when the officer pulls you over, it’s not because they thought you “looked like a criminal”, it’s because the uncaring, unchallengeable AI said you “matched a criminal on the database.”
+
+
+My research question is simple: Is this bias in facial recognition AI (specifically, the popular, public models) still the case?
+
+
+To test this, I have a research plan. 
+
+Using my own server, I will download, existing, pretrained facial recognition models (models are like the learned information that drives AI), and maybe their datasets (data, like images, used to train AI), from [kaggle](https://www.kaggle.com/) and [huggingface](https://huggingface.co/), two of the popular sites for public AI models. 
+
+I will then use a survey, and ask people to take pictures of their face from multiple angles. These images will be attached to  a pseudo anonymous identifier. In addition to this, I will ask people to report their race as other people would view them. 
+
+After I have collected this information, I will attempt to use facial recognition on the images I have collected, checking the accuracy of matching them to the images. Using this, I can see how biased the facial recognition of some of the popular publicly available facial recognition models are. 
+
+
+
+# Selection of software and models
+
+
+## Models
+
+For now, this is just some research on available public models.
+
+[hackernoon](https://hackernoon.com/6-best-open-source-projects-for-real-time-face-recognition-vr1w34x5) [archive](https://web.archive.org/web/20230423202315/https://hackernoon.com/6-best-open-source-projects-for-real-time-face-recognition-vr1w34x5)
+
+<https://github.com/ageitgey/face_recognition>
+
+
+## Survey Software
+
+I need a survey software that integrates with the transformers that I will be running. They must be FOSS, and run entirely on my machines, for privacy reasons.
+
+Option 1: Limesurvey:
+
+<https://github.com/LimeSurvey/LimeSurvey> 
+
+Many of the docker images seem to be a bit outdated, and I can't find an official one. 
+
+Thankfully, there exists a Nixos [package](https://search.nixos.org/packages?channel=23.05&show=limesurvey&size=50&sort=relevance&type=packages&query=limesurvey) and [service](https://search.nixos.org/options?channel=23.05&show=limesurvey&size=50&sort=relevance&type=packages&query=limesurvey) for it, meaning that will be fairly easy to deploy.
+
+It supports [file upload](https://manual.limesurvey.org/Question_type_-_File_upload), but no image upload.
+
+This one also has a python library to interact with it, so I can import data straight from there and plug it into a ML model. 
+
+Option 2: Odoo survey
+
+<https://github.com/odoo/odoo>
+
+There also exists a [Nixos service](https://search.nixos.org/options?channel=23.05&from=0&size=50&sort=relevance&type=packages&query=odoo) for this. 
+
+I don't know if it supports images. See [docs](https://www.odoo.com/documentation/16.0/applications/marketing/surveys/create.html)
+
+Option 3: Kobotoolbox
+
+Github Organization: <https://github.com/kobotoolbox>
+
+They do have a docker container on there. No nix packages though, but that's ok.
+
+They do support the [photo](https://support.kobotoolbox.org/photo_audio_video_file.html?highlight=image) image type.
+
+There is an unofficial python api: <https://pypi.org/project/pykobo/>. However, it import data as a pandas dataframe, and I don't know if it is possible to store images in those.
+
