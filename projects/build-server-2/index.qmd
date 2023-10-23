@@ -12,7 +12,11 @@ execute:
   freeze: true
 ---
 
+STATUS: PAUSED
 
+I have [other stuff](../ai-pipeline/) to do that needs my server working, and since I already have remote libvirt setup, I will just stick to that for now.
+
+But I don't think I am giving up on openstack, since what I want seems to be possible, just very difficult. 
 
 # Software
 
@@ -1813,9 +1817,19 @@ One reddit user [says that this is possible if ebtables are disabled](https://ww
 
 Okay, later the person I was talking to on discord mentioned that it is indeed possible, but not with NAT, but instead with BGP.
 
+> Yes as the flow will be: ipv6 address X is on node A but to reach it you need to contact me router A (on network node).
+
 I asked what to search for since docs aren't too good, and they said:
 
 > Openstack neutron OVN/OVS BGP north/south traffic ipv6 🙂 Should give you plenty documentation.
+
+I asked further about doing this with just OVS, since OVN seems to add more complications and is not enabled by default in kolla-ansible. 
+
+> OVN is still OpenVSwitch but with a different approach and structure, thought about it as OVS 2.0.
+
+> And yes you can achieve what you want with OVS instead of OVN.
+
+
 
 I also desire to enable vpn-as-a-service. But [according to the docs](https://docs.openstack.org/kolla-ansible/latest/reference/networking/neutron-extensions.html#neutron-vpnaas-vpn-as-a-service), that's not too difficult to set up. 
 
