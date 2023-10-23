@@ -236,6 +236,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 </header>
 
+<p>STATUS: PAUSED</p>
+<p>I have <a href="../ai-pipeline/">other stuff</a> to do that needs my server working, and since I already have remote libvirt setup, I will just stick to that for now.</p>
+<p>But I don’t think I am giving up on openstack, since what I want seems to be possible, just very difficult.</p>
 <section id="software" class="level1">
 <h1>Software</h1>
 <section id="software-suite" class="level2">
@@ -1463,9 +1466,19 @@ flat_networks = {% for interface in neutron_external_interface.split(',') %}phys
 <p>I have a new idea: the router has a subnet, and this subnet is exposed via a vpn. Packets are forwarded to this subnet. Because this subnet is located on the same physical node, there is no need to worry about the more compex pieces of openstack networking.</p>
 <p>One reddit user <a href="https://www.reddit.com/r/WireGuard/comments/lwkksi/using_ipv6_from_a_vps_provider_in_my_home_network/">says that this is possible if ebtables are disabled</a>.</p>
 <p>Okay, later the person I was talking to on discord mentioned that it is indeed possible, but not with NAT, but instead with BGP.</p>
+<blockquote class="blockquote">
+<p>Yes as the flow will be: ipv6 address X is on node A but to reach it you need to contact me router A (on network node).</p>
+</blockquote>
 <p>I asked what to search for since docs aren’t too good, and they said:</p>
 <blockquote class="blockquote">
 <p>Openstack neutron OVN/OVS BGP north/south traffic ipv6 🙂 Should give you plenty documentation.</p>
+</blockquote>
+<p>I asked further about doing this with just OVS, since OVN seems to add more complications and is not enabled by default in kolla-ansible.</p>
+<blockquote class="blockquote">
+<p>OVN is still OpenVSwitch but with a different approach and structure, thought about it as OVS 2.0.</p>
+</blockquote>
+<blockquote class="blockquote">
+<p>And yes you can achieve what you want with OVS instead of OVN.</p>
 </blockquote>
 <p>I also desire to enable vpn-as-a-service. But <a href="https://docs.openstack.org/kolla-ansible/latest/reference/networking/neutron-extensions.html#neutron-vpnaas-vpn-as-a-service">according to the docs</a>, that’s not too difficult to set up.</p>
 </section>
