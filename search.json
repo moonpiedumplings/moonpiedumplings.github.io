@@ -438,7 +438,21 @@
     "href": "guides/nix-fun/index.html",
     "title": "Installing the nix package manager and how it’s useful",
     "section": "",
-    "text": "On a macos or linux system, run thsi command in your terminal (from the nix manual) curl -L https://nixos.org/nix/install | sh -s -- --daemon\nThis should work on all cases, but if you are using WSL/WSL2, and you don’t have systemd enabled, then you can do a single user, no daemon install.\ncurl -L https://nixos.org/nix/install | sh -s -- --no-daemon\nNow, nix is installed. You should be able to access the nix commands in your terminal. For example, the nix-shell command can be used to create a temporary shell environment with packages, environment variables, and more. For examples, see below.\n\n\nHome manager is a way to declaratively manage a user environment, including packages installed, configuration files, and environment variables. It uses nix as the langauge of configuration.\nTo install home manager, you can follow the steps from their docs\nTo use home-manager, you can edit the configuration file located at $HOME/.config/home-manager/home.nix For an example, see my my blog post about this\n\n\n\nFlakes are an “experimental” feature of nix. I put experimental in quotes because they are not enabled by default, and are marked as experimental, but they are so popular in the community and so well tested that they are basically just another feature.\nWithin home-manager’s home.nix:\n\n\nhome.nix\n\nnix.settings.experimental-features = [\"nix-command\" \"flakes\"];\n\nWithout home manager, edit the nix.conf file:\n\n\n$HOME/.config/nix/nix.conf\n\nexperimental-features = nix-command flakes"
+    "text": "On a macos or linux system, you can use the DeterminateSystesm nix-installer to install linux.\nSimply run (not as root):\ncurl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix | sh -s -- install\nAnd then, also run these two commands below (as root):\nnix-channel --add https://nixos.org/channels/nixpkgs-unstable nixpkgs\nnix-channel --update\n\n\n\nSince nix does not support linux, you need to install it in WSL.\nIn the microsoft store, you can install one of many linux distributions or versions. I recommmend debian\nYou need to have WSL2\nNow, nix is installed. You should be able to access the nix commands in your terminal. For example, the nix-shell command can be used to create a temporary shell environment with packages, environment variables, and more. For examples, see below.\n\n\n\nHome manager is a way to declaratively manage a user environment, including packages installed, configuration files, and environment variables. It uses nix as the langauge of configuration.\nTo install home manager, you can follow the steps from their docs\nTo use home-manager, you can edit the configuration file located at $HOME/.config/home-manager/home.nix For an example, see my my blog post about this"
+  },
+  {
+    "objectID": "guides/nix-fun/index.html#macoslinux",
+    "href": "guides/nix-fun/index.html#macoslinux",
+    "title": "Installing the nix package manager and how it’s useful",
+    "section": "",
+    "text": "On a macos or linux system, you can use the DeterminateSystesm nix-installer to install linux.\nSimply run (not as root):\ncurl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix | sh -s -- install\nAnd then, also run these two commands below (as root):\nnix-channel --add https://nixos.org/channels/nixpkgs-unstable nixpkgs\nnix-channel --update"
+  },
+  {
+    "objectID": "guides/nix-fun/index.html#windows",
+    "href": "guides/nix-fun/index.html#windows",
+    "title": "Installing the nix package manager and how it’s useful",
+    "section": "",
+    "text": "Since nix does not support linux, you need to install it in WSL.\nIn the microsoft store, you can install one of many linux distributions or versions. I recommmend debian\nYou need to have WSL2\nNow, nix is installed. You should be able to access the nix commands in your terminal. For example, the nix-shell command can be used to create a temporary shell environment with packages, environment variables, and more. For examples, see below."
   },
   {
     "objectID": "guides/nix-fun/index.html#installing-home-manager",
@@ -446,13 +460,6 @@
     "title": "Installing the nix package manager and how it’s useful",
     "section": "",
     "text": "Home manager is a way to declaratively manage a user environment, including packages installed, configuration files, and environment variables. It uses nix as the langauge of configuration.\nTo install home manager, you can follow the steps from their docs\nTo use home-manager, you can edit the configuration file located at $HOME/.config/home-manager/home.nix For an example, see my my blog post about this"
-  },
-  {
-    "objectID": "guides/nix-fun/index.html#enabling-flakes",
-    "href": "guides/nix-fun/index.html#enabling-flakes",
-    "title": "Installing the nix package manager and how it’s useful",
-    "section": "",
-    "text": "Flakes are an “experimental” feature of nix. I put experimental in quotes because they are not enabled by default, and are marked as experimental, but they are so popular in the community and so well tested that they are basically just another feature.\nWithin home-manager’s home.nix:\n\n\nhome.nix\n\nnix.settings.experimental-features = [\"nix-command\" \"flakes\"];\n\nWithout home manager, edit the nix.conf file:\n\n\n$HOME/.config/nix/nix.conf\n\nexperimental-features = nix-command flakes"
   },
   {
     "objectID": "guides/nix-fun/index.html#searching-nixpkgs-or-other-repos",

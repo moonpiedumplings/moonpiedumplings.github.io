@@ -162,8 +162,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <ul>
   <li><a href="#install-nix-package-manager" id="toc-install-nix-package-manager" class="nav-link active" data-scroll-target="#install-nix-package-manager">Install nix package manager</a>
   <ul class="collapse">
+  <li><a href="#macoslinux" id="toc-macoslinux" class="nav-link" data-scroll-target="#macoslinux">Macos/Linux</a></li>
+  <li><a href="#windows" id="toc-windows" class="nav-link" data-scroll-target="#windows">Windows</a></li>
   <li><a href="#installing-home-manager" id="toc-installing-home-manager" class="nav-link" data-scroll-target="#installing-home-manager">Installing home-manager</a></li>
-  <li><a href="#enabling-flakes" id="toc-enabling-flakes" class="nav-link" data-scroll-target="#enabling-flakes">Enabling flakes</a></li>
   </ul></li>
   <li><a href="#using-nix" id="toc-using-nix" class="nav-link" data-scroll-target="#using-nix">Using nix</a>
   <ul class="collapse">
@@ -212,33 +213,27 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <section id="install-nix-package-manager" class="level1">
 <h1>Install nix package manager</h1>
-<p>On a macos or linux system, run thsi command in your terminal (from the <a href="https://nixos.org/manual/nix/stable/installation/installing-binary.html">nix manual</a>) <code>curl -L https://nixos.org/nix/install | sh -s -- --daemon</code></p>
-<p>This should work on all cases, but if you are using WSL/WSL2, and you don’t have <a href="https://learn.microsoft.com/en-us/windows/wsl/systemd">systemd enabled</a>, then you can do a single user, no daemon install.</p>
-<p><code>curl -L https://nixos.org/nix/install | sh -s -- --no-daemon</code></p>
+<section id="macoslinux" class="level2">
+<h2 class="anchored" data-anchor-id="macoslinux">Macos/Linux</h2>
+<p>On a macos or linux system, you can use the <a href="https://github.com/DeterminateSystems/nix-installer">DeterminateSystesm nix-installer</a> to install linux.</p>
+<p>Simply run (not as root):</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>curl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix | sh -s -- install</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>And then, also run these two commands below (as root):</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>nix-channel --add https://nixos.org/channels/nixpkgs-unstable nixpkgs</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb3"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>nix-channel --update</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
+<section id="windows" class="level2">
+<h2 class="anchored" data-anchor-id="windows">Windows</h2>
+<p>Since nix does not support linux, you need to install it in <a href="https://learn.microsoft.com/en-us/windows/wsl/install">WSL</a>.</p>
+<p>In the microsoft store, you can install one of many linux <em>distributions</em> or versions. I recommmend <a href="https://learWn.microsoft.com/en-us/windows/wsl/install">debian</a></p>
+<p>You need to have WSL2</p>
 <p>Now, nix is installed. You should be able to access the nix commands in your terminal. For example, the <code>nix-shell</code> command can be used to create a temporary shell environment with packages, environment variables, and more. For examples, see below.</p>
+</section>
 <section id="installing-home-manager" class="level2">
 <h2 class="anchored" data-anchor-id="installing-home-manager">Installing home-manager</h2>
 <p>Home manager is a way to declaratively manage a user environment, including packages installed, configuration files, and environment variables. It uses nix as the langauge of configuration.</p>
 <p>To install home manager, you can follow the steps from <a href="https://nix-community.github.io/home-manager/index.html#sec-install-standalone">their docs</a></p>
 <p>To use home-manager, you can edit the configuration file located at <code>$HOME/.config/home-manager/home.nix</code> For an example, see my <a href="../../blog/switch-to-opensuse/">my blog post about this</a></p>
-</section>
-<section id="enabling-flakes" class="level2">
-<h2 class="anchored" data-anchor-id="enabling-flakes">Enabling flakes</h2>
-<p>Flakes are an “experimental” feature of nix. I put experimental in quotes because they are not enabled by default, and are marked as experimental, but they are so popular in the community and so well tested that they are basically just another feature.</p>
-<p>Within home-manager’s home.nix:</p>
-<div class="code-with-filename">
-<div class="code-with-filename-file">
-<pre><strong>home.nix</strong></pre>
-</div>
-<div class="sourceCode" id="cb1"><pre class="sourceCode nix code-with-copy"><code class="sourceCode nix"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>nix.settings.experimental<span class="op">-</span>features = <span class="op">[</span><span class="st">"nix-command"</span> <span class="st">"flakes"</span><span class="op">]</span>;</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<p>Without home manager, edit the nix.conf file:</p>
-<div class="code-with-filename">
-<div class="code-with-filename-file">
-<pre><strong>$HOME/.config/nix/nix.conf</strong></pre>
-</div>
-<div class="sourceCode" id="cb2"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>experimental-features = nix-command flakes</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
 </section>
 </section>
 <section id="using-nix" class="level1">
@@ -275,9 +270,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="code-with-filename-file">
 <pre><strong>passwords.txt</strong></pre>
 </div>
-<div class="sourceCode" id="cb3"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>secretapikey ==&gt; ***REMOVED*** is the default if you don't have an arrow</span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>secretpassword ==&gt; but you can replace it with anything</span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>glob:*baddata* ==&gt; glob matches work too</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb4"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>secretapikey ==&gt; ***REMOVED*** is the default if you don't have an arrow</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>secretpassword ==&gt; but you can replace it with anything</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>glob:*baddata* ==&gt; glob matches work too</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>To push the changes to github, or your remote repository:</p>
 <p><code>git push --force --all</code></p>
