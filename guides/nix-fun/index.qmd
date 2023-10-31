@@ -10,11 +10,35 @@ execute:
 
 # Install nix package manager
 
-On a macos or linux system, run thsi command in your terminal (from the [nix manual](https://nixos.org/manual/nix/stable/installation/installing-binary.html)) `curl -L https://nixos.org/nix/install | sh -s -- --daemon`
+## Macos/Linux
 
-This should work on all cases, but if you are using WSL/WSL2, and you don't have [systemd enabled](https://learn.microsoft.com/en-us/windows/wsl/systemd), then you can do a single user, no daemon install.
+On a macos or linux system, you can use the [DeterminateSystesm nix-installer](https://github.com/DeterminateSystems/nix-installer) to install linux. 
 
-`curl -L https://nixos.org/nix/install | sh -s -- --no-daemon`
+Simply run (not as root): 
+
+```{.default}
+curl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix | sh -s -- install
+```
+
+And then, also run these two commands below (as root):
+
+```{.default}
+nix-channel --add https://nixos.org/channels/nixpkgs-unstable nixpkgs
+```
+
+```{.default }
+nix-channel --update
+```
+
+## Windows
+
+Since nix does not support linux, you need to install it in [WSL](https://learn.microsoft.com/en-us/windows/wsl/install).
+
+In the microsoft store, you can install one of many linux *distributions* or versions. I recommmend [debian](https://learWn.microsoft.com/en-us/windows/wsl/install)
+
+You need to have WSL2 
+
+
 
 
 Now, nix is installed. You should be able to access the nix commands in your terminal. For example, the `nix-shell` command can be used to create a temporary shell environment with packages, environment variables, and more. For examples, see below.
@@ -26,22 +50,6 @@ Home manager is a way to declaratively manage a user environment, including pack
 To install home manager, you can follow the steps from [their docs](https://nix-community.github.io/home-manager/index.html#sec-install-standalone)
 
 To use home-manager, you can edit the configuration file located at `$HOME/.config/home-manager/home.nix` For an example, see my [my blog post about this](../../blog/switch-to-opensuse/)
-
-## Enabling flakes
-
-Flakes are an "experimental" feature of nix. I put experimental in quotes because they are not enabled by default, and are marked as experimental, but they are so popular in the community and so well tested that they are basically just another feature. 
-
-Within home-manager's home.nix:
-
-```{.nix filename="home.nix"}
-nix.settings.experimental-features = ["nix-command" "flakes"];
-```
-
-Without home manager, edit the nix.conf file:
-
-```{.default filename="$HOME/.config/nix/nix.conf"}
-experimental-features = nix-command flakes
-```
 
 
 # Using nix
