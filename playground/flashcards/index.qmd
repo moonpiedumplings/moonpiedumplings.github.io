@@ -1,5 +1,5 @@
 ---
-title: "Can I do flashcards in revealjs?"
+title: "A notes format that I can automatically convert to flashcards?"
 description: ""
 date: "2023-10-4"
 execute:
@@ -10,16 +10,17 @@ format:
     page-layout: article
 ---
 
-So quarto has support for a format called [revealjs](https://quarto.org/docs/presentations/revealjs/). 
+My goal is to have a notes format that I can automatically convert to flashcards, for studying.
 
-Revealjs is basically presentations, like powerpoint or google slides, but in your browser. Although you can also print them to pdf. 
+So quarto has support for a format called [revealjs](https://quarto.org/docs/presentations/revealjs/).
 
-Anyway, I was in need of some flashcards for my class and I wanted to see if I could use revealjs for this. 
+Revealjs is basically presentations, like powerpoint or google slides, but in your browser. Although you can also print them to pdf.
 
+Anyway, I was in need of some flashcards for my class and I wanted to see if I could use revealjs for this.
 
 to create slides, just use a second level header:
 
-```{.markdown}
+``` markdown
 ## Getting up
 
 - Turn off alarm
@@ -31,20 +32,19 @@ to create slides, just use a second level header:
 - Count sheep
 ```
 
-However, I don't really want a title, so I can simply have the second level header (`##`), without a title, and it still creates another slide. 
+However, I don't really want a title, so I can simply have the second level header (`##`), without a title, and it still creates another slide.
 
 By default, lists are revealed all at once. To change this, in your quarto heading options:
 
-```{.yaml}
+``` yaml
 format: 
     revealjs:
         incremental: true
 ```
 
+Actually, I like content pauses better.
 
-Actually, I like content pauses better. 
-
-```{.markdown}
+``` markdown
 ## Slide with a pause
 
 content before the pause
@@ -54,14 +54,13 @@ content before the pause
 content after the pause
 ```
 
-
 Now, how can I randomize slide orders?
 
 According to the [revealjs pull where this feature was implemented](https://github.com/hakimel/reveal.js/pull/1506):
 
 I can have a range of slides, something like:
 
-```{.javascript}
+``` javascript
 // for everything
 // Reveal.configure({ random: true });
 
@@ -75,16 +74,15 @@ Reveal.configure({
 
 No wait, quarto has an option to shuffle the slides.
 
-```{.yml}
+``` yml
 shuffle: true
 ```
 
-
-Now, is there a way to randomize the the list? I want the list options to sometimes have the name, and sometimes have the content, and you have to match which with which. 
+Now, is there a way to randomize the the list? I want the list options to sometimes have the name, and sometimes have the content, and you have to match which with which.
 
 chatgpt gave me this:
 
-```{.html}
+``` html
 
 <!DOCTYPE html>
 <html lang="en">
@@ -115,7 +113,7 @@ chatgpt gave me this:
 </html>
 ```
 
-But does it work? : 
+But does it work? :
 
 ```{=html}
 <!DOCTYPE html>
@@ -146,22 +144,21 @@ But does it work? :
 </body>
 </html>
 ```
-
 But it doesn't work in revealjs, as revealjs won't run show thing incrementally.
 
 Rather than lists, can I just have javascript manipulate classes and divs created by pandoc?
 
-```{.markdown}
+``` markdown
 ::: {#myCustomBlock .custom-class}
 This is a custom block that can be manipulated by JavaScript.
 :::
 ```
 
-This should be able to be changed by pandoc. 
+This should be able to be changed by pandoc.
 
 And then I can shuffle them with something like:
 
-```{.javascript}
+``` javascript
     function shuffleBlocks() {
     const container = document.getElementById("blocksContainer");
     const blocks = Array.from(container.children);
@@ -177,25 +174,25 @@ And then I can shuffle them with something like:
 window.addEventListener("DOMContentLoaded", shuffleBlocks);
 ```
 
-So to test: 
+So to test:
 
-Shuffle blocks: 
+Shuffle blocks:
 
-<div id="blockContainer">
-::: {.block}
+::: {#blockContainer}
+::: block
 This is Block 1.
 :::
 
-::: {.block}
+::: block
 This is Block 2.
 :::
 
-::: {.block}
+::: block
 This is Block 3.
 :::
-</div>
+:::
 
-```{.html}
+``` html
 <script>
     function shuffleBlocks() {
         const container = document.querySelector("#blockContainer");
@@ -244,22 +241,15 @@ This is Block 3.
     window.addEventListener("DOMContentLoaded", shuffleBlocks);
 </script>
 ```
-
-
-
-After many iterations with chatgpt, I finally got it to shuffle content. 
-
+After many iterations with chatgpt, I finally got it to shuffle content.
 
 Now is there a way to scale this across multiple slides? I don't want to have to copy and paste this for the every single block. In fact, can I just make a custom html element that shuffles them?
 
+So chatgpt gave me a custom html element class. It gave me a lot, actually, and none of them worked. So I'm giving up on that for now.
 
-So chatgpt gave me a custom html element class. It gave me a lot, actually, and none of them worked. So I'm giving up on that for now. 
+However, revealjs does support a grid slide layout, and it groups vertical slides together while randomizing their order, but it also randomizes the horizontal slides as well.
 
-
-
-However, revealjs does support a grid slide layout, and it groups vertical slides together while randomizing their order, but it also randomizes the horizontal slides as well. 
-
-```{.yml}
+``` yml
 format: 
     revealjs:
         incremental: true
@@ -267,4 +257,31 @@ format:
         shuffle: true
         navigation-mode: grid
 ```
+
+Eventually, I gave up on the revealjs format, after I found out that this flashcards app, [anki](https://apps.ankiweb.net/)
+
+In my research, I found some tools which can convert other formats to anki:
+
+| Software                                                                  | Last update? | Packaged?                 |
+|---------------------------------------------------------------------------|--------------|---------------------------|
+| [md2anki](https://github.com/nx10/md2anki)                                | 4 years ago  | pypi                      |
+| [markdown2anki](https://github.com/Mochitto/Markdown2Anki)                | 2 weeks ago  | pypi                      |
+| [markdown-anki-decks](https://github.com/lukesmurray/markdown-anki-decks) | 1 year ago   | pypi, but also in nixpkgs |
+
+
+I did some testing. markdown-anki-decks is exceedingly simply, with something like:
+
+```{.markdown}
+# Deck title
+
+## card front
+
+card back
+```
+
+to create a deck. 
+
+I also experimented with markdown2anki. It's way, way more complex. Unlike the previous option, it has many, many options. 
+
+To create a simple flashcard:
 
