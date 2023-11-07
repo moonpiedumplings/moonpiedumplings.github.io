@@ -1,5 +1,26 @@
 [
   {
+    "objectID": "talks/containers/revealjs.html#what-are-containers",
+    "href": "talks/containers/revealjs.html#what-are-containers",
+    "title": "Linux Containerization Technology",
+    "section": "What are containers?",
+    "text": "What are containers?\n\nThe operating system is made up of many building blocks\nContainers are\n\n\n\n\n\ngraph LR\n    subgraph Hardware\n        CPU\n        Memory\n        Devices\n    end\n\n    subgraph Kernel\n        Control\n        Manage_Resources\n        Device_Management\n    end\n\n    subgraph Operating_System\n        System_Services\n    end\n\n    subgraph User\n        Application_Programs\n    end\n\n    User --&gt; Operating_System\n    Operating_System --&gt; Kernel\n    Kernel --&gt; Hardware"
+  },
+  {
+    "objectID": "talks/containers/revealjs.html#history",
+    "href": "talks/containers/revealjs.html#history",
+    "title": "Linux Containerization Technology",
+    "section": "History",
+    "text": "History\n\nOpenvz: Built custom kernel to make containers\nDid not update this custom kernel (2.6 is their stable, 3.10 is dev).\n\nCurrent Kernel is 6.5+"
+  },
+  {
+    "objectID": "talks/containers/revealjs.html#benefits-and-downsides",
+    "href": "talks/containers/revealjs.html#benefits-and-downsides",
+    "title": "Linux Containerization Technology",
+    "section": "Benefits and Downsides",
+    "text": "Benefits and Downsides\n\nContainers do not have"
+  },
+  {
     "objectID": "resume/index.html",
     "href": "resume/index.html",
     "title": "Jeffrey Fonseca — Resume",
@@ -838,5 +859,12 @@
     "title": "Kasmweb setup",
     "section": "zswap",
     "text": "zswap\nStatus: Partially done, but dropped in favor of zswap\n\nzswap is disabled by default on my ubuntu virtual machine. Odd that both are disabled by default.\nParameters for zswap can be found in /sys/module/zswap/parameters/\nTo set parameters at boot, use kernel boot paremeters, like zswap.enabled=1 zswap.compressor=lz4 zswap.max_pool_percent=20 zswap.zpool=z3fold\nI will need to tinker to see what is the most optimized zswap setup\nzswap has it’s own memory deduplication feature, which is enabled by default on both my ubuntu vm and the aws ubuntu server:\nSee above, my comments about zswap’s memory deduplication feature."
+  },
+  {
+    "objectID": "talks/containers/index.html",
+    "href": "talks/containers/index.html",
+    "title": "Containers",
+    "section": "",
+    "text": "The layer8 Cybersecurity club as Cal State Northridge asked me to do a talk on containerization technologies, such as kubernetes.\n\n\n\n\ngraph LR\n    subgraph Kernel\n        subgraph Hardware\n            CPU\n            Memory\n            Devices\n        end\n\n        Control --&gt; CPU\n        Manage_Resources --&gt; Memory\n        Device_Management --&gt; Devices\n    end\n\n    subgraph Operating_System\n        subgraph System_Services\n            File_Management\n            Process_Management\n            Memory_Management\n            I/O_Management\n        end\n\n        Application_Programs --&gt; System_Services\n    end\n\n    subgraph User\n        Application_Programs\n    end\n\n    User --&gt; Operating_System\n    Operating_System --&gt; Kernel"
   }
 ]
