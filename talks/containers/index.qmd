@@ -1,0 +1,48 @@
+---
+title: "Containers"
+date: "2023-10-23"
+categories: [linux]
+format:
+  html:
+    code-fold: true
+    code-summary: "Show the code"
+    code-block-background: true
+execute:
+  freeze: true
+---
+
+The layer8 Cybersecurity club as Cal State Northridge asked me to do a talk on containerization technologies, such as kubernetes. 
+
+```{mermaid}
+graph LR
+    subgraph Kernel
+        subgraph Hardware
+            CPU
+            Memory
+            Devices
+        end
+
+        Control --> CPU
+        Manage_Resources --> Memory
+        Device_Management --> Devices
+    end
+
+    subgraph Operating_System
+        subgraph System_Services
+            File_Management
+            Process_Management
+            Memory_Management
+            I/O_Management
+        end
+
+        Application_Programs --> System_Services
+    end
+
+    subgraph User
+        Application_Programs
+    end
+
+    User --> Operating_System
+    Operating_System --> Kernel
+```
+
