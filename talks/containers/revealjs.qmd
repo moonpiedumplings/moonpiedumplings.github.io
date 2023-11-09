@@ -12,37 +12,24 @@ execute:
 
 ## What are containers?
 
-* The operating system is made up of many building blocks
-* Containers are 
 
-```{mermaid}
-graph LR;
-    subgraph Hardware
-        CPU
-        Memory
-        Devices
-    end;
+::: { .scrollable style="font-size: 80%;"}
 
-    subgraph Kernel
-        API
-        Device_Management
-    end;
+* The operating system is made up of many building blocks, almost always placed unevenly
+* Container *runtimes* are a commmon platform that can be built off of
 
-    subgraph Operating_System
-        System_Services
-    end;
+:::
 
-    subgraph User
-        Application_Programs
-    end;
+::: {.notes}
+- Given a lego car, can you build a house on top of it?
+- What if you put a platform on that lego car?
+:::
 
-    User --> Operating_System;
-    Operating_System --> Kernel;
-    Kernel --> Hardware;
-```
+::: {.center}
 
-![](https://sherlockblaze.com/resources/img/c++/linux-building-blocks.png)
+![](https://static.packt-cdn.com/products/9781838646554/graphics/assets/9a7b4405-e9e4-431b-b068-0883d1189150.png){width=100% height=100% style="object-fit: cover;"}
 
+:::
 
 ## History
 
@@ -53,10 +40,100 @@ graph LR;
 
 ![](https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fwww.serveradminz.com%2Fblog%2Fwp-content%2Fuploads%2F2015%2F01%2Fopenvz_logo-1024x1022.jpg&f=1&nofb=1&ipt=18375d503a632a63ab2e71e78527cf8628f33ac8556c79f65197802705e707b0&ipo=images)
 
-
 ## Benefits and Downsides
 
-* Containers do not have
+* Containers use less memory, because
+    - share the host kernel
+    - only contain what is necessary to use an application
+    - Identical parts of containers (layers) are shared in memory, saving more memory
+* Not as secure as virtual machines
+    - Container escape CVE's are rare but fatal
+    - Very easy to configure, but misconfigurations can be fatal
+    - CTF will be a container escape one (with no CVEs)
+
+
+## LXC and modern containers
+
+* Many groups needed containers in mainline, so they contributed
+    - namespaces, cgroups (google), and 
+* Eventually, LXC was the first iteration of modern container software
+    - Docker was based of off lxc, but eventually switched to their own runtime
+
+
+## Pet vs Application Type
+
+* Pet
+    - Designed to simulate a linux system
+    - Often used for virtual private servers
+    - E.G: LXC, Openvz
+* Application
+    - Designed for ease of development and distribution of apps/services
+    - OCI based runners, like docker, podman, kubernetes, nomad
+
+## OCI Standard
+* Not to be confused with Oracle Cloud
+* Open Container Initiative
+    - Standardized Format for container images
+* Make distributing services very, very easy
+
+
+## Most Popular: Docker and Kubernetes
+* Docker runs OCI images
+    - Docker Hub: Massive repository of images for every type of application
+* Kubernetes: Clustering software
+    - Can run OCI images across multiple machines at once
+
+
+## Docker
+* Simple
+* Runs as root
+* One daaemon, that autostarts, and handles containers as services
+* Docker socket (/var/run/docker.sock), which can be served over the network
+* Downside: runs as root, having access to the docker socket means you have root privileges
+
+## Kubernetes
+
+* A.K.A "k8s"
+* Extremely powerful
+* Massively complex, many moving parts
+
+![](https://cdn-images-1.medium.com/fit/c/800/471/1*yq0bky23otUFDU1DbUftGg.png)
+
+## Kubernetes (cont.)
+* Different Distributions of Kubernetes
+
+![](https://storage.googleapis.com/cdn.thenewstack.io/media/2017/11/5aa59276-kube-02.png)
+
+
+## Others Container Orchetstrators
+* Docker Swarm Mode
+    - Literally docker, but across multiple machines
+* Hashicorp Nomad
+    - Integrates with many other Hashi products
+    - supports the most runtimes out of any other option
+
+## High Performance Computing (HPC)
+* Sciennce needs reproducibility
+    - Simulations ran using programs need to be ran using the same code
+* Slurm, runs any *jobs* across a cluster, but is not reproducible 
+    - By using slurm to run singularity/apptainer (OCI runtimes), you get more reproducibility in science
+
+
+
+
+## Cloud
+* AWS, GCP, Oracle, etc offer containers as a service
+* Also offer managed kubernetes
+
+
+## CTF
+* Go to ip address here
+* You are a researcher at the SCP 
+
+
+
+
+
 
 
 
