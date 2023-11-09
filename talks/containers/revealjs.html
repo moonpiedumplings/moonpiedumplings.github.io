@@ -397,18 +397,18 @@ Jeffrey Fonseca
 <ul>
 <li>Many groups needed containers in mainline, so they contributed
 <ul>
-<li>namespaces, cgroups (google), and</li>
+<li>namespaces, cgroups (google), seccomp, virtual filesystems, etc</li>
 </ul></li>
-<li>Eventually, LXC was the first iteration of modern container software
+<li>Eventually, LXC was the first iteration of modern container software (IBM0)
 <ul>
 <li>Docker was based of off lxc, but eventually switched to their own runtime</li>
 </ul></li>
 </ul>
 </section>
-<section id="pet-vs-application-type" class="slide level2">
-<h2>Pet vs Application Type</h2>
+<section id="os-vs-application-type" class="slide level2">
+<h2>OS vs Application Type</h2>
 <ul>
-<li>Pet
+<li>OS
 <ul>
 <li>Designed to simulate a linux system</li>
 <li>Often used for virtual private servers</li>
@@ -427,6 +427,7 @@ Jeffrey Fonseca
 <li>Not to be confused with Oracle Cloud</li>
 <li>Open Container Initiative
 <ul>
+<li>Linux Foundation Project, by Docker, CoreOS, and others</li>
 <li>Standardized Format for container images</li>
 </ul></li>
 <li>Make distributing services very, very easy</li>
@@ -449,10 +450,13 @@ Jeffrey Fonseca
 <h2>Docker</h2>
 <ul>
 <li>Simple</li>
-<li>Runs as root</li>
-<li>One daaemon, that autostarts, and handles containers as services</li>
-<li>Docker socket (/var/run/docker.sock), which can be served over the network</li>
-<li>Downside: runs as root, having access to the docker socket means you have root privileges</li>
+<li>One daemon that runs as root, that autostarts, and handles containers as services</li>
+<li>Docker socket (/var/run/docker.sock), which can be served over the network, or mounted inside a container or vm (it’s also a file)</li>
+<li>Downside: Runs as root:
+<ul>
+<li>Having access to the docker socket means you are effectively root</li>
+<li>Escaping a container as root means you are root on the host</li>
+</ul></li>
 </ul>
 </section>
 <section id="kubernetes" class="slide level2">
@@ -481,8 +485,24 @@ Jeffrey Fonseca
 <li>Hashicorp Nomad
 <ul>
 <li>Integrates with many other Hashi products</li>
-<li>supports the most runtimes out of any other option</li>
+<li>supports other, unorthox runtimes (e.g: qemu)</li>
 </ul></li>
+</ul>
+</section>
+<section id="runtimes" class="slide level2">
+<h2>Runtimes</h2>
+<p>High level:</p>
+<ul>
+<li>Docker Engine (deprecated, docker now uses containerd + runc)</li>
+<li>Containerd</li>
+<li>Cri-o</li>
+</ul>
+<p>Low Level</p>
+<ul>
+<li>runc</li>
+<li>crun (default of podman)</li>
+<li>Kata (virtual machine)</li>
+<li>NVIDIA</li>
 </ul>
 </section>
 <section id="high-performance-computing-hpc" class="slide level2">
@@ -495,6 +515,10 @@ Jeffrey Fonseca
 <li>Slurm, runs any <em>jobs</em> across a cluster, but is not reproducible
 <ul>
 <li>By using slurm to run singularity/apptainer (OCI runtimes), you get more reproducibility in science</li>
+</ul></li>
+<li>Kubernetes is used for machine learning
+<ul>
+<li>NVIDIA provides OCI images with drivers for GPU’s baked in</li>
 </ul></li>
 </ul>
 </section>
@@ -509,7 +533,7 @@ Jeffrey Fonseca
 <h2>CTF</h2>
 <ul>
 <li>Go to ip address here</li>
-<li>You are a researcher at the SCP</li>
+<li></li>
 </ul>
 
 <div class="footer footer-default">

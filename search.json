@@ -25,21 +25,21 @@
     "href": "talks/containers/revealjs.html#lxc-and-modern-containers",
     "title": "Linux Containerization Technology",
     "section": "LXC and modern containers",
-    "text": "LXC and modern containers\n\nMany groups needed containers in mainline, so they contributed\n\nnamespaces, cgroups (google), and\n\nEventually, LXC was the first iteration of modern container software\n\nDocker was based of off lxc, but eventually switched to their own runtime"
+    "text": "LXC and modern containers\n\nMany groups needed containers in mainline, so they contributed\n\nnamespaces, cgroups (google), seccomp, virtual filesystems, etc\n\nEventually, LXC was the first iteration of modern container software (IBM0)\n\nDocker was based of off lxc, but eventually switched to their own runtime"
   },
   {
-    "objectID": "talks/containers/revealjs.html#pet-vs-application-type",
-    "href": "talks/containers/revealjs.html#pet-vs-application-type",
+    "objectID": "talks/containers/revealjs.html#os-vs-application-type",
+    "href": "talks/containers/revealjs.html#os-vs-application-type",
     "title": "Linux Containerization Technology",
-    "section": "Pet vs Application Type",
-    "text": "Pet vs Application Type\n\nPet\n\nDesigned to simulate a linux system\nOften used for virtual private servers\nE.G: LXC, Openvz\n\nApplication\n\nDesigned for ease of development and distribution of apps/services\nOCI based runners, like docker, podman, kubernetes, nomad"
+    "section": "OS vs Application Type",
+    "text": "OS vs Application Type\n\nOS\n\nDesigned to simulate a linux system\nOften used for virtual private servers\nE.G: LXC, Openvz\n\nApplication\n\nDesigned for ease of development and distribution of apps/services\nOCI based runners, like docker, podman, kubernetes, nomad"
   },
   {
     "objectID": "talks/containers/revealjs.html#oci-standard",
     "href": "talks/containers/revealjs.html#oci-standard",
     "title": "Linux Containerization Technology",
     "section": "OCI Standard",
-    "text": "OCI Standard\n\nNot to be confused with Oracle Cloud\nOpen Container Initiative\n\nStandardized Format for container images\n\nMake distributing services very, very easy"
+    "text": "OCI Standard\n\nNot to be confused with Oracle Cloud\nOpen Container Initiative\n\nLinux Foundation Project, by Docker, CoreOS, and others\nStandardized Format for container images\n\nMake distributing services very, very easy"
   },
   {
     "objectID": "talks/containers/revealjs.html#most-popular-docker-and-kubernetes",
@@ -53,7 +53,7 @@
     "href": "talks/containers/revealjs.html#docker",
     "title": "Linux Containerization Technology",
     "section": "Docker",
-    "text": "Docker\n\nSimple\nRuns as root\nOne daaemon, that autostarts, and handles containers as services\nDocker socket (/var/run/docker.sock), which can be served over the network\nDownside: runs as root, having access to the docker socket means you have root privileges"
+    "text": "Docker\n\nSimple\nOne daemon that runs as root, that autostarts, and handles containers as services\nDocker socket (/var/run/docker.sock), which can be served over the network, or mounted inside a container or vm (it’s also a file)\nDownside: Runs as root:\n\nHaving access to the docker socket means you are effectively root\nEscaping a container as root means you are root on the host"
   },
   {
     "objectID": "talks/containers/revealjs.html#kubernetes",
@@ -74,14 +74,21 @@
     "href": "talks/containers/revealjs.html#others-container-orchetstrators",
     "title": "Linux Containerization Technology",
     "section": "Others Container Orchetstrators",
-    "text": "Others Container Orchetstrators\n\nDocker Swarm Mode\n\nLiterally docker, but across multiple machines\n\nHashicorp Nomad\n\nIntegrates with many other Hashi products\nsupports the most runtimes out of any other option"
+    "text": "Others Container Orchetstrators\n\nDocker Swarm Mode\n\nLiterally docker, but across multiple machines\n\nHashicorp Nomad\n\nIntegrates with many other Hashi products\nsupports other, unorthox runtimes (e.g: qemu)"
+  },
+  {
+    "objectID": "talks/containers/revealjs.html#runtimes",
+    "href": "talks/containers/revealjs.html#runtimes",
+    "title": "Linux Containerization Technology",
+    "section": "Runtimes",
+    "text": "Runtimes\nHigh level:\n\nDocker Engine (deprecated, docker now uses containerd + runc)\nContainerd\nCri-o\n\nLow Level\n\nrunc\ncrun (default of podman)\nKata (virtual machine)\nNVIDIA"
   },
   {
     "objectID": "talks/containers/revealjs.html#high-performance-computing-hpc",
     "href": "talks/containers/revealjs.html#high-performance-computing-hpc",
     "title": "Linux Containerization Technology",
     "section": "High Performance Computing (HPC)",
-    "text": "High Performance Computing (HPC)\n\nSciennce needs reproducibility\n\nSimulations ran using programs need to be ran using the same code\n\nSlurm, runs any jobs across a cluster, but is not reproducible\n\nBy using slurm to run singularity/apptainer (OCI runtimes), you get more reproducibility in science"
+    "text": "High Performance Computing (HPC)\n\nSciennce needs reproducibility\n\nSimulations ran using programs need to be ran using the same code\n\nSlurm, runs any jobs across a cluster, but is not reproducible\n\nBy using slurm to run singularity/apptainer (OCI runtimes), you get more reproducibility in science\n\nKubernetes is used for machine learning\n\nNVIDIA provides OCI images with drivers for GPU’s baked in"
   },
   {
     "objectID": "talks/containers/revealjs.html#cloud",
@@ -95,7 +102,7 @@
     "href": "talks/containers/revealjs.html#ctf",
     "title": "Linux Containerization Technology",
     "section": "CTF",
-    "text": "CTF\n\nGo to ip address here\nYou are a researcher at the SCP"
+    "text": "CTF\n\nGo to ip address here"
   },
   {
     "objectID": "resume/index.html",
