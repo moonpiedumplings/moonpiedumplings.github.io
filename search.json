@@ -4,7 +4,7 @@
     "href": "talks/containers/revealjs.html#what-are-containers",
     "title": "Linux Containerization Technology",
     "section": "What are containers?",
-    "text": "What are containers?\n\nThe operating system is made up of many building blocks\nContainers are\n\n\n\n\n\ngraph LR;\n    subgraph Hardware\n        CPU\n        Memory\n        Devices\n    end;\n\n    subgraph Kernel\n        API\n        Device_Management\n    end;\n\n    subgraph Operating_System\n        System_Services\n    end;\n\n    subgraph User\n        Application_Programs\n    end;\n\n    User --&gt; Operating_System;\n    Operating_System --&gt; Kernel;\n    Kernel --&gt; Hardware;"
+    "text": "What are containers?\n\n\nThe operating system is made up of many building blocks, almost always placed unevenly\nContainer runtimes are a commmon platform that can be built off of\n\n\n\n\nGiven a lego car, can you build a house on top of it?\nWhat if you put a platform on that lego car?"
   },
   {
     "objectID": "talks/containers/revealjs.html#history",
@@ -18,7 +18,84 @@
     "href": "talks/containers/revealjs.html#benefits-and-downsides",
     "title": "Linux Containerization Technology",
     "section": "Benefits and Downsides",
-    "text": "Benefits and Downsides\n\nContainers do not have"
+    "text": "Benefits and Downsides\n\nContainers use less memory, because\n\nshare the host kernel\nonly contain what is necessary to use an application\nIdentical parts of containers (layers) are shared in memory, saving more memory\n\nNot as secure as virtual machines\n\nContainer escape CVE’s are rare but fatal\nVery easy to configure, but misconfigurations can be fatal\nCTF will be a container escape one (with no CVEs)"
+  },
+  {
+    "objectID": "talks/containers/revealjs.html#lxc-and-modern-containers",
+    "href": "talks/containers/revealjs.html#lxc-and-modern-containers",
+    "title": "Linux Containerization Technology",
+    "section": "LXC and modern containers",
+    "text": "LXC and modern containers\n\nMany groups needed containers in mainline, so they contributed\n\nnamespaces, cgroups (google), and\n\nEventually, LXC was the first iteration of modern container software\n\nDocker was based of off lxc, but eventually switched to their own runtime"
+  },
+  {
+    "objectID": "talks/containers/revealjs.html#pet-vs-application-type",
+    "href": "talks/containers/revealjs.html#pet-vs-application-type",
+    "title": "Linux Containerization Technology",
+    "section": "Pet vs Application Type",
+    "text": "Pet vs Application Type\n\nPet\n\nDesigned to simulate a linux system\nOften used for virtual private servers\nE.G: LXC, Openvz\n\nApplication\n\nDesigned for ease of development and distribution of apps/services\nOCI based runners, like docker, podman, kubernetes, nomad"
+  },
+  {
+    "objectID": "talks/containers/revealjs.html#oci-standard",
+    "href": "talks/containers/revealjs.html#oci-standard",
+    "title": "Linux Containerization Technology",
+    "section": "OCI Standard",
+    "text": "OCI Standard\n\nNot to be confused with Oracle Cloud\nOpen Container Initiative\n\nStandardized Format for container images\n\nMake distributing services very, very easy"
+  },
+  {
+    "objectID": "talks/containers/revealjs.html#most-popular-docker-and-kubernetes",
+    "href": "talks/containers/revealjs.html#most-popular-docker-and-kubernetes",
+    "title": "Linux Containerization Technology",
+    "section": "Most Popular: Docker and Kubernetes",
+    "text": "Most Popular: Docker and Kubernetes\n\nDocker runs OCI images\n\nDocker Hub: Massive repository of images for every type of application\n\nKubernetes: Clustering software\n\nCan run OCI images across multiple machines at once"
+  },
+  {
+    "objectID": "talks/containers/revealjs.html#docker",
+    "href": "talks/containers/revealjs.html#docker",
+    "title": "Linux Containerization Technology",
+    "section": "Docker",
+    "text": "Docker\n\nSimple\nRuns as root\nOne daaemon, that autostarts, and handles containers as services\nDocker socket (/var/run/docker.sock), which can be served over the network\nDownside: runs as root, having access to the docker socket means you have root privileges"
+  },
+  {
+    "objectID": "talks/containers/revealjs.html#kubernetes",
+    "href": "talks/containers/revealjs.html#kubernetes",
+    "title": "Linux Containerization Technology",
+    "section": "Kubernetes",
+    "text": "Kubernetes\n\nA.K.A “k8s”\nExtremely powerful\nMassively complex, many moving parts"
+  },
+  {
+    "objectID": "talks/containers/revealjs.html#kubernetes-cont.",
+    "href": "talks/containers/revealjs.html#kubernetes-cont.",
+    "title": "Linux Containerization Technology",
+    "section": "Kubernetes (cont.)",
+    "text": "Kubernetes (cont.)\n\nDifferent Distributions of Kubernetes"
+  },
+  {
+    "objectID": "talks/containers/revealjs.html#others-container-orchetstrators",
+    "href": "talks/containers/revealjs.html#others-container-orchetstrators",
+    "title": "Linux Containerization Technology",
+    "section": "Others Container Orchetstrators",
+    "text": "Others Container Orchetstrators\n\nDocker Swarm Mode\n\nLiterally docker, but across multiple machines\n\nHashicorp Nomad\n\nIntegrates with many other Hashi products\nsupports the most runtimes out of any other option"
+  },
+  {
+    "objectID": "talks/containers/revealjs.html#high-performance-computing-hpc",
+    "href": "talks/containers/revealjs.html#high-performance-computing-hpc",
+    "title": "Linux Containerization Technology",
+    "section": "High Performance Computing (HPC)",
+    "text": "High Performance Computing (HPC)\n\nSciennce needs reproducibility\n\nSimulations ran using programs need to be ran using the same code\n\nSlurm, runs any jobs across a cluster, but is not reproducible\n\nBy using slurm to run singularity/apptainer (OCI runtimes), you get more reproducibility in science"
+  },
+  {
+    "objectID": "talks/containers/revealjs.html#cloud",
+    "href": "talks/containers/revealjs.html#cloud",
+    "title": "Linux Containerization Technology",
+    "section": "Cloud",
+    "text": "Cloud\n\nAWS, GCP, Oracle, etc offer containers as a service\nAlso offer managed kubernetes"
+  },
+  {
+    "objectID": "talks/containers/revealjs.html#ctf",
+    "href": "talks/containers/revealjs.html#ctf",
+    "title": "Linux Containerization Technology",
+    "section": "CTF",
+    "text": "CTF\n\nGo to ip address here\nYou are a researcher at the SCP"
   },
   {
     "objectID": "resume/index.html",

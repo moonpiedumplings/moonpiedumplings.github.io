@@ -319,9 +319,6 @@
       margin-right: 0; 
     }
   </style>
-  <script src="../../site_libs/quarto-diagram/mermaid.min.js"></script>
-  <script src="../../site_libs/quarto-diagram/mermaid-init.js"></script>
-  <link href="../../site_libs/quarto-diagram/mermaid.css" rel="stylesheet">
 </head>
 <body class="quarto-dark">
   <div class="reveal">
@@ -341,44 +338,32 @@ Jeffrey Fonseca
 </section>
 <section id="what-are-containers" class="slide level2">
 <h2>What are containers?</h2>
+<div class="scrollable" style="font-size: 80%;">
 <ul>
-<li>The operating system is made up of many building blocks</li>
-<li>Containers are</li>
+<li>The operating system is made up of many building blocks, almost always placed unevenly</li>
+<li>Container <em>runtimes</em> are a commmon platform that can be built off of</li>
 </ul>
-<div class="cell" data-reveal="true">
-<div class="cell-output-display">
-<div>
-<div>
-<pre class="mermaid mermaid-js">graph LR;
-    subgraph Hardware
-        CPU
-        Memory
-        Devices
-    end;
-
-    subgraph Kernel
-        API
-        Device_Management
-    end;
-
-    subgraph Operating_System
-        System_Services
-    end;
-
-    subgraph User
-        Application_Programs
-    end;
-
-    User --&gt; Operating_System;
-    Operating_System --&gt; Kernel;
-    Kernel --&gt; Hardware;
-</pre>
 </div>
+<aside class="notes">
+<ul>
+<li>Given a lego car, can you build a house on top of it?</li>
+<li>What if you put a platform on that lego car?</li>
+</ul>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+<div class="center">
+<p><img data-src="https://static.packt-cdn.com/products/9781838646554/graphics/assets/9a7b4405-e9e4-431b-b068-0883d1189150.png" style="object-fit: cover;;width:100.0%;height:100.0%"></p>
 </div>
-</div>
-</div>
-
-<img data-src="https://sherlockblaze.com/resources/img/c++/linux-building-blocks.png" class="r-stretch"></section>
+</section>
 <section id="history" class="slide level2">
 <h2>History</h2>
 <ul>
@@ -393,7 +378,138 @@ Jeffrey Fonseca
 <section id="benefits-and-downsides" class="slide level2">
 <h2>Benefits and Downsides</h2>
 <ul>
-<li>Containers do not have</li>
+<li>Containers use less memory, because
+<ul>
+<li>share the host kernel</li>
+<li>only contain what is necessary to use an application</li>
+<li>Identical parts of containers (layers) are shared in memory, saving more memory</li>
+</ul></li>
+<li>Not as secure as virtual machines
+<ul>
+<li>Container escape CVE’s are rare but fatal</li>
+<li>Very easy to configure, but misconfigurations can be fatal</li>
+<li>CTF will be a container escape one (with no CVEs)</li>
+</ul></li>
+</ul>
+</section>
+<section id="lxc-and-modern-containers" class="slide level2">
+<h2>LXC and modern containers</h2>
+<ul>
+<li>Many groups needed containers in mainline, so they contributed
+<ul>
+<li>namespaces, cgroups (google), and</li>
+</ul></li>
+<li>Eventually, LXC was the first iteration of modern container software
+<ul>
+<li>Docker was based of off lxc, but eventually switched to their own runtime</li>
+</ul></li>
+</ul>
+</section>
+<section id="pet-vs-application-type" class="slide level2">
+<h2>Pet vs Application Type</h2>
+<ul>
+<li>Pet
+<ul>
+<li>Designed to simulate a linux system</li>
+<li>Often used for virtual private servers</li>
+<li>E.G: LXC, Openvz</li>
+</ul></li>
+<li>Application
+<ul>
+<li>Designed for ease of development and distribution of apps/services</li>
+<li>OCI based runners, like docker, podman, kubernetes, nomad</li>
+</ul></li>
+</ul>
+</section>
+<section id="oci-standard" class="slide level2">
+<h2>OCI Standard</h2>
+<ul>
+<li>Not to be confused with Oracle Cloud</li>
+<li>Open Container Initiative
+<ul>
+<li>Standardized Format for container images</li>
+</ul></li>
+<li>Make distributing services very, very easy</li>
+</ul>
+</section>
+<section id="most-popular-docker-and-kubernetes" class="slide level2">
+<h2>Most Popular: Docker and Kubernetes</h2>
+<ul>
+<li>Docker runs OCI images
+<ul>
+<li>Docker Hub: Massive repository of images for every type of application</li>
+</ul></li>
+<li>Kubernetes: Clustering software
+<ul>
+<li>Can run OCI images across multiple machines at once</li>
+</ul></li>
+</ul>
+</section>
+<section id="docker" class="slide level2">
+<h2>Docker</h2>
+<ul>
+<li>Simple</li>
+<li>Runs as root</li>
+<li>One daaemon, that autostarts, and handles containers as services</li>
+<li>Docker socket (/var/run/docker.sock), which can be served over the network</li>
+<li>Downside: runs as root, having access to the docker socket means you have root privileges</li>
+</ul>
+</section>
+<section id="kubernetes" class="slide level2">
+<h2>Kubernetes</h2>
+<ul>
+<li>A.K.A “k8s”</li>
+<li>Extremely powerful</li>
+<li>Massively complex, many moving parts</li>
+</ul>
+
+<img data-src="https://cdn-images-1.medium.com/fit/c/800/471/1*yq0bky23otUFDU1DbUftGg.png" class="r-stretch"></section>
+<section id="kubernetes-cont." class="slide level2">
+<h2>Kubernetes (cont.)</h2>
+<ul>
+<li>Different Distributions of Kubernetes</li>
+</ul>
+
+<img data-src="https://storage.googleapis.com/cdn.thenewstack.io/media/2017/11/5aa59276-kube-02.png" class="r-stretch"></section>
+<section id="others-container-orchetstrators" class="slide level2">
+<h2>Others Container Orchetstrators</h2>
+<ul>
+<li>Docker Swarm Mode
+<ul>
+<li>Literally docker, but across multiple machines</li>
+</ul></li>
+<li>Hashicorp Nomad
+<ul>
+<li>Integrates with many other Hashi products</li>
+<li>supports the most runtimes out of any other option</li>
+</ul></li>
+</ul>
+</section>
+<section id="high-performance-computing-hpc" class="slide level2">
+<h2>High Performance Computing (HPC)</h2>
+<ul>
+<li>Sciennce needs reproducibility
+<ul>
+<li>Simulations ran using programs need to be ran using the same code</li>
+</ul></li>
+<li>Slurm, runs any <em>jobs</em> across a cluster, but is not reproducible
+<ul>
+<li>By using slurm to run singularity/apptainer (OCI runtimes), you get more reproducibility in science</li>
+</ul></li>
+</ul>
+</section>
+<section id="cloud" class="slide level2">
+<h2>Cloud</h2>
+<ul>
+<li>AWS, GCP, Oracle, etc offer containers as a service</li>
+<li>Also offer managed kubernetes</li>
+</ul>
+</section>
+<section id="ctf" class="slide level2">
+<h2>CTF</h2>
+<ul>
+<li>Go to ip address here</li>
+<li>You are a researcher at the SCP</li>
 </ul>
 
 <div class="footer footer-default">
