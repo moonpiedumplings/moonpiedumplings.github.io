@@ -50,7 +50,7 @@ For now, this is just some research on available public models.
 
 I need a survey software that integrates with the transformers that I will be running. They must be FOSS, and run entirely on my machines, for privacy reasons.
 
- ### Option 1: Limesurvey:
+### Option 1: Limesurvey:
 
 <https://github.com/LimeSurvey/LimeSurvey> 
 
@@ -83,6 +83,36 @@ There is an unofficial python api: <https://pypi.org/project/pykobo/>. However, 
 ### Option 4: OpenForis Collect
 
 Has a [mobile app](https://openforis.org/tools/collect-mobile/), which can request users to take a photo. Only available on android.
+
+
+
+## Deployment
+
+I was going to go with limesurvey, in part because it was the first option I tried, and it was mostly satisfactory, and I didn't have enough time to try anything else. 
+
+I found a [docker-compose](https://github.com/martialblog/docker-limesurvey) for it on github, however, I realized something: My server's cannot install docker normally, because that is potentially compatible with my future [openstack](../build-server-2/) install. Uh oh. 
+
+I installed docker using kolla-ansible's bootstrap steps, but that version of docker did not have networking working properly. So I decided to do something different: podman.
+
+However, because I am using Rocky Linux, there is no podman-compose, or docker-compose available in the repositories. In addition to that, I cannot install the podman-docker command, providing a replacement cli for docker that actually uses podman, as that conflicts with docker. 
+
+Thankfully, you can use an [environment variable](https://podman-desktop.io/docs/migrating-from-docker/using-the-docker_host-environment-variable) to make it so that the docker client, is actually using podman as a backend. This allows me to use the included `docker compose` command. 
+
+
+```{.default}
+
+systemctl start podman.service # or enable --now
+
+export DOCKER_HOST=unix:///run/podman/podman.sock
+```
+
+And with this, I can run `docker compose`, but it's actually using podman.
+
+
+
+
+
+
 
 
 
