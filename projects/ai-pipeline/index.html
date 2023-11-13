@@ -21,6 +21,40 @@ ul.task-list li input[type="checkbox"] {
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
 }
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
 </style>
 
 
@@ -130,10 +164,12 @@ ul.task-list li input[type="checkbox"] {
   <li><a href="#models" id="toc-models" class="nav-link" data-scroll-target="#models">Models</a></li>
   <li><a href="#survey-software" id="toc-survey-software" class="nav-link" data-scroll-target="#survey-software">Survey Software</a>
   <ul class="collapse">
+  <li><a href="#option-1-limesurvey" id="toc-option-1-limesurvey" class="nav-link" data-scroll-target="#option-1-limesurvey">Option 1: Limesurvey:</a></li>
   <li><a href="#option-2-odoo-survey" id="toc-option-2-odoo-survey" class="nav-link" data-scroll-target="#option-2-odoo-survey">Option 2: Odoo Survey</a></li>
   <li><a href="#option-3-kobotoolbox" id="toc-option-3-kobotoolbox" class="nav-link" data-scroll-target="#option-3-kobotoolbox">Option 3: Kobotoolbox</a></li>
   <li><a href="#option-4-openforis-collect" id="toc-option-4-openforis-collect" class="nav-link" data-scroll-target="#option-4-openforis-collect">Option 4: OpenForis Collect</a></li>
   </ul></li>
+  <li><a href="#deployment" id="toc-deployment" class="nav-link" data-scroll-target="#deployment">Deployment</a></li>
   </ul></li>
   </ul>
 </nav>
@@ -187,12 +223,14 @@ ul.task-list li input[type="checkbox"] {
 <section id="survey-software" class="level2">
 <h2 class="anchored" data-anchor-id="survey-software">Survey Software</h2>
 <p>I need a survey software that integrates with the transformers that I will be running. They must be FOSS, and run entirely on my machines, for privacy reasons.</p>
-<p>### Option 1: Limesurvey:</p>
+<section id="option-1-limesurvey" class="level3">
+<h3 class="anchored" data-anchor-id="option-1-limesurvey">Option 1: Limesurvey:</h3>
 <p><a href="https://github.com/LimeSurvey/LimeSurvey" class="uri">https://github.com/LimeSurvey/LimeSurvey</a></p>
 <p>Many of the docker images seem to be a bit outdated, and I can’t find an official one.</p>
 <p>Thankfully, there exists a Nixos <a href="https://search.nixos.org/packages?channel=23.05&amp;show=limesurvey&amp;size=50&amp;sort=relevance&amp;type=packages&amp;query=limesurvey">package</a> and <a href="https://search.nixos.org/options?channel=23.05&amp;show=limesurvey&amp;size=50&amp;sort=relevance&amp;type=packages&amp;query=limesurvey">service</a> for it, meaning that will be fairly easy to deploy.</p>
 <p>It supports <a href="https://manual.limesurvey.org/Question_type_-_File_upload">file upload</a>, but no image upload.</p>
 <p>This one also has a python library to interact with it, so I can import data straight from there and plug it into a ML model.</p>
+</section>
 <section id="option-2-odoo-survey" class="level3">
 <h3 class="anchored" data-anchor-id="option-2-odoo-survey">Option 2: Odoo Survey</h3>
 <p><a href="https://github.com/odoo/odoo" class="uri">https://github.com/odoo/odoo</a></p>
@@ -209,9 +247,22 @@ ul.task-list li input[type="checkbox"] {
 <section id="option-4-openforis-collect" class="level3">
 <h3 class="anchored" data-anchor-id="option-4-openforis-collect">Option 4: OpenForis Collect</h3>
 <p>Has a <a href="https://openforis.org/tools/collect-mobile/">mobile app</a>, which can request users to take a photo. Only available on android.</p>
-
-
 </section>
+</section>
+<section id="deployment" class="level2">
+<h2 class="anchored" data-anchor-id="deployment">Deployment</h2>
+<p>I was going to go with limesurvey, in part because it was the first option I tried, and it was mostly satisfactory, and I didn’t have enough time to try anything else.</p>
+<p>I found a <a href="https://github.com/martialblog/docker-limesurvey">docker-compose</a> for it on github, however, I realized something: My server’s cannot install docker normally, because that is potentially compatible with my future <a href="../build-server-2/">openstack</a> install. Uh oh.</p>
+<p>I installed docker using kolla-ansible’s bootstrap steps, but that version of docker did not have networking working properly. So I decided to do something different: podman.</p>
+<p>However, because I am using Rocky Linux, there is no podman-compose, or docker-compose available in the repositories. In addition to that, I cannot install the podman-docker command, providing a replacement cli for docker that actually uses podman, as that conflicts with docker.</p>
+<p>Thankfully, you can use an <a href="https://podman-desktop.io/docs/migrating-from-docker/using-the-docker_host-environment-variable">environment variable</a> to make it so that the docker client, is actually using podman as a backend. This allows me to use the included <code>docker compose</code> command.</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>systemctl start podman.service # or enable --now</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>export DOCKER_HOST=unix:///run/podman/podman.sock</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>And with this, I can run <code>docker compose</code>, but it’s actually using podman.</p>
+
+
 </section>
 </section>
 
