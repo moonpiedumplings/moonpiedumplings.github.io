@@ -1,0 +1,123 @@
+---
+title: "CCDC Environment setup"
+date: "2023-11-15"
+categories: [linux]
+format:
+  html:
+    code-fold: true
+    code-summary: "Show the code"
+    code-block-background: true
+execute:
+  freeze: true
+---
+
+This will be the guide(s) on how to set up your environment for CCDC playing, and development. I hope to make videos, but right now I'm just taking notes.
+
+
+# Windows
+
+## Playing
+
+First, in Windows "Programs and features", enable WSL and the virtualization platform. It might be enabled already, if it isn't, reboot after enabling it.
+
+![](https://code.visualstudio.com/assets/docs/remote/wsl-tutorial/windows-features.png)
+
+From a powershell window:
+
+`wsl --install debian`
+
+It's going to ask you for some prompts. Because this is a development environment, focusing on speed rather than security, I recommend an easy to type username and password. 
+
+While inside the debian, create the file `/etc/wsl.conf` with contents as so:
+
+```{.ini filename="/etc/wsl.conf"}
+[boot]
+systemd=true
+```
+
+While not necessary, I also recommend editing the sudoers file to not require a password:
+
+To edit the sudo file, you can use `sudo visudo` to edit it safely. This command while check the sudoers file for errors, rather than instantly breaking sudo. 
+
+```{.default filename="/etc/sudoers"}
+# Change the portion of the file that refers to wheel to look like this:
+
+%wheel ALL=(ALL:ALL) NOPASSWD: ALL
+```
+
+
+Install docker and docker-compose (and curl and git, other tools we will need later):
+
+`sudo apt install docker.io docker-compose curl git ssh`
+
+You might have to reboot here, before the next step will work. Maybe.
+
+`sudo systemctl enable --now docker.service`
+
+`sudo usermod -aG docker $USER # Run docker without sudo`
+
+Either reboot, or restart the wsl virtual machine.
+
+To restart the WSL vm, from **powershell** or **cmd**:
+
+`wsl --shutdown debian`
+
+And then relaunch with `wsl --launch debian # is this the right command? I'm going from memory`
+
+Install nix (tool used to manage our development environments):
+
+`curl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix | sh -s -- install`
+
+Update the nix channels:
+
+`sudo nix-channel --add https://nixos.org/channels/nixpkgs-unstable nixpkgs`
+
+`sudo nix-channel --update`
+
+
+
+
+## Development
+
+Within windows: Install virtualbox. 
+
+
+Virtualbox and wsl at the same time is a bit tricky, so you have to follow [this stackoverflow answer](https://stackoverflow.com/a/69896662)
+
+
+Now install vscode, connect it to wsl. 
+
+
+
+Install these vscode extensions, and their dependencies:
+* Ansible
+* Quarto
+
+
+
+
+# Playing and Developing
+
+### Playing
+
+`git clone https://github.com/CSUN-CCDC/CCDC-2023`
+
+When in the root of this git repo, you can run `nix-shell` to get a full development environment. It includes tools like ansible linting, vagrant, as well. 
+
+
+
+
+# Also to look into
+
+These are personal notes, for myself and anyone else who wants to work on this guide.
+
+<https://docs.docker.com/desktop/wsl/>
+
+
+<https://code.visualstudio.com/docs/remote/wsl>
+
+I don't like, we don't need or want remote development
+
+<https://code.visualstudio.com/docs/remote/wsl-tutorial>
+
+<https://learn.microsoft.com/en-us/windows/wsl/tutorials/wsl-vscode>

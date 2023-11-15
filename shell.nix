@@ -1,6 +1,6 @@
 let
     pkgs = import <nixpkgs> {};
-    quarto = pkgs.callPackage ./env/quarto.nix {};
+    #quarto = pkgs.callPackage ./env/quarto.nix {};
     python3 = pkgs.python311;
     pythonDeps = ps: with ps; [ 
 		jupyter notebook qtconsole jupyter_console 
