@@ -6,9 +6,9 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
-<meta name="description" content="Guides I’ve written. I keep this on the internet, so I can easily send these to people that need help.">
+<meta name="dcterms.date" content="2023-11-15">
 
-<title>Jeffrey Fonseca - Guides</title>
+<title>Jeffrey Fonseca - CCDC Environment setup</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -21,27 +21,59 @@ ul.task-list li input[type="checkbox"] {
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
 }
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
 </style>
 
 
-<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
-<script src="../site_libs/quarto-nav/headroom.min.js"></script>
-<script src="../site_libs/clipboard/clipboard.min.js"></script>
-<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
-<script src="../site_libs/quarto-search/fuse.min.js"></script>
-<script src="../site_libs/quarto-search/quarto-search.js"></script>
-<meta name="quarto:offset" content="../">
-<script src="../site_libs/quarto-listing/list.min.js"></script>
-<script src="../site_libs/quarto-listing/quarto-listing.js"></script>
-<script src="../site_libs/quarto-html/quarto.js"></script>
-<script src="../site_libs/quarto-html/popper.min.js"></script>
-<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
-<script src="../site_libs/quarto-html/anchor.min.js"></script>
-<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../site_libs/quarto-html/quarto-syntax-highlighting-dark.css" rel="stylesheet" id="quarto-text-highlighting-styles">
-<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
-<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="dark">
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<script src="../../site_libs/quarto-html/quarto.js"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="dark">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -62,40 +94,9 @@ ul.task-list li input[type="checkbox"] {
     "search-label": "Search"
   }
 }</script>
-<script>
 
-  window.document.addEventListener("DOMContentLoaded", function (_event) {
-    const listingTargetEl = window.document.querySelector('#listing-listing .list');
-    if (!listingTargetEl) {
-      // No listing discovered, do not attach.
-      return; 
-    }
 
-    const options = {
-      valueNames: ['listing-date','listing-title','listing-author',{ data: ['index'] },{ data: ['categories'] },{ data: ['listing-date-sort'] },{ data: ['listing-title-sort'] }],
-      
-      searchColumns: ["listing-date","listing-title","listing-author"],
-    };
-
-    window['quarto-listings'] = window['quarto-listings'] || {};
-    window['quarto-listings']['listing-listing'] = new List('listing-listing', options);
-
-    if (window['quarto-listing-loaded']) {
-      window['quarto-listing-loaded']();
-    }
-  });
-
-  window.addEventListener('hashchange',() => {
-    if (window['quarto-listing-loaded']) {
-      window['quarto-listing-loaded']();
-    }
-  })
-  </script>
-
-  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
-  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
-
-<link rel="stylesheet" href="../styles.css">
+<link rel="stylesheet" href="../../styles.css">
 </head>
 
 <body class="nav-fixed">
@@ -105,7 +106,7 @@ ul.task-list li input[type="checkbox"] {
     <nav class="navbar navbar-expand-lg navbar-dark ">
       <div class="navbar-container container-fluid">
       <div class="navbar-brand-container">
-    <a class="navbar-brand" href="../index.html">
+    <a class="navbar-brand" href="../../index.html">
     <span class="navbar-title">Jeffrey Fonseca</span>
     </a>
   </div>
@@ -116,23 +117,23 @@ ul.task-list li input[type="checkbox"] {
           <div class="collapse navbar-collapse" id="navbarCollapse">
             <ul class="navbar-nav navbar-nav-scroll me-auto">
   <li class="nav-item">
-    <a class="nav-link" href="../projects/index.html" rel="" target="">
+    <a class="nav-link" href="../../projects/index.html" rel="" target="">
  <span class="menu-text">Projects</span></a>
   </li>  
   <li class="nav-item">
-    <a class="nav-link" href="../blog/index.html" rel="" target="">
+    <a class="nav-link" href="../../blog/index.html" rel="" target="">
  <span class="menu-text">Blog</span></a>
   </li>  
   <li class="nav-item">
-    <a class="nav-link" href="../playground/index.html" rel="" target="">
+    <a class="nav-link" href="../../playground/index.html" rel="" target="">
  <span class="menu-text">Playground</span></a>
   </li>  
   <li class="nav-item">
-    <a class="nav-link active" href="../guides/index.html" rel="" target="" aria-current="page">
+    <a class="nav-link" href="../../guides/index.html" rel="" target="">
  <span class="menu-text">Guides</span></a>
   </li>  
   <li class="nav-item">
-    <a class="nav-link" href="../talks/index.html" rel="" target="">
+    <a class="nav-link" href="../../talks/index.html" rel="" target="">
  <span class="menu-text">Talks</span></a>
   </li>  
 </ul>
@@ -150,166 +151,128 @@ ul.task-list li input[type="checkbox"] {
     </nav>
 </header>
 <!-- content -->
-<header id="title-block-header" class="quarto-title-block default page-columns page-full">
-  <div class="quarto-title-banner page-columns page-full">
-    <div class="quarto-title column-page-left">
-      <h1 class="title">Guides</h1>
-                  <div>
-        <div class="description">
-          Guides I’ve written. I keep this on the internet, so I can easily send these to people that need help.
-        </div>
-      </div>
-                </div>
-  </div>
-    
-  
-  <div class="quarto-title-meta">
-
-      
-    
-      
-    </div>
-    
-  
-  </header><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-full page-navbar">
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
 <!-- sidebar -->
 <!-- margin-sidebar -->
     <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
-        
-    <h5 class="quarto-listing-category-title">Categories</h5><div class="quarto-listing-category category-default"><div class="category" data-category="">All <span class="quarto-category-count">(9)</span></div><div class="category" data-category="aws">aws <span class="quarto-category-count">(1)</span></div><div class="category" data-category="devops">devops <span class="quarto-category-count">(2)</span></div><div class="category" data-category="docker">docker <span class="quarto-category-count">(1)</span></div><div class="category" data-category="ec2">ec2 <span class="quarto-category-count">(1)</span></div><div class="category" data-category="git">git <span class="quarto-category-count">(2)</span></div><div class="category" data-category="linux">linux <span class="quarto-category-count">(7)</span></div><div class="category" data-category="nginx">nginx <span class="quarto-category-count">(1)</span></div><div class="category" data-category="nix">nix <span class="quarto-category-count">(1)</span></div></div></div>
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#windows" id="toc-windows" class="nav-link active" data-scroll-target="#windows">Windows</a>
+  <ul class="collapse">
+  <li><a href="#playing" id="toc-playing" class="nav-link" data-scroll-target="#playing">Playing</a></li>
+  <li><a href="#development" id="toc-development" class="nav-link" data-scroll-target="#development">Development</a></li>
+  </ul></li>
+  <li><a href="#playing-and-developing" id="toc-playing-and-developing" class="nav-link" data-scroll-target="#playing-and-developing">Playing and Developing</a>
+  <ul class="collapse">
+  <li><a href="#playing-1" id="toc-playing-1" class="nav-link" data-scroll-target="#playing-1">Playing</a></li>
+  </ul></li>
+  <li><a href="#also-to-look-into" id="toc-also-to-look-into" class="nav-link" data-scroll-target="#also-to-look-into">Also to look into</a></li>
+  </ul>
+</nav>
+    </div>
 <!-- main -->
-<main class="content quarto-banner-title-block column-page-left" id="quarto-document-content">
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">CCDC Environment setup</h1>
+  <div class="quarto-categories">
+    <div class="quarto-category">linux</div>
+  </div>
+  </div>
 
 
 
+<div class="quarto-title-meta">
 
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">November 15, 2023</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
 
+</header>
 
-
-
-<div class="quarto-listing quarto-listing-container-table" id="listing-listing">
-
-<table class="quarto-listing-table table">
-<thead>
-<tr>
-<th>
-Date
-</th>
-<th>
-Title
-</th>
-<th>
-Author
-</th>
-</tr>
-</thead>
-<tbody class="list">
-<tr data-index="0" data-categories="linux" data-listing-date-sort="1700006400000" data-listing-file-modified-sort="1700091794863" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="2" data-listing-title-sort="CCDC Environment setup" data-listing-filename-sort="index.qmd">
-<td>
-<span class="listing-date">Nov 15, 2023</span>
-</td>
-<td>
-<a href="../guides/ccdc-env/index.html" class="title listing-title">CCDC Environment setup</a>
-</td>
-<td>
-<span class="listing-author"></span>
-</td>
-</tr>
-<tr data-index="1" data-categories="linux" data-listing-date-sort="1698451200000" data-listing-file-modified-sort="1700091794863" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="2" data-listing-title-sort="CCDC Learning Resources" data-listing-filename-sort="index.qmd">
-<td>
-<span class="listing-date">Oct 28, 2023</span>
-</td>
-<td>
-<a href="../guides/ccdc-learning/index.html" class="title listing-title">CCDC Learning Resources</a>
-</td>
-<td>
-<span class="listing-author"></span>
-</td>
-</tr>
-<tr data-index="2" data-categories="linux" data-listing-date-sort="1691366400000" data-listing-file-modified-sort="1700091794871" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="2" data-listing-title-sort="Tmux" data-listing-filename-sort="index.qmd">
-<td>
-<span class="listing-date">Aug 7, 2023</span>
-</td>
-<td>
-<a href="../guides/tmux/index.html" class="title listing-title">Tmux</a>
-</td>
-<td>
-<span class="listing-author"></span>
-</td>
-</tr>
-<tr data-index="3" data-categories="git" data-listing-date-sort="1687910400000" data-listing-file-modified-sort="1700091794871" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="4" data-listing-title-sort="Git" data-listing-filename-sort="index.qmd">
-<td>
-<span class="listing-date">Jun 28, 2023</span>
-</td>
-<td>
-<a href="../guides/git/index.html" class="title listing-title">Git</a>
-</td>
-<td>
-<span class="listing-author"></span>
-</td>
-</tr>
-<tr data-index="4" data-categories="linux" data-listing-date-sort="1686787200000" data-listing-file-modified-sort="1700091794875" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="5" data-listing-title-sort="Urestricted Wifi/Hotspot as long as you have one unlimited device" data-listing-filename-sort="index.qmd">
-<td>
-<span class="listing-date">Jun 15, 2023</span>
-</td>
-<td>
-<a href="../guides/unrestricted-tethering/index.html" class="title listing-title">Urestricted Wifi/Hotspot as long as you have one unlimited device</a>
-</td>
-<td>
-<span class="listing-author"></span>
-</td>
-</tr>
-<tr data-index="5" data-categories="nix,git" data-listing-date-sort="1686441600000" data-listing-file-modified-sort="1700091794871" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="4" data-listing-title-sort="Installing the nix package manager and how it's useful" data-listing-filename-sort="index.qmd">
-<td>
-<span class="listing-date">Jun 11, 2023</span>
-</td>
-<td>
-<a href="../guides/nix-fun/index.html" class="title listing-title">Installing the nix package manager and how it’s useful</a>
-</td>
-<td>
-<span class="listing-author"></span>
-</td>
-</tr>
-<tr data-index="6" data-categories="linux,devops,nginx" data-listing-date-sort="1677542400000" data-listing-file-modified-sort="1700091794871" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="4" data-listing-title-sort="Nginx proxy manager" data-listing-filename-sort="index.qmd">
-<td>
-<span class="listing-date">Feb 28, 2023</span>
-</td>
-<td>
-<a href="../guides/npm/index.html" class="title listing-title">Nginx proxy manager</a>
-</td>
-<td>
-<span class="listing-author"></span>
-</td>
-</tr>
-<tr data-index="7" data-categories="linux,devops" data-listing-date-sort="1676332800000" data-listing-file-modified-sort="1700091794871" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="2" data-listing-title-sort="How to get a subdomain from duckdns" data-listing-filename-sort="index.qmd">
-<td>
-<span class="listing-date">Feb 14, 2023</span>
-</td>
-<td>
-<a href="../guides/duckdns/index.html" class="title listing-title">How to get a subdomain from duckdns</a>
-</td>
-<td>
-<span class="listing-author"></span>
-</td>
-</tr>
-<tr data-index="8" data-categories="aws,ec2,docker,linux" data-listing-date-sort="1664496000000" data-listing-file-modified-sort="1700091794863" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="3" data-listing-title-sort="Setting up cockpit" data-listing-filename-sort="index.qmd">
-<td>
-<span class="listing-date">Sep 30, 2022</span>
-</td>
-<td>
-<a href="../guides/cockpit-setup/index.html" class="title listing-title">Setting up cockpit</a>
-</td>
-<td>
-<span class="listing-author"></span>
-</td>
-</tr>
-</tbody>
-
-</table>
-<div class="listing-no-matching d-none">
-No matching items
+<p>This will be the guide(s) on how to set up your environment for CCDC playing, and development. I hope to make videos, but right now I’m just taking notes.</p>
+<section id="windows" class="level1">
+<h1>Windows</h1>
+<section id="playing" class="level2">
+<h2 class="anchored" data-anchor-id="playing">Playing</h2>
+<p>First, in Windows “Programs and features”, enable WSL and the virtualization platform. It might be enabled already, if it isn’t, reboot after enabling it.</p>
+<p><img src="https://code.visualstudio.com/assets/docs/remote/wsl-tutorial/windows-features.png" class="img-fluid"></p>
+<p>From a powershell window:</p>
+<p><code>wsl --install debian</code></p>
+<p>It’s going to ask you for some prompts. Because this is a development environment, focusing on speed rather than security, I recommend an easy to type username and password.</p>
+<p>While inside the debian, create the file <code>/etc/wsl.conf</code> with contents as so:</p>
+<div class="code-with-filename">
+<div class="code-with-filename-file">
+<pre><strong>/etc/wsl.conf</strong></pre>
 </div>
-</div></main> <!-- /main -->
+<div class="sourceCode" id="cb1"><pre class="sourceCode ini code-with-copy"><code class="sourceCode ini"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">[boot]</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="dt">systemd</span><span class="ot">=</span><span class="kw">true</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>While not necessary, I also recommend editing the sudoers file to not require a password:</p>
+<p>To edit the sudo file, you can use <code>sudo visudo</code> to edit it safely. This command while check the sudoers file for errors, rather than instantly breaking sudo.</p>
+<div class="code-with-filename">
+<div class="code-with-filename-file">
+<pre><strong>/etc/sudoers</strong></pre>
+</div>
+<div class="sourceCode" id="cb2"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a># Change the portion of the file that refers to wheel to look like this:</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>%wheel ALL=(ALL:ALL) NOPASSWD: ALL</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Install docker and docker-compose (and curl and git, other tools we will need later):</p>
+<p><code>sudo apt install docker.io docker-compose curl git ssh</code></p>
+<p>You might have to reboot here, before the next step will work. Maybe.</p>
+<p><code>sudo systemctl enable --now docker.service</code></p>
+<p><code>sudo usermod -aG docker $USER # Run docker without sudo</code></p>
+<p>Either reboot, or restart the wsl virtual machine.</p>
+<p>To restart the WSL vm, from <strong>powershell</strong> or <strong>cmd</strong>:</p>
+<p><code>wsl --shutdown debian</code></p>
+<p>And then relaunch with <code>wsl --launch debian # is this the right command? I'm going from memory</code></p>
+<p>Install nix (tool used to manage our development environments):</p>
+<p><code>curl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix | sh -s -- install</code></p>
+<p>Update the nix channels:</p>
+<p><code>sudo nix-channel --add https://nixos.org/channels/nixpkgs-unstable nixpkgs</code></p>
+<p><code>sudo nix-channel --update</code></p>
+</section>
+<section id="development" class="level2">
+<h2 class="anchored" data-anchor-id="development">Development</h2>
+<p>Within windows: Install virtualbox.</p>
+<p>Virtualbox and wsl at the same time is a bit tricky, so you have to follow <a href="https://stackoverflow.com/a/69896662">this stackoverflow answer</a></p>
+<p>Now install vscode, connect it to wsl.</p>
+<p>Install these vscode extensions, and their dependencies: * Ansible * Quarto</p>
+</section>
+</section>
+<section id="playing-and-developing" class="level1">
+<h1>Playing and Developing</h1>
+<section id="playing-1" class="level3">
+<h3 class="anchored" data-anchor-id="playing-1">Playing</h3>
+<p><code>git clone https://github.com/CSUN-CCDC/CCDC-2023</code></p>
+<p>When in the root of this git repo, you can run <code>nix-shell</code> to get a full development environment. It includes tools like ansible linting, vagrant, as well.</p>
+</section>
+</section>
+<section id="also-to-look-into" class="level1">
+<h1>Also to look into</h1>
+<p>These are personal notes, for myself and anyone else who wants to work on this guide.</p>
+<p><a href="https://docs.docker.com/desktop/wsl/" class="uri">https://docs.docker.com/desktop/wsl/</a></p>
+<p><a href="https://code.visualstudio.com/docs/remote/wsl" class="uri">https://code.visualstudio.com/docs/remote/wsl</a></p>
+<p>I don’t like, we don’t need or want remote development</p>
+<p><a href="https://code.visualstudio.com/docs/remote/wsl-tutorial" class="uri">https://code.visualstudio.com/docs/remote/wsl-tutorial</a></p>
+<p><a href="https://learn.microsoft.com/en-us/windows/wsl/tutorials/wsl-vscode" class="uri">https://learn.microsoft.com/en-us/windows/wsl/tutorials/wsl-vscode</a></p>
+
+
+</section>
+
+</main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">
 window.document.addEventListener("DOMContentLoaded", function (event) {
   const toggleBodyColorMode = (bsSheetEl) => {
