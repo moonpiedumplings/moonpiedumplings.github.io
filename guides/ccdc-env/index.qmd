@@ -24,37 +24,47 @@ First, in Windows "Programs and features", enable WSL and the virtualization pla
 
 From a powershell window:
 
+
+`wsl --update`
+
+You may need to reboot
+
 `wsl --install debian`
 
 It's going to ask you for some prompts. Because this is a development environment, focusing on speed rather than security, I recommend an easy to type username and password. 
 
-While inside the debian, create the file `/etc/wsl.conf` with contents as so:
+Go back to the powershell, for some further configurations:
+
+`wsl --set-version debian 2`
+
+`wsl --set-default debian`
+
+
+Now, while inside the debian, create the file `/etc/wsl.conf` with contents as so:
 
 ```{.ini filename="/etc/wsl.conf"}
 [boot]
 systemd=true
 ```
 
-While not necessary, I also recommend editing the sudoers file to not require a password:
+Edit the sudoers file:
 
-To edit the sudo file, you can use `sudo visudo` to edit it safely. This command while check the sudoers file for errors, rather than instantly breaking sudo. 
+To edit the sudo file, you can use `sudo visudo` to edit it safely. This command while check the sudoers file for errors, rather than instantly breaking sudo upon a misconfiguration.
 
 ```{.default filename="/etc/sudoers"}
+# Change the portion of the file referring to env_reset to look like this:
+# Put an "!" in front of env_reset, and comment out the part referring to secure path
+
+Defaults        !env_reset
+Defaults        mail_badpass
+#Defaults       secure_path="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin" 
+
+
+
 # Change the portion of the file that refers to wheel to look like this:
 
-%wheel ALL=(ALL:ALL) NOPASSWD: ALL
+%sudo ALL=(ALL:ALL) NOPASSWD: ALL
 ```
-
-
-Install docker and docker-compose (and curl and git, other tools we will need later):
-
-`sudo apt install docker.io docker-compose curl git ssh`
-
-You might have to reboot here, before the next step will work. Maybe.
-
-`sudo systemctl enable --now docker.service`
-
-`sudo usermod -aG docker $USER # Run docker without sudo`
 
 Either reboot, or restart the wsl virtual machine.
 
@@ -62,17 +72,32 @@ To restart the WSL vm, from **powershell** or **cmd**:
 
 `wsl --shutdown debian`
 
-And then relaunch with `wsl --launch debian # is this the right command? I'm going from memory`
+And then relaunch the debian virtual machine. 
+
+
+Update and upgrade: `sudo apt update && sudo apt upgrade`
+
+
+Install docker and docker-compose (and curl and git, other tools we will need later):
+
+`sudo apt install docker.io docker-compose curl git ssh wget`
+
+You might have to reboot here, before the next step will work. Maybe.
+
+`sudo usermod -aG docker $USER # Run docker without sudo`
+
 
 Install nix (tool used to manage our development environments):
 
 `curl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix | sh -s -- install`
 
+Restart your shell. Simply close and reopen the debian terminal. 
+
 Update the nix channels:
 
-`sudo nix-channel --add https://nixos.org/channels/nixpkgs-unstable nixpkgs`
+`nix-channel --add https://nixos.org/channels/nixpkgs-unstable nixpkgs`
 
-`sudo nix-channel --update`
+`nix-channel --update`
 
 
 
@@ -85,14 +110,29 @@ Within windows: Install virtualbox.
 Virtualbox and wsl at the same time is a bit tricky, so you have to follow [this stackoverflow answer](https://stackoverflow.com/a/69896662)
 
 
-Now install vscode, connect it to wsl. 
+Now install vscode, from the website: 
 
 
 
-Install these vscode extensions, and their dependencies:
-* Ansible
-* Quarto
+Install these vscode extensions, and their dependencies (should be pulled automatically):
 
+* [Ansible](https://marketplace.visualstudio.com/items?itemName=redhat.ansible)
+* [Quarto](https://marketplace.visualstudio.com/items?itemName=quarto.quarto)
+* [WSL](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-wsl)
+
+
+
+# Macos
+
+Install nix (tool used to manage our development environments):
+
+`curl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix | sh -s -- install`
+
+Update the nix channels:
+
+`sudo nix-channel --add https://nixos.org/channels/nixpkgs-unstable nixpkgs`
+
+`sudo nix-channel --update`
 
 
 
