@@ -164,6 +164,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#playing" id="toc-playing" class="nav-link" data-scroll-target="#playing">Playing</a></li>
   <li><a href="#development" id="toc-development" class="nav-link" data-scroll-target="#development">Development</a></li>
   </ul></li>
+  <li><a href="#macos" id="toc-macos" class="nav-link" data-scroll-target="#macos">Macos</a></li>
   <li><a href="#playing-and-developing" id="toc-playing-and-developing" class="nav-link" data-scroll-target="#playing-and-developing">Playing and Developing</a>
   <ul class="collapse">
   <li><a href="#playing-1" id="toc-playing-1" class="nav-link" data-scroll-target="#playing-1">Playing</a></li>
@@ -209,9 +210,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>First, in Windows “Programs and features”, enable WSL and the virtualization platform. It might be enabled already, if it isn’t, reboot after enabling it.</p>
 <p><img src="https://code.visualstudio.com/assets/docs/remote/wsl-tutorial/windows-features.png" class="img-fluid"></p>
 <p>From a powershell window:</p>
+<p><code>wsl --update</code></p>
+<p>You may need to reboot</p>
 <p><code>wsl --install debian</code></p>
 <p>It’s going to ask you for some prompts. Because this is a development environment, focusing on speed rather than security, I recommend an easy to type username and password.</p>
-<p>While inside the debian, create the file <code>/etc/wsl.conf</code> with contents as so:</p>
+<p>Go back to the powershell, for some further configurations:</p>
+<p><code>wsl --set-version debian 2</code></p>
+<p><code>wsl --set-default debian</code></p>
+<p>Now, while inside the debian, create the file <code>/etc/wsl.conf</code> with contents as so:</p>
 <div class="code-with-filename">
 <div class="code-with-filename-file">
 <pre><strong>/etc/wsl.conf</strong></pre>
@@ -219,38 +225,61 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="sourceCode" id="cb1"><pre class="sourceCode ini code-with-copy"><code class="sourceCode ini"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">[boot]</span></span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="dt">systemd</span><span class="ot">=</span><span class="kw">true</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>While not necessary, I also recommend editing the sudoers file to not require a password:</p>
-<p>To edit the sudo file, you can use <code>sudo visudo</code> to edit it safely. This command while check the sudoers file for errors, rather than instantly breaking sudo.</p>
+<p>Edit the sudoers file:</p>
+<p>To edit the sudo file, you can use <code>sudo visudo</code> to edit it safely. This command while check the sudoers file for errors, rather than instantly breaking sudo upon a misconfiguration.</p>
 <div class="code-with-filename">
 <div class="code-with-filename-file">
 <pre><strong>/etc/sudoers</strong></pre>
 </div>
-<div class="sourceCode" id="cb2"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a># Change the portion of the file that refers to wheel to look like this:</span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>%wheel ALL=(ALL:ALL) NOPASSWD: ALL</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb2"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a># Change the portion of the file referring to env_reset to look like this:</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a># Put an "!" in front of env_reset, and comment out the part referring to secure path</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>Defaults        !env_reset</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>Defaults        mail_badpass</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>#Defaults       secure_path="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin" </span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a># Change the portion of the file that refers to wheel to look like this:</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>%sudo ALL=(ALL:ALL) NOPASSWD: ALL</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>Install docker and docker-compose (and curl and git, other tools we will need later):</p>
-<p><code>sudo apt install docker.io docker-compose curl git ssh</code></p>
-<p>You might have to reboot here, before the next step will work. Maybe.</p>
-<p><code>sudo systemctl enable --now docker.service</code></p>
-<p><code>sudo usermod -aG docker $USER # Run docker without sudo</code></p>
 <p>Either reboot, or restart the wsl virtual machine.</p>
 <p>To restart the WSL vm, from <strong>powershell</strong> or <strong>cmd</strong>:</p>
 <p><code>wsl --shutdown debian</code></p>
-<p>And then relaunch with <code>wsl --launch debian # is this the right command? I'm going from memory</code></p>
+<p>And then relaunch the debian virtual machine.</p>
+<p>Update and upgrade: <code>sudo apt update &amp;&amp; sudo apt upgrade</code></p>
+<p>Install docker and docker-compose (and curl and git, other tools we will need later):</p>
+<p><code>sudo apt install docker.io docker-compose curl git ssh wget</code></p>
+<p>You might have to reboot here, before the next step will work. Maybe.</p>
+<p><code>sudo usermod -aG docker $USER # Run docker without sudo</code></p>
 <p>Install nix (tool used to manage our development environments):</p>
 <p><code>curl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix | sh -s -- install</code></p>
+<p>Restart your shell. Simply close and reopen the debian terminal.</p>
 <p>Update the nix channels:</p>
-<p><code>sudo nix-channel --add https://nixos.org/channels/nixpkgs-unstable nixpkgs</code></p>
-<p><code>sudo nix-channel --update</code></p>
+<p><code>nix-channel --add https://nixos.org/channels/nixpkgs-unstable nixpkgs</code></p>
+<p><code>nix-channel --update</code></p>
 </section>
 <section id="development" class="level2">
 <h2 class="anchored" data-anchor-id="development">Development</h2>
 <p>Within windows: Install virtualbox.</p>
 <p>Virtualbox and wsl at the same time is a bit tricky, so you have to follow <a href="https://stackoverflow.com/a/69896662">this stackoverflow answer</a></p>
-<p>Now install vscode, connect it to wsl.</p>
-<p>Install these vscode extensions, and their dependencies: * Ansible * Quarto</p>
+<p>Now install vscode, from the website:</p>
+<p>Install these vscode extensions, and their dependencies (should be pulled automatically):</p>
+<ul>
+<li><a href="https://marketplace.visualstudio.com/items?itemName=redhat.ansible">Ansible</a></li>
+<li><a href="https://marketplace.visualstudio.com/items?itemName=quarto.quarto">Quarto</a></li>
+<li><a href="https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-wsl">WSL</a></li>
+</ul>
 </section>
+</section>
+<section id="macos" class="level1">
+<h1>Macos</h1>
+<p>Install nix (tool used to manage our development environments):</p>
+<p><code>curl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix | sh -s -- install</code></p>
+<p>Update the nix channels:</p>
+<p><code>sudo nix-channel --add https://nixos.org/channels/nixpkgs-unstable nixpkgs</code></p>
+<p><code>sudo nix-channel --update</code></p>
 </section>
 <section id="playing-and-developing" class="level1">
 <h1>Playing and Developing</h1>
