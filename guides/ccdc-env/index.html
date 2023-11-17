@@ -223,7 +223,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <pre><strong>/etc/wsl.conf</strong></pre>
 </div>
 <div class="sourceCode" id="cb1"><pre class="sourceCode ini code-with-copy"><code class="sourceCode ini"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">[boot]</span></span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="dt">systemd</span><span class="ot">=</span><span class="kw">true</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="dt">systemd</span><span class="ot">=</span><span class="kw">true</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="kw">[wsl2]</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="dt">nestedVirtualization</span><span class="ot">=</span><span class="kw">true</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Edit the sudoers file:</p>
 <p>To edit the sudo file, you can use <code>sudo visudo</code> to edit it safely. This command while check the sudoers file for errors, rather than instantly breaking sudo upon a misconfiguration.</p>
@@ -248,9 +251,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>To restart the WSL vm, from <strong>powershell</strong> or <strong>cmd</strong>:</p>
 <p><code>wsl --shutdown debian</code></p>
 <p>And then relaunch the debian virtual machine.</p>
+<p>Install the necessary packages:</p>
+<p><code>wget -O- https://apt.releases.hashicorp.com/gpg | sudo gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg</code></p>
+<p><code>echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/hashicorp.list</code></p>
 <p>Update and upgrade: <code>sudo apt update &amp;&amp; sudo apt upgrade</code></p>
 <p>Install docker and docker-compose (and curl and git, other tools we will need later):</p>
-<p><code>sudo apt install docker.io docker-compose curl git ssh wget</code></p>
+<p><code>sudo apt install docker.io docker-compose vagrant curl git ssh wget</code></p>
 <p>You might have to reboot here, before the next step will work. Maybe.</p>
 <p><code>sudo usermod -aG docker $USER # Run docker without sudo</code></p>
 <p>Install nix (tool used to manage our development environments):</p>
@@ -291,6 +297,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="also-to-look-into" class="level1">
 <h1>Also to look into</h1>
+<p>Nested virtualization in wsl:</p>
+<p><a href="https://www.paralint.com/2022/11/find-new-modified-and-unversioned-subversion-files-on-windows" class="uri">https://www.paralint.com/2022/11/find-new-modified-and-unversioned-subversion-files-on-windows</a></p>
 <p>These are personal notes, for myself and anyone else who wants to work on this guide.</p>
 <p><a href="https://docs.docker.com/desktop/wsl/" class="uri">https://docs.docker.com/desktop/wsl/</a></p>
 <p><a href="https://code.visualstudio.com/docs/remote/wsl" class="uri">https://code.visualstudio.com/docs/remote/wsl</a></p>
