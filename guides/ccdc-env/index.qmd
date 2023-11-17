@@ -45,6 +45,9 @@ Now, while inside the debian, create the file `/etc/wsl.conf` with contents as s
 ```{.ini filename="/etc/wsl.conf"}
 [boot]
 systemd=true
+
+[wsl2]
+nestedVirtualization=true
 ```
 
 Edit the sudoers file:
@@ -75,12 +78,19 @@ To restart the WSL vm, from **powershell** or **cmd**:
 And then relaunch the debian virtual machine. 
 
 
+Install the necessary packages:
+
+`wget -O- https://apt.releases.hashicorp.com/gpg | sudo gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg`
+
+`echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/hashicorp.list`
+
+
 Update and upgrade: `sudo apt update && sudo apt upgrade`
 
 
 Install docker and docker-compose (and curl and git, other tools we will need later):
 
-`sudo apt install docker.io docker-compose curl git ssh wget`
+`sudo apt install docker.io docker-compose vagrant curl git ssh wget`
 
 You might have to reboot here, before the next step will work. Maybe.
 
@@ -148,6 +158,10 @@ When in the root of this git repo, you can run `nix-shell` to get a full develop
 
 
 # Also to look into
+
+Nested virtualization in wsl:
+
+<https://www.paralint.com/2022/11/find-new-modified-and-unversioned-subversion-files-on-windows>
 
 These are personal notes, for myself and anyone else who wants to work on this guide.
 
