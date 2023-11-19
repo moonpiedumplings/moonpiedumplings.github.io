@@ -207,12 +207,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h1>Windows</h1>
 <section id="playing" class="level2">
 <h2 class="anchored" data-anchor-id="playing">Playing</h2>
-<p>First, in Windows “Programs and features”, enable WSL and the virtualization platform. It might be enabled already, if it isn’t, reboot after enabling it.</p>
+<p>First, in Windows “Programs and features”, enable WSL, virtualization platform, and the windows hypervisor platform. It might be enabled already, if it isn’t, reboot after enabling it.</p>
 <p><img src="https://code.visualstudio.com/assets/docs/remote/wsl-tutorial/windows-features.png" class="img-fluid"></p>
+<p>Also, ensure you have the <a href="https://aka.ms/terminal">Windows Terminal</a> installed. It makes copy pasting very easy to do.</p>
 <p>From a powershell window:</p>
 <p><code>wsl --update</code></p>
 <p>You may need to reboot</p>
-<p><code>wsl --install debian</code></p>
+<p><code>wsl --install -d debian</code></p>
 <p>It’s going to ask you for some prompts. Because this is a development environment, focusing on speed rather than security, I recommend an easy to type username and password.</p>
 <p>Go back to the powershell, for some further configurations:</p>
 <p><code>wsl --set-version debian 2</code></p>
@@ -251,14 +252,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>To restart the WSL vm, from <strong>powershell</strong> or <strong>cmd</strong>:</p>
 <p><code>wsl --shutdown debian</code></p>
 <p>And then relaunch the debian virtual machine.</p>
-<p>Install the necessary packages:</p>
-<p><code>wget -O- https://apt.releases.hashicorp.com/gpg | sudo gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg</code></p>
-<p><code>echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/hashicorp.list</code></p>
 <p>Update and upgrade: <code>sudo apt update &amp;&amp; sudo apt upgrade</code></p>
 <p>Install docker and docker-compose (and curl and git, other tools we will need later):</p>
-<p><code>sudo apt install docker.io docker-compose vagrant curl git ssh wget</code></p>
+<p><code>sudo apt install docker.io docker-compose curl git ssh wget virt-manager</code></p>
 <p>You might have to reboot here, before the next step will work. Maybe.</p>
 <p><code>sudo usermod -aG docker $USER # Run docker without sudo</code></p>
+<p><code>sudo usermdo -aG libvirt $USER # Run libvirt vms without sudo</code></p>
 <p>Install nix (tool used to manage our development environments):</p>
 <p><code>curl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix | sh -s -- install</code></p>
 <p>Restart your shell. Simply close and reopen the debian terminal.</p>
@@ -268,7 +267,6 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="development" class="level2">
 <h2 class="anchored" data-anchor-id="development">Development</h2>
-<p>Within windows: Install virtualbox.</p>
 <p>Virtualbox and wsl at the same time is a bit tricky, so you have to follow <a href="https://stackoverflow.com/a/69896662">this stackoverflow answer</a></p>
 <p>Now install vscode, from the website: <a href="https://code.visualstudio.com/download" class="uri">https://code.visualstudio.com/download</a></p>
 <p>When you use the windows installer, ensure the “add to path” option is selected, it should be enabled by defualt.</p>
@@ -293,7 +291,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="playing-1" class="level3">
 <h3 class="anchored" data-anchor-id="playing-1">Playing</h3>
 <p><code>git clone https://github.com/CSUN-CCDC/CCDC-2023</code></p>
-<p>When in the root of this git repo, you can run <code>nix-shell</code> to get a full development environment. It includes tools like ansible linting, vagrant, as well.</p>
+<p>When in the root of this git repo, you can run <code>nix-shell</code> to get a full development environment. It includes tools like ansible, ansible checking, and vagrant.</p>
+<p>For the play environment, that is located in the root of utils/ directory.</p>
 </section>
 </section>
 <section id="also-to-look-into" class="level1">
