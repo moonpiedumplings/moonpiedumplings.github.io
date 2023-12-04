@@ -14,6 +14,30 @@ execute:
 This will be the guide(s) on how to set up your environment for CCDC playing, and development. I hope to make videos, but right now I'm just taking notes.
 
 
+# All Operating Systems:
+
+## Install Firefox
+
+During the invitational of 12/2/2023, [meshcentral](https://github.com/Ylianst/MeshCentral) ([github](https://github.com/Ylianst/MeshCentral)) was configured so that it was only accessible by it's domain name, and only over the https protocol, with an invalid certificate. 
+
+The easiest way to access meshcentral was to run an SSH proxy:
+
+`ssh -D 1080 host`
+
+For best testing purposes, I like to ssh into a host other than the one I am configuring on, to ensure the service can be accessed remotely (sometimes firewall only allows access from localhost). 
+
+And then in the firefox settings:   
+
+![](images/firefoxnetwork.png)
+
+Make sure you have proxy DNS over SOCKS v5 enabled, as this enables the proxy to fully emulate you being within the competition environment.
+
+Finally, with https services, for security purposes, none of the chromium based browsers will let you visit a site with an invalid certificate — which the meshcentral during that competition had. On the other hand, firefox simply offers a button to let you visit the site anyways. 
+
+
+Install firefox here: <https://www.mozilla.org/en-US/firefox/new/>
+
+
 # Windows
 
 ## Playing
@@ -80,12 +104,17 @@ To restart the WSL vm, from **powershell** or **cmd**:
 And then relaunch the debian virtual machine. 
 
 
-Update and upgrade: `sudo apt update && sudo apt upgrade`
+
+`wget -O- https://apt.releases.hashicorp.com/gpg | sudo gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg`
+
+`echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/hashicorp.list`
 
 
 Install docker and docker-compose (and curl and git, other tools we will need later):
 
-`sudo apt install docker.io docker-compose curl git ssh wget virt-manager`
+`sudo apt update && sudo apt upgrade`
+
+`sudo apt install docker.io docker-compose curl git ssh wget virt-manager vagrant`
 
 You might have to reboot here, before the next step will work. Maybe.
 
@@ -105,10 +134,6 @@ Update the nix channels:
 `nix-channel --add https://nixos.org/channels/nixpkgs-unstable nixpkgs`
 
 `nix-channel --update`
-
-
-
-
 
 
 
