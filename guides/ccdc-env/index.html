@@ -159,7 +159,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#windows" id="toc-windows" class="nav-link active" data-scroll-target="#windows">Windows</a>
+  <li><a href="#all-operating-systems" id="toc-all-operating-systems" class="nav-link active" data-scroll-target="#all-operating-systems">All Operating Systems:</a>
+  <ul class="collapse">
+  <li><a href="#install-firefox" id="toc-install-firefox" class="nav-link" data-scroll-target="#install-firefox">Install Firefox</a></li>
+  </ul></li>
+  <li><a href="#windows" id="toc-windows" class="nav-link" data-scroll-target="#windows">Windows</a>
   <ul class="collapse">
   <li><a href="#playing" id="toc-playing" class="nav-link" data-scroll-target="#playing">Playing</a></li>
   <li><a href="#development" id="toc-development" class="nav-link" data-scroll-target="#development">Development</a></li>
@@ -203,6 +207,21 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </header>
 
 <p>This will be the guide(s) on how to set up your environment for CCDC playing, and development. I hope to make videos, but right now I’m just taking notes.</p>
+<section id="all-operating-systems" class="level1">
+<h1>All Operating Systems:</h1>
+<section id="install-firefox" class="level2">
+<h2 class="anchored" data-anchor-id="install-firefox">Install Firefox</h2>
+<p>During the invitational of 12/2/2023, <a href="https://github.com/Ylianst/MeshCentral">meshcentral</a> (<a href="https://github.com/Ylianst/MeshCentral">github</a>) was configured so that it was only accessible by it’s domain name, and only over the https protocol, with an invalid certificate.</p>
+<p>The easiest way to access meshcentral was to run an SSH proxy:</p>
+<p><code>ssh -D 1080 host</code></p>
+<p>For best testing purposes, I like to ssh into a host other than the one I am configuring on, to ensure the service can be accessed remotely (sometimes firewall only allows access from localhost).</p>
+<p>And then in the firefox settings:</p>
+<p><img src="images/firefoxnetwork.png" class="img-fluid"></p>
+<p>Make sure you have proxy DNS over SOCKS v5 enabled, as this enables the proxy to fully emulate you being within the competition environment.</p>
+<p>Finally, with https services, for security purposes, none of the chromium based browsers will let you visit a site with an invalid certificate — which the meshcentral during that competition had. On the other hand, firefox simply offers a button to let you visit the site anyways.</p>
+<p>Install firefox here: <a href="https://www.mozilla.org/en-US/firefox/new/" class="uri">https://www.mozilla.org/en-US/firefox/new/</a></p>
+</section>
+</section>
 <section id="windows" class="level1">
 <h1>Windows</h1>
 <section id="playing" class="level2">
@@ -252,9 +271,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>To restart the WSL vm, from <strong>powershell</strong> or <strong>cmd</strong>:</p>
 <p><code>wsl --shutdown debian</code></p>
 <p>And then relaunch the debian virtual machine.</p>
-<p>Update and upgrade: <code>sudo apt update &amp;&amp; sudo apt upgrade</code></p>
+<p><code>wget -O- https://apt.releases.hashicorp.com/gpg | sudo gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg</code></p>
+<p><code>echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/hashicorp.list</code></p>
 <p>Install docker and docker-compose (and curl and git, other tools we will need later):</p>
-<p><code>sudo apt install docker.io docker-compose curl git ssh wget virt-manager</code></p>
+<p><code>sudo apt update &amp;&amp; sudo apt upgrade</code></p>
+<p><code>sudo apt install docker.io docker-compose curl git ssh wget virt-manager vagrant</code></p>
 <p>You might have to reboot here, before the next step will work. Maybe.</p>
 <p><code>sudo usermod -aG docker $USER # Run docker without sudo</code></p>
 <p><code>sudo usermdo -aG libvirt $USER # Run libvirt vms without sudo</code></p>
