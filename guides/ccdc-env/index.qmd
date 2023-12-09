@@ -14,67 +14,24 @@ execute:
 This will be the guide(s) on how to set up your environment for CCDC playing, and development. I hope to make videos, but right now I'm just taking notes.
 
 
-# All Operating Systems:
-
-## Install Firefox
-
-During the invitational of 12/2/2023, [meshcentral](https://github.com/Ylianst/MeshCentral) ([github](https://github.com/Ylianst/MeshCentral)) was configured so that it was only accessible by it's domain name, and only over the https protocol, with an invalid certificate. 
-
-The easiest way to access meshcentral was to run an SSH proxy:
-
-`ssh -D 1080 host`
-
-For best testing purposes, I like to ssh into a host other than the one I am configuring on, to ensure the service can be accessed remotely (sometimes firewall only allows access from localhost). 
-
-And then in the firefox settings:   
-
-![](images/firefoxnetwork.png)
-
-Make sure you have proxy DNS over SOCKS v5 enabled, as this enables the proxy to fully emulate you being within the competition environment.
-
-Finally, with https services, for security purposes, none of the chromium based browsers will let you visit a site with an invalid certificate — which the meshcentral during that competition had. On the other hand, firefox simply offers a button to let you visit the site anyways. 
-
-
-Install firefox here: <https://www.mozilla.org/en-US/firefox/new/>
 
 
 # Windows
 
-## Playing
+## Play environment
 
-First, in Windows "Programs and features", enable WSL, virtualization platform, and the windows hypervisor platform. It might be enabled already, if it isn't, reboot after enabling it.
+As long as you Windows 10 May 2020 Update (version 2004), you can install wsl with a single command. Otherwise, you have to follow some [painful steps](https://learn.microsoft.com/en-us/windows/wsl/install-manual)
 
-![](https://code.visualstudio.com/assets/docs/remote/wsl-tutorial/windows-features.png)
+In an elevated powershell window:
 
-Also, ensure you have the [Windows Terminal](https://aka.ms/terminal) installed. It makes copy pasting very easy to do. 
+`wsl --install`
 
-From a powershell window:
+Reboot the system.
 
-
-`wsl --update`  
-
-You may need to reboot
-
-`wsl --install -d debian`
+Then, launch wsl with `wsl` from powershell or cmd. 
 
 It's going to ask you for some prompts. Because this is a development environment, focusing on speed rather than security, I recommend an easy to type username and password. 
 
-Go back to the powershell, for some further configurations:
-
-`wsl --set-version debian 2`
-
-`wsl --set-default debian`
-
-
-Now, while inside the debian, create the file `/etc/wsl.conf` with contents as so:
-
-```{.ini filename="/etc/wsl.conf"}
-[boot]
-systemd=true
-
-[wsl2]
-nestedVirtualization=true
-```
 
 Edit the sudoers file:
 
@@ -99,11 +56,6 @@ Either reboot, or restart the wsl virtual machine.
 
 To restart the WSL vm, from **powershell** or **cmd**:
 
-`wsl --shutdown debian`
-
-And then relaunch the debian virtual machine. 
-
-
 
 `wget -O- https://apt.releases.hashicorp.com/gpg | sudo gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg`
 
@@ -114,7 +66,7 @@ Install docker and docker-compose (and curl and git, other tools we will need la
 
 `sudo apt update && sudo apt upgrade`
 
-`sudo apt install docker.io docker-compose curl git ssh wget virt-manager vagrant`
+`sudo apt install docker.io docker-compose curl git ssh wget virt-manager`
 
 You might have to reboot here, before the next step will work. Maybe.
 
@@ -135,18 +87,45 @@ Update the nix channels:
 
 `nix-channel --update`
 
+Install the zellij terminal multiplexer:
+
+`nix profile install nixpkgs#zellij`
 
 
-## Development
+## Outside WSL
+
+## Chocolatey?
+
+[Install chocolatey here](https://chocolatey.org/install#individual)
 
 
+## Firefox
 
-Virtualbox and wsl at the same time is a bit tricky, so you have to follow [this stackoverflow answer](https://stackoverflow.com/a/69896662)
+[Install firefox](https://www.mozilla.org/en-US/firefox/new/) 
+
+### Wezterm
+
+Install wezterm from either chocolatey or the [official website](https://wezfurlong.org/wezterm/install/windows.html) (using the setup.)
+
+
+On a vm, I get an error about the opengl version being incompatible when I attempt to launch wezterm. I have to launch it with `wezterm --config "prefer_egl=true".
+
+To launch the ubuntu session, you can right click on the new tab, and then a menu will appear, from which you can select Ubuntu. 
+
+## Virtualbox
+
+[Virtualbox website](https://www.virtualbox.org/wiki/Downloads)
+
+You may need to install the [Microsoft Visual C++ Redistributable 2019](https://learn.microsoft.com/en-us/cpp/windows/latest-supported-vc-redist?view=msvc-170#visual-studio-2015-2017-2019-and-20220) in order to install VirtualBox. 
+
+Attempting to install [older builds](https://www.virtualbox.org/wiki/Download_Old_Builds_6_1)
+
+Virtualbox and wsl at the same time is a bit tricky, so you have to follow [this stackoverflow answer](https://stackoverflow.com/a/69896662)  
 
 
 Now install vscode, from the website: <https://code.visualstudio.com/download>
 
-When you use the windows installer, ensure the "add to path" option is selected, it should be enabled by defualt. 
+When you use the windows installer, ensure the "add to path" option is selected, it should be enabled by default. 
 
 
 
