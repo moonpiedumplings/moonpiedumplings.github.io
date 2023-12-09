@@ -19,91 +19,42 @@
 
 
 <p>This will be the guide(s) on how to set up your environment for CCDC playing, and development. I hope to make videos, but right now I’m just taking notes.</p>
-<section id="all-operating-systems" class="level1">
-<h1>All Operating Systems:</h1>
-<section id="install-firefox" class="level2">
-<h2 class="anchored" data-anchor-id="install-firefox">Install Firefox</h2>
-<p>During the invitational of 12/2/2023, <a href="https://github.com/Ylianst/MeshCentral">meshcentral</a> (<a href="https://github.com/Ylianst/MeshCentral">github</a>) was configured so that it was only accessible by it’s domain name, and only over the https protocol, with an invalid certificate.</p>
-<p>The easiest way to access meshcentral was to run an SSH proxy:</p>
-<p><code>ssh -D 1080 host</code></p>
-<p>For best testing purposes, I like to ssh into a host other than the one I am configuring on, to ensure the service can be accessed remotely (sometimes firewall only allows access from localhost).</p>
-<p>And then in the firefox settings:</p>
-<p><img src="https://moonpiedumplings.github.io/guides/ccdc-env/images/firefoxnetwork.png" class="img-fluid"></p>
-<p>Make sure you have proxy DNS over SOCKS v5 enabled, as this enables the proxy to fully emulate you being within the competition environment.</p>
-<p>Finally, with https services, for security purposes, none of the chromium based browsers will let you visit a site with an invalid certificate — which the meshcentral during that competition had. On the other hand, firefox simply offers a button to let you visit the site anyways.</p>
-<p>Install firefox here: <a href="https://www.mozilla.org/en-US/firefox/new/" class="uri">https://www.mozilla.org/en-US/firefox/new/</a></p>
-</section>
-</section>
 <section id="windows" class="level1">
 <h1>Windows</h1>
-<section id="playing" class="level2">
-<h2 class="anchored" data-anchor-id="playing">Playing</h2>
-<p>First, in Windows “Programs and features”, enable WSL, virtualization platform, and the windows hypervisor platform. It might be enabled already, if it isn’t, reboot after enabling it.</p>
-<p><img src="https://moonpiedumplings.github.io/guides/ccdc-env/https:/code.visualstudio.com/assets/docs/remote/wsl-tutorial/windows-features.png" class="img-fluid"></p>
-<p>Also, ensure you have the <a href="https://aka.ms/terminal">Windows Terminal</a> installed. It makes copy pasting very easy to do.</p>
-<p>From a powershell window:</p>
-<p><code>wsl --update</code></p>
-<p>You may need to reboot</p>
-<p><code>wsl --install -d debian</code></p>
+<section id="play-environment" class="level2">
+<h2 class="anchored" data-anchor-id="play-environment">Play environment</h2>
+<p>As long as you Windows 10 May 2020 Update (version 2004), you can install wsl with a single command. Otherwise, you have to follow some <a href="https://learn.microsoft.com/en-us/windows/wsl/install-manual">painful steps</a></p>
+<p>In an elevated powershell window:</p>
+<p><code>wsl --install</code></p>
+<p>Reboot the system.</p>
+<p>Then, launch wsl with <code>wsl</code> from powershell or cmd.</p>
 <p>It’s going to ask you for some prompts. Because this is a development environment, focusing on speed rather than security, I recommend an easy to type username and password.</p>
-<p>Go back to the powershell, for some further configurations:</p>
-<p><code>wsl --set-version debian 2</code></p>
-<p><code>wsl --set-default debian</code></p>
-<p>Now, while inside the debian, create the file <code>/etc/wsl.conf</code> with contents as so:</p>
-<div class="code-with-filename">
-<div class="code-with-filename-file">
-<pre><strong>/etc/wsl.conf</strong></pre>
-</div>
-<div class="sourceCode" id="cb1" style="background: #f1f3f5;"><pre class="sourceCode ini code-with-copy"><code class="sourceCode ini"><span id="cb1-1"><span class="kw" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">[boot]</span></span>
-<span id="cb1-2"><span class="dt" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">systemd</span><span class="ot" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">=</span><span class="kw" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">true</span></span>
-<span id="cb1-3"></span>
-<span id="cb1-4"><span class="kw" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">[wsl2]</span></span>
-<span id="cb1-5"><span class="dt" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">nestedVirtualization</span><span class="ot" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">=</span><span class="kw" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">true</span></span></code></pre></div>
-</div>
 <p>Edit the sudoers file:</p>
 <p>To edit the sudo file, you can use <code>sudo visudo</code> to edit it safely. This command while check the sudoers file for errors, rather than instantly breaking sudo upon a misconfiguration.</p>
 <div class="code-with-filename">
 <div class="code-with-filename-file">
 <pre><strong>/etc/sudoers</strong></pre>
 </div>
-<div class="sourceCode" id="cb2" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb2-1"># Change the portion of the file referring to env_reset to look like this:</span>
-<span id="cb2-2"># Put an "!" in front of env_reset, and comment out the part referring to secure path</span>
-<span id="cb2-3"></span>
-<span id="cb2-4">Defaults        !env_reset</span>
-<span id="cb2-5">Defaults        mail_badpass</span>
-<span id="cb2-6">#Defaults       secure_path="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin" </span>
-<span id="cb2-7"></span>
-<span id="cb2-8"></span>
-<span id="cb2-9"></span>
-<span id="cb2-10"># Change the portion of the file that refers to wheel to look like this:</span>
-<span id="cb2-11"></span>
-<span id="cb2-12">%sudo ALL=(ALL:ALL) NOPASSWD: ALL</span></code></pre></div>
+<div class="sourceCode" id="cb1" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb1-1"># Change the portion of the file referring to env_reset to look like this:</span>
+<span id="cb1-2"># Put an "!" in front of env_reset, and comment out the part referring to secure path</span>
+<span id="cb1-3"></span>
+<span id="cb1-4">Defaults        !env_reset</span>
+<span id="cb1-5">Defaults        mail_badpass</span>
+<span id="cb1-6">#Defaults       secure_path="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin" </span>
+<span id="cb1-7"></span>
+<span id="cb1-8"></span>
+<span id="cb1-9"></span>
+<span id="cb1-10"># Change the portion of the file that refers to wheel to look like this:</span>
+<span id="cb1-11"></span>
+<span id="cb1-12">%sudo ALL=(ALL:ALL) NOPASSWD: ALL</span></code></pre></div>
 </div>
 <p>Either reboot, or restart the wsl virtual machine.</p>
 <p>To restart the WSL vm, from <strong>powershell</strong> or <strong>cmd</strong>:</p>
-<p><code>wsl --shutdown debian</code></p>
-<p>And then relaunch the debian virtual machine.</p>
 <p><code>wget -O- https://apt.releases.hashicorp.com/gpg | sudo gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg</code></p>
 <p><code>echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/hashicorp.list</code></p>
 <p>Install docker and docker-compose (and curl and git, other tools we will need later):</p>
 <p><code>sudo apt update &amp;&amp; sudo apt upgrade</code></p>
-<p><code>sudo apt install docker.io docker-compose curl git ssh wget virt-manager vagrant</code></p>
+<p><code>sudo apt install docker.io docker-compose curl git ssh wget virt-manager</code></p>
 <p>You might have to reboot here, before the next step will work. Maybe.</p>
 <p><code>sudo usermod -aG docker $USER # Run docker without sudo</code></p>
 <p><code>sudo usermdo -aG libvirt $USER # Run libvirt vms without sudo</code></p>
@@ -113,12 +64,34 @@ font-style: inherit;">true</span></span></code></pre></div>
 <p>Update the nix channels:</p>
 <p><code>nix-channel --add https://nixos.org/channels/nixpkgs-unstable nixpkgs</code></p>
 <p><code>nix-channel --update</code></p>
+<p>Install the zellij terminal multiplexer:</p>
+<p><code>nix profile install nixpkgs#zellij</code></p>
 </section>
-<section id="development" class="level2">
-<h2 class="anchored" data-anchor-id="development">Development</h2>
+<section id="outside-wsl" class="level2">
+<h2 class="anchored" data-anchor-id="outside-wsl">Outside WSL</h2>
+</section>
+<section id="chocolatey" class="level2">
+<h2 class="anchored" data-anchor-id="chocolatey">Chocolatey?</h2>
+<p><a href="https://chocolatey.org/install#individual">Install chocolatey here</a></p>
+</section>
+<section id="firefox" class="level2">
+<h2 class="anchored" data-anchor-id="firefox">Firefox</h2>
+<p><a href="https://www.mozilla.org/en-US/firefox/new/">Install firefox</a></p>
+<section id="wezterm" class="level3">
+<h3 class="anchored" data-anchor-id="wezterm">Wezterm</h3>
+<p>Install wezterm from either chocolatey or the <a href="https://wezfurlong.org/wezterm/install/windows.html">official website</a> (using the setup.)</p>
+<p>On a vm, I get an error about the opengl version being incompatible when I attempt to launch wezterm. I have to launch it with `wezterm –config “prefer_egl=true”.</p>
+<p>To launch the ubuntu session, you can right click on the new tab, and then a menu will appear, from which you can select Ubuntu.</p>
+</section>
+</section>
+<section id="virtualbox" class="level2">
+<h2 class="anchored" data-anchor-id="virtualbox">Virtualbox</h2>
+<p><a href="https://www.virtualbox.org/wiki/Downloads">Virtualbox website</a></p>
+<p>You may need to install the <a href="https://learn.microsoft.com/en-us/cpp/windows/latest-supported-vc-redist?view=msvc-170#visual-studio-2015-2017-2019-and-20220">Microsoft Visual C++ Redistributable 2019</a> in order to install VirtualBox.</p>
+<p>Attempting to install <a href="https://www.virtualbox.org/wiki/Download_Old_Builds_6_1">older builds</a></p>
 <p>Virtualbox and wsl at the same time is a bit tricky, so you have to follow <a href="https://stackoverflow.com/a/69896662">this stackoverflow answer</a></p>
 <p>Now install vscode, from the website: <a href="https://code.visualstudio.com/download" class="uri">https://code.visualstudio.com/download</a></p>
-<p>When you use the windows installer, ensure the “add to path” option is selected, it should be enabled by defualt.</p>
+<p>When you use the windows installer, ensure the “add to path” option is selected, it should be enabled by default.</p>
 <p>Install these vscode extensions, and their dependencies (should be pulled automatically):</p>
 <ul>
 <li><a href="https://marketplace.visualstudio.com/items?itemName=redhat.ansible">Ansible</a></li>
@@ -137,8 +110,8 @@ font-style: inherit;">true</span></span></code></pre></div>
 </section>
 <section id="playing-and-developing" class="level1">
 <h1>Playing and Developing</h1>
-<section id="playing-1" class="level3">
-<h3 class="anchored" data-anchor-id="playing-1">Playing</h3>
+<section id="playing" class="level3">
+<h3 class="anchored" data-anchor-id="playing">Playing</h3>
 <p><code>git clone https://github.com/CSUN-CCDC/CCDC-2023</code></p>
 <p>When in the root of this git repo, you can run <code>nix-shell</code> to get a full development environment. It includes tools like ansible, ansible checking, and vagrant.</p>
 <p>For the play environment, that is located in the root of utils/ directory.</p>
