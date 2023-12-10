@@ -21,8 +21,6 @@
 <p>This will be the guide(s) on how to set up your environment for CCDC playing, and development. I hope to make videos, but right now I’m just taking notes.</p>
 <section id="windows" class="level1">
 <h1>Windows</h1>
-<section id="play-environment" class="level2">
-<h2 class="anchored" data-anchor-id="play-environment">Play environment</h2>
 <p>As long as you Windows 10 May 2020 Update (version 2004), you can install wsl with a single command. Otherwise, you have to follow some <a href="https://learn.microsoft.com/en-us/windows/wsl/install-manual">painful steps</a></p>
 <p>In an elevated powershell window:</p>
 <p><code>wsl --install</code></p>
@@ -44,20 +42,20 @@
 <span id="cb1-7"></span>
 <span id="cb1-8"></span>
 <span id="cb1-9"></span>
-<span id="cb1-10"># Change the portion of the file that refers to wheel to look like this:</span>
+<span id="cb1-10"># Change the portion of the file that refers to the sudo group to look like this:</span>
 <span id="cb1-11"></span>
 <span id="cb1-12">%sudo ALL=(ALL:ALL) NOPASSWD: ALL</span></code></pre></div>
 </div>
 <p>Either reboot, or restart the wsl virtual machine.</p>
 <p>To restart the WSL vm, from <strong>powershell</strong> or <strong>cmd</strong>:</p>
-<p><code>wget -O- https://apt.releases.hashicorp.com/gpg | sudo gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg</code></p>
-<p><code>echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/hashicorp.list</code></p>
 <p>Install docker and docker-compose (and curl and git, other tools we will need later):</p>
 <p><code>sudo apt update &amp;&amp; sudo apt upgrade</code></p>
 <p><code>sudo apt install docker.io docker-compose curl git ssh wget virt-manager</code></p>
 <p>You might have to reboot here, before the next step will work. Maybe.</p>
 <p><code>sudo usermod -aG docker $USER # Run docker without sudo</code></p>
 <p><code>sudo usermdo -aG libvirt $USER # Run libvirt vms without sudo</code></p>
+<section id="nix" class="level2">
+<h2 class="anchored" data-anchor-id="nix">Nix</h2>
 <p>Install nix (tool used to manage our development environments):</p>
 <p><code>curl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix | sh -s -- install</code></p>
 <p>Restart your shell. Simply close and reopen the debian terminal.</p>
@@ -67,16 +65,11 @@
 <p>Install the zellij terminal multiplexer:</p>
 <p><code>nix profile install nixpkgs#zellij</code></p>
 </section>
-<section id="outside-wsl" class="level2">
-<h2 class="anchored" data-anchor-id="outside-wsl">Outside WSL</h2>
-</section>
 <section id="chocolatey" class="level2">
-<h2 class="anchored" data-anchor-id="chocolatey">Chocolatey?</h2>
+<h2 class="anchored" data-anchor-id="chocolatey">Chocolatey</h2>
 <p><a href="https://chocolatey.org/install#individual">Install chocolatey here</a></p>
-</section>
-<section id="firefox" class="level2">
-<h2 class="anchored" data-anchor-id="firefox">Firefox</h2>
-<p><a href="https://www.mozilla.org/en-US/firefox/new/">Install firefox</a></p>
+<p>Install several packages we need for development and playing (remove any packages you already have installed)</p>
+<div class="sourceCode" id="cb2" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb2-1">choco install -y firefox wezterm vscode virtualbox vmware-workstation-player vagrant-vmware-plugin</span></code></pre></div>
 <section id="wezterm" class="level3">
 <h3 class="anchored" data-anchor-id="wezterm">Wezterm</h3>
 <p>Install wezterm from either chocolatey or the <a href="https://wezfurlong.org/wezterm/install/windows.html">official website</a> (using the setup.)</p>
@@ -86,27 +79,74 @@
 </section>
 <section id="virtualbox" class="level2">
 <h2 class="anchored" data-anchor-id="virtualbox">Virtualbox</h2>
-<p><a href="https://www.virtualbox.org/wiki/Downloads">Virtualbox website</a></p>
-<p>You may need to install the <a href="https://learn.microsoft.com/en-us/cpp/windows/latest-supported-vc-redist?view=msvc-170#visual-studio-2015-2017-2019-and-20220">Microsoft Visual C++ Redistributable 2019</a> in order to install VirtualBox.</p>
-<p>Attempting to install <a href="https://www.virtualbox.org/wiki/Download_Old_Builds_6_1">older builds</a></p>
-<p>Virtualbox and wsl at the same time is a bit tricky, so you have to follow <a href="https://stackoverflow.com/a/69896662">this stackoverflow answer</a></p>
-<p>Now install vscode, from the website: <a href="https://code.visualstudio.com/download" class="uri">https://code.visualstudio.com/download</a></p>
-<p>When you use the windows installer, ensure the “add to path” option is selected, it should be enabled by default.</p>
+<p>Virtualbox and hyperv at the same time is a bit tricky, so you might have to follow <a href="https://stackoverflow.com/a/69896662">this stackoverflow answer</a></p>
+</section>
+<section id="linux" class="level2">
+<h2 class="anchored" data-anchor-id="linux">Linux</h2>
+<p>Linux has many distributions, so I will include vague steps that will work everywhere, rather than precise steps that only work on one distro, like the above Windows steps.</p>
+<p>Edit the sudoers file:</p>
+<p>To edit the sudo file, you can use <code>sudo visudo</code> to edit it safely. This command while check the sudoers file for errors, rather than instantly breaking sudo upon a misconfiguration.</p>
+<div class="code-with-filename">
+<div class="code-with-filename-file">
+<pre><strong>/etc/sudoers</strong></pre>
+</div>
+<div class="sourceCode" id="cb3" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb3-1"># Change the portion of the file referring to env_reset to look like this:</span>
+<span id="cb3-2"># Put an "!" in front of env_reset, and comment out the part referring to secure path</span>
+<span id="cb3-3"></span>
+<span id="cb3-4">Defaults        !env_reset</span>
+<span id="cb3-5">Defaults        mail_badpass</span>
+<span id="cb3-6">#Defaults       secure_path="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin" </span></code></pre></div>
+</div>
+<p>You can also set sudo to not require a password, if you so wish. However, this varies based on distributions.</p>
+<p>Install:</p>
+<ul>
+<li>Equivalent of base development packages for your distro. Usually a metapackage containing git, compilers like gcc, and build tools like make.</li>
+<li>ssh and related packages. (If sshfs and scp are packaged, get them as well)</li>
+<li>curl and wget</li>
+<li>Libvirt and virt-manager</li>
+<li>Docker</li>
+</ul>
+</section>
+<section id="nix-1" class="level2">
+<h2 class="anchored" data-anchor-id="nix-1">Nix</h2>
+<p>Install nix (tool used to manage our development environments):</p>
+<p><code>curl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix | sh -s -- install</code></p>
+<p>Update the nix channels:</p>
+<p><code>nix-channel --add https://nixos.org/channels/nixpkgs-unstable nixpkgs</code></p>
+<p><code>nix-channel --update</code></p>
+<p>Install zellij</p>
+<p><code>nix profile install nixpkgs#zellij</code></p>
+</section>
+</section>
+<section id="macos" class="level1">
+<h1>Macos</h1>
+<section id="tools" class="level2">
+<h2 class="anchored" data-anchor-id="tools">Tools</h2>
+<p>There are several tools you need for development/playing.</p>
+</section>
+<section id="nix-2" class="level2">
+<h2 class="anchored" data-anchor-id="nix-2">Nix</h2>
+<p>Install nix (tool used to manage our development environments):</p>
+<p><code>curl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix | sh -s -- install</code></p>
+<p>Update the nix channels:</p>
+<p><code>sudo nix-channel --add https://nixos.org/channels/nixpkgs-unstable nixpkgs</code></p>
+<p><code>sudo nix-channel --update</code></p>
+<p>Install zellij</p>
+<p><code>nix profile install nixpkgs#zellij</code></p>
+</section>
+</section>
+<section id="all-operating-systems" class="level1">
+<h1>All Operating Systems</h1>
+<section id="vscode" class="level2">
+<h2 class="anchored" data-anchor-id="vscode">Vscode</h2>
 <p>Install these vscode extensions, and their dependencies (should be pulled automatically):</p>
 <ul>
 <li><a href="https://marketplace.visualstudio.com/items?itemName=redhat.ansible">Ansible</a></li>
 <li><a href="https://marketplace.visualstudio.com/items?itemName=quarto.quarto">Quarto</a></li>
 <li><a href="https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-wsl">WSL</a></li>
 </ul>
+<p>Personal preference, but I like to <a href="https://stackoverflow.com/a/74409136">disable acceptance of the autocomplete suggestion on enter</a>. This can be particularly annoying in languages like ansible or python, where you have to hit enter to go to the next line.</p>
 </section>
-</section>
-<section id="macos" class="level1">
-<h1>Macos</h1>
-<p>Install nix (tool used to manage our development environments):</p>
-<p><code>curl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix | sh -s -- install</code></p>
-<p>Update the nix channels:</p>
-<p><code>sudo nix-channel --add https://nixos.org/channels/nixpkgs-unstable nixpkgs</code></p>
-<p><code>sudo nix-channel --update</code></p>
 </section>
 <section id="playing-and-developing" class="level1">
 <h1>Playing and Developing</h1>
