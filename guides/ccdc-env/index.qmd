@@ -14,11 +14,7 @@ execute:
 This will be the guide(s) on how to set up your environment for CCDC playing, and development. I hope to make videos, but right now I'm just taking notes.
 
 
-
-
 # Windows
-
-## Play environment
 
 As long as you Windows 10 May 2020 Update (version 2004), you can install wsl with a single command. Otherwise, you have to follow some [painful steps](https://learn.microsoft.com/en-us/windows/wsl/install-manual)
 
@@ -47,7 +43,7 @@ Defaults        mail_badpass
 
 
 
-# Change the portion of the file that refers to wheel to look like this:
+# Change the portion of the file that refers to the sudo group to look like this:
 
 %sudo ALL=(ALL:ALL) NOPASSWD: ALL
 ```
@@ -55,12 +51,6 @@ Defaults        mail_badpass
 Either reboot, or restart the wsl virtual machine.
 
 To restart the WSL vm, from **powershell** or **cmd**:
-
-
-`wget -O- https://apt.releases.hashicorp.com/gpg | sudo gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg`
-
-`echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/hashicorp.list`
-
 
 Install docker and docker-compose (and curl and git, other tools we will need later):
 
@@ -74,6 +64,7 @@ You might have to reboot here, before the next step will work. Maybe.
 
 `sudo usermdo -aG libvirt $USER # Run libvirt vms without sudo`
 
+## Nix
 
 Install nix (tool used to manage our development environments):
 
@@ -92,16 +83,19 @@ Install the zellij terminal multiplexer:
 `nix profile install nixpkgs#zellij`
 
 
-## Outside WSL
 
-## Chocolatey?
+
+## Chocolatey
 
 [Install chocolatey here](https://chocolatey.org/install#individual)
 
 
-## Firefox
+Install several packages we need for development and playing (remove any packages you already have installed)
 
-[Install firefox](https://www.mozilla.org/en-US/firefox/new/) 
+```{.default}
+choco install -y firefox wezterm vscode virtualbox vmware-workstation-player vagrant-vmware-plugin
+```
+
 
 ### Wezterm
 
@@ -112,32 +106,67 @@ On a vm, I get an error about the opengl version being incompatible when I attem
 
 To launch the ubuntu session, you can right click on the new tab, and then a menu will appear, from which you can select Ubuntu. 
 
+
+
 ## Virtualbox
 
-[Virtualbox website](https://www.virtualbox.org/wiki/Downloads)
-
-You may need to install the [Microsoft Visual C++ Redistributable 2019](https://learn.microsoft.com/en-us/cpp/windows/latest-supported-vc-redist?view=msvc-170#visual-studio-2015-2017-2019-and-20220) in order to install VirtualBox. 
-
-Attempting to install [older builds](https://www.virtualbox.org/wiki/Download_Old_Builds_6_1)
-
-Virtualbox and wsl at the same time is a bit tricky, so you have to follow [this stackoverflow answer](https://stackoverflow.com/a/69896662)  
-
-
-Now install vscode, from the website: <https://code.visualstudio.com/download>
-
-When you use the windows installer, ensure the "add to path" option is selected, it should be enabled by default. 
+Virtualbox and hyperv at the same time is a bit tricky, so you might have to follow [this stackoverflow answer](https://stackoverflow.com/a/69896662)  
 
 
 
-Install these vscode extensions, and their dependencies (should be pulled automatically):
+## Linux
 
-* [Ansible](https://marketplace.visualstudio.com/items?itemName=redhat.ansible)
-* [Quarto](https://marketplace.visualstudio.com/items?itemName=quarto.quarto)
-* [WSL](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-wsl)
+Linux has many distributions, so I will include vague steps that will work everywhere, rather than precise steps that only work on one distro, like the above Windows steps. 
+
+Edit the sudoers file:
+
+To edit the sudo file, you can use `sudo visudo` to edit it safely. This command while check the sudoers file for errors, rather than instantly breaking sudo upon a misconfiguration.
+
+```{.default filename="/etc/sudoers"}
+# Change the portion of the file referring to env_reset to look like this:
+# Put an "!" in front of env_reset, and comment out the part referring to secure path
+
+Defaults        !env_reset
+Defaults        mail_badpass
+#Defaults       secure_path="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin" 
+```
+
+You can also set sudo to not require a password, if you so wish. However, this varies based on distributions. 
+
+Install:
+
+* Equivalent of base development packages for your distro. Usually a metapackage containing git, compilers like gcc, and build tools like make.
+* ssh and related packages. (If sshfs and scp are packaged, get them as well)
+* curl and wget
+* Libvirt and virt-manager
+* Docker
+
+
+## Nix
+
+Install nix (tool used to manage our development environments):
+
+`curl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix | sh -s -- install`
+
+Update the nix channels:
+
+`nix-channel --add https://nixos.org/channels/nixpkgs-unstable nixpkgs`
+
+`nix-channel --update`
+
+Install zellij
+
+`nix profile install nixpkgs#zellij`
 
 
 
 # Macos
+
+## Tools
+
+There are several tools you need for development/playing. 
+
+## Nix
 
 Install nix (tool used to manage our development environments):
 
@@ -148,6 +177,23 @@ Update the nix channels:
 `sudo nix-channel --add https://nixos.org/channels/nixpkgs-unstable nixpkgs`
 
 `sudo nix-channel --update`
+
+Install zellij
+
+`nix profile install nixpkgs#zellij`
+
+
+# All Operating Systems
+
+## Vscode
+
+Install these vscode extensions, and their dependencies (should be pulled automatically):
+
+* [Ansible](https://marketplace.visualstudio.com/items?itemName=redhat.ansible)
+* [Quarto](https://marketplace.visualstudio.com/items?itemName=quarto.quarto)
+* [WSL](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-wsl)
+
+Personal preference, but I like to [disable acceptance of the autocomplete suggestion on enter](https://stackoverflow.com/a/74409136). This can be particularly annoying in languages like ansible or python, where you have to hit enter to go to the next line. 
 
 
 
@@ -160,8 +206,6 @@ Update the nix channels:
 When in the root of this git repo, you can run `nix-shell` to get a full development environment. It includes tools like ansible, ansible checking, and vagrant. 
 
 For the play environment, that is located in the root of utils/ directory. 
-
-
 
 
 # Also to look into
