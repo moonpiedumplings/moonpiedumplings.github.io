@@ -64,7 +64,9 @@ You might have to reboot here, before the next step will work. Maybe.
 
 `sudo usermod -aG docker $USER # Run docker without sudo`
 
-`sudo usermdo -aG libvirt $USER # Run libvirt vms without sudo`
+`sudo usermod -aG libvirt $USER # Run libvirt vms without sudo`
+
+Rebooting the wsl instance will enable you to have the 
 
 ## Nix
 
@@ -92,7 +94,9 @@ Install the zellij terminal multiplexer:
 [Install chocolatey here](https://chocolatey.org/install#individual)
 
 
-Install several packages we need for development and playing (remove any packages you already have installed)
+Install several packages we need for development and playing (remove any packages you already have installed):
+
+In an administrative powershell or cmd session, run (editing as appropriate): 
 
 ```{.default}
 choco install -y firefox wezterm vscode virtualbox vmware-workstation-player vagrant-vmware-plugin
@@ -147,7 +151,9 @@ Install:
 
 ## Nix
 
-Install nix (tool used to manage our development environments):
+Do not run any of these commands with sudo. 
+
+Install nix (tool used to manage our development environments, this method requires systemd)):
 
 `curl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix | sh -s -- install`
 
@@ -170,6 +176,8 @@ Install zellij
 There are several tools you need for development/playing. 
 
 ## Nix
+
+Do not run any of these commands with sudo. 
 
 Install nix (tool used to manage our development environments):
 
@@ -194,7 +202,7 @@ Install these vscode extensions, and their dependencies (should be pulled automa
 
 * [Ansible](https://marketplace.visualstudio.com/items?itemName=redhat.ansible)
 * [Quarto](https://marketplace.visualstudio.com/items?itemName=quarto.quarto)
-* [WSL](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-wsl)
+* If using vscode with wsl, then [WSL](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-wsl)
 
 Personal preference, but I like to [disable acceptance of the autocomplete suggestion on enter](https://stackoverflow.com/a/74409136). This can be particularly annoying in languages like ansible or python, where you have to hit enter to go to the next line. 
 
@@ -231,9 +239,6 @@ These are personal notes, for myself and anyone else who wants to work on this g
 <https://docs.docker.com/desktop/wsl/>
 
 
-<https://code.visualstudio.com/docs/remote/wsl>
-
-I don't like, we don't need or want remote development
 
 <https://code.visualstudio.com/docs/remote/wsl-tutorial>
 
