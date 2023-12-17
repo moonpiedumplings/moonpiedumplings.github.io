@@ -161,29 +161,24 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <ul>
   <li><a href="#windows" id="toc-windows" class="nav-link active" data-scroll-target="#windows">Windows</a>
   <ul class="collapse">
-  <li><a href="#nix" id="toc-nix" class="nav-link" data-scroll-target="#nix">Nix</a></li>
   <li><a href="#chocolatey" id="toc-chocolatey" class="nav-link" data-scroll-target="#chocolatey">Chocolatey</a>
   <ul class="collapse">
   <li><a href="#wezterm" id="toc-wezterm" class="nav-link" data-scroll-target="#wezterm">Wezterm</a></li>
   </ul></li>
-  <li><a href="#virtualbox" id="toc-virtualbox" class="nav-link" data-scroll-target="#virtualbox">Virtualbox</a></li>
+  <li><a href="#ubuntuwsl-in-windows" id="toc-ubuntuwsl-in-windows" class="nav-link" data-scroll-target="#ubuntuwsl-in-windows">Ubuntu/WSL in Windows</a></li>
+  </ul></li>
   <li><a href="#linux" id="toc-linux" class="nav-link" data-scroll-target="#linux">Linux</a></li>
-  <li><a href="#nix-1" id="toc-nix-1" class="nav-link" data-scroll-target="#nix-1">Nix</a></li>
-  </ul></li>
-  <li><a href="#macos" id="toc-macos" class="nav-link" data-scroll-target="#macos">Macos</a>
-  <ul class="collapse">
-  <li><a href="#tools" id="toc-tools" class="nav-link" data-scroll-target="#tools">Tools</a></li>
-  <li><a href="#nix-2" id="toc-nix-2" class="nav-link" data-scroll-target="#nix-2">Nix</a></li>
-  </ul></li>
+  <li><a href="#macos" id="toc-macos" class="nav-link" data-scroll-target="#macos">Macos</a></li>
   <li><a href="#all-operating-systems" id="toc-all-operating-systems" class="nav-link" data-scroll-target="#all-operating-systems">All Operating Systems</a>
   <ul class="collapse">
+  <li><a href="#nix" id="toc-nix" class="nav-link" data-scroll-target="#nix">Nix</a></li>
   <li><a href="#vscode" id="toc-vscode" class="nav-link" data-scroll-target="#vscode">Vscode</a></li>
   </ul></li>
   <li><a href="#playing-and-developing" id="toc-playing-and-developing" class="nav-link" data-scroll-target="#playing-and-developing">Playing and Developing</a>
   <ul class="collapse">
   <li><a href="#playing" id="toc-playing" class="nav-link" data-scroll-target="#playing">Playing</a></li>
   </ul></li>
-  <li><a href="#also-to-look-into" id="toc-also-to-look-into" class="nav-link" data-scroll-target="#also-to-look-into">Also to look into</a></li>
+  <li><a href="#for-developers-only" id="toc-for-developers-only" class="nav-link" data-scroll-target="#for-developers-only">For developers only</a></li>
   </ul>
 </nav>
     </div>
@@ -219,6 +214,21 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>This will be the guide(s) on how to set up your environment for CCDC playing, and development. I hope to make videos, but right now I’m just taking notes.</p>
 <section id="windows" class="level1">
 <h1>Windows</h1>
+<section id="chocolatey" class="level2">
+<h2 class="anchored" data-anchor-id="chocolatey">Chocolatey</h2>
+<p><a href="https://chocolatey.org/install#individual">Install chocolatey here</a></p>
+<p>Using chocolatey, install several packages we need for play/development. If you already have an app installed, you don’t need to install it with chocolatey.</p>
+<p>In an <strong>administrative powershell or cmd session</strong>, run:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>choco install -y firefox wezterm vscode</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<section id="wezterm" class="level3">
+<h3 class="anchored" data-anchor-id="wezterm">Wezterm</h3>
+<p>Install wezterm from either chocolatey or the <a href="https://wezfurlong.org/wezterm/install/windows.html">official website</a> (using the setup.)</p>
+<p>On a vm, I get an error about the opengl version being incompatible when I attempt to launch wezterm. I have to launch it with `wezterm –config “prefer_egl=true”.</p>
+<p>To launch the ubuntu session, you can right click on the new tab, and then a menu will appear, from which you can select Ubuntu.</p>
+</section>
+</section>
+<section id="ubuntuwsl-in-windows" class="level2">
+<h2 class="anchored" data-anchor-id="ubuntuwsl-in-windows">Ubuntu/WSL in Windows</h2>
 <p>You need to have Windows 11 installed, in order for nested virtualization within WSL to work. If you are not on Windows 10, then you need to either upgrade, or work within a linux distribution.</p>
 <p>As long as you Windows 10 May 2020 Update (version 2004), you can install wsl with a single command. Otherwise, you have to follow some <a href="https://learn.microsoft.com/en-us/windows/wsl/install-manual">painful steps</a></p>
 <p>In an elevated powershell window:</p>
@@ -232,58 +242,32 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="code-with-filename-file">
 <pre><strong>/etc/sudoers</strong></pre>
 </div>
-<div class="sourceCode" id="cb1"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a># Change the portion of the file referring to env_reset to look like this:</span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a># Put an "!" in front of env_reset, and comment out the part referring to secure path</span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>Defaults        !env_reset</span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>Defaults        mail_badpass</span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>#Defaults       secure_path="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin" </span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a># Change the portion of the file that refers to the sudo group to look like this:</span>
-<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>%sudo ALL=(ALL:ALL) NOPASSWD: ALL</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb2"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a># Change the portion of the file referring to env_reset to look like this:</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a># Put an "!" in front of env_reset, and comment out the part referring to secure path</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>Defaults        !env_reset</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>Defaults        mail_badpass</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>#Defaults       secure_path="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin" </span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a># Change the portion of the file that refers to the sudo group to look like this:</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>%sudo ALL=(ALL:ALL) NOPASSWD: ALL</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Either reboot, or restart the wsl virtual machine.</p>
 <p>To restart the WSL vm, from <strong>powershell</strong> or <strong>cmd</strong>:</p>
 <p>Install docker and docker-compose (and curl and git, other tools we will need later):</p>
 <p><code>sudo apt update &amp;&amp; sudo apt upgrade</code></p>
-<p><code>sudo apt install docker.io docker-compose curl git ssh wget virt-manager</code></p>
+<p><code>sudo apt install docker.io docker-compose curl git openssh-client wget virt-manager</code></p>
 <p>You might have to reboot here, before the next step will work. Maybe.</p>
 <p><code>sudo usermod -aG docker $USER # Run docker without sudo</code></p>
 <p><code>sudo usermod -aG libvirt $USER # Run libvirt vms without sudo</code></p>
-<p>Rebooting the wsl instance will enable you to have the</p>
-<section id="nix" class="level2">
-<h2 class="anchored" data-anchor-id="nix">Nix</h2>
-<p>Install nix (tool used to manage our development environments):</p>
-<p><code>curl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix | sh -s -- install</code></p>
-<p>Restart your shell. Simply close and reopen the debian terminal.</p>
-<p>Update the nix channels:</p>
-<p><code>nix-channel --add https://nixos.org/channels/nixpkgs-unstable nixpkgs</code></p>
-<p><code>nix-channel --update</code></p>
-<p>Install the zellij terminal multiplexer:</p>
-<p><code>nix profile install nixpkgs#zellij</code></p>
-</section>
-<section id="chocolatey" class="level2">
-<h2 class="anchored" data-anchor-id="chocolatey">Chocolatey</h2>
-<p><a href="https://chocolatey.org/install#individual">Install chocolatey here</a></p>
-<p>Install several packages we need for development and playing (remove any packages you already have installed):</p>
-<p>In an administrative powershell or cmd session, run (editing as appropriate):</p>
-<div class="sourceCode" id="cb2"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>choco install -y firefox wezterm vscode virtualbox vmware-workstation-player vagrant-vmware-plugin</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<section id="wezterm" class="level3">
-<h3 class="anchored" data-anchor-id="wezterm">Wezterm</h3>
-<p>Install wezterm from either chocolatey or the <a href="https://wezfurlong.org/wezterm/install/windows.html">official website</a> (using the setup.)</p>
-<p>On a vm, I get an error about the opengl version being incompatible when I attempt to launch wezterm. I have to launch it with `wezterm –config “prefer_egl=true”.</p>
-<p>To launch the ubuntu session, you can right click on the new tab, and then a menu will appear, from which you can select Ubuntu.</p>
+<p>Rebooting the wsl instance will log you in and out, enabling you to use docker, without sudo, and after you launch virt-manager once, you can access it from the windows gui.</p>
 </section>
 </section>
-<section id="virtualbox" class="level2">
-<h2 class="anchored" data-anchor-id="virtualbox">Virtualbox</h2>
-<p>Virtualbox and hyperv at the same time is a bit tricky, so you might have to follow <a href="https://stackoverflow.com/a/69896662">this stackoverflow answer</a></p>
-</section>
-<section id="linux" class="level2">
-<h2 class="anchored" data-anchor-id="linux">Linux</h2>
+<section id="linux" class="level1">
+<h1>Linux</h1>
 <p>Linux has many distributions, so I will include vague steps that will work everywhere, rather than precise steps that only work on one distro, like the above Windows/WSL steps, which are designed to work on Ubuntu. If you have an Ubuntu or Debian based distro for your linux, then those steps likely work.</p>
 <p>Edit the sudoers file:</p>
 <p>To edit the sudo file, you can use <code>sudo visudo</code> to edit it safely. This command while check the sudoers file for errors, rather than instantly breaking sudo upon a misconfiguration.</p>
@@ -304,73 +288,85 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li>Equivalent of base development packages for your distro. Usually a metapackage containing git, compilers like gcc, and build tools like make.</li>
 <li>ssh and related packages. (If sshfs and scp are packaged, get them as well)</li>
 <li>curl and wget</li>
-<li>Libvirt and virt-manager</li>
-<li>Docker</li>
-<li>Vscode</li>
+<li>Libvirt and virt-manager (add your user to the libvirtd group so that you don’t need sudo to manage virtual machines)</li>
+<li>Docker (add your user to the docker group so you don’t need sudo to manage docker containers)</li>
+<li>Firefox</li>
 </ul>
-</section>
-<section id="nix-1" class="level2">
-<h2 class="anchored" data-anchor-id="nix-1">Nix</h2>
-<p>Do not run any of these commands with sudo.</p>
-<p>Install nix (tool used to manage our development environments, this method requires systemd)):</p>
-<p><code>curl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix | sh -s -- install</code></p>
-<p>Update the nix channels:</p>
-<p><code>nix-channel --add https://nixos.org/channels/nixpkgs-unstable nixpkgs</code></p>
-<p><code>nix-channel --update</code></p>
-<p>Install zellij</p>
-<p><code>nix profile install nixpkgs#zellij</code></p>
-</section>
+<p><strong>Wezterm:</strong></p>
+<p><a href="https://wezfurlong.org/wezterm/install/linux.html">Wezterm has official installation instructions</a>. I don’t recommend flatpak, because sandboxing may cause weird behaviro.</p>
+<p><strong>Vscode:</strong></p>
+<p><a href="https://code.visualstudio.com/docs/setup/linux">Microsoft has an official guide about installing vscode</a>. I recommend you add the microsoft repo for your distro if available, and get from there, so that your package manager can update vscode alongside everything else.</p>
 </section>
 <section id="macos" class="level1">
 <h1>Macos</h1>
-<section id="tools" class="level2">
-<h2 class="anchored" data-anchor-id="tools">Tools</h2>
-<p>There are several tools you need for development/playing.</p>
-</section>
-<section id="nix-2" class="level2">
-<h2 class="anchored" data-anchor-id="nix-2">Nix</h2>
-<p>Do not run any of these commands with sudo.</p>
-<p>Install nix (tool used to manage our development environments):</p>
-<p><code>curl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix | sh -s -- install</code></p>
-<p>Update the nix channels:</p>
-<p><code>sudo nix-channel --add https://nixos.org/channels/nixpkgs-unstable nixpkgs</code></p>
-<p><code>sudo nix-channel --update</code></p>
-<p>Install zellij</p>
-<p><code>nix profile install nixpkgs#zellij</code></p>
-</section>
+<p>Install homebrew from <a href="https://brew.sh/">the official website</a></p>
+<p>Steps needed:</p>
+<ul>
+<li>Install vscode in a way that it’s in your $PATH.
+<ul>
+<li>Does brew do this?</li>
+<li><a href="https://code.visualstudio.com/docs/setup/mac">Microsoft’s documentation</a></li>
+</ul></li>
+<li>Nix (see below)</li>
+<li>Libvirt
+<ul>
+<li><a href="https://libvirt.org/macos.html">Official docs recommend brew</a> - but does this method integrate properly</li>
+<li><a href="https://www.arthurkoziel.com/running-virt-manager-and-libvirt-on-macos/">Spice not supported</a> - is this outdated?</li>
+</ul></li>
+<li>Virtualbox</li>
+<li><a href="https://www.virtualbox.org/wiki/Downloads">Official site</a></li>
+<li>No arm version?</li>
+<li>Vmware fusion — No.&nbsp;Paid software, and is a different vagrant provider.</li>
+<li>Wezterm:
+<ul>
+<li><a href="https://formulae.brew.sh/cask/wezterm#default">Brew cask</a></li>
+<li><a href="https://wezfurlong.org/wezterm/install/macos.html">Official website</a> (also recommends brew)</li>
+</ul></li>
+</ul>
 </section>
 <section id="all-operating-systems" class="level1">
 <h1>All Operating Systems</h1>
+<section id="nix" class="level2">
+<h2 class="anchored" data-anchor-id="nix">Nix</h2>
+<p>In macos terminal, in linux, or in WSL, install nix (tool used to manage our development environments):</p>
+<p>Do not run these commands with sudo.</p>
+<p><code>curl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix | sh -s -- install</code></p>
+<p>Restart your shell. Simply close and reopen the debian terminal.</p>
+<p>Update the nix channels:</p>
+<p><code>nix-channel --add https://nixos.org/channels/nixpkgs-unstable nixpkgs</code></p>
+<p><code>nix-channel --update</code></p>
+<p>Install the zellij terminal multiplexer:</p>
+<p><code>nix profile install nixpkgs#zellij</code></p>
+</section>
 <section id="vscode" class="level2">
 <h2 class="anchored" data-anchor-id="vscode">Vscode</h2>
 <p>Install these vscode extensions, and their dependencies (should be pulled automatically):</p>
 <ul>
 <li><a href="https://marketplace.visualstudio.com/items?itemName=redhat.ansible">Ansible</a></li>
 <li><a href="https://marketplace.visualstudio.com/items?itemName=quarto.quarto">Quarto</a></li>
-<li>If using vscode with wsl, then <a href="https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-wsl">WSL</a></li>
+<li>If using vscode with WSL, then <a href="https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-wsl">WSL</a></li>
 </ul>
 <p>Personal preference, but I like to <a href="https://stackoverflow.com/a/74409136">disable acceptance of the autocomplete suggestion on enter</a>. This can be particularly annoying in languages like ansible or python, where you have to hit enter to go to the next line.</p>
 </section>
 </section>
 <section id="playing-and-developing" class="level1">
 <h1>Playing and Developing</h1>
-<section id="playing" class="level3">
-<h3 class="anchored" data-anchor-id="playing">Playing</h3>
+<section id="playing" class="level2">
+<h2 class="anchored" data-anchor-id="playing">Playing</h2>
 <p><code>git clone https://github.com/CSUN-CCDC/CCDC-2023</code></p>
 <p>When in the root of this git repo, you can run <code>nix-shell</code> to get a full development environment. It includes tools like ansible, ansible checking, and vagrant.</p>
 <p>For the play environment, that is located in the root of utils/ directory.</p>
 </section>
 </section>
-<section id="also-to-look-into" class="level1">
-<h1>Also to look into</h1>
-<p>This is just for the developers.</p>
-<p><a href="https://github.com/nix-community/nix-direnv" class="uri">https://github.com/nix-community/nix-direnv</a></p>
-<p>Direnv, as an alternative to multiplexing for the competition environments.</p>
-<p>Libvirt on macos: <a href="https://libvirt.org/macos.html" class="uri">https://libvirt.org/macos.html</a></p>
-<p>Nested virtualization in wsl:</p>
-<p><a href="https://www.paralint.com/2022/11/find-new-modified-and-unversioned-subversion-files-on-windows" class="uri">https://www.paralint.com/2022/11/find-new-modified-and-unversioned-subversion-files-on-windows</a></p>
+<section id="for-developers-only" class="level1">
+<h1>For developers only</h1>
 <p>These are personal notes, for myself and anyone else who wants to work on this guide.</p>
+<p><a href="https://github.com/ppggff/vagrant-qemu">Qemu provider</a>? That should work on everything, although I can’t find speed benchmarks for pure qemu/qemu + TCG (windows 10). Will this take advantage of HVF (hardware accelerated cpu instructions) on Mac?</p>
+<p>Libvirt on macos: <a href="https://libvirt.org/macos.html" class="uri">https://libvirt.org/macos.html</a></p>
+<p>Nested virtualization in wsl (working on 11):</p>
+<p><a href="https://www.paralint.com/2022/11/find-new-modified-and-unversioned-subversion-files-on-windows">Run an hardware accelerated Fuchsia emulator on WSL2</a></p>
 <p><a href="https://docs.docker.com/desktop/wsl/" class="uri">https://docs.docker.com/desktop/wsl/</a></p>
+<p>Virtualbox and hyperv at the same time is a bit tricky, so you might have to follow <a href="https://stackoverflow.com/a/69896662">this stackoverflow answer</a></p>
 <p><a href="https://code.visualstudio.com/docs/remote/wsl-tutorial" class="uri">https://code.visualstudio.com/docs/remote/wsl-tutorial</a></p>
 <p><a href="https://learn.microsoft.com/en-us/windows/wsl/tutorials/wsl-vscode" class="uri">https://learn.microsoft.com/en-us/windows/wsl/tutorials/wsl-vscode</a></p>
 
