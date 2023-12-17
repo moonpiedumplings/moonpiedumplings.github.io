@@ -16,6 +16,34 @@ This will be the guide(s) on how to set up your environment for CCDC playing, an
 
 # Windows
 
+## Chocolatey
+
+[Install chocolatey here](https://chocolatey.org/install#individual)
+
+
+Using chocolatey, install several packages we need for play/development. If you already have an app installed, you don't need to install it with chocolatey. 
+
+
+In an **administrative powershell or cmd session**, run:
+
+```{.default}
+choco install -y firefox wezterm vscode
+```
+
+
+### Wezterm
+
+Install wezterm from either chocolatey or the [official website](https://wezfurlong.org/wezterm/install/windows.html) (using the setup.)
+
+
+On a vm, I get an error about the opengl version being incompatible when I attempt to launch wezterm. I have to launch it with `wezterm --config "prefer_egl=true".
+
+To launch the ubuntu session, you can right click on the new tab, and then a menu will appear, from which you can select Ubuntu. 
+
+
+
+## Ubuntu/WSL in Windows
+
 You need to have Windows 11 installed, in order for nested virtualization within WSL to work. If you are not on Windows 10, then you need to either upgrade, or work within a linux distribution. 
 
 As long as you Windows 10 May 2020 Update (version 2004), you can install wsl with a single command. Otherwise, you have to follow some [painful steps](https://learn.microsoft.com/en-us/windows/wsl/install-manual)
@@ -58,7 +86,7 @@ Install docker and docker-compose (and curl and git, other tools we will need la
 
 `sudo apt update && sudo apt upgrade`
 
-`sudo apt install docker.io docker-compose curl git ssh wget virt-manager`
+`sudo apt install docker.io docker-compose curl git openssh-client wget virt-manager`
 
 You might have to reboot here, before the next step will work. Maybe.
 
@@ -66,61 +94,12 @@ You might have to reboot here, before the next step will work. Maybe.
 
 `sudo usermod -aG libvirt $USER # Run libvirt vms without sudo`
 
-Rebooting the wsl instance will enable you to have the 
-
-## Nix
-
-Install nix (tool used to manage our development environments):
-
-`curl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix | sh -s -- install`
-
-Restart your shell. Simply close and reopen the debian terminal. 
-
-Update the nix channels:
-
-`nix-channel --add https://nixos.org/channels/nixpkgs-unstable nixpkgs`
-
-`nix-channel --update`
-
-Install the zellij terminal multiplexer:
-
-`nix profile install nixpkgs#zellij`
+Rebooting the wsl instance will log you in and out, enabling you to use docker, without sudo, and after you launch virt-manager once, you can access it from the windows gui. 
 
 
 
 
-## Chocolatey
-
-[Install chocolatey here](https://chocolatey.org/install#individual)
-
-
-Install several packages we need for development and playing (remove any packages you already have installed):
-
-In an administrative powershell or cmd session, run (editing as appropriate): 
-
-```{.default}
-choco install -y firefox wezterm vscode virtualbox vmware-workstation-player vagrant-vmware-plugin
-```
-
-
-### Wezterm
-
-Install wezterm from either chocolatey or the [official website](https://wezfurlong.org/wezterm/install/windows.html) (using the setup.)
-
-
-On a vm, I get an error about the opengl version being incompatible when I attempt to launch wezterm. I have to launch it with `wezterm --config "prefer_egl=true".
-
-To launch the ubuntu session, you can right click on the new tab, and then a menu will appear, from which you can select Ubuntu. 
-
-
-
-## Virtualbox
-
-Virtualbox and hyperv at the same time is a bit tricky, so you might have to follow [this stackoverflow answer](https://stackoverflow.com/a/69896662)  
-
-
-
-## Linux
+# Linux
 
 Linux has many distributions, so I will include vague steps that will work everywhere, rather than precise steps that only work on one distro, like the above Windows/WSL steps, which are designed to work on Ubuntu. If you have an Ubuntu or Debian based distro for your linux, then those steps likely work. 
 
@@ -144,18 +123,52 @@ Install:
 * Equivalent of base development packages for your distro. Usually a metapackage containing git, compilers like gcc, and build tools like make.
 * ssh and related packages. (If sshfs and scp are packaged, get them as well)
 * curl and wget
-* Libvirt and virt-manager
-* Docker
-* Vscode
+* Libvirt and virt-manager (add your user to the libvirtd group so that you don't need sudo to manage virtual machines)
+* Docker (add your user to the docker group so you don't need sudo to manage docker containers)
+* Firefox
 
+**Wezterm:**
+
+[Wezterm has official installation instructions](https://wezfurlong.org/wezterm/install/linux.html). I don't recommend flatpak, because sandboxing may cause weird behaviro. 
+
+**Vscode:**
+
+[Microsoft has an official guide about installing vscode](https://code.visualstudio.com/docs/setup/linux). I recommend you add the microsoft repo for your distro if available, and get from there, so that your package manager can update vscode alongside everything else. 
+
+
+# Macos
+
+Install homebrew from [the official website](https://brew.sh/)
+
+Steps needed: 
+
+* Install vscode in a way that it's in your $PATH.
+  - Does brew do this?
+  - [Microsoft's documentation](https://code.visualstudio.com/docs/setup/mac)
+* Nix (see below)
+* Libvirt
+  - [Official docs recommend brew](https://libvirt.org/macos.html) - but does this method integrate properly
+  - [Spice not supported](https://www.arthurkoziel.com/running-virt-manager-and-libvirt-on-macos/) - is this outdated?
+* Virtualbox
+ - [Official site](https://www.virtualbox.org/wiki/Downloads)
+ - No arm version?
+* Vmware fusion — No. Paid software, and is a different vagrant provider.
+* Wezterm:
+  - [Brew cask](https://formulae.brew.sh/cask/wezterm#default)
+  - [Official website](https://wezfurlong.org/wezterm/install/macos.html) (also recommends brew)
+
+
+# All Operating Systems
 
 ## Nix
 
-Do not run any of these commands with sudo. 
+In macos terminal, in linux, or in WSL, install nix (tool used to manage our development environments):
 
-Install nix (tool used to manage our development environments, this method requires systemd)):
+Do not run these commands with sudo.
 
 `curl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix | sh -s -- install`
+
+Restart your shell. Simply close and reopen the debian terminal. 
 
 Update the nix channels:
 
@@ -163,38 +176,9 @@ Update the nix channels:
 
 `nix-channel --update`
 
-Install zellij
+Install the zellij terminal multiplexer:
 
 `nix profile install nixpkgs#zellij`
-
-
-
-# Macos
-
-## Tools
-
-There are several tools you need for development/playing. 
-
-## Nix
-
-Do not run any of these commands with sudo. 
-
-Install nix (tool used to manage our development environments):
-
-`curl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix | sh -s -- install`
-
-Update the nix channels:
-
-`sudo nix-channel --add https://nixos.org/channels/nixpkgs-unstable nixpkgs`
-
-`sudo nix-channel --update`
-
-Install zellij
-
-`nix profile install nixpkgs#zellij`
-
-
-# All Operating Systems
 
 ## Vscode
 
@@ -202,7 +186,7 @@ Install these vscode extensions, and their dependencies (should be pulled automa
 
 * [Ansible](https://marketplace.visualstudio.com/items?itemName=redhat.ansible)
 * [Quarto](https://marketplace.visualstudio.com/items?itemName=quarto.quarto)
-* If using vscode with wsl, then [WSL](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-wsl)
+* If using vscode with WSL, then [WSL](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-wsl)
 
 Personal preference, but I like to [disable acceptance of the autocomplete suggestion on enter](https://stackoverflow.com/a/74409136). This can be particularly annoying in languages like ansible or python, where you have to hit enter to go to the next line. 
 
@@ -210,7 +194,7 @@ Personal preference, but I like to [disable acceptance of the autocomplete sugge
 
 # Playing and Developing
 
-### Playing
+## Playing
 
 `git clone https://github.com/CSUN-CCDC/CCDC-2023`
 
@@ -219,25 +203,23 @@ When in the root of this git repo, you can run `nix-shell` to get a full develop
 For the play environment, that is located in the root of utils/ directory. 
 
 
-# Also to look into
+# For developers only
 
-This is just for the developers.
-
-<https://github.com/nix-community/nix-direnv>
-
-Direnv, as an alternative to multiplexing for the competition environments.
-
-
-Libvirt on macos: <https://libvirt.org/macos.html>
-
-Nested virtualization in wsl:
-
-<https://www.paralint.com/2022/11/find-new-modified-and-unversioned-subversion-files-on-windows>
 
 These are personal notes, for myself and anyone else who wants to work on this guide.
 
+[Qemu provider](https://github.com/ppggff/vagrant-qemu)? That should work on everything, although I can't find speed benchmarks for pure qemu/qemu + TCG (windows 10). Will this take advantage of HVF (hardware accelerated cpu instructions) on Mac? 
+
+Libvirt on macos: <https://libvirt.org/macos.html>
+
+Nested virtualization in wsl (working on 11):
+
+[Run an hardware accelerated Fuchsia emulator on WSL2](https://www.paralint.com/2022/11/find-new-modified-and-unversioned-subversion-files-on-windows)
+
+
 <https://docs.docker.com/desktop/wsl/>
 
+Virtualbox and hyperv at the same time is a bit tricky, so you might have to follow [this stackoverflow answer](https://stackoverflow.com/a/69896662)  
 
 
 <https://code.visualstudio.com/docs/remote/wsl-tutorial>
