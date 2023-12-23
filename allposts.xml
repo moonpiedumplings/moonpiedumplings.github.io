@@ -433,81 +433,6 @@
   <pubDate>Mon, 23 Oct 2023 00:00:00 GMT</pubDate>
 </item>
 <item>
-  <title>Building an ML pipeline</title>
-  <link>https://moonpiedumplings.github.io/projects/ai-pipeline/index.html</link>
-  <description><![CDATA[ 
-
-
-
-<p>For my Black Studies and Culture class (AFRS 100), the class mainly consists of a single major project, which we are given free reign about. So obviously, I made mine related to computer science.</p>
-<p>There is a very good documentary, called “Coded Bias”, on Netflix. In it, MIT researcher Joy Buolamwini discovers that existing facial recognition AI struggle to differentiate black people properly, or sometimes to even recognize them as a face.</p>
-<p>The film also goes further in depth, like how facial recognition is being increasingly used to surveil populations. It gives the example of in the UK, where a facial recognition AI is employed to catch “criminals,” but the AI has the same issue of not being able to differentiate between black people, which leads to innocent people being accosted.</p>
-<p>Of course, innocent white people also got accosted by this system. And there were also people who sought to protect their own face, but then were pulled over simply for desiring privacy. However, black people are definitely affected worse than other groups by systems such as this. The combination of the sheer apathy towards marginalized groups in the creation of facial recognition AI, and the already existing racism present in policing systems multiplies to create something much worse. Now, when the officer pulls you over, it’s not because they thought you “looked like a criminal”, it’s because the uncaring, unchallengeable AI said you “matched a criminal on the database.”</p>
-<p>My research question is simple: Is this bias in facial recognition AI (specifically, the popular, public models) still the case?</p>
-<p>To test this, I have a research plan.</p>
-<p>Using my own server, I will download, existing, pretrained facial recognition models (models are like the learned information that drives AI), and maybe their datasets (data, like images, used to train AI), from <a href="https://www.kaggle.com/">kaggle</a> and <a href="https://huggingface.co/">huggingface</a>, two of the popular sites for public AI models.</p>
-<p>I will then use a survey, and ask people to take pictures of their face from multiple angles. These images will be attached to a pseudo anonymous identifier. In addition to this, I will ask people to report their race as other people would view them.</p>
-<p>After I have collected this information, I will attempt to use facial recognition on the images I have collected, checking the accuracy of matching them to the images. Using this, I can see how biased the facial recognition of some of the popular publicly available facial recognition models are.</p>
-<section id="selection-of-software-and-models" class="level1">
-<h1>Selection of software and models</h1>
-<section id="models" class="level2">
-<h2 class="anchored" data-anchor-id="models">Models</h2>
-<p>For now, this is just some research on available public models.</p>
-<p><a href="https://hackernoon.com/6-best-open-source-projects-for-real-time-face-recognition-vr1w34x5">hackernoon</a> article, <a href="https://web.archive.org/web/20230423202315/https://hackernoon.com/6-best-open-source-projects-for-real-time-face-recognition-vr1w34x5">archive</a>.</p>
-<p><a href="https://github.com/ageitgey/face_recognition" class="uri">https://github.com/ageitgey/face_recognition</a> : Machine learning based python facial recognition library.</p>
-</section>
-<section id="survey-software" class="level2">
-<h2 class="anchored" data-anchor-id="survey-software">Survey Software</h2>
-<p>I need a survey software that integrates with the transformers that I will be running. They must be FOSS, and run entirely on my machines, for privacy reasons.</p>
-<section id="option-1-limesurvey" class="level3">
-<h3 class="anchored" data-anchor-id="option-1-limesurvey">Option 1: Limesurvey:</h3>
-<p><a href="https://github.com/LimeSurvey/LimeSurvey" class="uri">https://github.com/LimeSurvey/LimeSurvey</a></p>
-<p>Many of the docker images seem to be a bit outdated, and I can’t find an official one.</p>
-<p>Thankfully, there exists a Nixos <a href="https://search.nixos.org/packages?channel=23.05&amp;show=limesurvey&amp;size=50&amp;sort=relevance&amp;type=packages&amp;query=limesurvey">package</a> and <a href="https://search.nixos.org/options?channel=23.05&amp;show=limesurvey&amp;size=50&amp;sort=relevance&amp;type=packages&amp;query=limesurvey">service</a> for it, meaning that will be fairly easy to deploy.</p>
-<p>It supports <a href="https://manual.limesurvey.org/Question_type_-_File_upload">file upload</a>, but no image upload.</p>
-<p>This one also has a python library to interact with it, so I can import data straight from there and plug it into a ML model.</p>
-</section>
-<section id="option-2-odoo-survey" class="level3">
-<h3 class="anchored" data-anchor-id="option-2-odoo-survey">Option 2: Odoo Survey</h3>
-<p><a href="https://github.com/odoo/odoo" class="uri">https://github.com/odoo/odoo</a></p>
-<p>There also exists a <a href="https://search.nixos.org/options?channel=23.05&amp;from=0&amp;size=50&amp;sort=relevance&amp;type=packages&amp;query=odoo">Nixos service</a> for this.</p>
-<p>I don’t know if it supports images. See <a href="https://www.odoo.com/documentation/16.0/applications/marketing/surveys/create.html">docs</a></p>
-</section>
-<section id="option-3-kobotoolbox" class="level3">
-<h3 class="anchored" data-anchor-id="option-3-kobotoolbox">Option 3: Kobotoolbox</h3>
-<p>Github Organization: <a href="https://github.com/kobotoolbox" class="uri">https://github.com/kobotoolbox</a></p>
-<p>They do have a docker container on there. No nix packages though, but that’s ok.</p>
-<p>They do support the <a href="https://support.kobotoolbox.org/photo_audio_video_file.html?highlight=image">photo</a> image type.</p>
-<p>There is an unofficial python api: <a href="https://pypi.org/project/pykobo/" class="uri">https://pypi.org/project/pykobo/</a>. However, it import data as a pandas dataframe, and I don’t know if it is possible to store images in those.</p>
-</section>
-<section id="option-4-openforis-collect" class="level3">
-<h3 class="anchored" data-anchor-id="option-4-openforis-collect">Option 4: OpenForis Collect</h3>
-<p>Has a <a href="https://openforis.org/tools/collect-mobile/">mobile app</a>, which can request users to take a photo. Only available on android.</p>
-</section>
-</section>
-<section id="deployment" class="level2">
-<h2 class="anchored" data-anchor-id="deployment">Deployment</h2>
-<p>I was going to go with limesurvey, in part because it was the first option I tried, and it was mostly satisfactory, and I didn’t have enough time to try anything else.</p>
-<p>I found a <a href="https://github.com/martialblog/docker-limesurvey">docker-compose</a> for it on github, however, I realized something: My server’s cannot install docker normally, because that is potentially compatible with my future <a href="../build-server-2/">openstack</a> install. Uh oh.</p>
-<p>I installed docker using kolla-ansible’s bootstrap steps, but that version of docker did not have networking working properly. So I decided to do something different: podman.</p>
-<p>However, because I am using Rocky Linux, there is no podman-compose, or docker-compose available in the repositories. In addition to that, I cannot install the podman-docker command, providing a replacement cli for docker that actually uses podman, as that conflicts with docker.</p>
-<p>Thankfully, you can use an <a href="https://podman-desktop.io/docs/migrating-from-docker/using-the-docker_host-environment-variable">environment variable</a> to make it so that the docker client, is actually using podman as a backend. This allows me to use the included <code>docker compose</code> command.</p>
-<div class="sourceCode" id="cb1" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb1-1"></span>
-<span id="cb1-2">systemctl start podman.service # or enable --now</span>
-<span id="cb1-3"></span>
-<span id="cb1-4">export DOCKER_HOST=unix:///run/podman/podman.sock</span></code></pre></div>
-<p>And with this, I can run <code>docker compose</code>, but it’s actually using podman.</p>
-
-
-</section>
-</section>
-
- ]]></description>
-  <category>linux</category>
-  <guid>https://moonpiedumplings.github.io/projects/ai-pipeline/index.html</guid>
-  <pubDate>Mon, 23 Oct 2023 00:00:00 GMT</pubDate>
-</item>
-<item>
   <title>Being an internet helper</title>
   <link>https://moonpiedumplings.github.io/blog/helping/index.html</link>
   <description><![CDATA[ 
@@ -6997,6 +6922,63 @@ font-style: inherit;"> mine</span></span></code></pre></div>
   <category>git</category>
   <guid>https://moonpiedumplings.github.io/guides/git/index.html</guid>
   <pubDate>Wed, 28 Jun 2023 00:00:00 GMT</pubDate>
+</item>
+<item>
+  <title>The cruise ship I am on has very locked down computers</title>
+  <link>https://moonpiedumplings.github.io/playground/cruise-ship-computers/index.html</link>
+  <description><![CDATA[ 
+
+
+
+<p>So I finally found the internet cafe on the cruise ship. I didn’t think they had one.</p>
+<p>The computers look something like this:</p>
+<p><img src="https://moonpiedumplings.github.io/playground/cruise-ship-computers/images/intro.jpg" class="img-fluid"></p>
+<p>They have a keyboard, mouse and screen, but the rest of the machine was locked away, physically, behind the desk. I couldn’t get to it, and the cabinets were locked.</p>
+<p>The only reason I know it’s windows is because all devices on this ship, including point of sale devices appear to be using windows. However, there is no taskbar, or windows UI visible, just a chrome browser in an incognito tab session, and a big blue “End Internet Session” button in the top right. When presses, this button completely resets the session.</p>
+<p>So obviously, I decided to do some snooping around.</p>
+<p>Can I get open task manager from the cntrl alt delete interface? :</p>
+<p><img src="https://moonpiedumplings.github.io/playground/cruise-ship-computers/images/cntraltdel.jpg" class="img-fluid"></p>
+<p>No, I can’t. But I can do other things.</p>
+<p><img src="https://moonpiedumplings.github.io/playground/cruise-ship-computers/images/snooping.jpg" class="img-fluid"></p>
+<p>Control + O brings up the file open dialog, which lets me see the immediate user filesystem. Using this, I figured out the currently logged in user. Then, using chrome’s <code>file://</code> dialog, I decided to do some browsing.</p>
+<p><img src="https://moonpiedumplings.github.io/playground/cruise-ship-computers/images/useris.jpg" class="img-fluid"></p>
+<p>I went through all the directories of the currently logged in user, but I didn’t find anything of note. It seems like the reset of the seession deletes any downloaded files, or something like that.</p>
+<p>However, I quickly discovered something more interesting:</p>
+<p><img src="https://moonpiedumplings.github.io/playground/cruise-ship-computers/images/chromewindows.jpg" class="img-fluid"></p>
+<p>I could get to the C:/Windows directory, where the explorer.exe file was. Explorer.exe is the program that launches the windows UI.</p>
+<p>But when I tried to click on it, chrome just downloaded it instead. But this was promising.</p>
+<p>So I tried accessing the C drive through the “open file” interface that pops up when you hit Control + O.</p>
+<p><img src="https://moonpiedumplings.github.io/playground/cruise-ship-computers/images/cdenied.jpg" class="img-fluid"></p>
+<p>However, when I tried to access the C drive, I got an access denied. But if I put in the absolute path like so:</p>
+<p><img src="https://moonpiedumplings.github.io/playground/cruise-ship-computers/images/absfilepath.jpg" class="img-fluid"></p>
+<p>Then it worked:</p>
+<p><img src="https://moonpiedumplings.github.io/playground/cruise-ship-computers/images/explorer.jpg" class="img-fluid"></p>
+<p>I right clicked on explorer.exe, and selected “open”. And I got the windows UI to launch.</p>
+<p><img src="https://moonpiedumplings.github.io/playground/cruise-ship-computers/images/windowsui.jpg" class="img-fluid"></p>
+<p>From here, I had broken out of the small box that I was locked in. But I decided to snoop around more.</p>
+<p><img src="https://moonpiedumplings.github.io/playground/cruise-ship-computers/images/noprompt.jpg" class="img-fluid"></p>
+<p>Aww, command prompt was disabled. Too bad.</p>
+<p><img src="https://moonpiedumplings.github.io/playground/cruise-ship-computers/images/powershell.jpg" class="img-fluid"></p>
+<p>But powershell wasn’t.</p>
+<p><img src="https://moonpiedumplings.github.io/playground/cruise-ship-computers/images/antivirus.jpg" class="img-fluid"></p>
+<p>Windows defender was active, but it was complaining about virus definitons being outdated.</p>
+<p>The settings app wouldn’t launch, it would close instantly. And attempting to launch control panel made erred as well, complaining about being disabled by the administrator.</p>
+<p>So, I decided to use powershell to do further snooping around:</p>
+<p><img src="https://moonpiedumplings.github.io/playground/cruise-ship-computers/images/systeminfo.jpg" class="img-fluid"></p>
+<p>Wow, that is an old version of windows. It looks like they haven’t updated this system from when they first installed it in 2020 (It’s currently 6/24/2023 as I write this).</p>
+<p><img src="https://moonpiedumplings.github.io/playground/cruise-ship-computers/images/whoami.jpg" class="img-fluid"></p>
+<p>The whoami command tells a little bit about users and permissions. Looking at permissions, I notice something. The user I am logged in as is denied all permissions except one, bypass traversal checking. Bypass traversal checking allows users to visit lower level directories they haven’t been explicitly granted permission to go to, even if they are denied to higher level directories.</p>
+<p>In this case, even though I have been denied access to the C drive, this singular permission enabled me to get into C:/Windows, and launch the explorer.exe program. This singular persmission created a security hole for me to crawl to.</p>
+<p>Now, there are probably ways I can exploit this further. Since these machines are connected to the network, even if they aren’t connected to the internet, I could use an http server on another network connected device to send an payload to be executed on these devices, targeting a vulnerability not patched in this older version of windows. Or, since it is an older version of windows, there may be a easy exploit, something I could simply type into powershell.</p>
+<p>I ended up not going any further. Ironically, I was pretty busy this vacation, between my other personal projects, and all the traveling.</p>
+
+
+
+ ]]></description>
+  <category>windows</category>
+  <category>cybersecurity</category>
+  <guid>https://moonpiedumplings.github.io/playground/cruise-ship-computers/index.html</guid>
+  <pubDate>Wed, 21 Jun 2023 00:00:00 GMT</pubDate>
 </item>
 </channel>
 </rss>
