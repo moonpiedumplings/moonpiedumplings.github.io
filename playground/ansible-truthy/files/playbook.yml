@@ -7,12 +7,13 @@
     ignore_errors: true
     empty_list: []
     test_ip: 1.1.1.1
+    notunset: "stuff"
 
   tasks:
     - name: Print test var
       ansible.builtin.debug:
         var: test_var
-    - name: Is null defined
+    - name: Is test_var defined
       ansible.builtin.debug:
         msg: "test_var is defined"
       when: test_var is defined
@@ -20,13 +21,22 @@
       ansible.builtin.debug:
         msg: "test_var is truthy"
       when: test_var
+    - name: Set test_var as a fact
+      ansible.builtin.set_fact:
+        test_var_stuff: "{{ test_var | default(False) }}"
+    - name: What about the default filter?
+      ansible.builtin.debug:
+        var: test_var_stuff
+    - name: default to false for test_var
+      ansible.builtin.debug:
+        msg: "{{ test_var | default(False) }}"
     - name: What about the bool filter
       ansible.builtin.debug:
         msg: "test var passes the bool"
       when: test_var | bool
     - name: How about the default filter?
       ansible.builtin.debug:
-        msg: "{{ test_var | default('test_var is not defined') }}"
+        msg: "{{ test_var | default('test_var does not pass the default filter') }}"
     - name: What about a length filter?
       ansible.builtin.debug:
         msg: "empty_string passes the length filter"
@@ -34,7 +44,7 @@
     - name: Print empty_string
       ansible.builtin.debug:
         var: empty_string
-    - name: Is null defined
+    - name: Is empty_string defined
       ansible.builtin.debug:
         msg: "empty_string is defined"
       when: empty_string is defined
@@ -59,6 +69,31 @@
       ansible.builtin.debug:
         msg: "unset is defined"
       when: unset is defined
+    - name: Unset variable defined and truthy?
+      ansible.builtin.assert:
+        that: unset is defined and unset
+      ignore_errors: true
+    - name: Is notunset variable truthy
+      ansible.builtin.debug:
+        msg: "notunset is truthy?"
+      when: notunset
+      ignore_errors: true
+    - name: Notunset variable defined?
+      ansible.builtin.debug:
+        msg: "unset is defined"
+      when: notunset is defined
+    - name: Notunset variable defined and truthy (with bool filter)?
+      ansible.builtin.assert:
+        that: notunset is defined and notunset | bool
+      ignore_errors: true
+    - name: Notunset variable defined and truthy (without bool filter)?
+      ansible.builtin.assert:
+        that: notunset is defined and notunset
+      ignore_errors: true
+    - name: Notunset using default
+      ansible.builtin.assert:
+        that: notunset | default(False)
+      ignore_errors: true
     - name: is empty list defined
       ansible.builtin.debug:
         msg: "empty list is defined"
@@ -73,6 +108,7 @@
     - name: Is undefined ip address?
       ansible.builtin.assert:
         that: unset | ansible.utils.ipaddr
+      ignore_errors: true
 
 
 

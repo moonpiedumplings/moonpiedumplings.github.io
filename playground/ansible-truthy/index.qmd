@@ -1,0 +1,259 @@
+---
+title: "Ansible: Defined is not Truthy"
+date: "2023-8-2"
+categories: [linux,ansible,devops]
+format:
+  html:
+    toc-depth: 4
+    code-fold: true
+    code-summary: "Show the code"
+    code-block-background: true
+execute:
+  freeze: true
+---
+
+I was creating some ansible playbooks recently, and I came across an interesting issue. 
+
+In my variable definition file, this:
+
+```{.yaml filename="vars/main.yml"}
+test_var: # This is a test var
+```
+
+When evaluating whether or not it was defined: 
+
+```{.yml}
+- name: Print test var
+  ansible.builtin.debug:
+    var: test_var
+- name: Is null defined
+  ansible.builtin.debug:
+    msg: "test_var is defined"
+  when: test_var is defined
+```
+
+This would actually evaluate to true: 
+
+```{.default}
+TASK [Print test var] ************************************************************************************************************************************
+ok: [localhost] => {
+    "test_var": null
+}
+
+TASK [Is null defined] ***********************************************************************************************************************************
+ok: [localhost] => {
+    "msg": "test_var is defined"
+}
+```
+
+So apparently, null is defined. This is a somewhat weird behavior. 
+
+Apparently, it's only when variables are completly unset, unmentioned in any files, that a variable is not considered defined. 
+
+However, even if variables are not defined, then the value of `null` is still considerd to be [falsey](https://stackoverflow.com/a/39984051)
+
+```{.yml}
+- name: What about truthyism?
+      ansible.builtin.debug:
+        msg: "test_var is truthy"
+      when: test_var
+- name: What about the bool filter
+  ansible.builtin.debug:
+    msg: "test var passes the bool"
+  when: test_var | bool
+```
+
+```{.default}
+TASK [What about truthyism?] *****************************************************************************************************************************
+skipping: [localhost]
+
+TASK [What about the bool filter] ************************************************************************************************************************
+skipping: [localhost]
+```
+
+And these tasks are skipped, because `null` is falsey, and doesn't satisfy the when statements. 
+
+
+What about an empty string?
+
+```{.yml}
+empty_string: ""
+```
+
+```{.yml}
+- name: What about a length filter?
+  ansible.builtin.debug:
+    msg: "empty_string passes the length filter"
+  when: empty_string | length > 0
+- name: Print empty_string
+  ansible.builtin.debug:
+    var: empty_string
+- name: Is empty_string defined
+  ansible.builtin.debug:
+    msg: "empty_string is defined"
+  when: empty_string is defined
+- name: What about truthyism?
+  ansible.builtin.debug:
+    msg: "empty_string is truthy"
+  when: empty_string
+- name: What about the bool filter
+  ansible.builtin.debug:
+    msg: "empty_string passes the bool"
+  when: empty_string | bool
+- name: Empty string truthy in assert?
+  ansible.builtin.assert:
+    that: empty_string
+```
+
+```{.default}
+TASK [What about a length filter?] ***********************************************************************************************************************
+skipping: [localhost]
+
+TASK [Print empty_string] ********************************************************************************************************************************
+ok: [localhost] => {
+    "empty_string": ""
+}
+
+TASK [Is empty_string defined] ***************************************************************************************************************************
+ok: [localhost] => {
+    "msg": "empty_string is defined"
+}
+
+TASK [What about truthyism?] *****************************************************************************************************************************
+skipping: [localhost]
+
+TASK [What about the bool filter] ************************************************************************************************************************
+skipping: [localhost]
+
+TASK [Empty string truthy in assert?] ********************************************************************************************************************
+fatal: [localhost]: FAILED! => {
+    "assertion": "empty_string",
+    "changed": false,
+    "evaluated_to": false,
+    "msg": "Assertion failed"
+}
+...ignoring
+```
+
+So an empty_string is considered defined, falsey, and unlike a `null` value, it can also be passed through the length filter, to get falsey. 
+
+
+What about completely unset? Not bothering to mention a variable in any files?
+
+```{.yml}
+- name: Is variable truthy
+  ansible.builtin.debug:
+    msg: "unset is truthy?"
+  when: unset
+  ignore_errors: true
+- name: Uset variable defined?
+  ansible.builtin.debug:
+    msg: "unset is defined"
+  when: unset is defined
+```
+
+```{.default}
+TASK [Empty string truthy in assert?] ********************************************************************************************************************
+fatal: [localhost]: FAILED! => {
+    "assertion": "empty_string",
+    "changed": false,
+    "evaluated_to": false,
+    "msg": "Assertion failed"
+}
+...ignoring
+
+TASK [Is variable truthy] ********************************************************************************************************************************
+fatal: [localhost]: FAILED! => {"msg": "The conditional check 'unset' failed. The error was: error while evaluating conditional (unset): 'unset' is undefined. 'unset' is undefined\n\nThe error appears to be in '/stuff/playbook.yml': line 53, column 7, but may\nbe elsewhere in the file depending on the exact syntax problem.\n\nThe offending line appears to be:\n\n      ignore_errors: true\n    - name: Is variable truthy\n      ^ here\n"}
+...ignoring
+
+TASK [Uset variable defined?] ****************************************************************************************************************************
+skipping: [localhost]
+```
+
+So this is an interesting phenomenon. Trying to check a completely undefined variable for truthyness doesn't work. 
+
+What about an is defined, and a check for truthyness? For my specific usecase, I have an ansible role that generates a variable, that some roles may rely on. If the first role isn't run or run out of order, things could break.  
+
+I want an `ansible.builtin.assert`, which essentially checks some conditions, and fails, stopping the playbook if they are not met. How can I check if a variable is defined first, and then truthy? Now, a check for truthyism will still fail, but without the assert catching the error, the error message won't be as explicit. 
+
+I created a variable called `notunset`, and set it to "stuff", and ran some similar tests. 
+
+
+```{.yml}
+- name: Notunset variable defined?
+  ansible.builtin.debug:
+    msg: "unset is defined"
+  when: notunset is defined
+- name: Notunset variable defined and truthy?
+  ansible.builtin.assert:
+    that: notunset is defined and notunset | bool
+  ignore_errors: true
+```
+
+
+```{.default}
+TASK [Is notunset variable truthy] ***********************************************************************************************************************
+ok: [localhost] => {
+    "msg": "notunset is truthy?"
+}
+
+TASK [Notunset variable defined?] ************************************************************************************************************************
+ok: [localhost] => {
+    "msg": "unset is defined"
+}
+
+TASK [Notunset variable defined and truthy?] *************************************************************************************************************
+fatal: [localhost]: FAILED! => {
+    "assertion": "notunset is defined and notunset | bool",
+    "changed": false,
+    "evaluated_to": false,
+    "msg": "Assertion failed"
+}
+...ignoring
+```
+
+Huh. Why does this fail? 
+
+A little modification though, and it succeeds:
+
+```{.yml}
+- name: Notunset variable defined and truthy?
+  ansible.builtin.assert:
+    that: notunset is defined and notunset
+  ignore_errors: true
+```
+
+```{.default}
+TASK [Notunset variable defined and truthy?] *************************************************************************************************************
+ok: [localhost] => {
+    "changed": false,
+    "msg": "All assertions passed"
+}
+```
+
+When doing a little more testing, this interacts properly with assert with undefined, null, and empty strings, properly turning them into falsey and truthy values. 
+
+Another thing to note is the `default filter`. When a variable is undefined, it will assign it a default value. 
+
+Interestingly, this also considers null to be undefined. When working with the `test_var`, which defined but never assigned a value (`null`):
+
+```{.yml}
+- name: How about the default filter?
+  ansible.builtin.debug:
+    msg: "{{ test_var | default('test_var is not defined') }}"
+```
+
+```{.default}
+TASK [How about the default filter?] *********************************************************************************************************************
+ok: [localhost] => {
+    "msg": ""
+}
+```
+
+Null is considered defined again, as shown here. 
+
+```{.yaml}
+when: variable | default(False)
+```
+
+Creates an elegant way to check if a variable exists, and set it to a False otherwise. This is the final solution I've settled on, for when I can't guarantee variables are defined (including `null` or an empty list/string)
