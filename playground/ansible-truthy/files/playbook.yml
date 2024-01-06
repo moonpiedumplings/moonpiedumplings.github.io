@@ -1,0 +1,78 @@
+---
+- name: Testing truthyism and null
+  hosts: localhost
+  vars:
+    test_var:
+    empty_string: ""
+    ignore_errors: true
+    empty_list: []
+    test_ip: 1.1.1.1
+
+  tasks:
+    - name: Print test var
+      ansible.builtin.debug:
+        var: test_var
+    - name: Is null defined
+      ansible.builtin.debug:
+        msg: "test_var is defined"
+      when: test_var is defined
+    - name: What about truthyism?
+      ansible.builtin.debug:
+        msg: "test_var is truthy"
+      when: test_var
+    - name: What about the bool filter
+      ansible.builtin.debug:
+        msg: "test var passes the bool"
+      when: test_var | bool
+    - name: How about the default filter?
+      ansible.builtin.debug:
+        msg: "{{ test_var | default('test_var is not defined') }}"
+    - name: What about a length filter?
+      ansible.builtin.debug:
+        msg: "empty_string passes the length filter"
+      when: empty_string | length > 0
+    - name: Print empty_string
+      ansible.builtin.debug:
+        var: empty_string
+    - name: Is null defined
+      ansible.builtin.debug:
+        msg: "empty_string is defined"
+      when: empty_string is defined
+    - name: What about truthyism?
+      ansible.builtin.debug:
+        msg: "empty_string is truthy"
+      when: empty_string
+    - name: What about the bool filter
+      ansible.builtin.debug:
+        msg: "empty_string passes the bool"
+      when: empty_string | bool
+    - name: Empty string truthy in assert?
+      ansible.builtin.assert:
+        that: empty_string
+      ignore_errors: true
+    - name: Is variable truthy
+      ansible.builtin.debug:
+        msg: "unset is truthy?"
+      when: unset
+      ignore_errors: true
+    - name: Uset variable defined?
+      ansible.builtin.debug:
+        msg: "unset is defined"
+      when: unset is defined
+    - name: is empty list defined
+      ansible.builtin.debug:
+        msg: "empty list is defined"
+      when: empty_list is defined
+    - name: Empty list is truthy?
+      ansible.builtin.debug:
+        msg: "empty list is truthy"
+      when: empty_list
+    - name: Test ip address filter 1
+      ansible.builtin.assert:
+        that: test_ip | ansible.utils.ipaddr
+    - name: Is undefined ip address?
+      ansible.builtin.assert:
+        that: unset | ansible.utils.ipaddr
+
+
+
