@@ -10,7 +10,734 @@
 <atom:link href="https://moonpiedumplings.github.io/allposts.xml" rel="self" type="application/rss+xml"/>
 <description>All posts, intended to be used in an RSS feed. </description>
 <generator>quarto-1.3.450</generator>
-<lastBuildDate>Wed, 15 Nov 2023 00:00:00 GMT</lastBuildDate>
+<lastBuildDate>Sat, 06 Jan 2024 00:00:00 GMT</lastBuildDate>
+<item>
+  <title>Ansible: Defined is not Truthy</title>
+  <link>https://moonpiedumplings.github.io/playground/ansible-truthy/index.html</link>
+  <description><![CDATA[ 
+
+
+
+<p>I was creating some ansible playbooks recently, and I came across an interesting issue.</p>
+<p>In my variable definition file, this:</p>
+<div class="code-with-filename">
+<div class="code-with-filename-file">
+<pre><strong>vars/main.yml</strong></pre>
+</div>
+<div class="sourceCode" id="cb1" style="background: #f1f3f5;"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb1-1"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">test_var</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">:</span><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"> # This is a test var</span></span></code></pre></div>
+</div>
+<p>When evaluating whether or not it was defined:</p>
+<div class="sourceCode" id="cb2" style="background: #f1f3f5;"><pre class="sourceCode yml code-with-copy"><code class="sourceCode yaml"><span id="cb2-1"><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">-</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">name</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> Print test var</span></span>
+<span id="cb2-2"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">ansible.builtin.debug</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">:</span></span>
+<span id="cb2-3"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">var</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> test_var</span></span>
+<span id="cb2-4"><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">-</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">name</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> Is null defined</span></span>
+<span id="cb2-5"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">ansible.builtin.debug</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">:</span></span>
+<span id="cb2-6"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">msg</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> </span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"test_var is defined"</span></span>
+<span id="cb2-7"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">when</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> test_var is defined</span></span></code></pre></div>
+<p>This would actually evaluate to true:</p>
+<div class="sourceCode" id="cb3" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb3-1">TASK [Print test var] ************************************************************************************************************************************</span>
+<span id="cb3-2">ok: [localhost] =&gt; {</span>
+<span id="cb3-3">    "test_var": null</span>
+<span id="cb3-4">}</span>
+<span id="cb3-5"></span>
+<span id="cb3-6">TASK [Is null defined] ***********************************************************************************************************************************</span>
+<span id="cb3-7">ok: [localhost] =&gt; {</span>
+<span id="cb3-8">    "msg": "test_var is defined"</span>
+<span id="cb3-9">}</span></code></pre></div>
+<p>So apparently, null is defined. This is a somewhat weird behavior.</p>
+<p>Apparently, it’s only when variables are completly unset, unmentioned in any files, that a variable is not considered defined.</p>
+<p>However, even if variables are not defined, then the value of <code>null</code> is still considerd to be <a href="https://stackoverflow.com/a/39984051">falsey</a></p>
+<div class="sourceCode" id="cb4" style="background: #f1f3f5;"><pre class="sourceCode yml code-with-copy"><code class="sourceCode yaml"><span id="cb4-1"><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">-</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">name</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> What about truthyism?</span></span>
+<span id="cb4-2"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">      </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">ansible.builtin.debug</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">:</span></span>
+<span id="cb4-3"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">        </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">msg</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> </span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"test_var is truthy"</span></span>
+<span id="cb4-4"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">      </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">when</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> test_var</span></span>
+<span id="cb4-5"><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">-</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">name</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> What about the bool filter</span></span>
+<span id="cb4-6"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">ansible.builtin.debug</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">:</span></span>
+<span id="cb4-7"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">msg</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> </span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"test var passes the bool"</span></span>
+<span id="cb4-8"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">when</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> test_var | bool</span></span></code></pre></div>
+<div class="sourceCode" id="cb5" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb5-1">TASK [What about truthyism?] *****************************************************************************************************************************</span>
+<span id="cb5-2">skipping: [localhost]</span>
+<span id="cb5-3"></span>
+<span id="cb5-4">TASK [What about the bool filter] ************************************************************************************************************************</span>
+<span id="cb5-5">skipping: [localhost]</span></code></pre></div>
+<p>And these tasks are skipped, because <code>null</code> is falsey, and doesn’t satisfy the when statements.</p>
+<p>What about an empty string?</p>
+<div class="sourceCode" id="cb6" style="background: #f1f3f5;"><pre class="sourceCode yml code-with-copy"><code class="sourceCode yaml"><span id="cb6-1"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">empty_string</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> </span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">""</span></span></code></pre></div>
+<div class="sourceCode" id="cb7" style="background: #f1f3f5;"><pre class="sourceCode yml code-with-copy"><code class="sourceCode yaml"><span id="cb7-1"><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">-</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">name</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> What about a length filter?</span></span>
+<span id="cb7-2"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">ansible.builtin.debug</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">:</span></span>
+<span id="cb7-3"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">msg</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> </span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"empty_string passes the length filter"</span></span>
+<span id="cb7-4"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">when</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> empty_string | length &gt; 0</span></span>
+<span id="cb7-5"><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">-</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">name</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> Print empty_string</span></span>
+<span id="cb7-6"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">ansible.builtin.debug</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">:</span></span>
+<span id="cb7-7"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">var</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> empty_string</span></span>
+<span id="cb7-8"><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">-</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">name</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> Is empty_string defined</span></span>
+<span id="cb7-9"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">ansible.builtin.debug</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">:</span></span>
+<span id="cb7-10"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">msg</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> </span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"empty_string is defined"</span></span>
+<span id="cb7-11"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">when</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> empty_string is defined</span></span>
+<span id="cb7-12"><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">-</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">name</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> What about truthyism?</span></span>
+<span id="cb7-13"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">ansible.builtin.debug</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">:</span></span>
+<span id="cb7-14"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">msg</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> </span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"empty_string is truthy"</span></span>
+<span id="cb7-15"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">when</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> empty_string</span></span>
+<span id="cb7-16"><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">-</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">name</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> What about the bool filter</span></span>
+<span id="cb7-17"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">ansible.builtin.debug</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">:</span></span>
+<span id="cb7-18"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">msg</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> </span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"empty_string passes the bool"</span></span>
+<span id="cb7-19"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">when</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> empty_string | bool</span></span>
+<span id="cb7-20"><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">-</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">name</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> Empty string truthy in assert?</span></span>
+<span id="cb7-21"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">ansible.builtin.assert</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">:</span></span>
+<span id="cb7-22"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">that</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> empty_string</span></span></code></pre></div>
+<div class="sourceCode" id="cb8" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb8-1">TASK [What about a length filter?] ***********************************************************************************************************************</span>
+<span id="cb8-2">skipping: [localhost]</span>
+<span id="cb8-3"></span>
+<span id="cb8-4">TASK [Print empty_string] ********************************************************************************************************************************</span>
+<span id="cb8-5">ok: [localhost] =&gt; {</span>
+<span id="cb8-6">    "empty_string": ""</span>
+<span id="cb8-7">}</span>
+<span id="cb8-8"></span>
+<span id="cb8-9">TASK [Is empty_string defined] ***************************************************************************************************************************</span>
+<span id="cb8-10">ok: [localhost] =&gt; {</span>
+<span id="cb8-11">    "msg": "empty_string is defined"</span>
+<span id="cb8-12">}</span>
+<span id="cb8-13"></span>
+<span id="cb8-14">TASK [What about truthyism?] *****************************************************************************************************************************</span>
+<span id="cb8-15">skipping: [localhost]</span>
+<span id="cb8-16"></span>
+<span id="cb8-17">TASK [What about the bool filter] ************************************************************************************************************************</span>
+<span id="cb8-18">skipping: [localhost]</span>
+<span id="cb8-19"></span>
+<span id="cb8-20">TASK [Empty string truthy in assert?] ********************************************************************************************************************</span>
+<span id="cb8-21">fatal: [localhost]: FAILED! =&gt; {</span>
+<span id="cb8-22">    "assertion": "empty_string",</span>
+<span id="cb8-23">    "changed": false,</span>
+<span id="cb8-24">    "evaluated_to": false,</span>
+<span id="cb8-25">    "msg": "Assertion failed"</span>
+<span id="cb8-26">}</span>
+<span id="cb8-27">...ignoring</span></code></pre></div>
+<p>So an empty_string is considered defined, falsey, and unlike a <code>null</code> value, it can also be passed through the length filter, to get falsey.</p>
+<p>What about completely unset? Not bothering to mention a variable in any files?</p>
+<div class="sourceCode" id="cb9" style="background: #f1f3f5;"><pre class="sourceCode yml code-with-copy"><code class="sourceCode yaml"><span id="cb9-1"><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">-</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">name</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> Is variable truthy</span></span>
+<span id="cb9-2"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">ansible.builtin.debug</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">:</span></span>
+<span id="cb9-3"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">msg</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> </span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"unset is truthy?"</span></span>
+<span id="cb9-4"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">when</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> unset</span></span>
+<span id="cb9-5"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">ignore_errors</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> </span><span class="ch" style="color: #20794D;
+background-color: null;
+font-style: inherit;">true</span></span>
+<span id="cb9-6"><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">-</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">name</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> Uset variable defined?</span></span>
+<span id="cb9-7"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">ansible.builtin.debug</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">:</span></span>
+<span id="cb9-8"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">msg</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> </span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"unset is defined"</span></span>
+<span id="cb9-9"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">when</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> unset is defined</span></span></code></pre></div>
+<div class="sourceCode" id="cb10" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb10-1">TASK [Empty string truthy in assert?] ********************************************************************************************************************</span>
+<span id="cb10-2">fatal: [localhost]: FAILED! =&gt; {</span>
+<span id="cb10-3">    "assertion": "empty_string",</span>
+<span id="cb10-4">    "changed": false,</span>
+<span id="cb10-5">    "evaluated_to": false,</span>
+<span id="cb10-6">    "msg": "Assertion failed"</span>
+<span id="cb10-7">}</span>
+<span id="cb10-8">...ignoring</span>
+<span id="cb10-9"></span>
+<span id="cb10-10">TASK [Is variable truthy] ********************************************************************************************************************************</span>
+<span id="cb10-11">fatal: [localhost]: FAILED! =&gt; {"msg": "The conditional check 'unset' failed. The error was: error while evaluating conditional (unset): 'unset' is undefined. 'unset' is undefined\n\nThe error appears to be in '/stuff/playbook.yml': line 53, column 7, but may\nbe elsewhere in the file depending on the exact syntax problem.\n\nThe offending line appears to be:\n\n      ignore_errors: true\n    - name: Is variable truthy\n      ^ here\n"}</span>
+<span id="cb10-12">...ignoring</span>
+<span id="cb10-13"></span>
+<span id="cb10-14">TASK [Uset variable defined?] ****************************************************************************************************************************</span>
+<span id="cb10-15">skipping: [localhost]</span></code></pre></div>
+<p>So this is an interesting phenomenon. Trying to check a completely undefined variable for truthyness doesn’t work.</p>
+<p>What about an is defined, and a check for truthyness? For my specific usecase, I have an ansible role that generates a variable, that some roles may rely on. If the first role isn’t run or run out of order, things could break.</p>
+<p>I want an <code>ansible.builtin.assert</code>, which essentially checks some conditions, and fails, stopping the playbook if they are not met. How can I check if a variable is defined first, and then truthy? Now, a check for truthyism will still fail, but without the assert catching the error, the error message won’t be as explicit.</p>
+<p>I created a variable called <code>notunset</code>, and set it to “stuff”, and ran some similar tests.</p>
+<div class="sourceCode" id="cb11" style="background: #f1f3f5;"><pre class="sourceCode yml code-with-copy"><code class="sourceCode yaml"><span id="cb11-1"><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">-</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">name</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> Notunset variable defined?</span></span>
+<span id="cb11-2"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">ansible.builtin.debug</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">:</span></span>
+<span id="cb11-3"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">msg</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> </span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"unset is defined"</span></span>
+<span id="cb11-4"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">when</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> notunset is defined</span></span>
+<span id="cb11-5"><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">-</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">name</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> Notunset variable defined and truthy?</span></span>
+<span id="cb11-6"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">ansible.builtin.assert</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">:</span></span>
+<span id="cb11-7"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">that</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> notunset is defined and notunset | bool</span></span>
+<span id="cb11-8"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">ignore_errors</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> </span><span class="ch" style="color: #20794D;
+background-color: null;
+font-style: inherit;">true</span></span></code></pre></div>
+<div class="sourceCode" id="cb12" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb12-1">TASK [Is notunset variable truthy] ***********************************************************************************************************************</span>
+<span id="cb12-2">ok: [localhost] =&gt; {</span>
+<span id="cb12-3">    "msg": "notunset is truthy?"</span>
+<span id="cb12-4">}</span>
+<span id="cb12-5"></span>
+<span id="cb12-6">TASK [Notunset variable defined?] ************************************************************************************************************************</span>
+<span id="cb12-7">ok: [localhost] =&gt; {</span>
+<span id="cb12-8">    "msg": "unset is defined"</span>
+<span id="cb12-9">}</span>
+<span id="cb12-10"></span>
+<span id="cb12-11">TASK [Notunset variable defined and truthy?] *************************************************************************************************************</span>
+<span id="cb12-12">fatal: [localhost]: FAILED! =&gt; {</span>
+<span id="cb12-13">    "assertion": "notunset is defined and notunset | bool",</span>
+<span id="cb12-14">    "changed": false,</span>
+<span id="cb12-15">    "evaluated_to": false,</span>
+<span id="cb12-16">    "msg": "Assertion failed"</span>
+<span id="cb12-17">}</span>
+<span id="cb12-18">...ignoring</span></code></pre></div>
+<p>Huh. Why does this fail?</p>
+<p>A little modification though, and it succeeds:</p>
+<div class="sourceCode" id="cb13" style="background: #f1f3f5;"><pre class="sourceCode yml code-with-copy"><code class="sourceCode yaml"><span id="cb13-1"><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">-</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">name</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> Notunset variable defined and truthy?</span></span>
+<span id="cb13-2"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">ansible.builtin.assert</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">:</span></span>
+<span id="cb13-3"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">that</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> notunset is defined and notunset</span></span>
+<span id="cb13-4"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">ignore_errors</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> </span><span class="ch" style="color: #20794D;
+background-color: null;
+font-style: inherit;">true</span></span></code></pre></div>
+<div class="sourceCode" id="cb14" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb14-1">TASK [Notunset variable defined and truthy?] *************************************************************************************************************</span>
+<span id="cb14-2">ok: [localhost] =&gt; {</span>
+<span id="cb14-3">    "changed": false,</span>
+<span id="cb14-4">    "msg": "All assertions passed"</span>
+<span id="cb14-5">}</span></code></pre></div>
+<p>When doing a little more testing, this interacts properly with assert with undefined, null, and empty strings, properly turning them into falsey and truthy values.</p>
+<p>Another thing to note is the <code>default filter</code>. When a variable is undefined, it will assign it a default value.</p>
+<p>Interestingly, this also considers null to be undefined. When working with the <code>test_var</code>, which defined but never assigned a value (<code>null</code>):</p>
+<div class="sourceCode" id="cb15" style="background: #f1f3f5;"><pre class="sourceCode yml code-with-copy"><code class="sourceCode yaml"><span id="cb15-1"><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">-</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">name</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> How about the default filter?</span></span>
+<span id="cb15-2"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">ansible.builtin.debug</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">:</span></span>
+<span id="cb15-3"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">msg</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> </span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"{{ test_var | default('test_var is not defined') }}"</span></span></code></pre></div>
+<div class="sourceCode" id="cb16" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb16-1">TASK [How about the default filter?] *********************************************************************************************************************</span>
+<span id="cb16-2">ok: [localhost] =&gt; {</span>
+<span id="cb16-3">    "msg": ""</span>
+<span id="cb16-4">}</span></code></pre></div>
+<p>Null is considered defined again, as shown here.</p>
+<div class="sourceCode" id="cb17" style="background: #f1f3f5;"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb17-1"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">when</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> variable | default(False)</span></span></code></pre></div>
+<p>Creates an elegant way to check if a variable exists, and set it to a False otherwise. This is the final solution I’ve settled on, for when I can’t guarantee variables are defined (including <code>null</code> or an empty list/string)</p>
+
+
+
+ ]]></description>
+  <category>linux</category>
+  <category>ansible</category>
+  <category>devops</category>
+  <guid>https://moonpiedumplings.github.io/playground/ansible-truthy/index.html</guid>
+  <pubDate>Sat, 06 Jan 2024 00:00:00 GMT</pubDate>
+</item>
 <item>
   <title>CCDC Environment setup</title>
   <link>https://moonpiedumplings.github.io/guides/ccdc-env/index.html</link>
@@ -2154,7 +2881,7 @@ sits here forever</code></pre>
 
 
 <p>STATUS: PAUSED</p>
-<p>I have <a href="../ai-pipeline/">other stuff</a> to do that needs my server working, and since I already have remote libvirt setup, I will just stick to that for now.</p>
+<p>I have other stuff to do that needs my server working, and since I already have remote libvirt setup, I will just stick to that for now.</p>
 <p>But I don’t think I am giving up on openstack, since what I want seems to be possible, just very difficult.</p>
 <section id="software" class="level1">
 <h1>Software</h1>
@@ -6922,63 +7649,6 @@ font-style: inherit;"> mine</span></span></code></pre></div>
   <category>git</category>
   <guid>https://moonpiedumplings.github.io/guides/git/index.html</guid>
   <pubDate>Wed, 28 Jun 2023 00:00:00 GMT</pubDate>
-</item>
-<item>
-  <title>The cruise ship I am on has very locked down computers</title>
-  <link>https://moonpiedumplings.github.io/playground/cruise-ship-computers/index.html</link>
-  <description><![CDATA[ 
-
-
-
-<p>So I finally found the internet cafe on the cruise ship. I didn’t think they had one.</p>
-<p>The computers look something like this:</p>
-<p><img src="https://moonpiedumplings.github.io/playground/cruise-ship-computers/images/intro.jpg" class="img-fluid"></p>
-<p>They have a keyboard, mouse and screen, but the rest of the machine was locked away, physically, behind the desk. I couldn’t get to it, and the cabinets were locked.</p>
-<p>The only reason I know it’s windows is because all devices on this ship, including point of sale devices appear to be using windows. However, there is no taskbar, or windows UI visible, just a chrome browser in an incognito tab session, and a big blue “End Internet Session” button in the top right. When presses, this button completely resets the session.</p>
-<p>So obviously, I decided to do some snooping around.</p>
-<p>Can I get open task manager from the cntrl alt delete interface? :</p>
-<p><img src="https://moonpiedumplings.github.io/playground/cruise-ship-computers/images/cntraltdel.jpg" class="img-fluid"></p>
-<p>No, I can’t. But I can do other things.</p>
-<p><img src="https://moonpiedumplings.github.io/playground/cruise-ship-computers/images/snooping.jpg" class="img-fluid"></p>
-<p>Control + O brings up the file open dialog, which lets me see the immediate user filesystem. Using this, I figured out the currently logged in user. Then, using chrome’s <code>file://</code> dialog, I decided to do some browsing.</p>
-<p><img src="https://moonpiedumplings.github.io/playground/cruise-ship-computers/images/useris.jpg" class="img-fluid"></p>
-<p>I went through all the directories of the currently logged in user, but I didn’t find anything of note. It seems like the reset of the seession deletes any downloaded files, or something like that.</p>
-<p>However, I quickly discovered something more interesting:</p>
-<p><img src="https://moonpiedumplings.github.io/playground/cruise-ship-computers/images/chromewindows.jpg" class="img-fluid"></p>
-<p>I could get to the C:/Windows directory, where the explorer.exe file was. Explorer.exe is the program that launches the windows UI.</p>
-<p>But when I tried to click on it, chrome just downloaded it instead. But this was promising.</p>
-<p>So I tried accessing the C drive through the “open file” interface that pops up when you hit Control + O.</p>
-<p><img src="https://moonpiedumplings.github.io/playground/cruise-ship-computers/images/cdenied.jpg" class="img-fluid"></p>
-<p>However, when I tried to access the C drive, I got an access denied. But if I put in the absolute path like so:</p>
-<p><img src="https://moonpiedumplings.github.io/playground/cruise-ship-computers/images/absfilepath.jpg" class="img-fluid"></p>
-<p>Then it worked:</p>
-<p><img src="https://moonpiedumplings.github.io/playground/cruise-ship-computers/images/explorer.jpg" class="img-fluid"></p>
-<p>I right clicked on explorer.exe, and selected “open”. And I got the windows UI to launch.</p>
-<p><img src="https://moonpiedumplings.github.io/playground/cruise-ship-computers/images/windowsui.jpg" class="img-fluid"></p>
-<p>From here, I had broken out of the small box that I was locked in. But I decided to snoop around more.</p>
-<p><img src="https://moonpiedumplings.github.io/playground/cruise-ship-computers/images/noprompt.jpg" class="img-fluid"></p>
-<p>Aww, command prompt was disabled. Too bad.</p>
-<p><img src="https://moonpiedumplings.github.io/playground/cruise-ship-computers/images/powershell.jpg" class="img-fluid"></p>
-<p>But powershell wasn’t.</p>
-<p><img src="https://moonpiedumplings.github.io/playground/cruise-ship-computers/images/antivirus.jpg" class="img-fluid"></p>
-<p>Windows defender was active, but it was complaining about virus definitons being outdated.</p>
-<p>The settings app wouldn’t launch, it would close instantly. And attempting to launch control panel made erred as well, complaining about being disabled by the administrator.</p>
-<p>So, I decided to use powershell to do further snooping around:</p>
-<p><img src="https://moonpiedumplings.github.io/playground/cruise-ship-computers/images/systeminfo.jpg" class="img-fluid"></p>
-<p>Wow, that is an old version of windows. It looks like they haven’t updated this system from when they first installed it in 2020 (It’s currently 6/24/2023 as I write this).</p>
-<p><img src="https://moonpiedumplings.github.io/playground/cruise-ship-computers/images/whoami.jpg" class="img-fluid"></p>
-<p>The whoami command tells a little bit about users and permissions. Looking at permissions, I notice something. The user I am logged in as is denied all permissions except one, bypass traversal checking. Bypass traversal checking allows users to visit lower level directories they haven’t been explicitly granted permission to go to, even if they are denied to higher level directories.</p>
-<p>In this case, even though I have been denied access to the C drive, this singular permission enabled me to get into C:/Windows, and launch the explorer.exe program. This singular persmission created a security hole for me to crawl to.</p>
-<p>Now, there are probably ways I can exploit this further. Since these machines are connected to the network, even if they aren’t connected to the internet, I could use an http server on another network connected device to send an payload to be executed on these devices, targeting a vulnerability not patched in this older version of windows. Or, since it is an older version of windows, there may be a easy exploit, something I could simply type into powershell.</p>
-<p>I ended up not going any further. Ironically, I was pretty busy this vacation, between my other personal projects, and all the traveling.</p>
-
-
-
- ]]></description>
-  <category>windows</category>
-  <category>cybersecurity</category>
-  <guid>https://moonpiedumplings.github.io/playground/cruise-ship-computers/index.html</guid>
-  <pubDate>Wed, 21 Jun 2023 00:00:00 GMT</pubDate>
 </item>
 </channel>
 </rss>
