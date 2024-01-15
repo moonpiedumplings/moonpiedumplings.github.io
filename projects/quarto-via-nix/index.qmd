@@ -1,6 +1,6 @@
 ---
 title: "Packaging quarto using nix"
-date: "2023-6-1"
+date: "2024-1-15"
 categories: [nix, quarto]
 format:
   html:
@@ -10,6 +10,83 @@ format:
 execute:
   freeze: auto
 ---
+
+# Update 2024-1-15
+
+Bug. See here: <https://github.com/NixOS/nixpkgs/issues/256074>
+
+Because of this, I returned to the vendored version of pandoc to fix this:
+
+<details><summary>Show code</summary>
+
+```{.nix}
+let
+    pkgs = import <nixpkgs> {};
+
+    python3 = pkgs.python311;
+    pythonDeps = ps: with ps; [ 
+		jupyter #notebook qtconsole jupyter_console
+		# nbconvert
+		# ipykernel ipywidgets
+		# matplotlib
+		pip
+
+		];
+     quarto = pkgs.quarto.overrideAttrs (oldAttrs: rec {
+         preFixup = ''
+          wrapProgram $out/bin/quarto \
+            --prefix PATH : ${pkgs.lib.makeBinPath [ pkgs.deno ]} \
+            --prefix QUARTO_ESBUILD : ${pkgs.esbuild}/bin/esbuild \
+            --prefix QUARTO_DART_SASS : ${pkgs.dart-sass}/bin/dart-sass \
+            --prefix QUARTO_PYTHON : "${pkgs.python3.withPackages pythonDeps}/bin/python3" \
+          '';
+          installPhase = ''
+            runHook preInstall
+
+            mkdir -p $out/bin $out/share
+
+            mv bin/* $out/bin
+            mv share/* $out/share
+
+            runHook postInstall
+        '';
+    });
+in
+    pkgs.mkShell {
+        PYTHONPATH = "${pkgs.python3.withPackages pythonDeps}/bin/python3";
+        QUARTO_PYTHON = "${pkgs.python3.withPackages pythonDeps}/bin/python3";
+        QUARTO_PANDOC = "${quarto}/bin/tools/pandoc";
+        packages = with pkgs; [ 
+            nodePackages_latest.npm
+            (python3.withPackages pythonDeps)
+            quarto
+            texlive.combined.scheme-full
+            ];
+    }
+```
+
+</details>
+
+And with this, this little bug is fixed.
+
+However, there is another issue where quarto does not properly detect the version of jupyter installed in the nix environment. 
+
+
+```{.default}
+[nix-shell:~/vscode/moonpiedumplings.github.io]$ quarto check
+
+....
+
+[✓] Checking Python 3 installation....OK
+      Version: 3.11.6
+      Path: /nix/store/aa115421digfydv0j6w1ad33f822z2sz-python3-3.11.6-env/bin/python3.11
+      Jupyter: (None)
+
+      Jupyter is not available in this Python installation.
+      Install with python3 -m pip install jupyter
+```
+
+Despite the fact that it is installed.
 
 # Quarto and pandoc were updated in nixpkgs!
 

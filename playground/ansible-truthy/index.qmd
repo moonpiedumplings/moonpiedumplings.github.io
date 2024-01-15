@@ -12,17 +12,17 @@ execute:
   freeze: true
 ---
 
-I was creating some ansible playbooks recently, and I came across an interesting issue. 
+I was creating some ansible playbooks recently, and I came across an interesting issue.
 
 In my variable definition file, this:
 
-```{.yaml filename="vars/main.yml"}
+``` {.yaml filename="vars/main.yml"}
 test_var: # This is a test var
 ```
 
-When evaluating whether or not it was defined: 
+When evaluating whether or not it was defined:
 
-```{.yml}
+``` yml
 - name: Print test var
   ansible.builtin.debug:
     var: test_var
@@ -32,9 +32,9 @@ When evaluating whether or not it was defined:
   when: test_var is defined
 ```
 
-This would actually evaluate to true: 
+This would actually evaluate to true:
 
-```{.default}
+``` default
 TASK [Print test var] ************************************************************************************************************************************
 ok: [localhost] => {
     "test_var": null
@@ -46,13 +46,13 @@ ok: [localhost] => {
 }
 ```
 
-So apparently, null is defined. This is a somewhat weird behavior. 
+So apparently, null is defined. This is a somewhat weird behavior.
 
-Apparently, it's only when variables are completly unset, unmentioned in any files, that a variable is not considered defined. 
+Apparently, it's only when variables are completly unset, unmentioned in any files, that a variable is not considered defined.
 
 However, even if variables are not defined, then the value of `null` is still considerd to be [falsey](https://stackoverflow.com/a/39984051)
 
-```{.yml}
+``` yml
 - name: What about truthyism?
       ansible.builtin.debug:
         msg: "test_var is truthy"
@@ -63,7 +63,7 @@ However, even if variables are not defined, then the value of `null` is still co
   when: test_var | bool
 ```
 
-```{.default}
+``` default
 TASK [What about truthyism?] *****************************************************************************************************************************
 skipping: [localhost]
 
@@ -71,16 +71,15 @@ TASK [What about the bool filter] **********************************************
 skipping: [localhost]
 ```
 
-And these tasks are skipped, because `null` is falsey, and doesn't satisfy the when statements. 
-
+And these tasks are skipped, because `null` is falsey, and doesn't satisfy the when statements.
 
 What about an empty string?
 
-```{.yml}
+``` yml
 empty_string: ""
 ```
 
-```{.yml}
+``` yml
 - name: What about a length filter?
   ansible.builtin.debug:
     msg: "empty_string passes the length filter"
@@ -105,7 +104,7 @@ empty_string: ""
     that: empty_string
 ```
 
-```{.default}
+``` default
 TASK [What about a length filter?] ***********************************************************************************************************************
 skipping: [localhost]
 
@@ -135,12 +134,11 @@ fatal: [localhost]: FAILED! => {
 ...ignoring
 ```
 
-So an empty_string is considered defined, falsey, and unlike a `null` value, it can also be passed through the length filter, to get falsey. 
-
+So an empty_string is considered defined, falsey, and unlike a `null` value, it can also be passed through the length filter, to get falsey.
 
 What about completely unset? Not bothering to mention a variable in any files?
 
-```{.yml}
+``` yml
 - name: Is variable truthy
   ansible.builtin.debug:
     msg: "unset is truthy?"
@@ -152,7 +150,7 @@ What about completely unset? Not bothering to mention a variable in any files?
   when: unset is defined
 ```
 
-```{.default}
+``` default
 TASK [Empty string truthy in assert?] ********************************************************************************************************************
 fatal: [localhost]: FAILED! => {
     "assertion": "empty_string",
@@ -170,16 +168,15 @@ TASK [Uset variable defined?] **************************************************
 skipping: [localhost]
 ```
 
-So this is an interesting phenomenon. Trying to check a completely undefined variable for truthyness doesn't work. 
+So this is an interesting phenomenon. Trying to check a completely undefined variable for truthyness doesn't work.
 
-What about an is defined, and a check for truthyness? For my specific usecase, I have an ansible role that generates a variable, that some roles may rely on. If the first role isn't run or run out of order, things could break.  
+What about an is defined, and a check for truthyness? For my specific usecase, I have an ansible role that generates a variable, that some roles may rely on. If the first role isn't run or run out of order, things could break.
 
-I want an `ansible.builtin.assert`, which essentially checks some conditions, and fails, stopping the playbook if they are not met. How can I check if a variable is defined first, and then truthy? Now, a check for truthyism will still fail, but without the assert catching the error, the error message won't be as explicit. 
+I want an `ansible.builtin.assert`, which essentially checks some conditions, and fails, stopping the playbook if they are not met. How can I check if a variable is defined first, and then truthy? Now, a check for truthyism will still fail, but without the assert catching the error, the error message won't be as explicit.
 
-I created a variable called `notunset`, and set it to "stuff", and ran some similar tests. 
+I created a variable called `notunset`, and set it to "stuff", and ran some similar tests.
 
-
-```{.yml}
+``` yml
 - name: Notunset variable defined?
   ansible.builtin.debug:
     msg: "unset is defined"
@@ -190,8 +187,7 @@ I created a variable called `notunset`, and set it to "stuff", and ran some simi
   ignore_errors: true
 ```
 
-
-```{.default}
+``` default
 TASK [Is notunset variable truthy] ***********************************************************************************************************************
 ok: [localhost] => {
     "msg": "notunset is truthy?"
@@ -212,18 +208,18 @@ fatal: [localhost]: FAILED! => {
 ...ignoring
 ```
 
-Huh. Why does this fail? 
+Huh. Why does this fail?
 
 A little modification though, and it succeeds:
 
-```{.yml}
+``` yml
 - name: Notunset variable defined and truthy?
   ansible.builtin.assert:
     that: notunset is defined and notunset
   ignore_errors: true
 ```
 
-```{.default}
+``` default
 TASK [Notunset variable defined and truthy?] *************************************************************************************************************
 ok: [localhost] => {
     "changed": false,
@@ -231,28 +227,28 @@ ok: [localhost] => {
 }
 ```
 
-When doing a little more testing, this interacts properly with assert with undefined, null, and empty strings, properly turning them into falsey and truthy values. 
+When doing a little more testing, this interacts properly with assert with undefined, null, and empty strings, properly turning them into falsey and truthy values.
 
-Another thing to note is the `default filter`. When a variable is undefined, it will assign it a default value. 
+Another thing to note is the `default filter`. When a variable is undefined, it will assign it a default value.
 
 Interestingly, this also considers null to be undefined. When working with the `test_var`, which defined but never assigned a value (`null`):
 
-```{.yml}
+``` yml
 - name: How about the default filter?
   ansible.builtin.debug:
     msg: "{{ test_var | default('test_var is not defined') }}"
 ```
 
-```{.default}
+``` default
 TASK [How about the default filter?] *********************************************************************************************************************
 ok: [localhost] => {
     "msg": ""
 }
 ```
 
-Null is considered defined again, as shown here. 
+Null is considered defined again, as shown here.
 
-```{.yaml}
+``` yaml
 when: variable | default(False)
 ```
 
