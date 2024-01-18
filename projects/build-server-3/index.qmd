@@ -1,0 +1,161 @@
+---
+title: "Building my server part 3 — The switch to debian"
+date: "2024-1-17"
+categories: [linux]
+format:
+  html:
+    code-fold: true
+    code-summary: "Show the code"
+    code-block-background: true
+execute:
+  freeze: auto
+---
+
+# Why the switch?
+
+Recently, I have been very busy working on scripts and ansible playbooks for the [Collegiate Cyber Defense Competition](https://www.nationalccdc.org/). 
+
+In order to test those playbooks, I have been using Vagrantfiles, as an excerp, something like this:
+
+
+```{.ruby}
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+Vagrant.configure("2") do |config|
+
+    config.vm.synced_folder ".", "/vagrant", disabled: true
+    config.vm.provision "shell", path: "scripts/packages.sh"
+
+    config.vm.define "318" do |vmconfig|
+        vmconfig.vm.provision "ansible" do |ansible|
+            ansible.playbook = "ansible/inventory.yml"
+        end
+        vmconfig.vm.box = "generic/alpine318"
+        vmconfig.vm.provider "libvirt" do |libvirt|
+            libvirt.driver = "kvm"
+            libvirt.memory = 1024
+            libvirt.cpus = 2
+            libvirt.video_type = "virtio"
+        end
+        vmconfig.vm.provider "virtualbox" do |virtualbox,override|
+            virtualbox.memory = 1024
+            virtualbox.cpus = 1
+        end
+    end
+end
+```
+
+This is from the [ccdc-2023](https://github.com/CSUN-CCDC/CCDC-2023/blob/8c8e5f5b59543ca246e7ec718ef13d60a3f94efc/linux/testing/alpine/Vagrantfile) github repo. With a single command, `vagrant up`, I can create virtual machines, and then provision them with ansible playbooks.
+
+Even more impressive, I can use the generated ansible inventory manually, [as noted in the ansible documentation](https://docs.ansible.com/ansible/latest/scenario_guides/guide_vagrant.html#running-ansible-manually). This creates an environment closer to how I would actually use the vagrant ansible playbooks.
+
+Vagrants snapshots let me easily freeze and revert machines to previous features. 
+
+I used vagrant, in combination with windows vagrant machines to easily test things for the [ccdc environment guide](../../guides/ccdc-env/). 
+
+However, when attempting to up vagrant on my Rocky Linux machine, I got an error: Spice is not supported. 
+
+Apparently, Red Hat Enterprise Linux deprecated spice, and now any rebuilds of it, no longer have spice as well. 
+
+<https://forums.rockylinux.org/t/spice-support-was-dropped-in-rhel-9/6753>
+
+<https://access.redhat.com/articles/442543> (requires subscription, but the important content is in the beginning).
+
+Except, my Arch Linux machines can still run spice virtual machines just fine... so when I want to run a Vagrant box(s) on my server, like the Windows boxes which require much more memory, I can either write around this missing feature, using the much less performant VNC... or I can switch.
+
+The main reason why I picked Rocky, was the 4 year support of an operating system supported by Kolla-ansible. This is no longer the only case. 
+
+As of the current supported Kolla-Ansible, it now supports Debian 12, which will be supported for all 4 years of my bachelors. [Support Matrix](https://docs.openstack.org/kolla-ansible/2023.2/user/support-matrix.html).
+
+With this, I decided to switch to debian... but I encountered some challenges.
+
+# Installing Debian
+
+When I installed Debian in UEFI mode, it wouldn't boot. But Rocky Linux booted just fine? Why?
+
+I tested a legacy install, and it booted just fine. Did a little more research, asked for help from a friend, and found this:
+
+According to the [debian wiki](https://wiki.debian.org/UEFI#Force_grub-efi_installation_to_the_removable_media_path) some UEFI motherboards do not implement the spec properly (even after a BIOS update, it seems). Described in that article, is how to get around this quirk, and why they don't do that by default.
+
+> All OS installers installing things to this removable media path will conflict with any other such installers, which is **bad** and **wrong**. That's why in Debian we don't do this by default. 
+
+But, it was only after selecting the "expert install" in the installer, that I was eventually presented with this menu:
+
+![](images/forcegrub.jpg)
+
+And by forcing a grub install, I finally got it to boot in UEFI mode.
+
+In my opinion, the debian installer should do this as a default if it detects that it is going to be the sole OS. I would rather have a booting install than a standards compliant one. 
+
+Although, it was suprising and disheartening to learn that what I considered to be an enterprise server doesn't implement a standard such as this properly. 
+
+# Configuring
+
+I don't want to do openstack just yet. After getting experience with keycloak, active directory, and ldap, I've decided that this server can be the host to a variety of services, all using ldap or SSO to sign on. I want a remote development environment, not just for me, but also for my team members. 
+
+The other thing I want is for the server to be configured as code. Past the initial setup (podman, libvirt, nix), I want everything to be configured via ansible.
+
+Goals:
+
+Overall, system design goals
+
+* Configuration as code
+* Rootless containers when possible
+    - No docker on bare metal — this interferes with the eventual open stack install
+* Security
+    - Https should be terminated on my home server, not on my vps
+
+Service/Specific goals for the short(er) term:
+
+* Podman
+    - Nvidia runtime, for kasm hardware acceleration, and AI
+* LDAP
+    - Do I want openldap or lldap?
+* keycloak
+    - Connected to ldap, of course
+    - everything should be SSO when possible
+* Kasmweb
+    - Run this in a privileged podman container rather than docker is my only real option
+    - Create kasm containers for development environment for my teams
+    - Nix in kasm docker containers
+    - Hardware acceleration via Nvidia?
+    - Mounting /dev/kvm inside for libvirt inside? Or remote libvirt
+
+
+Later, I want:
+
+* Forgejo — a source forge
+* Move my blog to this server, from github pages
+    - Continue to use some form of CI/CD for it. 
+
+
+## Reverse Proxies and HTTPS
+
+To ensure maximum security, I need to terminate HTTPS on the home server, which is completely under my control, unlike the VPS I'm renting from Contabo.
+
+Currently, I have a simply setup using [nginx proxy manager](https://nginxproxymanager.com/), where it reverse proxies any sites I want to create by terminating TLS/SSL on the VPS. 
+
+I don't really feel like going back to pure nginx, it was very painful to configure, which is why I switched to the easier frontend, nginx proxy manager (npm). 
+
+I attempted to set up a stream, but I was simply redirected to the "Nginx Proxy Manager" page instead.
+
+# Presearch for future pieces
+
+## Openstack Notes
+
+I will probably get to this later on.
+
+Rather than trying to do an openstack native implemenation of a public ipv6 addresses for virtual machines on a private ip address, I can simply have my router set up a "private" ipv6 subnet, and then VPN (or an [L2TP](https://en.wikipedia.org/wiki/Layer_2_Tunneling_Protocol), which does not come with encryption). Then, I can do a 1 to 1 NAT, or something of the sort, but without any address translation. By putting VM's on this subnet, I can give them public ipv6 addresses. This is simpler, and compatible with more than just openstack. 
+
+Something like this is definitely possible.
+
+<https://superuser.com/questions/887745/routing-a-particular-subnet-into-a-vpn-tunnel>
+
+<https://serverfault.com/questions/608517/how-to-route-traffic-from-private-network-to-openvpn-subnet-and-back>
+
+<https://superuser.com/questions/1162231/route-public-subnet-over-vpn>
+
+
+
+
