@@ -312,6 +312,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>Currently, I have a simply setup using <a href="https://nginxproxymanager.com/">nginx proxy manager</a>, where it reverse proxies any sites I want to create by terminating TLS/SSL on the VPS.</p>
 <p>I don’t really feel like going back to pure nginx, it was very painful to configure, which is why I switched to the easier frontend, nginx proxy manager (npm).</p>
 <p>I attempted to set up a stream, but I was simply redirected to the “Nginx Proxy Manager” page instead.</p>
+<p>I bought a domain: &lt;moonpiedumpl.ing&gt;. It looks very clean. I will use subdomains for each service, something like &lt;keycloak.moonpiedumpl.ing&gt; will be the keycloak service, and so on.</p>
+<p>I want a declarative reverse proxy, that can reverse proxy existing https servers, without issues. <a href="https://caddyserver.com/docs/">Caddy</a> can <em>probably</em> do this.</p>
+<p>I think the crucial thing is that is that Caddy some of the reverse proxy headers by default. It’s documented here: <a href="https://caddyserver.com/docs/caddyfile/directives/reverse_proxy#defaults" class="uri">https://caddyserver.com/docs/caddyfile/directives/reverse_proxy#defaults</a></p>
+<p>So the second Caddy proxy, located on the internal server, would have the option “trusted proxies”, set to the ip address that the internal server sees coming from the VPS. This will cause it to not edit the headers, allowing the internal server to see the real ip address of the machines connecting to the services.</p>
+<p>Caddy can also configure https automatically: <a href="https://caddyserver.com/docs/caddyfile/options#email" class="uri">https://caddyserver.com/docs/caddyfile/options#email</a></p>
+<p>As for TLS passthrough on the external Caddy service, I found some relevant content:</p>
+<p><a href="https://caddy.community/t/reverse-proxy-chaining-vps-local-server-service-trusted-proxies/18105" class="uri">https://caddy.community/t/reverse-proxy-chaining-vps-local-server-service-trusted-proxies/18105</a></p>
 </section>
 </section>
 <section id="presearch-for-future-pieces" class="level1">
