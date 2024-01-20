@@ -140,6 +140,21 @@ I don't really feel like going back to pure nginx, it was very painful to config
 
 I attempted to set up a stream, but I was simply redirected to the "Nginx Proxy Manager" page instead.
 
+I bought a domain: <moonpiedumpl.ing>. It looks very clean. I will use subdomains for each service, something like <keycloak.moonpiedumpl.ing> will be the keycloak service, and so on. 
+
+I want a declarative reverse proxy, that can reverse proxy existing https servers, without issues. [Caddy](https://caddyserver.com/docs/) can *probably* do this.
+
+I think the crucial thing is that is that Caddy some of the reverse proxy headers by default. It's documented here: <https://caddyserver.com/docs/caddyfile/directives/reverse_proxy#defaults>
+
+So the second Caddy proxy, located on the internal server, would have the option "trusted proxies", set to the ip address that the internal server sees coming from the VPS. This will cause it to not edit the headers, allowing the internal server to see the real ip address of the machines connecting to the services.
+
+Caddy can also configure https automatically: <https://caddyserver.com/docs/caddyfile/options#email>
+
+As for TLS passthrough on the external Caddy service, I found some relevant content:
+
+<https://caddy.community/t/reverse-proxy-chaining-vps-local-server-service-trusted-proxies/18105> 
+
+
 # Presearch for future pieces
 
 ## Openstack Notes
