@@ -10,7 +10,52 @@
 <atom:link href="https://moonpiedumplings.github.io/allposts.xml" rel="self" type="application/rss+xml"/>
 <description>All posts, intended to be used in an RSS feed. </description>
 <generator>quarto-1.3.450</generator>
-<lastBuildDate>Wed, 17 Jan 2024 00:00:00 GMT</lastBuildDate>
+<lastBuildDate>Sun, 21 Jan 2024 00:00:00 GMT</lastBuildDate>
+<item>
+  <title>Automatically upping OVA’s</title>
+  <link>https://moonpiedumplings.github.io/projects/ova-automation/index.html</link>
+  <description><![CDATA[ 
+
+
+
+<section id="goals-and-context" class="level1">
+<h1>Goals and Context</h1>
+<p>I am currently participating on the cybersercurity team of Cal State Northridge, for a competition called CCDC.</p>
+<p>For more information:</p>
+<p>Nationals: <a href="https://www.nationalccdc.org/" class="uri">https://www.nationalccdc.org/</a></p>
+<p>And our region, the Western Region: <a href="https://wrccdc.org/" class="uri">https://wrccdc.org/</a></p>
+<p>Essentially, we are asked given a bunch of really insecure virtual machines, and asked to secure and administrate them, while being attacked by red team.</p>
+<p>Although Nationals does not post the old images they have used in the past, our region, does.</p>
+<p>WRCCDC Archive: <a href="https://archive.wrccdc.org/" class="uri">https://archive.wrccdc.org/</a></p>
+<p>Currently, our team is doing mock competitions by downloading these images, manually importing them into esxi, or proxmox, and then adjusting networking in each virtual machine, by hand.</p>
+<p>This is unacceptable.</p>
+<p>An easier way, is rather than manually changing networking configuration in each virtual machine, the virtual machine managers (proxmox and esxi, currently) could be configured to have the same network as the competition, removing the hassle of changing this.</p>
+<p>In addition to that, manually importing virtual machines is also unacceptable.</p>
+<p>With the existence of modern automation tools, like terraform, there must be a better way to do this.</p>
+<p>Currently, I’m using vagrant to automate the upping of individual images, for testing. However, vagrant isn’t really ideal for this, because I would have to convert OVA files to “vagrant boxes” first, which don’t support every vagrant provider.</p>
+<p>It would probably be better to import the images, and then use terraform to up it automatically. The advantage of this, to me, is that it is more provider agnostic. By seperating the pieces that handle the image management, and the pieces that handle control of the hypervisor platform, it’s easier to port things to new platforms.</p>
+</section>
+<section id="work" class="level1">
+<h1>Work</h1>
+<section id="proxmox" class="level2">
+<h2 class="anchored" data-anchor-id="proxmox">Proxmox</h2>
+<p>I’ve created a folder with a shell.nix and a Vagrantfile, in order to automate the creation of a proxmox virtual machine. It’s located inside this git repo, and by extension, <a href="./proxmox/">this static site</a>.</p>
+<p>Docs to import OVA files on proxmox: <a href="https://pve.proxmox.com/wiki/Migration_of_servers_to_Proxmox_VE#Importing" class="uri">https://pve.proxmox.com/wiki/Migration_of_servers_to_Proxmox_VE#Importing</a></p>
+<p>After some testing with that, <code>importovf</code> isn’t too good, because it imports the virtual machine metadata, without any of the actual data. So things we don’t really need to store, like how many vcpu’s or memory, or the network, but none of the actual disk data.</p>
+<p>You have to run <code>qm importdisk</code> (an alias for <code>qm disk import</code>)</p>
+<p>So after extracting the ova, you have to extract the vmdk (it’s gzipped), and then it would be something like:</p>
+<p><code>qm importdisk numberhere image.vmdk --format qcow2|vmware</code></p>
+<p>The manpage for qm says that –format specifies the target format, so I’m assuming it’s the format to convert to.</p>
+
+
+</section>
+</section>
+
+ ]]></description>
+  <category>linux</category>
+  <guid>https://moonpiedumplings.github.io/projects/ova-automation/index.html</guid>
+  <pubDate>Sun, 21 Jan 2024 00:00:00 GMT</pubDate>
+</item>
 <item>
   <title>Building my server part 3 — The switch to debian</title>
   <link>https://moonpiedumplings.github.io/projects/build-server-3/index.html</link>
@@ -7778,7 +7823,7 @@ sits here forever</code></pre>
 
 
 
-<p>STATUS: PAUSED</p>
+<p>STATUS: see <a href="../build-server-3/">part 3</a>, where I don’t start with openstack.</p>
 <p>I have other stuff to do that needs my server working, and since I already have remote libvirt setup, I will just stick to that for now.</p>
 <p>But I don’t think I am giving up on openstack, since what I want seems to be possible, just very difficult.</p>
 <section id="software" class="level1">
@@ -12380,36 +12425,6 @@ font-style: inherit;"> mine</span></span></code></pre></div>
   <category>ansible</category>
   <guid>https://moonpiedumplings.github.io/projects/nixos-vps/index.html</guid>
   <pubDate>Fri, 14 Jul 2023 00:00:00 GMT</pubDate>
-</item>
-<item>
-  <title>First job, an internship at cirrascale</title>
-  <link>https://moonpiedumplings.github.io/blog/cirrascale-intern/index.html</link>
-  <description><![CDATA[ 
-
-
-
-<p>Cirrascale is a San Diego company that offers managed cloud computing, targeted at AI. Before my vacation, I took a tour of their hosting center. It honestly had me awestruck, seeing rack upon rack of water cooled servers.</p>
-<p>2023-7-10</p>
-<p>First day. It was pretty nice. My skills with managing linux, containers, and virtual machines came in handy. I took initiative and stepped up when a task was offered, which was tough because I was so new. My heart was literally racing and I felt so nervous, but I didn’t take on more than I could handle and I made good progress on it in that same day. In addition to that, I collaborated with the other interns on things. Overall, it was a lot of fun, and the people were very friendly.</p>
-<p>2023-7-12</p>
-<p>In the last two days I feel like I have done a lot, despite being so new. I helped another intern install Ubuntu linux, and I am now working on another project, creating a proxmox image with packer to deploy using maas.</p>
-<p>2023-8-1</p>
-<p>Since then, I have completed created an image, although I haven’t tested yet. In addition to that, I got to post all my code on github:</p>
-<p><a href="https://github.com/moonpiedumplings/proxmox-maas" class="uri">https://github.com/moonpiedumplings/proxmox-maas</a></p>
-<p>2023-8-26</p>
-<p>Alright, my original intention was for this to be a regular or semi regular type blog thing, but that was very boring, as most days were simply spent grinding away at whatever problems I was working on.</p>
-<p>So I’m just going to put an overview and reflection here, after I have done the internship.</p>
-<p>I worked on two major projects, which ate up the majority of my time.</p>
-<p>The first was <a href="https://github.com/moonpiedumplings/proxmox-maas">proxmox-maas</a>. Maas is an automated deployment method created by canonical, and it allows you to deploy configured ubuntu servers to virtual machines, or usually more valuably, bare metal machines. In Cirrascale, they were using Maas to deploy Ubuntu, and using MAAS to configure things like networking on these machines. MAAS can deploy other operating systems, but you have to create an image which it can deploy. I created a proxmox image, so that they could deploy it to bare metal machines rapidly.</p>
-<p>The other project I created was assisting in planning a setup where they use rancher to deploy kubernetes. I started out with my notes on onedrive, but eventually I got annoyed and put them on <a href="https://moonpiedumplings.github.io/rancher-ops/">github sites</a>. I created a simple docker-compose file to allow people to quickly up rancher for testing purposes, and I noted it on that page. In addition to that, I also documented installing k3s clusters with calico rather than rancher, installing vcluster, installing kata-containers, and other kubernetes management operations.</p>
-<p>Overall, it was a great learning experience. I had an abstract understanding of what production environments required, but it was cool to work with those in production environments.</p>
-
-
-
- ]]></description>
-  <category>linux</category>
-  <guid>https://moonpiedumplings.github.io/blog/cirrascale-intern/index.html</guid>
-  <pubDate>Mon, 10 Jul 2023 00:00:00 GMT</pubDate>
 </item>
 </channel>
 </rss>
