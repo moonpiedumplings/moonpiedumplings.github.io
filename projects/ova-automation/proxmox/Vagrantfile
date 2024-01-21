@@ -1,0 +1,29 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+Vagrant.configure("2") do |config|
+
+    config.vm.synced_folder ".", "/vagrant", disabled: true
+    #config.vm.provision "shell", path: "scripts/packages.sh"
+
+    config.vm.define "proxmox" do |vmconfig|
+        # Default user: vagrant
+        # Default password: vagrant
+        # Also root user, vagrant password.     
+        vmconfig.vm.provision "ansible" do |ansible|
+            ansible.playbook = "provisioners/setup.yml"
+            ansible.compatibility_mode = "2.0"
+            ansible.host_vars = {
+                "proxmox" => { "ansible_password" => "vagrant", "ansible_become_password" => "vagrant" }
+            }
+        end
+        vmconfig.vm.box = "castor/proxmox"
+        vmconfig.vm.provider "libvirt" do |libvirt|
+            libvirt.driver = "kvm"
+            libvirt.memory = 4096
+            libvirt.cpus = 3
+            libvirt.nested = true
+            libvirt.video_type = "virtio"
+        end
+    end
+end

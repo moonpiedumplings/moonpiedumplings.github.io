@@ -1,0 +1,63 @@
+---
+title: "Automatically upping OVA's"
+date: "2024-1-21"
+categories: [linux]
+format:
+  html:
+    toc-depth: 4
+    code-fold: true
+    code-summary: "Show the code"
+    code-block-background: true
+execute:
+  freeze: true
+---
+
+# Goals and Context
+
+I am currently participating on the cybersercurity team of Cal State Northridge, for a competition called CCDC.
+
+For more information:
+
+Nationals: <https://www.nationalccdc.org/>
+
+And our region, the Western Region: <https://wrccdc.org/>
+
+Essentially, we are asked given a bunch of really insecure virtual machines, and asked to secure and administrate them, while being attacked by red team. 
+
+Although Nationals does not post the old images they have used in the past, our region, does. 
+
+WRCCDC Archive: <https://archive.wrccdc.org/>
+
+Currently, our team is doing mock competitions by downloading these images, manually importing them into esxi, or proxmox, and then adjusting networking in each virtual machine, by hand.
+
+This is unacceptable. 
+
+An easier way, is rather than manually changing networking configuration in each virtual machine, the virtual machine managers (proxmox and esxi, currently) could be configured to have the same network as the competition, removing the hassle of changing this. 
+
+In addition to that, manually importing virtual machines is also unacceptable.
+
+With the existence of modern automation tools, like terraform, there must be a better way to do this. 
+
+Currently, I'm using vagrant to automate the upping of individual images, for testing. However, vagrant isn't really ideal for this, because I would have to convert OVA files to "vagrant boxes" first, which don't support every vagrant provider. 
+
+It would probably be better to import the images, and then use terraform to up it automatically. The advantage of this, to me, is that it is more provider agnostic. By seperating the pieces that handle the image management, and the pieces that handle control of the hypervisor platform, it's easier to port things to new platforms. 
+
+# Work
+
+## Proxmox
+
+I've created a folder with a shell.nix and a Vagrantfile, in order to automate the creation of a proxmox virtual machine. It's located inside this git repo, and by extension, [this static site](./proxmox/). 
+
+Docs to import OVA files on proxmox: <https://pve.proxmox.com/wiki/Migration_of_servers_to_Proxmox_VE#Importing>
+
+After some testing with that, `importovf` isn't too good, because it imports the virtual machine metadata, without any of the actual data. So things we don't really need to store, like how many vcpu's or memory, or the network, but none of the actual disk data. 
+
+You have to run `qm importdisk` (an alias for `qm disk import`)
+
+So after extracting the ova, you have to extract the vmdk (it's gzipped), and then it would be something like: 
+
+`qm importdisk numberhere image.vmdk --format qcow2|vmware`
+
+The manpage for qm says that --format specifies the target format, so I'm assuming it's the format to convert to.
+
+
