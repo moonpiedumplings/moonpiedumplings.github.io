@@ -164,6 +164,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#configuring" id="toc-configuring" class="nav-link" data-scroll-target="#configuring">Configuring</a>
   <ul class="collapse">
   <li><a href="#reverse-proxies-and-https" id="toc-reverse-proxies-and-https" class="nav-link" data-scroll-target="#reverse-proxies-and-https">Reverse Proxies and HTTPS</a></li>
+  <li><a href="#ansibilizing-the-server" id="toc-ansibilizing-the-server" class="nav-link" data-scroll-target="#ansibilizing-the-server">Ansibilizing the server</a>
+  <ul class="collapse">
+  <li><a href="#podman-as-a-user" id="toc-podman-as-a-user" class="nav-link" data-scroll-target="#podman-as-a-user">Podman as a user</a></li>
+  </ul></li>
   </ul></li>
   <li><a href="#presearch-for-future-pieces" id="toc-presearch-for-future-pieces" class="nav-link" data-scroll-target="#presearch-for-future-pieces">Presearch for future pieces</a>
   <ul class="collapse">
@@ -319,6 +323,18 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>Caddy can also configure https automatically: <a href="https://caddyserver.com/docs/caddyfile/options#email" class="uri">https://caddyserver.com/docs/caddyfile/options#email</a></p>
 <p>As for TLS passthrough on the external Caddy service, I found some relevant content:</p>
 <p><a href="https://caddy.community/t/reverse-proxy-chaining-vps-local-server-service-trusted-proxies/18105" class="uri">https://caddy.community/t/reverse-proxy-chaining-vps-local-server-service-trusted-proxies/18105</a></p>
+</section>
+<section id="ansibilizing-the-server" class="level2">
+<h2 class="anchored" data-anchor-id="ansibilizing-the-server">Ansibilizing the server</h2>
+<section id="podman-as-a-user" class="level3">
+<h3 class="anchored" data-anchor-id="podman-as-a-user">Podman as a user</h3>
+<p>I was actually doing really good, but I encountered a roadblock:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>TASK [Create caddy directory] ************************************************************************************************************</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>fatal: [moonstack]: FAILED! =&gt; {"msg": "Failed to set permissions on the temporary files Ansible needs to create when becoming an unprivileged user (rc: 1, err: chmod: invalid mode: ‘A+user:podmaner:rx:allow’\nTry 'chmod --help' for more information.\n}). For information on working around this, see https://docs.ansible.com/ansible-core/2.16/playbook_guide/playbooks_privilege_escalation.html#risks-of-becoming-an-unprivileged-user"}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>The relevant ansible code uses <a href="">become</a> to run as the <code>podmaner</code> user, and then runs the <a href="https://docs.ansible.com/ansible/latest/collections/containers/podman/podman_container_module.html#ansible-collections-containers-podman-podman-container-module">ansible podman container</a> module.</p>
+<p>It links to some docs here: <a href="https://docs.ansible.com/ansible-core/2.16/playbook_guide/playbooks_privilege_escalation.html#risks-of-becoming-an-unprivileged-user" class="uri">https://docs.ansible.com/ansible-core/2.16/playbook_guide/playbooks_privilege_escalation.html#risks-of-becoming-an-unprivileged-user</a></p>
+<p>This was fixed after I installed the <code>acl</code> package.</p>
+</section>
 </section>
 </section>
 <section id="presearch-for-future-pieces" class="level1">
