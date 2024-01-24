@@ -1,0 +1,99 @@
+---
+title: "How to Ansible"
+author: "Jeffrey Fonseca"
+categories: [linux, ansible]
+format: 
+    revealjs:
+        incremental: false
+        theme: dark
+        #center: true
+execute:
+  freeze: true
+---
+
+# What is ansible?
+
+* Ansible is Configuration-as-Code (CaC)
+    - Most popular CaC option. 
+    - Red Hat uses in downstream products
+* Massive community
+    - Pieces written in python, easy to add on to
+    - Official package manager and repository called Galaxy
+    - 30000+ custom "roles" to do anything you want, from installing proxmox on debian to SOMETHING HERE
+
+# What is ansible (cont.)
+
+* Uses Yet-Another-Markup-Language (yaml)
+
+```{.yaml}
+---
+- name: Sample ansible playbook (playbook name here)
+  hosts: all
+  gather_facts: true # Gather facts about managed node
+
+  tasks:
+    - name: Install the latest version of Apache and MariaDB
+      ansible.builtin.package:
+      name:
+        - httpd
+        - mariadb-server
+      state: latest
+```
+
+# What is ansible (cont.)
+
+::: {.incremental}
+* In theory should work on any Linux Distro
+    - Abstracts ansible's package manager specific modules, for apt/dnf/portage/slackpkg/apk/pacman/pkg-ng (freebsd)
+* In practice, packages have different names
+:::
+
+. . .
+
+```{.yaml}
+- name: Install the latest version of Apache and MariaDB
+      ansible.builtin.package:
+      name:
+        - "{{ 'apache2' if ansible_os_family == 'Debian' else 'httpd' }}"
+        - mariadb-server
+      state: latest
+```
+
+. . .
+
+It looks like python, but squished into one line... that's because it is!
+
+# What is ansible (cont.)
+
+
+# How it works
+
+* Ansible is fundamentally ssh + python
+  - Generates python scripts, transfers them over ssh
+  - Popular because it only requires python on remote nodes
+  - "Agentless" — no software needs to be installed on machines being configured
+* Executes sequentially, difficult to have execute things in parallel
+
+# How it works (cont.)
+
+
+
+
+# Setup
+
+* Ansible is written entirely in python
+    - There is an article called [How to improve Python packaging, or why fourteen tools are at least twelve too many](https://chriswarrick.com/blog/2023/01/15/how-to-improve-python-packaging/)...
+* I use Nix to install needed tools, as it also can do more than just python packages, and it's very easy to ensure everybody gets the same version of things
+    - Nix only supports Linux/Macos, so Windows users on the team work in WSL or a VM.ke
+
+# Setup on Linux
+
+
+
+# Usage: Inventory
+
+
+
+
+
+
