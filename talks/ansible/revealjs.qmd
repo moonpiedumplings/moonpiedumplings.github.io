@@ -1,0 +1,207 @@
+---
+title: "How to Ansible"
+author: "Jeffrey Fonseca"
+categories: [linux, ansible]
+format: 
+    revealjs:
+        incremental: false
+        theme: dark
+        #center: true
+execute:
+  freeze: true
+---
+
+# What is ansible?
+
+* Ansible is Configuration-as-Code (CaC)
+    - Most popular CaC option. 
+    - Red Hat uses in downstream products
+* Massive community
+    - Pieces written in python, easy to add on to
+    - Official package manager and repository called Galaxy
+    - 30000+ custom "roles" to do anything you want, from installing proxmox on debian to configuring iptables
+
+# What is ansible (cont.)
+
+* Uses Yet-Another-Markup-Language (yaml)
+
+```{.yaml}
+---
+- name: Sample ansible playbook (playbook name here)
+  hosts: all
+  gather_facts: true # Gather facts about managed node
+
+  tasks:
+    - name: Install the latest version of Apache and MariaDB
+      ansible.builtin.package:
+        name:
+          - httpd
+          - mariadb-server
+        state: latest
+```
+
+# What is ansible (cont.)
+
+::: {.incremental}
+* In theory should work on any Linux Distro
+    - Abstracts ansible's package manager specific modules, for apt/dnf/portage/slackpkg/apk/pacman/pkg-ng (freebsd)
+* In practice, packages have different names
+:::
+
+. . .
+
+```{.yaml}
+- name: Install the latest version of Apache and MariaDB
+  ansible.builtin.package:
+    name:
+      - "{{ 'apache2' if ansible_os_family == 'Debian' else 'httpd' }}"
+      - mariadb-server
+    state: latest
+```
+
+. . .
+
+It looks like python, but squished into one line... that's because it is!
+
+
+# How it works
+
+* Ansible is fundamentally ssh + python
+  - Generates python scripts, transfers them over ssh
+  - Popular because it only requires python on remote nodes
+  - "Agentless" — no software needs to be installed on machines being configured
+* Executes sequentially, difficult to have execute things in parallel
+  - Despite imperative structure, good ansible code should be "idempotent"
+
+# Setup
+
+* Ansible is written entirely in python
+    - There is an article called [How to improve Python packaging, or why fourteen tools are at least twelve too many](https://chriswarrick.com/blog/2023/01/15/how-to-improve-python-packaging/)...
+* I use Nix to install needed tools, as it also can do more than just python packages, and it's very easy to ensure everybody gets the same version of things
+    - Nix only supports Linux/Macos, so Windows users on the team work in WSL or a VM
+
+# Setup on Linux
+
+
+
+# Setup on Windows
+
+
+
+# Usage: Inventory
+
+Sample ansible inventory
+
+```{.yaml filename="inventory.yml"}
+---
+all:
+  hosts:
+    test_host:
+      ansible_host: # Defaults to host alias, in this case test_host 
+      ansible_user: 
+      ansible_password:
+      ansible_become_pass: # Password ansible uses to authenticate with sudo
+      ansible_ssh_private_key_file: 
+```
+# Usage: Get information from a real Vm
+
+
+
+
+
+# Ansible ping
+
+`ansible all -i inventory.yml -m ping`
+
+* Tells if you can configure a machine
+
+# Your first playbook!
+
+```{.yaml}
+---
+- name: Playbook for testing webserver related roles
+  hosts: all
+  gather_facts: true
+
+  tasks:
+    - name: Test privilege escalation
+      become: true
+      ansible.builtin.debug:
+        msg: "Hello World!"
+```
+
+# Roles
+
+* Ansible roles are akin to functions in other programming langauges
+* Special folder structure
+
+```{.default}
+.
+|-- users
+    |-- tasks
+    |   |-- add_good_admins.yml
+    |   |-- change_passwords.yml
+    |   |-- main.yml
+    |   `-- remove_bad_admins.yml
+    |-- templates
+    |   `-- gitignore.j2
+    `-- vars
+        `-- main.yml
+```
+
+# Roles (cont.)
+
+* To use a role, simply refer to it's "root" folder, or the canonical name
+* Use `vars` to pass variables to the role, same way you would pass variables to a function
+  - roles almost always come with defaults
+
+```{.yaml}
+---
+- name: Playbook for testing webserver related roles
+  hosts: all
+  gather_facts: true
+  roles:
+    # Or publisher.role, if installed via ansible-galaxy
+    - role: "../roles/ufw" 
+      vars:
+        ufw_var1: "a string!"
+        var1: "Best practice is to have rolename_var1"
+```
+
+# Our roles
+
+* We have quite a few. Priority was given to a few cases:
+  - Linux firewalls — accidental lockout is not fun
+  - Database password shuffling
+  - User management: Password shuffling, and controlling who is in admin equivalent groups (wheel, sudo, docker)
+  - Backup and restore: Arbitrary folders, containers, and container volumes. Comes with a simple versioning system, as well.
+
+# Usage
+
+* They all do nothing by default. Pass variables to the roles, changing the default variables in vars/main.yml.
+  - vars/main.yml also acts as documentation for each role, via the comments either next to, or above each variable.
+
+# Usable Roles
+* ufw, firewalld, iptables
+* users, keycloak
+* Mysql, Postgres. Mongo might work, but I didn't get around to testing it. Don't bother with mysql backup, there is no restore, it's better to just use the `backup` role pointed at the relevant mysql service data.
+* Backups, podman, docker. Docker watchtower container update is untested.
+
+# Example
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
