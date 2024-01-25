@@ -193,11 +193,10 @@ all:
   hosts: all
   gather_facts: true
   roles:
-    # Or publisher.role, if installed via ansible-galaxy
+    # Or publisher.role, if installed via ansible-galaxy would be moonpie.ufw
     - role: "../roles/ufw" 
       vars:
-        ufw_var1: "a string!"
-        var1: "Best practice is to have rolename_var1"
+        ufw_lockdown: true
 ```
 
 # Our roles
@@ -220,6 +219,32 @@ all:
 * backup, podman, docker. Docker watchtower container update is untested.
 
 # Examples
+
+```{.yaml}
+---
+- name: Example playbook
+  hosts: all
+  vars:
+        podman_backup_version: initial
+        podman_backup_containers: ["alpine"]
+        backup_version: initial
+        backup_restore_directories:
+          - "/var/lib/www/"
+        ufw_lockdown: true
+        ufw_open_ports: 80
+  roles:
+    - role: "../roles/facts"
+    - role: "../roles/ufw"
+    - role: "../roles/podman"
+    - role: "../roles/backup"
+```
+
+# Best Practice
+
+* Roles that do many disk operations (any of the backups) take a very long time
+  - They should be seperated into seperate playbooks, and ran independently, like using a terminal multiplexer (tabs but in your terminal)
+* Facts needs to be ran before any of the firewall playbooks (facts gathers the control node ip address)
+
 
 
 
