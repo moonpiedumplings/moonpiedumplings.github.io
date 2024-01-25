@@ -7,8 +7,9 @@
 <link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
 <link href="../../site_libs/quarto-html/light-border.css" rel="stylesheet">
 <link href="../../site_libs/quarto-html/quarto-html.min.css" rel="stylesheet" data-mode="light">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark.css" rel="stylesheet" id="quarto-text-highlighting-styles"><meta charset="utf-8">
-  <meta name="generator" content="quarto-1.3.450">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/quarto-contrib/qrcodejs-v1.0.0/qrcode.js"></script><meta charset="utf-8">
+  <meta name="generator" content="quarto-1.4.549">
 
   <meta name="author" content="Jeffrey Fonseca">
   <title>Jeffrey Fonseca - How to Ansible</title>
@@ -31,7 +32,7 @@
     }
     /* CSS for syntax highlighting */
     pre > code.sourceCode { white-space: pre; position: relative; }
-    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span { line-height: 1.25; }
     pre > code.sourceCode > span:empty { height: 1.2em; }
     .sourceCode { overflow: visible; }
     code.sourceCode > span { color: inherit; text-decoration: inherit; }
@@ -221,7 +222,8 @@
   }
 
   .callout.callout-titled .callout-body > .callout-content > :last-child {
-    margin-bottom: 0.5rem;
+    padding-bottom: 0.5rem;
+    margin-bottom: 0;
   }
 
   .callout.callout-titled .callout-icon::before {
@@ -411,9 +413,9 @@ Jeffrey Fonseca
 </ul></li>
 <li>Massive community
 <ul>
-<li>Pieces written in python, easy to add on to</li>
+<li>Written in python, with a modular architecture, easy to add on to</li>
 <li>Official package manager and repository called Galaxy</li>
-<li>30000+ custom “roles” to do anything you want, from installing proxmox on debian to configuring iptables</li>
+<li>30000+ custom ansible pieces to do anything you want, from installing proxmox on debian to configuring desktop Linux</li>
 </ul></li>
 </ul>
 </section>
@@ -423,40 +425,38 @@ Jeffrey Fonseca
 <ul>
 <li>Uses Yet-Another-Markup-Language (yaml)</li>
 </ul>
-<div class="sourceCode" id="cb1"><pre class="sourceCode numberSource yaml number-lines code-with-copy"><code class="sourceCode yaml"><span id="cb1-1"><a href="#cb1-1"></a><span class="pp">---</span></span>
-<span id="cb1-2"><a href="#cb1-2"></a><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> Sample ansible playbook (playbook name here)</span></span>
-<span id="cb1-3"><a href="#cb1-3"></a><span class="at">  </span><span class="fu">hosts</span><span class="kw">:</span><span class="at"> all</span></span>
-<span id="cb1-4"><a href="#cb1-4"></a><span class="at">  </span><span class="fu">gather_facts</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span><span class="co"> # Gather facts about managed node</span></span>
-<span id="cb1-5"><a href="#cb1-5"></a></span>
-<span id="cb1-6"><a href="#cb1-6"></a><span class="at">  </span><span class="fu">tasks</span><span class="kw">:</span></span>
-<span id="cb1-7"><a href="#cb1-7"></a><span class="at">    </span><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> Install the latest version of Apache and MariaDB</span></span>
-<span id="cb1-8"><a href="#cb1-8"></a><span class="at">      </span><span class="fu">ansible.builtin.package</span><span class="kw">:</span></span>
-<span id="cb1-9"><a href="#cb1-9"></a><span class="at">        </span><span class="fu">name</span><span class="kw">:</span></span>
-<span id="cb1-10"><a href="#cb1-10"></a><span class="at">          </span><span class="kw">-</span><span class="at"> httpd</span></span>
-<span id="cb1-11"><a href="#cb1-11"></a><span class="at">          </span><span class="kw">-</span><span class="at"> mariadb-server</span></span>
-<span id="cb1-12"><a href="#cb1-12"></a><span class="at">        </span><span class="fu">state</span><span class="kw">:</span><span class="at"> latest</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb1"><pre class="sourceCode numberSource yaml number-lines code-with-copy"><code class="sourceCode yaml"><span id="cb1-1"><a></a><span class="pp">---</span></span>
+<span id="cb1-2"><a></a><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> Sample ansible playbook (playbook name here)</span></span>
+<span id="cb1-3"><a></a><span class="at">  </span><span class="fu">hosts</span><span class="kw">:</span><span class="at"> all</span></span>
+<span id="cb1-4"><a></a><span class="at">  </span><span class="fu">gather_facts</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span><span class="co"> # Gather facts about managed node</span></span>
+<span id="cb1-5"><a></a></span>
+<span id="cb1-6"><a></a><span class="at">  </span><span class="fu">tasks</span><span class="kw">:</span></span>
+<span id="cb1-7"><a></a><span class="at">    </span><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> Install the latest version of Apache and MariaDB</span></span>
+<span id="cb1-8"><a></a><span class="at">      </span><span class="fu">ansible.builtin.package</span><span class="kw">:</span></span>
+<span id="cb1-9"><a></a><span class="at">        </span><span class="fu">name</span><span class="kw">:</span></span>
+<span id="cb1-10"><a></a><span class="at">          </span><span class="kw">-</span><span class="at"> httpd</span></span>
+<span id="cb1-11"><a></a><span class="at">          </span><span class="kw">-</span><span class="at"> mariadb-server</span></span>
+<span id="cb1-12"><a></a><span class="at">        </span><span class="fu">state</span><span class="kw">:</span><span class="at"> latest</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </section>
 
 <section id="what-is-ansible-cont.-1" class="title-slide slide level1 center">
 <h1>What is ansible (cont.)</h1>
-<div>
 <ul>
-<li class="fragment">In theory should work on any Linux Distro
+<li>In theory should work on any Linux Distro
 <ul>
-<li class="fragment">Abstracts ansible’s package manager specific modules, for apt/dnf/portage/slackpkg/apk/pacman/pkg-ng (freebsd)</li>
+<li>Abstracts ansible’s package manager specific modules, for apt/dnf/portage/slackpkg/apk/pacman/pkg-ng (freebsd)</li>
 </ul></li>
-<li class="fragment">In practice, packages have different names</li>
 </ul>
-</div>
 <div class="fragment">
-<div class="sourceCode" id="cb2"><pre class="sourceCode numberSource yaml number-lines code-with-copy"><code class="sourceCode yaml"><span id="cb2-1"><a href="#cb2-1"></a><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> Install the latest version of Apache and MariaDB</span></span>
-<span id="cb2-2"><a href="#cb2-2"></a><span class="at">  </span><span class="fu">ansible.builtin.package</span><span class="kw">:</span></span>
-<span id="cb2-3"><a href="#cb2-3"></a><span class="at">    </span><span class="fu">name</span><span class="kw">:</span></span>
-<span id="cb2-4"><a href="#cb2-4"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="st">"{{ 'apache2' if ansible_os_family == 'Debian' else 'httpd' }}"</span></span>
-<span id="cb2-5"><a href="#cb2-5"></a><span class="at">      </span><span class="kw">-</span><span class="at"> mariadb-server</span></span>
-<span id="cb2-6"><a href="#cb2-6"></a><span class="at">    </span><span class="fu">state</span><span class="kw">:</span><span class="at"> latest</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<div class="fragment">
+<ul>
+<li>In practice, packages have different names</li>
+</ul>
+<div class="sourceCode" id="cb2"><pre class="sourceCode numberSource yaml number-lines code-with-copy"><code class="sourceCode yaml"><span id="cb2-1"><a></a><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> Install the latest version of Apache and MariaDB</span></span>
+<span id="cb2-2"><a></a><span class="at">  </span><span class="fu">ansible.builtin.package</span><span class="kw">:</span></span>
+<span id="cb2-3"><a></a><span class="at">    </span><span class="fu">name</span><span class="kw">:</span></span>
+<span id="cb2-4"><a></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="st">"{{ 'apache2' if ansible_os_family == 'Debian' else 'httpd' }}"</span></span>
+<span id="cb2-5"><a></a><span class="at">      </span><span class="kw">-</span><span class="at"> mariadb-server</span></span>
+<span id="cb2-6"><a></a><span class="at">    </span><span class="fu">state</span><span class="kw">:</span><span class="at"> latest</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>It looks like python, but squished into one line… that’s because it is!</p>
 </div>
 </section>
@@ -491,14 +491,63 @@ Jeffrey Fonseca
 </ul>
 </section>
 
-<section id="setup-on-linux" class="title-slide slide level1 center">
-<h1>Setup on Linux</h1>
-
+<section id="environment-setup" class="title-slide slide level1 center">
+<h1>Environment Setup</h1>
+<p>Follow the guide at <a href="https://moonpiedmplings.github.io/guides/ccdc-env/" class="uri">https://moonpiedmplings.github.io/guides/ccdc-env/</a></p>
+<div id="qrcode" class="qrcode"></div>
+<script type="text/javascript">
+var qrcode = new QRCode("qrcode", {"colorLight":"#ffffff","height":128,"colorDark":"#000000","text":"https://moonpiedmplings.github.io/guides/ccdc-env/","width":128});
+</script>
+    
+<p>End environment created should have:</p>
+<ul>
+<li>Libvirt</li>
+<li>Nix</li>
+<li>Wezterm</li>
+<li>Visual Studio Code (with relevant extensions)</li>
+</ul>
 </section>
 
-<section id="setup-on-windows" class="title-slide slide level1 center">
-<h1>Setup on Windows</h1>
+<section id="launching" class="title-slide slide level1 center">
+<h1>Launching</h1>
+<ul>
+<li>Run <code>nix-shell</code> to create a temporary environment with the relevant tools</li>
+<li><code>code .</code> launches vscode in the current directory, in the nix environment</li>
+<li>Zellij launches a terminal multiplexer</li>
+</ul>
+</section>
 
+<section id="vagrant" class="title-slide slide level1 center">
+<h1>Vagrant</h1>
+<ul>
+<li>Infrastructure-as-Code (IaC)
+<ul>
+<li>Overshadowed by docker recently</li>
+</ul></li>
+<li>Create virtual machines from code, by downloading “boxes” from the main repository, vagrant cloud</li>
+</ul>
+<div class="sourceCode" id="cb3"><pre class="sourceCode numberSource ruby number-lines code-with-copy"><code class="sourceCode ruby"><span id="cb3-1"><a></a><span class="dt">Vagrant</span><span class="at">.configure</span>(<span class="st">"2"</span>) <span class="cf">do</span> <span class="kw">|</span>config<span class="kw">|</span></span>
+<span id="cb3-2"><a></a>    config<span class="at">.vm.provision</span> <span class="st">"shell"</span>, <span class="wa">path: </span><span class="st">"scripts/packages.sh"</span></span>
+<span id="cb3-3"><a></a>    config<span class="at">.vm.define</span> <span class="st">"318"</span> <span class="cf">do</span> <span class="kw">|</span>vmconfig<span class="kw">|</span> <span class="co"># 318 is the virtual machine name</span></span>
+<span id="cb3-4"><a></a>        vmconfig<span class="at">.vm.provision</span> <span class="st">"ansible"</span> <span class="cf">do</span> <span class="kw">|</span>ansible<span class="kw">|</span></span>
+<span id="cb3-5"><a></a>            ansible<span class="at">.playbook</span> <span class="kw">=</span> <span class="st">"ansible/inventory.yml"</span></span>
+<span id="cb3-6"><a></a>        <span class="cf">end</span></span>
+<span id="cb3-7"><a></a>        vmconfig<span class="at">.vm.box</span> <span class="kw">=</span> <span class="st">"generic/alpine318"</span></span>
+<span id="cb3-8"><a></a>        vmconfig<span class="at">.vm.provider</span> <span class="st">"libvirt"</span> <span class="cf">do</span> <span class="kw">|</span>libvirt<span class="kw">|</span></span>
+<span id="cb3-9"><a></a>            libvirt<span class="at">.memory</span> <span class="kw">=</span> <span class="dv">1024</span></span>
+<span id="cb3-10"><a></a>            libvirt<span class="at">.cpus</span> <span class="kw">=</span> <span class="dv">2</span></span>
+<span id="cb3-11"><a></a>        <span class="cf">end</span></span>
+<span id="cb3-12"><a></a>    <span class="cf">end</span></span>
+<span id="cb3-13"><a></a><span class="cf">end</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
+
+<section id="vagrant-cont." class="title-slide slide level1 center">
+<h1>Vagrant (cont.)</h1>
+<ul>
+<li>In <code>linux/testing</code>, there are directories for several operating systems</li>
+<li>With those as your working directory, <code>vagrant up --provider libvirt machinename</code> brings them up.</li>
+<li>An ansible inventory will be generated in <code>.vagrant/provisioners/ansible/inventory/</code></li>
+</ul>
 </section>
 
 <section id="usage-inventory" class="title-slide slide level1 center">
@@ -508,21 +557,16 @@ Jeffrey Fonseca
 <div class="code-with-filename-file">
 <pre><strong>inventory.yml</strong></pre>
 </div>
-<div class="sourceCode" id="cb3"><pre class="sourceCode numberSource yaml number-lines code-with-copy"><code class="sourceCode yaml"><span id="cb3-1"><a href="#cb3-1"></a><span class="pp">---</span></span>
-<span id="cb3-2"><a href="#cb3-2"></a><span class="fu">all</span><span class="kw">:</span></span>
-<span id="cb3-3"><a href="#cb3-3"></a><span class="at">  </span><span class="fu">hosts</span><span class="kw">:</span></span>
-<span id="cb3-4"><a href="#cb3-4"></a><span class="at">    </span><span class="fu">test_host</span><span class="kw">:</span></span>
-<span id="cb3-5"><a href="#cb3-5"></a><span class="at">      </span><span class="fu">ansible_host</span><span class="kw">:</span><span class="co"> # Defaults to host alias, in this case test_host </span></span>
-<span id="cb3-6"><a href="#cb3-6"></a><span class="at">      </span><span class="fu">ansible_user</span><span class="kw">:</span><span class="at"> </span></span>
-<span id="cb3-7"><a href="#cb3-7"></a><span class="at">      </span><span class="fu">ansible_password</span><span class="kw">:</span></span>
-<span id="cb3-8"><a href="#cb3-8"></a><span class="at">      </span><span class="fu">ansible_become_pass</span><span class="kw">:</span><span class="co"> # Password ansible uses to authenticate with sudo</span></span>
-<span id="cb3-9"><a href="#cb3-9"></a><span class="at">      </span><span class="fu">ansible_ssh_private_key_file</span><span class="kw">:</span><span class="at"> </span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb4" data-filename="inventory.yml"><pre class="sourceCode numberSource yaml number-lines code-with-copy"><code class="sourceCode yaml"><span id="cb4-1"><a></a><span class="pp">---</span></span>
+<span id="cb4-2"><a></a><span class="fu">all</span><span class="kw">:</span></span>
+<span id="cb4-3"><a></a><span class="at">  </span><span class="fu">hosts</span><span class="kw">:</span></span>
+<span id="cb4-4"><a></a><span class="at">    </span><span class="fu">test_host</span><span class="kw">:</span></span>
+<span id="cb4-5"><a></a><span class="at">      </span><span class="fu">ansible_host</span><span class="kw">:</span><span class="co"> # Defaults to host alias, in this case test_host </span></span>
+<span id="cb4-6"><a></a><span class="at">      </span><span class="fu">ansible_user</span><span class="kw">:</span><span class="at"> </span></span>
+<span id="cb4-7"><a></a><span class="at">      </span><span class="fu">ansible_password</span><span class="kw">:</span></span>
+<span id="cb4-8"><a></a><span class="at">      </span><span class="fu">ansible_become_pass</span><span class="kw">:</span><span class="co"> # Password ansible uses to authenticate with sudo</span></span>
+<span id="cb4-9"><a></a><span class="at">      </span><span class="fu">ansible_ssh_private_key_file</span><span class="kw">:</span><span class="at"> </span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-</section>
-
-<section id="usage-get-information-from-a-real-vm" class="title-slide slide level1 center">
-<h1>Usage: Get information from a real Vm</h1>
-
 </section>
 
 <section id="ansible-ping" class="title-slide slide level1 center">
@@ -535,16 +579,16 @@ Jeffrey Fonseca
 
 <section id="your-first-playbook" class="title-slide slide level1 center">
 <h1>Your first playbook!</h1>
-<div class="sourceCode" id="cb4"><pre class="sourceCode numberSource yaml number-lines code-with-copy"><code class="sourceCode yaml"><span id="cb4-1"><a href="#cb4-1"></a><span class="pp">---</span></span>
-<span id="cb4-2"><a href="#cb4-2"></a><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> Playbook for testing webserver related roles</span></span>
-<span id="cb4-3"><a href="#cb4-3"></a><span class="at">  </span><span class="fu">hosts</span><span class="kw">:</span><span class="at"> all</span></span>
-<span id="cb4-4"><a href="#cb4-4"></a><span class="at">  </span><span class="fu">gather_facts</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
-<span id="cb4-5"><a href="#cb4-5"></a></span>
-<span id="cb4-6"><a href="#cb4-6"></a><span class="at">  </span><span class="fu">tasks</span><span class="kw">:</span></span>
-<span id="cb4-7"><a href="#cb4-7"></a><span class="at">    </span><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> Test privilege escalation</span></span>
-<span id="cb4-8"><a href="#cb4-8"></a><span class="at">      </span><span class="fu">become</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
-<span id="cb4-9"><a href="#cb4-9"></a><span class="at">      </span><span class="fu">ansible.builtin.debug</span><span class="kw">:</span></span>
-<span id="cb4-10"><a href="#cb4-10"></a><span class="at">        </span><span class="fu">msg</span><span class="kw">:</span><span class="at"> </span><span class="st">"Hello World!"</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb5"><pre class="sourceCode numberSource yaml number-lines code-with-copy"><code class="sourceCode yaml"><span id="cb5-1"><a></a><span class="pp">---</span></span>
+<span id="cb5-2"><a></a><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> Playbook for testing webserver related roles</span></span>
+<span id="cb5-3"><a></a><span class="at">  </span><span class="fu">hosts</span><span class="kw">:</span><span class="at"> all</span></span>
+<span id="cb5-4"><a></a><span class="at">  </span><span class="fu">gather_facts</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb5-5"><a></a></span>
+<span id="cb5-6"><a></a><span class="at">  </span><span class="fu">tasks</span><span class="kw">:</span></span>
+<span id="cb5-7"><a></a><span class="at">    </span><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> Test privilege escalation</span></span>
+<span id="cb5-8"><a></a><span class="at">      </span><span class="fu">become</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb5-9"><a></a><span class="at">      </span><span class="fu">ansible.builtin.debug</span><span class="kw">:</span></span>
+<span id="cb5-10"><a></a><span class="at">        </span><span class="fu">msg</span><span class="kw">:</span><span class="at"> </span><span class="st">"Hello World!"</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </section>
 
 <section id="roles" class="title-slide slide level1 center">
@@ -553,17 +597,17 @@ Jeffrey Fonseca
 <li>Ansible roles are akin to functions in other programming langauges</li>
 <li>Special folder structure</li>
 </ul>
-<div class="sourceCode" id="cb5"><pre class="sourceCode numberSource default number-lines code-with-copy"><code class="sourceCode default"><span id="cb5-1"><a href="#cb5-1"></a>.</span>
-<span id="cb5-2"><a href="#cb5-2"></a>|-- users</span>
-<span id="cb5-3"><a href="#cb5-3"></a>    |-- tasks</span>
-<span id="cb5-4"><a href="#cb5-4"></a>    |   |-- add_good_admins.yml</span>
-<span id="cb5-5"><a href="#cb5-5"></a>    |   |-- change_passwords.yml</span>
-<span id="cb5-6"><a href="#cb5-6"></a>    |   |-- main.yml</span>
-<span id="cb5-7"><a href="#cb5-7"></a>    |   `-- remove_bad_admins.yml</span>
-<span id="cb5-8"><a href="#cb5-8"></a>    |-- templates</span>
-<span id="cb5-9"><a href="#cb5-9"></a>    |   `-- gitignore.j2</span>
-<span id="cb5-10"><a href="#cb5-10"></a>    `-- vars</span>
-<span id="cb5-11"><a href="#cb5-11"></a>        `-- main.yml</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb6"><pre class="sourceCode numberSource default number-lines code-with-copy"><code class="sourceCode default"><span id="cb6-1"><a></a>.</span>
+<span id="cb6-2"><a></a>|-- users</span>
+<span id="cb6-3"><a></a>    |-- tasks</span>
+<span id="cb6-4"><a></a>    |   |-- add_good_admins.yml</span>
+<span id="cb6-5"><a></a>    |   |-- change_passwords.yml</span>
+<span id="cb6-6"><a></a>    |   |-- main.yml</span>
+<span id="cb6-7"><a></a>    |   `-- remove_bad_admins.yml</span>
+<span id="cb6-8"><a></a>    |-- templates</span>
+<span id="cb6-9"><a></a>    |   `-- gitignore.j2</span>
+<span id="cb6-10"><a></a>    `-- vars</span>
+<span id="cb6-11"><a></a>        `-- main.yml</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </section>
 
 <section id="roles-cont." class="title-slide slide level1 center">
@@ -575,16 +619,16 @@ Jeffrey Fonseca
 <li>roles almost always come with defaults</li>
 </ul></li>
 </ul>
-<div class="sourceCode" id="cb6"><pre class="sourceCode numberSource yaml number-lines code-with-copy"><code class="sourceCode yaml"><span id="cb6-1"><a href="#cb6-1"></a><span class="pp">---</span></span>
-<span id="cb6-2"><a href="#cb6-2"></a><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> Playbook for testing webserver related roles</span></span>
-<span id="cb6-3"><a href="#cb6-3"></a><span class="at">  </span><span class="fu">hosts</span><span class="kw">:</span><span class="at"> all</span></span>
-<span id="cb6-4"><a href="#cb6-4"></a><span class="at">  </span><span class="fu">gather_facts</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
-<span id="cb6-5"><a href="#cb6-5"></a><span class="at">  </span><span class="fu">roles</span><span class="kw">:</span></span>
-<span id="cb6-6"><a href="#cb6-6"></a><span class="co">    # Or publisher.role, if installed via ansible-galaxy</span></span>
-<span id="cb6-7"><a href="#cb6-7"></a><span class="at">    </span><span class="kw">-</span><span class="at"> </span><span class="fu">role</span><span class="kw">:</span><span class="at"> </span><span class="st">"../roles/ufw"</span><span class="at"> </span></span>
-<span id="cb6-8"><a href="#cb6-8"></a><span class="at">      </span><span class="fu">vars</span><span class="kw">:</span></span>
-<span id="cb6-9"><a href="#cb6-9"></a><span class="at">        </span><span class="fu">ufw_var1</span><span class="kw">:</span><span class="at"> </span><span class="st">"a string!"</span></span>
-<span id="cb6-10"><a href="#cb6-10"></a><span class="at">        </span><span class="fu">var1</span><span class="kw">:</span><span class="at"> </span><span class="st">"Best practice is to have rolename_var1"</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb7"><pre class="sourceCode numberSource yaml number-lines code-with-copy"><code class="sourceCode yaml"><span id="cb7-1"><a></a><span class="pp">---</span></span>
+<span id="cb7-2"><a></a><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> Playbook for testing webserver related roles</span></span>
+<span id="cb7-3"><a></a><span class="at">  </span><span class="fu">hosts</span><span class="kw">:</span><span class="at"> all</span></span>
+<span id="cb7-4"><a></a><span class="at">  </span><span class="fu">gather_facts</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb7-5"><a></a><span class="at">  </span><span class="fu">roles</span><span class="kw">:</span></span>
+<span id="cb7-6"><a></a><span class="co">    # Or publisher.role, if installed via ansible-galaxy</span></span>
+<span id="cb7-7"><a></a><span class="at">    </span><span class="kw">-</span><span class="at"> </span><span class="fu">role</span><span class="kw">:</span><span class="at"> </span><span class="st">"../roles/ufw"</span><span class="at"> </span></span>
+<span id="cb7-8"><a></a><span class="at">      </span><span class="fu">vars</span><span class="kw">:</span></span>
+<span id="cb7-9"><a></a><span class="at">        </span><span class="fu">ufw_var1</span><span class="kw">:</span><span class="at"> </span><span class="st">"a string!"</span></span>
+<span id="cb7-10"><a></a><span class="at">        </span><span class="fu">var1</span><span class="kw">:</span><span class="at"> </span><span class="st">"Best practice is to have rolename_var1"</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </section>
 
 <section id="our-roles" class="title-slide slide level1 center">
@@ -615,16 +659,18 @@ Jeffrey Fonseca
 <ul>
 <li>ufw, firewalld, iptables</li>
 <li>users, keycloak</li>
-<li>Mysql, Postgres. Mongo might work, but I didn’t get around to testing it. Don’t bother with mysql backup, there is no restore, it’s better to just use the <code>backup</code> role pointed at the relevant mysql service data.</li>
-<li>Backups, podman, docker. Docker watchtower container update is untested.</li>
+<li>mysql, Postgres. Mongo might work, but I didn’t get around to testing it. Don’t bother with mysql backup, there is no restore, it’s better to just use the <code>backup</code> role pointed at the relevant mysql service data.</li>
+<li>backup, podman, docker. Docker watchtower container update is untested.</li>
 </ul>
 </section>
 
-<section id="example" class="title-slide slide level1 center">
-<h1>Example</h1>
+<section id="examples" class="title-slide slide level1 center">
+<h1>Examples</h1>
 
+<div class="quarto-auto-generated-content">
 <div class="footer footer-default">
 
+</div>
 </div>
 </section>
     </div>
@@ -653,7 +699,6 @@ Jeffrey Fonseca
       Reveal.initialize({
 'controlsAuto': true,
 'previewLinksAuto': false,
-'smaller': false,
 'pdfSeparateFragments': false,
 'autoAnimateEasing': "ease",
 'autoAnimateDuration': 1,
@@ -914,10 +959,9 @@ Jeffrey Fonseca
         // clear code selection
         e.clearSelection();
       });
-      function tippyHover(el, contentFn) {
+      function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
         const config = {
           allowHTML: true,
-          content: contentFn,
           maxWidth: 500,
           delay: 100,
           arrow: false,
@@ -927,8 +971,17 @@ Jeffrey Fonseca
           interactive: true,
           interactiveBorder: 10,
           theme: 'light-border',
-          placement: 'bottom-start'
+          placement: 'bottom-start',
         };
+        if (contentFn) {
+          config.content = contentFn;
+        }
+        if (onTriggerFn) {
+          config.onTrigger = onTriggerFn;
+        }
+        if (onUntriggerFn) {
+          config.onUntrigger = onUntriggerFn;
+        }
           config['offset'] = [0,0];
           config['maxWidth'] = 700;
         window.tippy(el, config); 
