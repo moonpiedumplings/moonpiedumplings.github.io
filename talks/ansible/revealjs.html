@@ -496,7 +496,7 @@ Jeffrey Fonseca
 <p>Follow the guide at <a href="https://moonpiedmplings.github.io/guides/ccdc-env/" class="uri">https://moonpiedmplings.github.io/guides/ccdc-env/</a></p>
 <div id="qrcode" class="qrcode"></div>
 <script type="text/javascript">
-var qrcode = new QRCode("qrcode", {"colorLight":"#ffffff","height":128,"colorDark":"#000000","text":"https://moonpiedmplings.github.io/guides/ccdc-env/","width":128});
+var qrcode = new QRCode("qrcode", {"colorDark":"#000000","text":"https://moonpiedmplings.github.io/guides/ccdc-env/","colorLight":"#ffffff","height":128,"width":128});
 </script>
     
 <p>End environment created should have:</p>
@@ -624,11 +624,10 @@ var qrcode = new QRCode("qrcode", {"colorLight":"#ffffff","height":128,"colorDar
 <span id="cb7-3"><a></a><span class="at">  </span><span class="fu">hosts</span><span class="kw">:</span><span class="at"> all</span></span>
 <span id="cb7-4"><a></a><span class="at">  </span><span class="fu">gather_facts</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
 <span id="cb7-5"><a></a><span class="at">  </span><span class="fu">roles</span><span class="kw">:</span></span>
-<span id="cb7-6"><a></a><span class="co">    # Or publisher.role, if installed via ansible-galaxy</span></span>
+<span id="cb7-6"><a></a><span class="co">    # Or publisher.role, if installed via ansible-galaxy would be moonpie.ufw</span></span>
 <span id="cb7-7"><a></a><span class="at">    </span><span class="kw">-</span><span class="at"> </span><span class="fu">role</span><span class="kw">:</span><span class="at"> </span><span class="st">"../roles/ufw"</span><span class="at"> </span></span>
 <span id="cb7-8"><a></a><span class="at">      </span><span class="fu">vars</span><span class="kw">:</span></span>
-<span id="cb7-9"><a></a><span class="at">        </span><span class="fu">ufw_var1</span><span class="kw">:</span><span class="at"> </span><span class="st">"a string!"</span></span>
-<span id="cb7-10"><a></a><span class="at">        </span><span class="fu">var1</span><span class="kw">:</span><span class="at"> </span><span class="st">"Best practice is to have rolename_var1"</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb7-9"><a></a><span class="at">        </span><span class="fu">ufw_lockdown</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </section>
 
 <section id="our-roles" class="title-slide slide level1 center">
@@ -666,6 +665,33 @@ var qrcode = new QRCode("qrcode", {"colorLight":"#ffffff","height":128,"colorDar
 
 <section id="examples" class="title-slide slide level1 center">
 <h1>Examples</h1>
+<div class="sourceCode" id="cb8"><pre class="sourceCode numberSource yaml number-lines code-with-copy"><code class="sourceCode yaml"><span id="cb8-1"><a></a><span class="pp">---</span></span>
+<span id="cb8-2"><a></a><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> Example playbook</span></span>
+<span id="cb8-3"><a></a><span class="at">  </span><span class="fu">hosts</span><span class="kw">:</span><span class="at"> all</span></span>
+<span id="cb8-4"><a></a><span class="at">  </span><span class="fu">vars</span><span class="kw">:</span></span>
+<span id="cb8-5"><a></a><span class="at">        </span><span class="fu">podman_backup_version</span><span class="kw">:</span><span class="at"> initial</span></span>
+<span id="cb8-6"><a></a><span class="at">        </span><span class="fu">podman_backup_containers</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="st">"alpine"</span><span class="kw">]</span></span>
+<span id="cb8-7"><a></a><span class="at">        </span><span class="fu">backup_version</span><span class="kw">:</span><span class="at"> initial</span></span>
+<span id="cb8-8"><a></a><span class="at">        </span><span class="fu">backup_restore_directories</span><span class="kw">:</span></span>
+<span id="cb8-9"><a></a><span class="at">          </span><span class="kw">-</span><span class="at"> </span><span class="st">"/var/lib/www/"</span></span>
+<span id="cb8-10"><a></a><span class="at">        </span><span class="fu">ufw_lockdown</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb8-11"><a></a><span class="at">        </span><span class="fu">ufw_open_ports</span><span class="kw">:</span><span class="at"> </span><span class="dv">80</span></span>
+<span id="cb8-12"><a></a><span class="at">  </span><span class="fu">roles</span><span class="kw">:</span></span>
+<span id="cb8-13"><a></a><span class="at">    </span><span class="kw">-</span><span class="at"> </span><span class="fu">role</span><span class="kw">:</span><span class="at"> </span><span class="st">"../roles/facts"</span></span>
+<span id="cb8-14"><a></a><span class="at">    </span><span class="kw">-</span><span class="at"> </span><span class="fu">role</span><span class="kw">:</span><span class="at"> </span><span class="st">"../roles/ufw"</span></span>
+<span id="cb8-15"><a></a><span class="at">    </span><span class="kw">-</span><span class="at"> </span><span class="fu">role</span><span class="kw">:</span><span class="at"> </span><span class="st">"../roles/podman"</span></span>
+<span id="cb8-16"><a></a><span class="at">    </span><span class="kw">-</span><span class="at"> </span><span class="fu">role</span><span class="kw">:</span><span class="at"> </span><span class="st">"../roles/backup"</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
+
+<section id="best-practice" class="title-slide slide level1 center">
+<h1>Best Practice</h1>
+<ul>
+<li>Roles that do many disk operations (any of the backups) take a very long time
+<ul>
+<li>They should be seperated into seperate playbooks, and ran independently, like using a terminal multiplexer (tabs but in your terminal)</li>
+</ul></li>
+<li>Facts needs to be ran before any of the firewall playbooks (facts gathers the control node ip address)</li>
+</ul>
 
 <div class="quarto-auto-generated-content">
 <div class="footer footer-default">
