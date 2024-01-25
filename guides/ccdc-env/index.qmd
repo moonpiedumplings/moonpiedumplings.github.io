@@ -11,10 +11,13 @@ execute:
   freeze: true
 ---
 
-This will be the guide(s) on how to set up your environment for CCDC playing, and development. I hope to make videos, but right now I'm just taking notes.
-
+This will be the guide(s) on how to set up your environment for CCDC playing, and development of related scripts + testing them.
 
 # Windows
+
+You require Windows 11. With Windows 10, there is no nested virtaulization in libvirt, preventing the use of the relevant vagrant machines. 
+
+Although there are workarounds, allowing you to use virtualbox in WSL or the like, they are not worth the effort it requires to support them. 
 
 ## Chocolatey
 
@@ -129,7 +132,7 @@ Install:
 
 **Wezterm:**
 
-[Wezterm has official installation instructions](https://wezfurlong.org/wezterm/install/linux.html). I don't recommend flatpak, because sandboxing may cause weird behaviro. 
+[Wezterm has official installation instructions](https://wezfurlong.org/wezterm/install/linux.html). I don't recommend flatpak, because sandboxing may cause weird behaviors. 
 
 **Vscode:**
 
@@ -198,10 +201,11 @@ Personal preference, but I like to [disable acceptance of the autocomplete sugge
 
 `git clone https://github.com/CSUN-CCDC/CCDC-2023`
 
-When in the root of this git repo, you can run `nix-shell` to get a full development environment. It includes tools like ansible, ansible checking, and vagrant. 
+When in the root of this git repo, you can run `nix-shell` to get a full development environment. It includes tools like ansible, ansible checking, vagrant, and more. 
 
-For the play environment, that is located in the root of utils/ directory. 
 
+
+::: {.hidden}
 
 # For developers only
 
@@ -209,6 +213,8 @@ For the play environment, that is located in the root of utils/ directory.
 These are personal notes, for myself and anyone else who wants to work on this guide.
 
 [Qemu provider](https://github.com/ppggff/vagrant-qemu)? That should work on everything, although I can't find speed benchmarks for pure qemu/qemu + TCG (windows 10). Will this take advantage of HVF (hardware accelerated cpu instructions) on Mac? 
+
+I tested something a little bit, but it was so slow that SSH timed out. This doesn't seem to be feasible.
 
 Libvirt on macos: <https://libvirt.org/macos.html>
 
@@ -225,3 +231,5 @@ Virtualbox and hyperv at the same time is a bit tricky, so you might have to fol
 <https://code.visualstudio.com/docs/remote/wsl-tutorial>
 
 <https://learn.microsoft.com/en-us/windows/wsl/tutorials/wsl-vscode>
+
+:::

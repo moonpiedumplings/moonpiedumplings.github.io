@@ -17,9 +17,9 @@ execute:
     - Most popular CaC option. 
     - Red Hat uses in downstream products
 * Massive community
-    - Pieces written in python, easy to add on to
+    - Written in python, with a modular architecture, easy to add on to
     - Official package manager and repository called Galaxy
-    - 30000+ custom "roles" to do anything you want, from installing proxmox on debian to configuring iptables
+    - 30000+ custom ansible pieces to do anything you want, from installing proxmox on debian to configuring desktop Linux
 
 # What is ansible (cont.)
 
@@ -42,13 +42,12 @@ execute:
 
 # What is ansible (cont.)
 
-::: {.incremental}
 * In theory should work on any Linux Distro
     - Abstracts ansible's package manager specific modules, for apt/dnf/portage/slackpkg/apk/pacman/pkg-ng (freebsd)
-* In practice, packages have different names
-:::
 
 . . .
+
+* In practice, packages have different names
 
 ```{.yaml}
 - name: Install the latest version of Apache and MariaDB
@@ -58,8 +57,6 @@ execute:
       - mariadb-server
     state: latest
 ```
-
-. . .
 
 It looks like python, but squished into one line... that's because it is!
 
@@ -80,13 +77,53 @@ It looks like python, but squished into one line... that's because it is!
 * I use Nix to install needed tools, as it also can do more than just python packages, and it's very easy to ensure everybody gets the same version of things
     - Nix only supports Linux/Macos, so Windows users on the team work in WSL or a VM
 
-# Setup on Linux
+# Environment Setup
+
+Follow the guide at <https://moonpiedmplings.github.io/guides/ccdc-env/>
+
+{{< qrcode https://moonpiedmplings.github.io/guides/ccdc-env/ >}}
+
+End environment created should have:
+
+* Libvirt
+* Nix
+* Wezterm
+* Visual Studio Code (with relevant extensions)
+
+# Launching
+
+* Run  `nix-shell` to create a temporary environment with the relevant tools
+* `code .` launches vscode in the current directory, in the nix environment
+* Zellij launches a terminal multiplexer
 
 
+# Vagrant
 
-# Setup on Windows
+* Infrastructure-as-Code (IaC)
+  - Overshadowed by docker recently
+* Create virtual machines from code, by downloading "boxes" from the main repository, vagrant cloud
 
+```{.ruby}
+Vagrant.configure("2") do |config|
+    config.vm.provision "shell", path: "scripts/packages.sh"
+    config.vm.define "318" do |vmconfig| # 318 is the virtual machine name
+        vmconfig.vm.provision "ansible" do |ansible|
+            ansible.playbook = "ansible/inventory.yml"
+        end
+        vmconfig.vm.box = "generic/alpine318"
+        vmconfig.vm.provider "libvirt" do |libvirt|
+            libvirt.memory = 1024
+            libvirt.cpus = 2
+        end
+    end
+end
+```
 
+# Vagrant (cont.)
+
+* In `linux/testing`, there are directories for several operating systems
+* With those as your working directory, `vagrant up --provider libvirt machinename` brings them up.
+* An ansible inventory will be generated in `.vagrant/provisioners/ansible/inventory/`
 
 # Usage: Inventory
 
@@ -103,11 +140,6 @@ all:
       ansible_become_pass: # Password ansible uses to authenticate with sudo
       ansible_ssh_private_key_file: 
 ```
-# Usage: Get information from a real Vm
-
-
-
-
 
 # Ansible ping
 
@@ -184,10 +216,11 @@ all:
 # Usable Roles
 * ufw, firewalld, iptables
 * users, keycloak
-* Mysql, Postgres. Mongo might work, but I didn't get around to testing it. Don't bother with mysql backup, there is no restore, it's better to just use the `backup` role pointed at the relevant mysql service data.
-* Backups, podman, docker. Docker watchtower container update is untested.
+* mysql, Postgres. Mongo might work, but I didn't get around to testing it. Don't bother with mysql backup, there is no restore, it's better to just use the `backup` role pointed at the relevant mysql service data.
+* backup, podman, docker. Docker watchtower container update is untested.
 
-# Example
+# Examples
+
 
 
 
