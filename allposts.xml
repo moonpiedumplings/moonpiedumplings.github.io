@@ -337,6 +337,16 @@ font-style: inherit;">end</span></span></code></pre></div>
 <p>Caddy can also configure https automatically: <a href="https://caddyserver.com/docs/caddyfile/options#email" class="uri">https://caddyserver.com/docs/caddyfile/options#email</a></p>
 <p>As for TLS passthrough on the external Caddy service, I found some relevant content:</p>
 <p><a href="https://caddy.community/t/reverse-proxy-chaining-vps-local-server-service-trusted-proxies/18105" class="uri">https://caddy.community/t/reverse-proxy-chaining-vps-local-server-service-trusted-proxies/18105</a></p>
+<p>Alright. This isn’t working. Double reverse proxies are a pain to configure, plus they seem to be lacking support for <a href="https://github.com/caddyserver/caddy/issues/5086">some things</a>.</p>
+<p>So… alternatives?</p>
+<p>I started looking through this: <a href="https://github.com/anderspitman/awesome-tunneling" class="uri">https://github.com/anderspitman/awesome-tunneling</a></p>
+<p>Projects like <a href="https://github.com/fatedier/frp">frp</a> appeal to me and look like they do what I want to.</p>
+<p>Out of them, <a href="https://github.com/rapiz1/rathole">rathole</a> appeals to me the most. The benchmarks advertise high performance, and it has an official <a href="https://hub.docker.com/r/rapiz1/rathole">docker container</a>. This would make it easy to deploy.</p>
+<p>It seems to forward traffic as it, which is good, because I don’t want it to get in the way of caddy.</p>
+<p>I also need to test iptables as a reverse proxy. I don’t want to test this, as it requires that I tear down some of my declarative configuration to temporarily test this in an imperative manner.</p>
+<p>Alternatively, I am looking at <code>iptables</code>.</p>
+<p>There are several relevant stackoverflow answers: <a href="https://superuser.com/a/1291523">this one</a> and <a href="https://unix.stackexchange.com/a/634972">this one</a>.</p>
+<p>I did a little bit of experimenting with iptables, but it looks to be more effort than it is worth to configure.</p>
 </section>
 <section id="ansibilizing-the-server" class="level2">
 <h2 class="anchored" data-anchor-id="ansibilizing-the-server">Ansibilizing the server</h2>
@@ -348,6 +358,16 @@ font-style: inherit;">end</span></span></code></pre></div>
 <p>The relevant ansible code uses <a href="">become</a> to run as the <code>podmaner</code> user, and then runs the <a href="https://docs.ansible.com/ansible/latest/collections/containers/podman/podman_container_module.html#ansible-collections-containers-podman-podman-container-module">ansible podman container</a> module.</p>
 <p>It links to some docs here: <a href="https://docs.ansible.com/ansible-core/2.16/playbook_guide/playbooks_privilege_escalation.html#risks-of-becoming-an-unprivileged-user" class="uri">https://docs.ansible.com/ansible-core/2.16/playbook_guide/playbooks_privilege_escalation.html#risks-of-becoming-an-unprivileged-user</a></p>
 <p>This was fixed after I installed the <code>acl</code> package.</p>
+</section>
+<section id="ansible-vault" class="level3">
+<h3 class="anchored" data-anchor-id="ansible-vault">Ansible vault</h3>
+<p>If I am going to use rathole, then I need to deploy a config file with a client and server secrets. Although an extra step of complexity, thankfully, ansible makes handling secrets easy, with ansible vault.</p>
+<p>Main docs here: <a href="https://docs.ansible.com/ansible/latest/vault_guide/index.html" class="uri">https://docs.ansible.com/ansible/latest/vault_guide/index.html</a></p>
+<p><a href="https://docs.ansible.com/ansible/latest/vault_guide/vault_managing_passwords.html#storing-and-accessing-vault-passwords">Docs on handling vault passwords</a></p>
+<p>I only need a few variables encrypted, so maybe:</p>
+<p><a href="https://docs.ansible.com/ansible/latest/vault_guide/vault_encrypting_content.html#encrypting-content-with-ansible-vault">Docs on encrypting individual variables</a></p>
+<p>Or I could encrypt a file with the variables I want and add them? :</p>
+<p><a href="https://docs.ansible.com/ansible/latest/vault_guide/vault_encrypting_content.html#encrypting-files-with-ansible-vault">Docs on encrypting files</a></p>
 </section>
 </section>
 </section>
@@ -5836,7 +5856,8 @@ font-style: inherit;"> variable | default(False)</span></span></code></pre></div
 <p>In macos terminal, in linux, or in WSL, install nix (tool used to manage our development environments):</p>
 <p>Do not run these commands with sudo.</p>
 <p><code>curl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix | sh -s -- install</code></p>
-<p>Restart your shell. Simply close and reopen the debian terminal.</p>
+<p>Restart your shell. Simply close and reopen the terminal.</p>
+<p>Also, ensure the nix service is enabled by the</p>
 <p>Update the nix channels:</p>
 <p><code>nix-channel --add https://nixos.org/channels/nixpkgs-unstable nixpkgs</code></p>
 <p><code>nix-channel --update</code></p>

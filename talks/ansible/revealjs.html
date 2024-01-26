@@ -496,7 +496,7 @@ Jeffrey Fonseca
 <p>Follow the guide at <a href="https://moonpiedmplings.github.io/guides/ccdc-env/" class="uri">https://moonpiedmplings.github.io/guides/ccdc-env/</a></p>
 <div id="qrcode" class="qrcode"></div>
 <script type="text/javascript">
-var qrcode = new QRCode("qrcode", {"colorDark":"#000000","text":"https://moonpiedmplings.github.io/guides/ccdc-env/","colorLight":"#ffffff","height":128,"width":128});
+var qrcode = new QRCode("qrcode", {"height":128,"colorLight":"#ffffff","width":128,"text":"https://moonpiedmplings.github.io/guides/ccdc-env/","colorDark":"#000000"});
 </script>
     
 <p>End environment created should have:</p>
@@ -571,24 +571,29 @@ var qrcode = new QRCode("qrcode", {"colorDark":"#000000","text":"https://moonpie
 
 <section id="ansible-ping" class="title-slide slide level1 center">
 <h1>Ansible ping</h1>
-<p><code>ansible all -i inventory.yml -m ping</code></p>
-<ul>
-<li>Tells if you can configure a machine</li>
-</ul>
+<div class="sourceCode" id="cb5"><pre class="sourceCode numberSource default number-lines code-with-copy"><code class="sourceCode default"><span id="cb5-1"><a></a>[nix-shell:~/]$ ansible all -i inventory/ -m ping</span>
+<span id="cb5-2"><a></a>test_host | SUCCESS =&gt; {</span>
+<span id="cb5-3"><a></a>    "ansible_facts": {</span>
+<span id="cb5-4"><a></a>        "discovered_interpreter_python": "/usr/bin/python3"</span>
+<span id="cb5-5"><a></a>    },</span>
+<span id="cb5-6"><a></a>    "changed": false,</span>
+<span id="cb5-7"><a></a>    "ping": "pong"</span>
+<span id="cb5-8"><a></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p><code>pong</code> means you can configure a machine</p>
 </section>
 
 <section id="your-first-playbook" class="title-slide slide level1 center">
 <h1>Your first playbook!</h1>
-<div class="sourceCode" id="cb5"><pre class="sourceCode numberSource yaml number-lines code-with-copy"><code class="sourceCode yaml"><span id="cb5-1"><a></a><span class="pp">---</span></span>
-<span id="cb5-2"><a></a><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> Playbook for testing webserver related roles</span></span>
-<span id="cb5-3"><a></a><span class="at">  </span><span class="fu">hosts</span><span class="kw">:</span><span class="at"> all</span></span>
-<span id="cb5-4"><a></a><span class="at">  </span><span class="fu">gather_facts</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
-<span id="cb5-5"><a></a></span>
-<span id="cb5-6"><a></a><span class="at">  </span><span class="fu">tasks</span><span class="kw">:</span></span>
-<span id="cb5-7"><a></a><span class="at">    </span><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> Test privilege escalation</span></span>
-<span id="cb5-8"><a></a><span class="at">      </span><span class="fu">become</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
-<span id="cb5-9"><a></a><span class="at">      </span><span class="fu">ansible.builtin.debug</span><span class="kw">:</span></span>
-<span id="cb5-10"><a></a><span class="at">        </span><span class="fu">msg</span><span class="kw">:</span><span class="at"> </span><span class="st">"Hello World!"</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb6"><pre class="sourceCode numberSource yaml number-lines code-with-copy"><code class="sourceCode yaml"><span id="cb6-1"><a></a><span class="pp">---</span></span>
+<span id="cb6-2"><a></a><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> Example playbook</span></span>
+<span id="cb6-3"><a></a><span class="at">  </span><span class="fu">hosts</span><span class="kw">:</span><span class="at"> all</span></span>
+<span id="cb6-4"><a></a><span class="at">  </span><span class="fu">gather_facts</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb6-5"><a></a></span>
+<span id="cb6-6"><a></a><span class="at">  </span><span class="fu">tasks</span><span class="kw">:</span></span>
+<span id="cb6-7"><a></a><span class="at">    </span><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> Test privilege escalation</span></span>
+<span id="cb6-8"><a></a><span class="at">      </span><span class="fu">become</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb6-9"><a></a><span class="at">      </span><span class="fu">ansible.builtin.debug</span><span class="kw">:</span></span>
+<span id="cb6-10"><a></a><span class="at">        </span><span class="fu">msg</span><span class="kw">:</span><span class="at"> </span><span class="st">"Hello World!"</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </section>
 
 <section id="roles" class="title-slide slide level1 center">
@@ -597,17 +602,17 @@ var qrcode = new QRCode("qrcode", {"colorDark":"#000000","text":"https://moonpie
 <li>Ansible roles are akin to functions in other programming langauges</li>
 <li>Special folder structure</li>
 </ul>
-<div class="sourceCode" id="cb6"><pre class="sourceCode numberSource default number-lines code-with-copy"><code class="sourceCode default"><span id="cb6-1"><a></a>.</span>
-<span id="cb6-2"><a></a>|-- users</span>
-<span id="cb6-3"><a></a>    |-- tasks</span>
-<span id="cb6-4"><a></a>    |   |-- add_good_admins.yml</span>
-<span id="cb6-5"><a></a>    |   |-- change_passwords.yml</span>
-<span id="cb6-6"><a></a>    |   |-- main.yml</span>
-<span id="cb6-7"><a></a>    |   `-- remove_bad_admins.yml</span>
-<span id="cb6-8"><a></a>    |-- templates</span>
-<span id="cb6-9"><a></a>    |   `-- gitignore.j2</span>
-<span id="cb6-10"><a></a>    `-- vars</span>
-<span id="cb6-11"><a></a>        `-- main.yml</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb7"><pre class="sourceCode numberSource default number-lines code-with-copy"><code class="sourceCode default"><span id="cb7-1"><a></a>.</span>
+<span id="cb7-2"><a></a>|-- users</span>
+<span id="cb7-3"><a></a>    |-- tasks</span>
+<span id="cb7-4"><a></a>    |   |-- add_good_admins.yml</span>
+<span id="cb7-5"><a></a>    |   |-- change_passwords.yml</span>
+<span id="cb7-6"><a></a>    |   |-- main.yml</span>
+<span id="cb7-7"><a></a>    |   `-- remove_bad_admins.yml</span>
+<span id="cb7-8"><a></a>    |-- templates</span>
+<span id="cb7-9"><a></a>    |   `-- gitignore.j2</span>
+<span id="cb7-10"><a></a>    `-- vars</span>
+<span id="cb7-11"><a></a>        `-- main.yml</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </section>
 
 <section id="roles-cont." class="title-slide slide level1 center">
@@ -619,15 +624,15 @@ var qrcode = new QRCode("qrcode", {"colorDark":"#000000","text":"https://moonpie
 <li>roles almost always come with defaults</li>
 </ul></li>
 </ul>
-<div class="sourceCode" id="cb7"><pre class="sourceCode numberSource yaml number-lines code-with-copy"><code class="sourceCode yaml"><span id="cb7-1"><a></a><span class="pp">---</span></span>
-<span id="cb7-2"><a></a><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> Playbook for testing webserver related roles</span></span>
-<span id="cb7-3"><a></a><span class="at">  </span><span class="fu">hosts</span><span class="kw">:</span><span class="at"> all</span></span>
-<span id="cb7-4"><a></a><span class="at">  </span><span class="fu">gather_facts</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
-<span id="cb7-5"><a></a><span class="at">  </span><span class="fu">roles</span><span class="kw">:</span></span>
-<span id="cb7-6"><a></a><span class="co">    # Or publisher.role, if installed via ansible-galaxy would be moonpie.ufw</span></span>
-<span id="cb7-7"><a></a><span class="at">    </span><span class="kw">-</span><span class="at"> </span><span class="fu">role</span><span class="kw">:</span><span class="at"> </span><span class="st">"../roles/ufw"</span><span class="at"> </span></span>
-<span id="cb7-8"><a></a><span class="at">      </span><span class="fu">vars</span><span class="kw">:</span></span>
-<span id="cb7-9"><a></a><span class="at">        </span><span class="fu">ufw_lockdown</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb8"><pre class="sourceCode numberSource yaml number-lines code-with-copy"><code class="sourceCode yaml"><span id="cb8-1"><a></a><span class="pp">---</span></span>
+<span id="cb8-2"><a></a><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> Example playbook</span></span>
+<span id="cb8-3"><a></a><span class="at">  </span><span class="fu">hosts</span><span class="kw">:</span><span class="at"> all</span></span>
+<span id="cb8-4"><a></a><span class="at">  </span><span class="fu">gather_facts</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb8-5"><a></a><span class="at">  </span><span class="fu">roles</span><span class="kw">:</span></span>
+<span id="cb8-6"><a></a><span class="co">    # Or publisher.role, if installed via ansible-galaxy would be moonpie.ufw</span></span>
+<span id="cb8-7"><a></a><span class="at">    </span><span class="kw">-</span><span class="at"> </span><span class="fu">role</span><span class="kw">:</span><span class="at"> </span><span class="st">"../roles/ufw"</span><span class="at"> </span></span>
+<span id="cb8-8"><a></a><span class="at">      </span><span class="fu">vars</span><span class="kw">:</span></span>
+<span id="cb8-9"><a></a><span class="at">        </span><span class="fu">ufw_lockdown</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </section>
 
 <section id="our-roles" class="title-slide slide level1 center">
@@ -657,7 +662,7 @@ var qrcode = new QRCode("qrcode", {"colorDark":"#000000","text":"https://moonpie
 <h1>Usable Roles</h1>
 <ul>
 <li>ufw, firewalld, iptables</li>
-<li>users, keycloak</li>
+<li>users, keycloak (only version 23 of the api)</li>
 <li>mysql, Postgres. Mongo might work, but I didn’t get around to testing it. Don’t bother with mysql backup, there is no restore, it’s better to just use the <code>backup</code> role pointed at the relevant mysql service data.</li>
 <li>backup, podman, docker. Docker watchtower container update is untested.</li>
 </ul>
@@ -665,22 +670,22 @@ var qrcode = new QRCode("qrcode", {"colorDark":"#000000","text":"https://moonpie
 
 <section id="examples" class="title-slide slide level1 center">
 <h1>Examples</h1>
-<div class="sourceCode" id="cb8"><pre class="sourceCode numberSource yaml number-lines code-with-copy"><code class="sourceCode yaml"><span id="cb8-1"><a></a><span class="pp">---</span></span>
-<span id="cb8-2"><a></a><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> Example playbook</span></span>
-<span id="cb8-3"><a></a><span class="at">  </span><span class="fu">hosts</span><span class="kw">:</span><span class="at"> all</span></span>
-<span id="cb8-4"><a></a><span class="at">  </span><span class="fu">vars</span><span class="kw">:</span></span>
-<span id="cb8-5"><a></a><span class="at">        </span><span class="fu">podman_backup_version</span><span class="kw">:</span><span class="at"> initial</span></span>
-<span id="cb8-6"><a></a><span class="at">        </span><span class="fu">podman_backup_containers</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="st">"alpine"</span><span class="kw">]</span></span>
-<span id="cb8-7"><a></a><span class="at">        </span><span class="fu">backup_version</span><span class="kw">:</span><span class="at"> initial</span></span>
-<span id="cb8-8"><a></a><span class="at">        </span><span class="fu">backup_restore_directories</span><span class="kw">:</span></span>
-<span id="cb8-9"><a></a><span class="at">          </span><span class="kw">-</span><span class="at"> </span><span class="st">"/var/lib/www/"</span></span>
-<span id="cb8-10"><a></a><span class="at">        </span><span class="fu">ufw_lockdown</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
-<span id="cb8-11"><a></a><span class="at">        </span><span class="fu">ufw_open_ports</span><span class="kw">:</span><span class="at"> </span><span class="dv">80</span></span>
-<span id="cb8-12"><a></a><span class="at">  </span><span class="fu">roles</span><span class="kw">:</span></span>
-<span id="cb8-13"><a></a><span class="at">    </span><span class="kw">-</span><span class="at"> </span><span class="fu">role</span><span class="kw">:</span><span class="at"> </span><span class="st">"../roles/facts"</span></span>
-<span id="cb8-14"><a></a><span class="at">    </span><span class="kw">-</span><span class="at"> </span><span class="fu">role</span><span class="kw">:</span><span class="at"> </span><span class="st">"../roles/ufw"</span></span>
-<span id="cb8-15"><a></a><span class="at">    </span><span class="kw">-</span><span class="at"> </span><span class="fu">role</span><span class="kw">:</span><span class="at"> </span><span class="st">"../roles/podman"</span></span>
-<span id="cb8-16"><a></a><span class="at">    </span><span class="kw">-</span><span class="at"> </span><span class="fu">role</span><span class="kw">:</span><span class="at"> </span><span class="st">"../roles/backup"</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb9"><pre class="sourceCode numberSource yaml number-lines code-with-copy"><code class="sourceCode yaml"><span id="cb9-1"><a></a><span class="pp">---</span></span>
+<span id="cb9-2"><a></a><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> Example playbook</span></span>
+<span id="cb9-3"><a></a><span class="at">  </span><span class="fu">hosts</span><span class="kw">:</span><span class="at"> all</span></span>
+<span id="cb9-4"><a></a><span class="at">  </span><span class="fu">vars</span><span class="kw">:</span></span>
+<span id="cb9-5"><a></a><span class="at">        </span><span class="fu">podman_backup_version</span><span class="kw">:</span><span class="at"> initial</span></span>
+<span id="cb9-6"><a></a><span class="at">        </span><span class="fu">podman_backup_containers</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="st">"alpine"</span><span class="kw">]</span></span>
+<span id="cb9-7"><a></a><span class="at">        </span><span class="fu">backup_version</span><span class="kw">:</span><span class="at"> initial</span></span>
+<span id="cb9-8"><a></a><span class="at">        </span><span class="fu">backup_restore_directories</span><span class="kw">:</span></span>
+<span id="cb9-9"><a></a><span class="at">          </span><span class="kw">-</span><span class="at"> </span><span class="st">"/var/lib/www/"</span></span>
+<span id="cb9-10"><a></a><span class="at">        </span><span class="fu">ufw_lockdown</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb9-11"><a></a><span class="at">        </span><span class="fu">ufw_open_ports</span><span class="kw">:</span><span class="at"> </span><span class="dv">80</span></span>
+<span id="cb9-12"><a></a><span class="at">  </span><span class="fu">roles</span><span class="kw">:</span></span>
+<span id="cb9-13"><a></a><span class="at">    </span><span class="kw">-</span><span class="at"> </span><span class="fu">role</span><span class="kw">:</span><span class="at"> </span><span class="st">"../roles/facts"</span></span>
+<span id="cb9-14"><a></a><span class="at">    </span><span class="kw">-</span><span class="at"> </span><span class="fu">role</span><span class="kw">:</span><span class="at"> </span><span class="st">"../roles/ufw"</span></span>
+<span id="cb9-15"><a></a><span class="at">    </span><span class="kw">-</span><span class="at"> </span><span class="fu">role</span><span class="kw">:</span><span class="at"> </span><span class="st">"../roles/podman"</span></span>
+<span id="cb9-16"><a></a><span class="at">    </span><span class="kw">-</span><span class="at"> </span><span class="fu">role</span><span class="kw">:</span><span class="at"> </span><span class="st">"../roles/backup"</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </section>
 
 <section id="best-practice" class="title-slide slide level1 center">
