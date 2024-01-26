@@ -154,6 +154,30 @@ As for TLS passthrough on the external Caddy service, I found some relevant cont
 
 <https://caddy.community/t/reverse-proxy-chaining-vps-local-server-service-trusted-proxies/18105> 
 
+
+Alright. This isn't working. Double reverse proxies are a pain to configure, plus they seem to be lacking support for [some things](https://github.com/caddyserver/caddy/issues/5086).
+
+
+So... alternatives?
+
+I started looking through this: <https://github.com/anderspitman/awesome-tunneling>
+
+Projects like [frp](https://github.com/fatedier/frp) appeal to me and look like they do what I want to.
+
+Out of them, [rathole](https://github.com/rapiz1/rathole) appeals to me the most. The benchmarks advertise high performance, and it has an official [docker container](https://hub.docker.com/r/rapiz1/rathole). This would make it easy to deploy.
+
+It seems to forward traffic as it, which is good, because I don't want it to get in the way of caddy. 
+
+I also need to test iptables as a reverse proxy. I don't want to test this, as it requires that I tear down some of my declarative configuration to temporarily test this in an imperative manner. 
+
+Alternatively, I am looking at `iptables`.
+
+There are several relevant stackoverflow answers: [this one](https://superuser.com/a/1291523) and [this one](https://unix.stackexchange.com/a/634972). 
+
+I did a little bit of experimenting with iptables, but it looks to be more effort than it is worth to configure. 
+
+
+
 ## Ansibilizing the server
 
 ### Podman as a user
@@ -170,6 +194,23 @@ The relevant ansible code uses [become]() to run as the `podmaner` user, and the
 It links to some docs here: <https://docs.ansible.com/ansible-core/2.16/playbook_guide/playbooks_privilege_escalation.html#risks-of-becoming-an-unprivileged-user>
 
 This was fixed after I installed the `acl` package. 
+
+### Ansible vault
+
+If I am going to use rathole, then I need to deploy a config file with a client and server secrets. Although an extra step of complexity, thankfully, ansible makes handling secrets easy, with ansible vault. 
+
+Main docs here: <https://docs.ansible.com/ansible/latest/vault_guide/index.html>
+
+
+[Docs on handling vault passwords](https://docs.ansible.com/ansible/latest/vault_guide/vault_managing_passwords.html#storing-and-accessing-vault-passwords)
+
+I only need a few variables encrypted, so maybe:
+
+[Docs on encrypting individual variables](https://docs.ansible.com/ansible/latest/vault_guide/vault_encrypting_content.html#encrypting-content-with-ansible-vault)
+
+Or I could encrypt a file with the variables I want and add them? :
+
+[Docs on encrypting files](https://docs.ansible.com/ansible/latest/vault_guide/vault_encrypting_content.html#encrypting-files-with-ansible-vault)
 
 # Presearch for future pieces
 

@@ -143,15 +143,24 @@ all:
 
 # Ansible ping
 
-`ansible all -i inventory.yml -m ping`
+```{.default}
+[nix-shell:~/]$ ansible all -i inventory/ -m ping
+test_host | SUCCESS => {
+    "ansible_facts": {
+        "discovered_interpreter_python": "/usr/bin/python3"
+    },
+    "changed": false,
+    "ping": "pong"
+}
+```
 
-* Tells if you can configure a machine
+`pong` means you can configure a machine
 
 # Your first playbook!
 
 ```{.yaml}
 ---
-- name: Playbook for testing webserver related roles
+- name: Example playbook
   hosts: all
   gather_facts: true
 
@@ -189,7 +198,7 @@ all:
 
 ```{.yaml}
 ---
-- name: Playbook for testing webserver related roles
+- name: Example playbook
   hosts: all
   gather_facts: true
   roles:
@@ -214,7 +223,7 @@ all:
 
 # Usable Roles
 * ufw, firewalld, iptables
-* users, keycloak
+* users, keycloak (only version 23 of the api)
 * mysql, Postgres. Mongo might work, but I didn't get around to testing it. Don't bother with mysql backup, there is no restore, it's better to just use the `backup` role pointed at the relevant mysql service data.
 * backup, podman, docker. Docker watchtower container update is untested.
 
