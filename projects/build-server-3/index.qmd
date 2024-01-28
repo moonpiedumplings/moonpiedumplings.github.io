@@ -168,7 +168,7 @@ Alternatively, I am looking at `iptables`.
 
 There are several relevant stackoverflow answers: [this one](https://superuser.com/a/1291523) and [this one](https://unix.stackexchange.com/a/634972). 
 
-I did a little bit of experimenting with iptables, but it looks to be more effort than it is worth to configure, for something that might not even work.
+I did a little bit of experimenting with iptables, but it looks to be more effort than it is worth to configure, for something that might not even work.i
 
 I started looking through this: <https://github.com/anderspitman/awesome-tunneling>
 
@@ -176,6 +176,33 @@ Projects like [frp](https://github.com/fatedier/frp) appeal to me and look like 
 
 Out of them, [rathole](https://github.com/rapiz1/rathole) appeals to me the most. The benchmarks advertise high performance, and it has an official [docker container](https://hub.docker.com/r/rapiz1/rathole). This would make it easy to deploy.
 
+I don't like the existing rathole docker images. The official one is older than the code is, and other docker container uses a bash script reading enviornment variables to configure itself. 
+
+I've decided to compile rathole myself. I want a static binary I can copy over to an empty docker container, and then docker can handle the service managemnt. 
+
+I want to compile rathole myself, and I have something almost working:
+
+```{.dockerfile}
+FROM rust:1-alpine3.19
+
+ENV RUSTFLAGS="-C target-feature=+crt-static"
+
+ENV OPENSSL_NO_VENDOR="n"
+
+RUN apk add git build-base openssl-dev musl-dev
+
+RUN cargo build --release --target x86_64-unknown-linux-musl
+```
+
+Except this errors: 
+
+```{.default}
+note: /usr/lib/gcc/x86_64-alpine-linux-musl/13.2.1/../../../../x86_64-alpine-linux-musl/bin/ld: cannot find -lssl: No such file or directory
+          /usr/lib/gcc/x86_64-alpine-linux-musl/13.2.1/../../../../x86_64-alpine-linux-musl/bin/ld: cannot find -lcrypto: No such file or directory
+          collect2: error: ld returned 1 exit status
+```
+
+Since alpine seems to not work consistently for this, I think I will do what [this person did](https://stackoverflow.com/a/66967770), and compile the staticly linked binary on a debian or ubuntu docker container instead. 
 
 
 ## Ansibilizing the server
