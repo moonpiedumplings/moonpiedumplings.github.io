@@ -1,0 +1,188 @@
+---
+title: "Engineer's Audit Advice - Managing Critical Systems"
+date: "2024-1-30"
+categories: [linux]
+author: Jeffrey Fonseca
+execute:
+  freeze: auto
+---
+
+This is for the [NICE](https://nice-challenge.com/) challenge. It's a blue team challenge where you are tasked with hardening machines. Perhaps there is more, but all I was asked to do for this challenge was some simple hardening. 
+
+![](images/chatroom.png)
+
+# Joomia
+
+Joomia is the Debian 9.3 machine, with an apache2 web server. 
+
+I began by looking at `/home/playerone/audit.log`
+
+```{.default}
+[ Lynis 2.4.0 ]
+
+################################################################################
+  Lynis comes with ABSOLUTELY NO WARRANTY. This is free software, and you are
+  welcome to redistribute it under the terms of the GNU General Public License.
+  See the LICENSE file for details about using this software.
+
+  2007-2016, CISOfy - https://cisofy.com/lynis/
+  Enterprise support available (compliance, plugins, interface and tools)
+################################################################################
+
+
+[+] Initializing program
+------------------------------------
+- Detecting OS... [ DONE ]
+- Checking profiles... [ DONE ]
+
+  ---------------------------------------------------
+  Program version:           2.4.0
+  Operating system:          Linux
+  Operating system name:     Debian
+  Operating system version:  9.3
+  Kernel version:            4.9.0
+  Hardware platform:         x86_64
+  Hostname:                  Prod-Joomla
+  ---------------------------------------------------
+  Profiles:                  /etc/lynis/default.prf
+  Log file:                  /var/log/lynis.log
+  Report file:               /var/log/lynis-report.dat
+  Report version:            1.0
+  Plugin directory:          /etc/lynis/plugins
+  ---------------------------------------------------
+  Auditor:                   [Not Specified]
+  Test category:             all
+  Test group:                all
+  ---------------------------------------------------
+
+  Suggestions (45):
+  ----------------------------
+  * Install a PAM module for password strength testing like pam_cracklib [AUTH-9262] 
+      https://cisofy.com/controls/AUTH-9262/
+
+  * Configure minimum password age in /etc/login.defs [AUTH-9286] 
+      https://cisofy.com/controls/AUTH-9286/
+
+  * Configure maximum password age in /etc/login.defs [AUTH-9286] 
+      https://cisofy.com/controls/AUTH-9286/
+
+  * Install Apache mod_evasive to guard webserver against DoS/brute force attempts [HTTP-6640] 
+      https://cisofy.com/controls/HTTP-6640/
+
+  * Install Apache mod_qos to guard webserver against Slowloris attacks [HTTP-6641] 
+      https://cisofy.com/controls/HTTP-6641/
+
+  * Install Apache modsecurity to guard webserver against web application attacks [HTTP-6643] 
+      https://cisofy.com/controls/HTTP-6643/
+
+  * Install fail2ban to automatically ban hosts that commit multiple authentication errors. [DEB-0880]
+      https://cisofy.com/controls/DEB-0880/
+
+Note from asteele: In addition to the password aging and cracklib, we should also set a password policy to require passwords be of a minimum strength. I feel the default password policy for pam_cracklib is too weak, therefore you should implement a policy that is stronger than the default given. I would suggest a minimum password length of at least 10. I would also like you to not address the maximum password age as experts suggest that setting a maximum password age encourages the creation of weaker passwords, however setting the minimum password age to at least 3 days is advised.
+```
+
+
+So these are some security things I should do. Coincidentally, the numbers also aligned with the checks we were given:
+
+![](images/checksintro.png)
+
+I followed an online [guide](https://phoenixnap.com/kb/apache-mod-evasive) ([internet archive](https://web.archive.org/web/20231130023256/https://phoenixnap.com/kb/apache-mod-evasive)) to enable apache mod_evasive, and sure enough, the check was passed:
+
+![](images/joomiafirst.png)
+
+The process was fairly simple, I installed `libapache2-mod-evasive`, and then uncommented the relevant options in `/etc/apache2/mods-enabled/evasive.conf`
+
+Installing fail2ban and apache mod_qos were easy:
+
+`sudo apt install libapache2-mod-qos fail2ban`
+
+I used a similar process, by uncommenting options in `/etc/apache2/mods-enabled` to enable mod_qos, and pass the check. Here's the new config file:
+
+```{.default}
+<IfModule qos_module>
+  # minimum request rate (bytes/sec at request reading):
+  QS_SrvRequestRate                                 120
+
+  # limits the connections for this virtual host:
+  QS_SrvMaxConn                                     100
+
+  # allows keep-alive support till the server reaches 600 connections:
+  QS_SrvMaxConnClose                                600
+
+  # allows max 50 connections from a single ip address:
+  QS_SrvMaxConnPerIP                                 50
+</IfModule>
+```
+
+The next thing I did was login.defs. They had `PASS_MAX_AGE` set to 9999, which I left. I did, however, change `PASS_MIN_AGE` to 3, per the suggesion in `audit.log`. 
+
+
+To configure pam and the minimum of the password, I edited `/etc/pam.d/common-password:
+
+
+```{.default filename="/etc/pam.d/common-password}
+
+# here are the per-package modules (the "Primary" block)
+password	requisite			pam_cracklib.so retry=3 minlen=10 difok=3
+password	[success=1 default=ignore]	pam_unix.so obscure use_authtok try_first_pass sha512
+# here's the fallback if no module succeeds
+password	requisite			pam_deny.so
+# prime the stack with a positive return value if there isn't one already;
+# this avoids us returning an error just because nothing sets a success code
+# since the modules above will each just jump around
+password	required			pam_permit.so
+# and here are more per-package modules (the "Additional" block)
+# end of pam-auth-update config
+```
+
+And with this, Joomia is done. Except not really, as one of the checks won't pass, it's reported as a "known issue"
+
+
+# Fileshare
+
+The Fileshare is the Ubuntu 16 machine. 
+
+```{.default filename="/home/playerone/audit.log"}
+
+  Suggestions:
+  ----------------------------
+  - Install a PAM module for password strength testing like pam_cracklib [AUTH-9262]
+      https://cisofy.com/controls/AUTH-9262/
+  
+  * Configure minimum password age in /etc/login.defs [AUTH-9286] 
+      https://cisofy.com/controls/AUTH-9286/
+
+  * Configure maximum password age in /etc/login.defs [AUTH-9286] 
+      https://cisofy.com/controls/AUTH-9286/
+
+  - Enable process accounting [ACCT-9622]
+      https://cisofy.com/controls/ACCT-9622/
+
+  - Install fail2ban to automatically ban hosts that commit multiple authentication errors. [DEB-0880]
+      https://cisofy.com/controls/DEB-0880/
+
+Note from asteele: In addition to the password aging and cracklib, we should also set a password policy to require passwords be of a minimum strength. I feel the default password policy for pam_cracklib is too weak, therefore you should implement a policy that is stronger than the default given. I would suggest a minimum password length of at least 10. I would also like you to not address the maximum password age as experts suggest that setting a maximum password age encourages the creation of weaker passwords, however setting the minimum password age to at least 3 days is advised.
+```
+
+This time, I clipped the lynis output for brevity. 
+
+I started with installing fail2ban again, since that was simple.
+
+Process accounting was simple as well. I installed `acct`, and then ran `sudo acctn on`. 
+
+I copied the same process as the first machine for configuring `/etc/login.defs`, changing `PASS_MIN_AGE` to 3.
+
+For cracklib, I also copied the same process as the above. 
+
+
+And finally, all checks are passed:
+
+![](images/allchecks.png)
+
+The one check that won't pass, is actually broken, and won't pass. They documented this in "Known Issues"
+
+![](images/knownissues.png)
+
+
+
+
