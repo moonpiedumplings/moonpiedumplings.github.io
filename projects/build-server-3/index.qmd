@@ -208,7 +208,9 @@ It uses a multi stage build to copy the statically compiled binary to the final 
 
 ## Ansibilizing the server
 
-### Podman as a user
+### Podman
+
+#### Rootless
 
 I was actually doing really good, but I encountered a roadblock:
 
@@ -222,6 +224,18 @@ The relevant ansible code uses [become]() to run as the `podmaner` user, and the
 It links to some docs here: <https://docs.ansible.com/ansible-core/2.16/playbook_guide/playbooks_privilege_escalation.html#risks-of-becoming-an-unprivileged-user>
 
 This was fixed after I installed the `acl` package. 
+
+#### Pods
+
+Podman has "pods". These are somewhat similar to docker networks, which I prefer. 
+
+With docker networks, the "network" has a dns, and containers can find eachother by the container name. I enjoyed this with nginx proxy manager, because then I could just forward "containername:port" and it would be easy.
+
+Podman pods work a bit differently. Every pod can contain multiple containers, but they share a network interface. I tested this with two alpine containers, even if I bind a port to localhost, then the other container can still access it. 
+
+I am using ansible to create pods:
+
+
 
 ### Ansible vault
 
@@ -239,6 +253,29 @@ I only need a few variables encrypted, so maybe:
 Or I could encrypt a file with the variables I want and add them? :
 
 [Docs on encrypting files](https://docs.ansible.com/ansible/latest/vault_guide/vault_encrypting_content.html#encrypting-files-with-ansible-vault)
+
+
+# Service deployment
+
+All of this will be ansibilized, ideally.
+
+## Authentik
+
+The listen settings are here: <https://goauthentik.io/docs/installation/configuration/#listen-settings>
+
+So the podman pod which runs all of authentik will have those ports forwarded. 
+
+```{.yaml}
+- name: Create relevant podman pod
+  containers.podman.podman_pod:
+    name: authentik_pod
+    state: present
+    ports:
+      - "9000:9000"
+      - "9443:9443"
+      - "3389:3389"
+      - "6636:3389"
+```
 
 # Presearch for future pieces
 
