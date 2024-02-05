@@ -597,6 +597,221 @@ font-style: inherit;">"/bin/rathole"</span>]</span></code></pre></div>
 <p>I am using ansible to create pods:</p>
 </section>
 </section>
+<section id="ansible-facts-home-home" class="level3">
+<h3 class="anchored" data-anchor-id="ansible-facts-home-home">Ansible facts HOME =/= $HOME</h3>
+<p>I was having ansible run some things as another user, and using something like this to get the home directory of the user it was running as:</p>
+<div class="sourceCode" id="cb4" style="background: #f1f3f5;"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb4-1"><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">-</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">name</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> Do podmaner container</span></span>
+<span id="cb4-2"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">become</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> </span><span class="ch" style="color: #20794D;
+background-color: null;
+font-style: inherit;">true</span></span>
+<span id="cb4-3"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">become_user</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> </span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"{{ rathole_user }}"</span></span>
+<span id="cb4-4"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">block</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">:</span></span>
+<span id="cb4-5"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">    </span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">-</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">name</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> Create rathole config</span></span>
+<span id="cb4-6"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">      </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">ansible.builtin.file</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">:</span></span>
+<span id="cb4-7"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">        </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">path</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> </span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"{{ lookup('ansible.builtin.env', 'HOME') }}/rathole/config"</span></span>
+<span id="cb4-8"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">        </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">state</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> directory</span></span>
+<span id="cb4-9"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">        </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">mode</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> </span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'0775'</span></span></code></pre></div>
+<p>But this errors. Despite <code>rathole_user</code> being <code>podmaner</code>, the error is something like:</p>
+<div class="sourceCode" id="cb5" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb5-1">TASK [rathole : Create rathole config] *******************************************************************************************</span>
+<span id="cb5-2">fatal: [moonstack]: FAILED! =&gt; {"changed": false, "msg": "There was an issue creating /home/moonpie/rathole as requested: [Errno 13] Permission denied: b'/home/moonpie/rathole'", "path": "/home/moonpie/rathole/config"}</span></code></pre></div>
+<p>This might be because, when executing one off commands, sudo does not keep environment variables</p>
+<div class="sourceCode" id="cb6" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb6-1">moonpie@thoth:~$ sudo -iu podmaner echo $HOME</span>
+<span id="cb6-2">/home/moonpie</span></code></pre></div>
+<p>Interestingly enough, using the $HOME environment variable works though.</p>
+<div class="sourceCode" id="cb7" style="background: #f1f3f5;"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb7-1"><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">-</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">name</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> Do podmaner container</span></span>
+<span id="cb7-2"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">become</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> </span><span class="ch" style="color: #20794D;
+background-color: null;
+font-style: inherit;">true</span></span>
+<span id="cb7-3"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">become_user</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> </span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"{{ rathole_user }}"</span></span>
+<span id="cb7-4"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">block</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">:</span></span>
+<span id="cb7-5"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">    </span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">-</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">name</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> Get home</span></span>
+<span id="cb7-6"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">      </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">ansible.builtin.command</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> </span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"echo $HOME"</span></span>
+<span id="cb7-7"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">      </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">register</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> homepath</span></span>
+<span id="cb7-8"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">    </span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">-</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">name</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> Print current home</span></span>
+<span id="cb7-9"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">      </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">ansible.builtin.debug</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">:</span></span>
+<span id="cb7-10"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">        </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">msg</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> </span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"{{ homepath.stdout }}"</span></span></code></pre></div>
+<div class="sourceCode" id="cb8" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb8-1">TASK [rathole : Print current home] **********************************************************************************************</span>
+<span id="cb8-2">ok: [moonstack] =&gt; {</span>
+<span id="cb8-3">    "msg": "/home/podmaner"</span>
+<span id="cb8-4">}</span></code></pre></div>
+<p>Oh, I figured it out. After a quick google, this is because this lookup runs on the control node, rather than the server being managed.</p>
+<p>From the <a href="https://docs.ansible.com/ansible/latest/collections/ansible/builtin/env_lookup.html">ansible docs</a>: “query the environment variables available on the controller”</p>
+<p>I also decided to try <code>ansible_facts['env']['HOME']</code>, but that still outpus <code>/home/moonpie</code>. It seems that facts are gathered using hte user ansible initially logs in as.</p>
+<p><code>ansible_env['HOME']</code> doesn’t work either, probably for the same reason.</p>
+<p>This was a fun little tangent, I think I am going to return to using <code>$HOME</code> and other environment variables. Since things like podman volumes can’t simply be fed environment variables, I have to echo $HOME to get it first, and then save it to stdout. It feels like there should be a cleaner way to do this, but this does work.</p>
+</section>
 <section id="ansible-vault" class="level3">
 <h3 class="anchored" data-anchor-id="ansible-vault">Ansible vault</h3>
 <p>If I am going to use rathole, then I need to deploy a config file with a client and server secrets. Although an extra step of complexity, thankfully, ansible makes handling secrets easy, with ansible vault.</p>
@@ -616,7 +831,7 @@ font-style: inherit;">"/bin/rathole"</span>]</span></code></pre></div>
 <h2 class="anchored" data-anchor-id="authentik">Authentik</h2>
 <p>The listen settings are here: <a href="https://goauthentik.io/docs/installation/configuration/#listen-settings" class="uri">https://goauthentik.io/docs/installation/configuration/#listen-settings</a></p>
 <p>So the podman pod which runs all of authentik will have those ports forwarded.</p>
-<div class="sourceCode" id="cb4" style="background: #f1f3f5;"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb4-1"><span class="kw" style="color: #003B4F;
+<div class="sourceCode" id="cb9" style="background: #f1f3f5;"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb9-1"><span class="kw" style="color: #003B4F;
 background-color: null;
 font-style: inherit;">-</span><span class="at" style="color: #657422;
 background-color: null;
@@ -627,14 +842,14 @@ background-color: null;
 font-style: inherit;">:</span><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;"> Create relevant podman pod</span></span>
-<span id="cb4-2"><span class="at" style="color: #657422;
+<span id="cb9-2"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
 background-color: null;
 font-style: inherit;">containers.podman.podman_pod</span><span class="kw" style="color: #003B4F;
 background-color: null;
 font-style: inherit;">:</span></span>
-<span id="cb4-3"><span class="at" style="color: #657422;
+<span id="cb9-3"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -643,7 +858,7 @@ background-color: null;
 font-style: inherit;">:</span><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;"> authentik_pod</span></span>
-<span id="cb4-4"><span class="at" style="color: #657422;
+<span id="cb9-4"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -652,14 +867,14 @@ background-color: null;
 font-style: inherit;">:</span><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;"> present</span></span>
-<span id="cb4-5"><span class="at" style="color: #657422;
+<span id="cb9-5"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
 background-color: null;
 font-style: inherit;">ports</span><span class="kw" style="color: #003B4F;
 background-color: null;
 font-style: inherit;">:</span></span>
-<span id="cb4-6"><span class="at" style="color: #657422;
+<span id="cb9-6"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">      </span><span class="kw" style="color: #003B4F;
 background-color: null;
@@ -668,7 +883,7 @@ background-color: null;
 font-style: inherit;"> </span><span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">"9000:9000"</span></span>
-<span id="cb4-7"><span class="at" style="color: #657422;
+<span id="cb9-7"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">      </span><span class="kw" style="color: #003B4F;
 background-color: null;
@@ -677,7 +892,7 @@ background-color: null;
 font-style: inherit;"> </span><span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">"9443:9443"</span></span>
-<span id="cb4-8"><span class="at" style="color: #657422;
+<span id="cb9-8"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">      </span><span class="kw" style="color: #003B4F;
 background-color: null;
@@ -686,7 +901,7 @@ background-color: null;
 font-style: inherit;"> </span><span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">"3389:3389"</span></span>
-<span id="cb4-9"><span class="at" style="color: #657422;
+<span id="cb9-9"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">      </span><span class="kw" style="color: #003B4F;
 background-color: null;
@@ -6402,6 +6617,12 @@ font-style: inherit;"> variable | default(False)</span></span></code></pre></div
 <td>Learning rust on stream</td>
 <td>Arch Linux</td>
 <td></td>
+</tr>
+<tr class="even">
+<td><a href="https://www.twitch.tv/kodder">kodder</a></td>
+<td>Various devops and system admin things</td>
+<td>Regolith on Pop_OS! on desktop, Proxmox on the one server I saw</td>
+<td>Said he was gonna stream once a week on sunday</td>
 </tr>
 </tbody>
 </table>
