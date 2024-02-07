@@ -233,70 +233,8 @@ With docker networks, the "network" has a dns, and containers can find eachother
 
 Podman pods work a bit differently. Every pod can contain multiple containers, but they share a network interface. I tested this with two alpine containers, even if I bind a port to localhost, then the other container can still access it. 
 
-I am using ansible to create pods:
+I am using ansible to create pods. 
 
-
-### Ansible facts HOME =/= $HOME
-
-I was having ansible run some things as another user, and using something like this to get the home directory of the user it was running as:
-
-```{.yaml}
-- name: Do podmaner container
-  become: true
-  become_user: "{{ rathole_user }}"
-  block:
-    - name: Create rathole config
-      ansible.builtin.file:
-        path: "{{ lookup('ansible.builtin.env', 'HOME') }}/rathole/config"
-        state: directory
-        mode: '0775'
-```
-
-But this errors. Despite `rathole_user` being `podmaner`, the error is something like:
-
-```{.default}
-TASK [rathole : Create rathole config] *******************************************************************************************
-fatal: [moonstack]: FAILED! => {"changed": false, "msg": "There was an issue creating /home/moonpie/rathole as requested: [Errno 13] Permission denied: b'/home/moonpie/rathole'", "path": "/home/moonpie/rathole/config"}
-```
-
-This might be because, when executing one off commands, sudo does not keep environment variables
-
-```{.default}
-moonpie@thoth:~$ sudo -iu podmaner echo $HOME
-/home/moonpie
-```
-
-Interestingly enough, using the $HOME environment variable works though.
-
-```{.yaml}
-- name: Do podmaner container
-  become: true
-  become_user: "{{ rathole_user }}"
-  block:
-    - name: Get home
-      ansible.builtin.command: "echo $HOME"
-      register: homepath
-    - name: Print current home
-      ansible.builtin.debug:
-        msg: "{{ homepath.stdout }}"
-```
-
-```{.default}
-TASK [rathole : Print current home] **********************************************************************************************
-ok: [moonstack] => {
-    "msg": "/home/podmaner"
-}
-```
-
-Oh, I figured it out. After a quick google, this is because this lookup runs on the control node, rather than the server being managed. 
-
-From the [ansible docs](https://docs.ansible.com/ansible/latest/collections/ansible/builtin/env_lookup.html): "query the environment variables available on the controller"
-
-I also decided to try  `ansible_facts['env']['HOME']`, but that still outpus `/home/moonpie`. It seems that facts are gathered using hte user ansible initially logs in as. 
-
-`ansible_env['HOME']` doesn't work either, probably for the same reason. 
-
-This was a fun little tangent, I think I am going to return to using `$HOME` and other environment variables. Since things like podman volumes can't simply be fed environment variables, I have to echo $HOME to get it first, and then save it to stdout. It feels like there should be a cleaner way to do this, but this does work.
 
 
 ### Ansible vault
