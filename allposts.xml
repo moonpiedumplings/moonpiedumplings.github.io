@@ -1077,11 +1077,90 @@ font-style: inherit;">"{{ homepath.stdout }}"</span></span></code></pre></div>
 <section id="service-deployment" class="level1">
 <h1>Service deployment</h1>
 <p>All of this will be ansibilized, ideally.</p>
+<section id="caddy" class="level2">
+<h2 class="anchored" data-anchor-id="caddy">Caddy</h2>
+<p>I have a simple caddyfile, right now, but it doesn’t work:</p>
+<div class="code-with-filename">
+<div class="code-with-filename-file">
+<pre><strong>Caddyfile.j2</strong></pre>
+</div>
+<div class="sourceCode" id="cb9" data-filename="Caddyfile.j2" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb9-1">http://test.moonpiedumpl.ing { </span>
+<span id="cb9-2">  reverse_proxy * http://localhost:8000</span>
+<span id="cb9-3">}</span></code></pre></div>
+</div>
+<p>I need to expand this. I dislike how Caddy only takes a config file, and there isn’t something like a premade docker container that takes environment variables, but it is what it is.</p>
+<p>For a <a href="https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_templating.html">jinja2</a> template, something like this:</p>
+<div class="code-with-filename">
+<div class="code-with-filename-file">
+<pre><strong>Caddyfile.j2</strong></pre>
+</div>
+<div class="sourceCode" id="cb10" data-filename="Caddyfile.j2" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb10-1">{% for host in caddy.hosts %}</span>
+<span id="cb10-2">{{ host.hostname }} {</span>
+<span id="cb10-3">    {% if host.port is defined %}</span>
+<span id="cb10-4">    reverse_proxy http://127.0.0.1:{{ host.port }}</span>
+<span id="cb10-5">    request_body {</span>
+<span id="cb10-6">        max_size 2048MB</span>
+<span id="cb10-7">    }</span>
+<span id="cb10-8">    {% endif %}</span>
+<span id="cb10-9">    {% if host.file_root is defined %}</span>
+<span id="cb10-10">    root * {{ host.file_root }}</span>
+<span id="cb10-11">    file_server</span>
+<span id="cb10-12">    {% endif %}</span>
+<span id="cb10-13">}</span>
+<span id="cb10-14">{% endfor %}</span></code></pre></div>
+</div>
+<p>And then the caddy role would take these hosts:</p>
+<div class="sourceCode" id="cb11" style="background: #f1f3f5;"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb11-1"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">roles</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">:</span></span>
+<span id="cb11-2"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">  </span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">-</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">name</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> caddy</span></span>
+<span id="cb11-3"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">vars</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">:</span></span>
+<span id="cb11-4"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">      </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">hosts</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">:</span></span>
+<span id="cb11-5"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">        </span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">-</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">domain</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> test.moonpiedumpl.ing</span></span></code></pre></div>
+</section>
 <section id="authentik" class="level2">
 <h2 class="anchored" data-anchor-id="authentik">Authentik</h2>
 <p>The listen settings are here: <a href="https://goauthentik.io/docs/installation/configuration/#listen-settings" class="uri">https://goauthentik.io/docs/installation/configuration/#listen-settings</a></p>
 <p>So the podman pod which runs all of authentik will have those ports forwarded.</p>
-<div class="sourceCode" id="cb9" style="background: #f1f3f5;"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb9-1"><span class="kw" style="color: #003B4F;
+<div class="sourceCode" id="cb12" style="background: #f1f3f5;"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb12-1"><span class="kw" style="color: #003B4F;
 background-color: null;
 font-style: inherit;">-</span><span class="at" style="color: #657422;
 background-color: null;
@@ -1092,14 +1171,14 @@ background-color: null;
 font-style: inherit;">:</span><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;"> Create relevant podman pod</span></span>
-<span id="cb9-2"><span class="at" style="color: #657422;
+<span id="cb12-2"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
 background-color: null;
 font-style: inherit;">containers.podman.podman_pod</span><span class="kw" style="color: #003B4F;
 background-color: null;
 font-style: inherit;">:</span></span>
-<span id="cb9-3"><span class="at" style="color: #657422;
+<span id="cb12-3"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -1108,7 +1187,7 @@ background-color: null;
 font-style: inherit;">:</span><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;"> authentik_pod</span></span>
-<span id="cb9-4"><span class="at" style="color: #657422;
+<span id="cb12-4"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -1117,14 +1196,14 @@ background-color: null;
 font-style: inherit;">:</span><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;"> present</span></span>
-<span id="cb9-5"><span class="at" style="color: #657422;
+<span id="cb12-5"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
 background-color: null;
 font-style: inherit;">ports</span><span class="kw" style="color: #003B4F;
 background-color: null;
 font-style: inherit;">:</span></span>
-<span id="cb9-6"><span class="at" style="color: #657422;
+<span id="cb12-6"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">      </span><span class="kw" style="color: #003B4F;
 background-color: null;
@@ -1133,7 +1212,7 @@ background-color: null;
 font-style: inherit;"> </span><span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">"9000:9000"</span></span>
-<span id="cb9-7"><span class="at" style="color: #657422;
+<span id="cb12-7"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">      </span><span class="kw" style="color: #003B4F;
 background-color: null;
@@ -1142,7 +1221,7 @@ background-color: null;
 font-style: inherit;"> </span><span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">"9443:9443"</span></span>
-<span id="cb9-8"><span class="at" style="color: #657422;
+<span id="cb12-8"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">      </span><span class="kw" style="color: #003B4F;
 background-color: null;
@@ -1151,7 +1230,7 @@ background-color: null;
 font-style: inherit;"> </span><span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">"3389:3389"</span></span>
-<span id="cb9-9"><span class="at" style="color: #657422;
+<span id="cb12-9"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">      </span><span class="kw" style="color: #003B4F;
 background-color: null;
