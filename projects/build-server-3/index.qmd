@@ -320,6 +320,49 @@ Or I could encrypt a file with the variables I want and add them? :
 
 All of this will be ansibilized, ideally.
 
+## Caddy
+
+I have a simple caddyfile, right now, but it doesn't work:
+
+```{.default filename="Caddyfile.j2"}
+http://test.moonpiedumpl.ing { 
+  reverse_proxy * http://localhost:8000
+}
+```
+
+I need to expand this. I dislike how Caddy only takes a config file, and there isn't something like a premade docker container that takes environment variables, but it is what it is.
+
+For a [jinja2](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_templating.html) template, something like this:
+
+
+```{.default filename="Caddyfile.j2"}
+{% for host in caddy.hosts %}
+{{ host.hostname }} {
+    {% if host.port is defined %}
+    reverse_proxy http://127.0.0.1:{{ host.port }}
+    request_body {
+        max_size 2048MB
+    }
+    {% endif %}
+    {% if host.file_root is defined %}
+    root * {{ host.file_root }}
+    file_server
+    {% endif %}
+}
+{% endfor %}
+```
+
+And then the caddy role would take these hosts:
+
+```{.yaml}
+roles:
+  - name: caddy
+    vars:
+      hosts:
+        - domain: test.moonpiedumpl.ing
+```
+
+
 ## Authentik
 
 The listen settings are here: <https://goauthentik.io/docs/installation/configuration/#listen-settings>
