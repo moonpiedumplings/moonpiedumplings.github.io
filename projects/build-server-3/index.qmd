@@ -336,16 +336,18 @@ For a [jinja2](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_
 
 
 ```{.default filename="Caddyfile.j2"}
-{% for host in caddy.hosts %}
-{{ host.hostname }} {
-    {% if host.port is defined %}
-    reverse_proxy http://127.0.0.1:{{ host.port }}
+{% for service in caddy_services %}
+{{ service.domain_name }} {
+    {% if service.port is defined %}
+    reverse_proxy http://127.0.0.1:{{ service.port }}
+    {% if service.request_body is defined %}
     request_body {
         max_size 2048MB
     }
     {% endif %}
-    {% if host.file_root is defined %}
-    root * {{ host.file_root }}
+    {% endif %}
+    {% if service.file_root is defined %}
+    root * {{ service.file_root }}
     file_server
     {% endif %}
 }
@@ -355,13 +357,53 @@ For a [jinja2](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_
 And then the caddy role would take these hosts:
 
 ```{.yaml}
-roles:
-  - name: caddy
-    vars:
-      hosts:
-        - domain: test.moonpiedumpl.ing
+- role: caddy
+  vars:
+    caddy_services:
+      - domain_name: "test.moonpiedumpl.ing"
+        port: 8000 # This is where the python http server runs by default, for my tests.
 ```
 
+This almost worked, but I got an error in the caddy logs
+
+```{.default}
+dial tcp 127.0.0.1:8000: connect: connection refused
+```
+
+The issue is that, unlike docker containers, podman containers have their own network interface. Attempting to curl localhost on them would result in the wrong network interface being accessed. 
+
+Also, I need to add the [trusted_proxies](https://caddyserver.com/docs/caddyfile/options#trusted-proxies) option, otherwise caddy will not report the real ip address of the client. 
+
+I adjusted the podman container to not forward any ports, and instead to be in "host" networking mode, where it shares the interfaces with the host. 
+
+```{.jinja2 filename="Caddyfile.j2"}
+{
+    http_port {{ caddy_http_port }}
+    https_port {{ caddy_https_port }}
+    {% if caddy_trusted_proxies | length > 0 %}
+    trusted_proxies static {{ caddy_trusted_proxies | join(' ') }}
+    {% endif %}
+}
+```
+
+Except this errors. Caddy complains: `Error: adapting config using caddyfile: /etc/caddy/Caddyfile:4: unrecognized global option: trusted_proxies` and the container dies.
+
+Also, the generated file looks really weird:
+
+```{.default filename="Caddyfile"}
+{
+    http_port 8080
+    https_port 8443
+        trusted_proxies staic 154.12.245.181
+    }
+test.moonpiedumpl.ing {
+        reverse_proxy http://127.0.0.1:8000
+            }
+```
+
+The spacing is off, and that might be the reason why it errors?
+
+Except when I correct this by playing around with jinja2 spacing, but this still errors. 
 
 ## Authentik
 
