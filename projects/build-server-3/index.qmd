@@ -403,7 +403,31 @@ test.moonpiedumpl.ing {
 
 The spacing is off, and that might be the reason why it errors?
 
-Except when I correct this by playing around with jinja2 spacing, but this still errors. 
+I corrected the jinja2 spacing according to [it's docs](https://jinja.palletsprojects.com/en/latest/templates/#whitespace-control), and also corrected the caddy config. `trusted_proxies` needs to be placed inside a `servers` block for it to be a global option, or inside each of the sites, if you want to make it site specific. 
+
+The corrected generated config:
+
+```{.default filename="Caddyfile"}
+{
+    http_port 8080
+    https_port 8443
+    servers {
+        trusted_proxies static 154.12.245.181
+    }
+}
+test.moonpiedumpl.ing {
+    reverse_proxy http://127.0.0.1:8000
+}
+```
+
+However, this does not work. I only get:
+
+```{.default}
+[moonpie@lizard moonpiedumplings.github.io]$ curl test.moonpiedumpl.ing
+curl: (52) Empty reply from server
+```
+
+The caddy logs do not show anything relevant. I also did an additional test, by running a podman alpine container with host networking, where it was able to curl localhost just fine. So again, the issue is probably in the config file. 
 
 ## Authentik
 
