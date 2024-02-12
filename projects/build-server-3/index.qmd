@@ -320,6 +320,23 @@ Or I could encrypt a file with the variables I want and add them? :
 
 All of this will be ansibilized, ideally.
 
+## Rathole
+
+In addition to the build above, I used a template to deply the rathole container, in case I want more than just http or https on my server (minecraft?).
+
+For example, here is the "client" code:
+
+```{.default filename="client.toml.j2"}
+{% for service in rathole_services %}
+
+[client.services.{{ service.name }}]
+token = "{{ rathole_secret }}"
+local_addr = "{{ service.local_addr }}"
+{% endfor %}
+```
+
+Using ansible's ability to do for loops. The server config has something similar. 
+
 ## Caddy
 
 I have a simple caddyfile, right now, but it doesn't work:
@@ -427,7 +444,9 @@ However, this does not work. I only get:
 curl: (52) Empty reply from server
 ```
 
-The caddy logs do not show anything relevant. I also did an additional test, by running a podman alpine container with host networking, where it was able to curl localhost just fine. So again, the issue is probably in the config file. 
+The caddy logs do not show anything relevant. I also did an additional test, by running a podman alpine container with host networking, where it was able to curl localhost just fine. 
+
+I did a little more resaerch, and the 
 
 ## Authentik
 
