@@ -26,4 +26,25 @@ Vagrant.configure("2") do |config|
             libvirt.video_type = "virtio"
         end
     end
+    config.vm.define "debincus" do |vmconfig|
+        # Debian incus vm
+        # Default user: vagrant
+        # Default password: vagrant
+        # Also root user, vagrant password.     
+        vmconfig.vm.provision "ansible" do |ansible|
+            ansible.playbook = "provisioners/debincus.yml"
+            ansible.compatibility_mode = "2.0"
+            ansible.host_vars = {
+                "debincus" => { "ansible_password" => "vagrant", "ansible_become_password" => "vagrant" }
+            }
+        end
+        vmconfig.vm.box = "generic/debian12"
+        vmconfig.vm.provider "libvirt" do |libvirt|
+            libvirt.driver = "kvm"
+            libvirt.memory = 1500
+            libvirt.cpus = 1
+            libvirt.nested = true
+            libvirt.video_type = "virtio"
+        end
+    end
 end

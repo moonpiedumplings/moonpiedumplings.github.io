@@ -61,4 +61,74 @@ So after extracting the ova, you have to extract the vmdk (it's gzipped), and th
 The manpage for qm says that --format specifies the target format, so I'm assuming it's the format to convert to.
 
 
+## LXD/Incus
+
+LXD is a "containervisor", capable of managing both lxc containers and qemu-kvm virtual machinwees. 
+
+For this usecase, I only need it's hypervisor management capibilities, but I also want to the automation capabilities that it may offer, since that seems to be an often criticized lacking feature of proxmox. 
+
+I also tried out incus. I put together [an ansible playbook](./vms/provisioners/debincus.yml) to install incus on debian. 
+
+However, I am having trouble with their official web ui. Authentication is certificate based, so it asks for me to import a browser certificate... not fun.
+
+I am going to collect and test multiple alternatives:
+
+* Offical Canonical One 
+* [LXDWare](https://lxdware.com/)
+* <https://github.com/AdaptiveScale/lxdui>
+* <https://github.com/PenningLabs/lxconsole> still in beta, according to the readme
+
+
+I tried lxdware, but when I tried to add a remote, and connect it to the incus daemon, it I get an error "Remote host connection is not trusted".
+
+I do some investiagting. 
+
+```{.default}
+root@f6ded1cb73d7:/# incus remote add 192.168.121.103
+Generating a client certificate. This may take a minute...
+Certificate fingerprint: 7cf0d7d12fed498811e485d8dec4655012873876e9f45e15974cfdb9a8fd810a
+ok (y/n/[fingerprint])? y
+Trust token for 192.168.121.103: eyJjbGllbnRfbmFtZSI6ImluY3VzLXVpLTE5Mi4xNjguMTIxLjEwMy5jcnQiLCJmaW5nZXJwcmludCI6IjdjZjBkN2QxMmZlZDQ5ODgxMWU0ODVkOGRlYzQ2NTUwMTI4NzM4NzZlOWY0NWUxNTk3NGNmZGI5YThmZDgxMGEiLCJhZGRyZXNzZXMiOlsiMTkyLjE2OC4xMjEuMTAzOjg0NDMiXSwic2VjcmV0IjoiMjRjNWNjZjkzZTgzMTBmNGRlMzAwMTgyOTc0YWE4Nzg1MDAxMTkzZWQ3NTEyYTk0ZjlmZGRkZWQwMzBkNWJkZSIsImV4cGlyZXNfYXQiOiIwMDAxLTAxLTAxVDAwOjAwOjAwWiJ9
+Client certificate now trusted by server: 192.168.121.103
+```
+
+```{.default}
+root@d90da14b48e9:/# lxc remote add 192.168.121.103
+Admin password (or token) for 192.168.121.103:
+Error: not authorized
+```
+
+In short, it seems like the api is not compatible, since using the lxc client fails, but the incus client succeeds. 
+
+
+Luckily, I got incus working. In addition to the normal steps, I had to run [`incus config trust add-certificate certficatefile.crt`](https://discuss.linuxcontainers.org/t/incus-ui-install-error-using-token-not-authorized/18822/2)
+
+
+Testing, I was able to download a debian image, and put it up.
+
+Incus looks very promising, because it also comes with a [terraform provider](https://registry.terraform.io/providers/lxc/incus/latest/docs/resources/instance)
+
+Incus also provides docs on [migrating machines](https://linuxcontainers.org/incus/docs/main/howto/server_migrate_lxd/) ([canonical lxd version](https://documentation.ubuntu.com/lxd/en/latest/migration/))
+
+
+
+On that page, it recommends using virt-v2v, which has support for importing from [vmware ova's](https://libguestfs.org/virt-v2v-input-vmware.1.html)
+
+(It seems it requires a newer version of [virt-v2v](https://libguestfs.org/virt-v2v.1.html), and [rhsrvany](https://github.com/rwmjones/rhsrvany), which only debian sid and ubuntu 23 package both right now.)
+
+Once you use that tool, you can use incus-migrate to interactively or programmaticly import the raw disk images as incus images. 
+
+So that's pretty promising. But what about networking? For a replica of the competition environment, we will need to have firewalls (vyos, pfsense, etc) and to my understanding, that is essentially having a virtual machine act as a bridge. How can I do that on LXD/Incus?
+
+It seems to be possible. Here are some guides I found:
+
+<https://www.cloudwizard.nl/build-your-own-windows-cloud-with-lxd/>
+
+<https://forum.netgate.com/topic/154906/how-to-install-pfsense-on-lxc-vm-qemu>
+
+
+
+
+
+
 
