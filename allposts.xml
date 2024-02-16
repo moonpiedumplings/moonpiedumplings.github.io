@@ -9,7 +9,7 @@
 <link>https://moonpiedumplings.github.io/allposts.html</link>
 <atom:link href="https://moonpiedumplings.github.io/allposts.xml" rel="self" type="application/rss+xml"/>
 <description>All posts, intended to be used in an RSS feed. </description>
-<generator>quarto-1.4.549</generator>
+<generator>quarto-1.4.550</generator>
 <lastBuildDate>Invalid Date</lastBuildDate>
 <item>
   <title>How to Ansible</title>
@@ -24,7 +24,7 @@
 <p>These ansible “roles,” cover a variety of tasks that the cybersecurity competition would require from us, including things like managing firewalls (ufw, iptables, firewalld), shuffling passwords of linux users or databases, or doing backups.</p>
 <p>Professor Doris Chaney asked me to present on how to use ansible, so here is where the presentation, code, and guide will go.</p>
 <p>The presentation can be <a href="../../talks/ansible/revealjs.html">found here</a></p>
-<p>Currently, the guide and presentation are incomplete, but I do my development of both of them on here on here.</p>
+<p>Sadly, although I did the presentation, and it went well including recording it, I did not get the okay from Prof.&nbsp;Chaney to post presentation recording to this public, at least this season.</p>
 
 
 
@@ -69,6 +69,43 @@
 <p>So after extracting the ova, you have to extract the vmdk (it’s gzipped), and then it would be something like:</p>
 <p><code>qm importdisk numberhere image.vmdk --format qcow2|vmware</code></p>
 <p>The manpage for qm says that –format specifies the target format, so I’m assuming it’s the format to convert to.</p>
+</section>
+<section id="lxdincus" class="level2">
+<h2 class="anchored" data-anchor-id="lxdincus">LXD/Incus</h2>
+<p>LXD is a “containervisor”, capable of managing both lxc containers and qemu-kvm virtual machinwees.</p>
+<p>For this usecase, I only need it’s hypervisor management capibilities, but I also want to the automation capabilities that it may offer, since that seems to be an often criticized lacking feature of proxmox.</p>
+<p>I also tried out incus. I put together <a href="./vms/provisioners/debincus.yml">an ansible playbook</a> to install incus on debian.</p>
+<p>However, I am having trouble with their official web ui. Authentication is certificate based, so it asks for me to import a browser certificate… not fun.</p>
+<p>I am going to collect and test multiple alternatives:</p>
+<ul>
+<li>Offical Canonical One</li>
+<li><a href="https://lxdware.com/">LXDWare</a></li>
+<li><a href="https://github.com/AdaptiveScale/lxdui" class="uri">https://github.com/AdaptiveScale/lxdui</a></li>
+<li><a href="https://github.com/PenningLabs/lxconsole" class="uri">https://github.com/PenningLabs/lxconsole</a> still in beta, according to the readme</li>
+</ul>
+<p>I tried lxdware, but when I tried to add a remote, and connect it to the incus daemon, it I get an error “Remote host connection is not trusted”.</p>
+<p>I do some investiagting.</p>
+<div class="sourceCode" id="cb1" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb1-1">root@f6ded1cb73d7:/# incus remote add 192.168.121.103</span>
+<span id="cb1-2">Generating a client certificate. This may take a minute...</span>
+<span id="cb1-3">Certificate fingerprint: 7cf0d7d12fed498811e485d8dec4655012873876e9f45e15974cfdb9a8fd810a</span>
+<span id="cb1-4">ok (y/n/[fingerprint])? y</span>
+<span id="cb1-5">Trust token for 192.168.121.103: eyJjbGllbnRfbmFtZSI6ImluY3VzLXVpLTE5Mi4xNjguMTIxLjEwMy5jcnQiLCJmaW5nZXJwcmludCI6IjdjZjBkN2QxMmZlZDQ5ODgxMWU0ODVkOGRlYzQ2NTUwMTI4NzM4NzZlOWY0NWUxNTk3NGNmZGI5YThmZDgxMGEiLCJhZGRyZXNzZXMiOlsiMTkyLjE2OC4xMjEuMTAzOjg0NDMiXSwic2VjcmV0IjoiMjRjNWNjZjkzZTgzMTBmNGRlMzAwMTgyOTc0YWE4Nzg1MDAxMTkzZWQ3NTEyYTk0ZjlmZGRkZWQwMzBkNWJkZSIsImV4cGlyZXNfYXQiOiIwMDAxLTAxLTAxVDAwOjAwOjAwWiJ9</span>
+<span id="cb1-6">Client certificate now trusted by server: 192.168.121.103</span></code></pre></div>
+<div class="sourceCode" id="cb2" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb2-1">root@d90da14b48e9:/# lxc remote add 192.168.121.103</span>
+<span id="cb2-2">Admin password (or token) for 192.168.121.103:</span>
+<span id="cb2-3">Error: not authorized</span></code></pre></div>
+<p>In short, it seems like the api is not compatible, since using the lxc client fails, but the incus client succeeds.</p>
+<p>Luckily, I got incus working. In addition to the normal steps, I had to run <a href="https://discuss.linuxcontainers.org/t/incus-ui-install-error-using-token-not-authorized/18822/2"><code>incus config trust add-certificate certficatefile.crt</code></a></p>
+<p>Testing, I was able to download a debian image, and put it up.</p>
+<p>Incus looks very promising, because it also comes with a <a href="https://registry.terraform.io/providers/lxc/incus/latest/docs/resources/instance">terraform provider</a></p>
+<p>Incus also provides docs on <a href="https://linuxcontainers.org/incus/docs/main/howto/server_migrate_lxd/">migrating machines</a> (<a href="https://documentation.ubuntu.com/lxd/en/latest/migration/">canonical lxd version</a>)</p>
+<p>On that page, it recommends using virt-v2v, which has support for importing from <a href="https://libguestfs.org/virt-v2v-input-vmware.1.html">vmware ova’s</a></p>
+<p>(It seems it requires a newer version of <a href="https://libguestfs.org/virt-v2v.1.html">virt-v2v</a>, and <a href="https://github.com/rwmjones/rhsrvany">rhsrvany</a>, which only debian sid and ubuntu 23 package both right now.)</p>
+<p>Once you use that tool, you can use incus-migrate to interactively or programmaticly import the raw disk images as incus images.</p>
+<p>So that’s pretty promising. But what about networking? For a replica of the competition environment, we will need to have firewalls (vyos, pfsense, etc) and to my understanding, that is essentially having a virtual machine act as a bridge. How can I do that on LXD/Incus?</p>
+<p>It seems to be possible. Here are some guides I found:</p>
+<p><a href="https://www.cloudwizard.nl/build-your-own-windows-cloud-with-lxd/" class="uri">https://www.cloudwizard.nl/build-your-own-windows-cloud-with-lxd/</a></p>
+<p><a href="https://forum.netgate.com/topic/154906/how-to-install-pfsense-on-lxc-vm-qemu" class="uri">https://forum.netgate.com/topic/154906/how-to-install-pfsense-on-lxc-vm-qemu</a></p>
 
 
 </section>
