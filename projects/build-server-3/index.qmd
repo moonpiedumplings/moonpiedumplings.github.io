@@ -15,7 +15,7 @@ execute:
 
 Recently, I have been very busy working on scripts and ansible playbooks for the [Collegiate Cyber Defense Competition](https://www.nationalccdc.org/). 
 
-In order to test those playbooks, I have been using Vagrantfiles, as an excerp, something like this:
+In order to test those playbooks, I have been using Vagrantfiles, as an excerpt, something like this:
 
 
 ```{.ruby}
@@ -448,6 +448,71 @@ The caddy logs do not show anything relevant. I also did an additional test, by 
 
 It is interesting, how Caddy returns an "empty reply", rather than what I am expecting, a "502 Bad Gateway" — that's the reply that you usually get when the backend server is down, which it was in a lot of my testing. 
 
+So I throw in a quick "Hello World"
+
+```{.default}
+hello.moonpiedumpl.ing {
+    respond "Hello World!"
+}
+```
+
+And still get an empty reply. 
+
+The caddy logs, however, do say soemthign interesting:
+
+
+<details><summary>Show Logs</summary>
+
+```{.default}
+{"level":"info","ts":1707778344.991714,"logger":"http.auto_https","msg":"server is listening only on the HTTPS port but has no TLS connection policies; adding one to enable TLS","server_name":"srv0","https_port":8443}
+.....
+....
+.....
+{"level":"info","ts":1707778344.991727,"logger":"http.auto_https","msg":"enabling automatic HTTP->HTTPS redirects","server_name":"srv0"}
+{"level":"error","ts":1708452118.3423748,"logger":"http.acme_client","msg":"validating authorization","identifier":"hello.moonpiedumpl.ing","problem":{"type":"urn:ietf:params:acme:error:connection","title":"","detail":"154.12.245.181: Fetching http://hello.moonpiedumpl.ing/.well-known/acme-challenge/1qnsZcobKUGtdEG2KON-FeFwio97TFxWCu7hqXSY89s: Error getting validation data","instance":"","subproblems":[]},"order":"https://acme-v02.api.letsencrypt.org/acme/order/1560639027/246082250997","attempt":2,"max_attempts":3}
+{"level":"error","ts":1708452118.3424225,"logger":"tls.obtain","msg":"could not get certificate from issuer","identifier":"hello.moonpiedumpl.ing","issuer":"acme-v02.api.letsencrypt.org-directory","error":"HTTP 400 urn:ietf:params:acme:error:connection - 154.12.245.181: Fetching http://hello.moonpiedumpl.ing/.well-known/acme-challenge/1qnsZcobKUGtdEG2KON-FeFwio97TFxWCu7hqXSY89s: Error getting validation data"}
+{"level":"warn","ts":1708452118.3426523,"logger":"http","msg":"missing email address for ZeroSSL; it is strongly recommended to set one for next time"}
+{"level":"info","ts":1708452119.2906954,"logger":"http","msg":"generated EAB credentials","key_id":"N8YqjedBRmclRYYFjYqZGw"}
+{"level":"info","ts":1708452136.0253348,"logger":"http","msg":"waiting on internal rate limiter","identifiers":["hello.moonpiedumpl.ing"],"ca":"https://acme.zerossl.com/v2/DV90","account":""}
+{"level":"info","ts":1708452136.0253737,"logger":"http","msg":"done waiting on internal rate limiter","identifiers":["hello.moonpiedumpl.ing"],"ca":"https://acme.zerossl.com/v2/DV90","account":""}
+{"level":"info","ts":1708452143.7124622,"logger":"http.acme_client","msg":"trying to solve challenge","identifier":"hello.moonpiedumpl.ing","challenge_type":"http-01","ca":"https://acme.zerossl.com/v2/DV90"}
+{"level":"error","ts":1708452153.466225,"logger":"http.acme_client","msg":"challenge failed","identifier":"hello.moonpiedumpl.ing","challenge_type":"http-01","problem":{"type":"","title":"","detail":"","instance":"","subproblems":[]}}
+{"level":"error","ts":1708452153.4662635,"logger":"http.acme_client","msg":"validating authorization","identifier":"hello.moonpiedumpl.ing","problem":{"type":"","title":"","detail":"","instance":"","subproblems":[]},"order":"https://acme.zerossl.com/v2/DV90/order/mlTQtXTaA_eyy7PFDbdZSg","attempt":1,"max_attempts":3}
+{"level":"error","ts":1708452153.4663181,"logger":"tls.obtain","msg":"could not get certificate from issuer","identifier":"hello.moonpiedumpl.ing","issuer":"acme.zerossl.com-v2-DV90","error":"HTTP 0  - "}
+{"level":"error","ts":1708452153.466387,"logger":"tls.obtain","msg":"will retry","error":"[hello.moonpiedumpl.ing] Obtain: [hello.moonpiedumpl.ing] solving challenge: hello.moonpiedumpl.ing: [hello.moonpiedumpl.ing] authorization failed: HTTP 0  -  (ca=https://acme.zerossl.com/v2/DV90)","attempt":1,"retrying_in":60,"elapsed":41.717184567,"max_duration":2592000}
+```
+
+</details>
+
+
+It seems like the certificate challenge fails. If caddy is doing auto https redirects, then it makes sense that the reply is empty. 
+
+And curling https?
+
+```{.default}
+[moonpie@lizard server-configs]$ curl https://hello.moonpiedumpl.ing
+curl: (35) OpenSSL SSL_connect: SSL_ERROR_SYSCALL in connection to hello.moonpiedumpl.ing:443
+```
+
+If caddy isn't serving on https properly, then it makes sense that this fails. 
+
+
+Later, I think I discover the issue: 
+
+```{.default}
+podmaner@thoth:~/rathole$ podman ps
+CONTAINER ID  IMAGE                                      COMMAND               CREATED      STATUS            PORTS                                        NAMES
+868115b4e818  docker.io/moonpiedumplings/rathole:latest  rathole --client ...  2 weeks ago  Up 7 minutes ago                                               rathole
+860ec72e5c78  docker.io/library/caddy:latest             caddy run --confi...  2 weeks ago  Up 7 minutes ago  0.0.0.0:8080->80/tcp, 0.0.0.0:8443->443/tcp  caddy
+```
+
+Why is Caddy forwarding ports? My ansible playbooks set the podman networking to be host networking. It seems that, when rerunning a podman container using ansible, it doesn't properly destroy it, leaving some lingering configs. 
+
+After changing this, it works properly ☺. Running a test server, I can access it publicly. 
+
+
+
+
 ## Authentik
 
 The listen settings are here: <https://goauthentik.io/docs/installation/configuration/#listen-settings>
@@ -465,6 +530,167 @@ So the podman pod which runs all of authentik will have those ports forwarded.
       - "3389:3389"
       - "6636:3389"
 ```
+
+I designed a role, and deployment was going pretty smoothly. Until it errored:
+
+```{.default}
+failed: [moonstack] (item=postgres) => {
+    "ansible_loop_var": "item",
+    "changed": false,
+    "item": "postgres",
+    "module_stderr": "Shared connection to 192.168.17.197 closed.",
+    "module_stdout": "
+Traceback (most recent call last):
+  File \"/var/tmp/ansible-tmp-1708731694.1592944-80284-196261000245469/AnsiballZ_file.py\", line 107, in <module>
+    _ansiballz_main()
+  File \"/var/tmp/ansible-tmp-1708731694.1592944-80284-196261000245469/AnsiballZ_file.py\", line 99, in _ansiballz_main
+    invoke_module(zipped_mod, temp_path, ANSIBALLZ_PARAMS)
+  File \"/var/tmp/ansible-tmp-1708731694.1592944-80284-196261000245469/AnsiballZ_file.py\", line 47, in invoke_module
+    runpy.run_module(mod_name='ansible.modules.file', init_globals=dict(_module_fqn='ansible.modules.file', _modlib_path=modlib_path),
+  File \"<frozen runpy>\", line 226, in run_module
+  File \"<frozen runpy>\", line 98, in _run_module_code
+  File \"<frozen runpy>\", line 88, in _run_code
+  File \"/tmp/ansible_ansible.builtin.file_payload_37zf8n_k/ansible_ansible.builtin.file_payload.zip/ansible/modules/file.py\", line 987, in <module>
+  File \"/tmp/ansible_ansible.builtin.file_payload_37zf8n_k/ansible_ansible.builtin.file_payload.zip/ansible/modules/file.py\", line 973, in main
+  File \"/tmp/ansible_ansible.builtin.file_payload_37zf8n_k/ansible_ansible.builtin.file_payload.zip/ansible/modules/file.py\", line 680, in ensure_directory
+  File \"/tmp/ansible_ansible.builtin.file_payload_37zf8n_k/ansible_ansible.builtin.file_payload.zip/ansible/module_utils/basic.py\", line 1159, in set_fs_attributes_if_different
+  File \"/tmp/ansible_ansible.builtin.file_payload_37zf8n_k/ansible_ansible.builtin.file_payload.zip/ansible/module_utils/basic.py\", line 919, in set_mode_if_different
+PermissionError: [Errno 1] Operation not permitted: b'/home/podmaner/authentik/postgres'",
+    "msg": "MODULE FAILURE\nSee stdout/stderr for the exact error",
+    "rc": 1
+}
+```
+
+Which is... weird. Looking at the ansible code that generates this:
+
+```{.yaml}
+- name: Create relevant configuration files
+  ansible.builtin.file:
+    path: "{{ homepath.stdout }}/authentik/{{ item }}"
+    state: directory
+    mode: '0755'
+  loop: ["media", "custom-templates", "certs", "postgres", "redis"]
+```
+
+It's the same exact task, looped through... but it *only errors for /home/podmaner/authentik/postgres* ‽
+
+```{.default}
+podmaner@thoth:~/authentik$ ls -la
+total 28
+drwxr-xr-x 7 podmaner podmaner 4096 Feb 23 15:37 .
+drwx------ 9 podmaner podmaner 4096 Feb 23 15:37 ..
+drwxr-xr-x 2 podmaner podmaner 4096 Feb 23 15:37 certs
+drwxr-xr-x 2 podmaner podmaner 4096 Feb 23 15:37 custom-templates
+drwxr-xr-x 2 podmaner podmaner 4096 Feb 23 15:37 media
+drwx------ 2   165605 podmaner 4096 Feb 23 15:37 postgres
+drwxr-xr-x 2   166534 podmaner 4096 Feb 23 15:39 redis
+```
+
+For some reason, only the postgres directory has incorrect permissions?
+
+And the weirdest part: This only happens upon a rerun of the role. If I delete the `/home/podmaner/authentik/` directory, and run the role, then everything runs properly, and the `postgres` directory gets the proper permissions. 
+
+Why does this happen? My intuition is telling me this is a bug, since the behavior is so blatantly inconsistent.
+
+It's not really that though. After deleting the  `postgres` directory, it was recreated. 
+
+
+```{.default}
+podmaner@thoth:~/authentik$ podman logs authentik_postgres
+Error: Database is uninitialized and superuser password is not specified.
+       You must specify POSTGRES_PASSWORD to a non-empty value for the
+       superuser. For example, "-e POSTGRES_PASSWORD=password" on "docker run".
+
+       You may also use "POSTGRES_HOST_AUTH_METHOD=trust" to allow all
+       connections without a password. This is *not* recommended.
+
+       See PostgreSQL documentation about "trust":
+       https://www.postgresql.org/docs/current/auth-trust.html
+```
+
+Whoops. Lol. I was attempting to convet [authentik's docker-compose.yml](https://goauthentik.io/docs/installation/docker-compose) to podman+ansible instructions, but my copy was incomplete, and I forgot to configure the postgres container properly.
+
+That explains why the container won't start... but it still doesn't explain the file permissions error. 
+
+After taking a closer look at the output of `ls -la`, it seems that the podman containers change ownership of the files. Why doesn't it do this for any of my other containers?
+
+I'm guessing this is because the postgres and redis container, unlike every other container, have the main process inside as a different user other than root. 
+
+I looked into [podman user namespaces](https://www.redhat.com/sysadmin/rootless-podman-user-namespace-modes). I tried setting user namespaces for the relevant containers, first, but I got an error:
+
+```{.default}
+TASK [authentik : Authentik postgres database] ***********************************************************************************************************************
+fatal: [moonstack]: FAILED! => {"changed": false, "msg": "Can't run container authentik_postgres", "stderr": "Error: --userns and --pod cannot be set together\n", "stderr_lines": ["Error: --userns and --pod cannot be set together"], "stdout": "", "stdout_lines": []}
+```
+
+So instead, I set the usernamespace for the whole pod, and it didn't erorr:
+
+```{.yaml}
+- name: Create relevant podman pod  
+      containers.podman.podman_pod:
+        name: authentik_pod
+        recreate: true
+```
+
+It seems like the error is that, the podmaner user would no longer have write permissions, preventing it from doing anything to those specific files. 
+
+However, the podman container still died. 
+
+<details><summary>Show error</summary>
+
+```{.default}
+podmaner@thoth:~$ podman logs authentik_worker
+{"event": "Loaded config", "level": "debug", "logger": "authentik.lib.config", "timestamp": 1708731540.8134813, "file": "/authentik/lib/default.yml"}
+{"event": "Loaded environment variables", "level": "debug", "logger": "authentik.lib.config", "timestamp": 1708731540.813802, "count": 5}
+{"event": "Starting authentik bootstrap", "level": "info", "logger": "authentik.lib.config", "timestamp": 1708731540.8138793}
+{"event": "----------------------------------------------------------------------", "level": "info", "logger": "authentik.lib.config", "timestamp": 1708731540.8139021}
+{"event": "Secret key missing, check https://goauthentik.io/docs/installation/.", "level": "info", "logger": "authentik.lib.config", "timestamp": 1708731540.8139138}
+{"event": "----------------------------------------------------------------------", "level": "info", "logger": "authentik.lib.config", "timestamp": 1708731540.8139226}
+{"event": "Loaded config", "level": "debug", "logger": "authentik.lib.config", "timestamp": 1708807909.1802225, "file": "/authentik/lib/default.yml"}
+{"event": "Loaded environment variables", "level": "debug", "logger": "authentik.lib.config", "timestamp": 1708807909.1805325, "count": 5}
+{"event": "Starting authentik bootstrap", "level": "info", "logger": "authentik.lib.config", "timestamp": 1708807909.1806104}
+{"event": "----------------------------------------------------------------------", "level": "info", "logger": "authentik.lib.config", "timestamp": 1708807909.180633}
+{"event": "Secret key missing, check https://goauthentik.io/docs/installation/.", "level": "info", "logger": "authentik.lib.config", "timestamp": 1708807909.1806445}
+{"event": "----------------------------------------------------------------------", "level": "info", "logger": "authentik.lib.config", "timestamp": 1708807909.1806536}
+{"event": "Loaded config", "level": "debug", "logger": "authentik.lib.config", "timestamp": 1708817283.6261683, "file": "/authentik/lib/default.yml"}
+{"event": "Loaded environment variables", "level": "debug", "logger": "authentik.lib.config", "timestamp": 1708817283.6264079, "count": 5}
+{"event": "Starting authentik bootstrap", "level": "info", "logger": "authentik.lib.config", "timestamp": 1708817283.6264803}
+{"event": "----------------------------------------------------------------------", "level": "info", "logger": "authentik.lib.config", "timestamp": 1708817283.6265018}
+{"event": "Secret key missing, check https://goauthentik.io/docs/installation/.", "level": "info", "logger": "authentik.lib.config", "timestamp": 1708817283.626513}
+{"event": "----------------------------------------------------------------------", "level": "info", "logger": "authentik.lib.config", "timestamp": 1708817283.6265216}
+podmaner@thoth:~$ podman logs authentik_server
+{"event": "Loaded config", "level": "debug", "logger": "authentik.lib.config", "timestamp": 1708817279.5668721, "file": "/authentik/lib/default.yml"}
+{"event": "Loaded environment variables", "level": "debug", "logger": "authentik.lib.config", "timestamp": 1708817279.567172, "count": 5}
+{"event": "Loaded app settings", "level": "debug", "logger": "authentik.lib.config", "timestamp": 1708817281.6441257, "path": "authentik.admin.settings"}
+{"event": "Loaded app settings", "level": "debug", "logger": "authentik.lib.config", "timestamp": 1708817281.644982, "path": "authentik.crypto.settings"}
+{"event": "Loaded app settings", "level": "debug", "logger": "authentik.lib.config", "timestamp": 1708817281.6455739, "path": "authentik.events.settings"}
+{"event": "Loaded app settings", "level": "debug", "logger": "authentik.lib.config", "timestamp": 1708817281.6467671, "path": "authentik.outposts.settings"}
+{"event": "Loaded app settings", "level": "debug", "logger": "authentik.lib.config", "timestamp": 1708817281.6484737, "path": "authentik.policies.reputation.settings"}
+{"event": "Loaded app settings", "level": "debug", "logger": "authentik.lib.config", "timestamp": 1708817281.651618, "path": "authentik.providers.scim.settings"}
+{"event": "Loaded app settings", "level": "debug", "logger": "authentik.lib.config", "timestamp": 1708817281.6528664, "path": "authentik.sources.ldap.settings"}
+{"event": "Loaded app settings", "level": "debug", "logger": "authentik.lib.config", "timestamp": 1708817281.6535037, "path": "authentik.sources.oauth.settings"}
+{"event": "Loaded app settings", "level": "debug", "logger": "authentik.lib.config", "timestamp": 1708817281.6540685, "path": "authentik.sources.plex.settings"}
+{"event": "Loaded app settings", "level": "debug", "logger": "authentik.lib.config", "timestamp": 1708817281.6560044, "path": "authentik.stages.authenticator_totp.settings"}
+{"event": "Loaded app settings", "level": "debug", "logger": "authentik.lib.config", "timestamp": 1708817281.6598718, "path": "authentik.blueprints.settings"}
+{"event": "Booting authentik", "level": "info", "logger": "authentik.lib.config", "timestamp": 1708817281.6600318, "version": "2023.10.7"}
+{"event": "Enabled authentik enterprise", "level": "info", "logger": "authentik.lib.config", "timestamp": 1708817281.661141}
+{"event": "Loaded app settings", "level": "debug", "logger": "authentik.lib.config", "timestamp": 1708817281.661508, "path": "authentik.enterprise.settings"}
+{"event": "Loaded GeoIP database", "last_write": 1706549214.0, "level": "info", "logger": "authentik.events.geo", "pid": 2, "timestamp": "2024-02-24T23:28:02.805111"}
+{"app_name": "authentik.crypto", "event": "Failed to run reconcile", "exc": "ProgrammingError('relation \"authentik_crypto_certificatekeypair\" does not exist\\nLINE 1: ...hentik_crypto_certificatekeypair\".\"key_data\" FROM \"authentik...\\n                                                             ^')", "level": "warning", "logger": "authentik.blueprints.apps", "name": "managed_jwt_cert", "pid": 2, "timestamp": "2024-02-24T23:28:03.610865"}
+{"app_name": "authentik.crypto", "event": "Failed to run reconcile", "exc": "ProgrammingError('relation \"authentik_crypto_certificatekeypair\" does not exist\\nLINE 1: SELECT 1 AS \"a\" FROM \"authentik_crypto_certificatekeypair\" W...\\n                             ^')", "level": "warning", "logger": "authentik.blueprints.apps", "name": "self_signed", "pid": 2, "timestamp": "2024-02-24T23:28:03.612779"}
+{"app_name": "authentik.outposts", "event": "Failed to run reconcile", "exc": "ProgrammingError('relation \"authentik_outposts_outpost\" does not exist\\nLINE 1: ..._id\", \"authentik_outposts_outpost\".\"_config\" FROM \"authentik...\\n                                                             ^')", "level": "warning", "logger": "authentik.blueprints.apps", "name": "embedded_outpost", "pid": 2, "timestamp": "2024-02-24T23:28:03.647866"}
+{"event": "Task published", "level": "info", "logger": "authentik.root.celery", "pid": 2, "task_id": "d28b9ddc12eb44eaa99a25dfe3477f37", "task_name": "authentik.blueprints.v1.tasks.blueprints_discovery", "timestamp": "2024-02-24T23:28:03.876853"}
+{"event": "Task published", "level": "info", "logger": "authentik.root.celery", "pid": 2, "task_id": "763c497b4e4c43e2bb745de6a613e104", "task_name": "authentik.blueprints.v1.tasks.clear_failed_blueprints", "timestamp": "2024-02-24T23:28:03.878293"}
+{"app_name": "authentik.core", "event": "Failed to run reconcile", "exc": "ProgrammingError('relation \"authentik_core_source\" does not exist\\nLINE 1: ...\"authentik_core_source\".\"user_matching_mode\" FROM \"authentik...\\n                                                             ^')", "level": "warning", "logger": "authentik.blueprints.apps", "name": "source_inbuilt", "pid": 2, "timestamp": "2024-02-24T23:28:03.881205"}\
+```
+
+</details>
+
+It seems I forgot another environment variable, which has been [documented on authentik's site](https://goauthentik.io/docs/installation/docker-compose#preparation).
+
+
+I did that, and it still dies.
+
 
 # Presearch for future pieces
 
