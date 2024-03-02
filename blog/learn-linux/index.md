@@ -13,7 +13,8 @@ execute:
 
 My browser bookmarks bar is massive. I basically bookworm anything interesting I come across, and now I have a lot of resources accumulated, and I think it's worth it to write them down, although formatting is still a work in progress. 
 
-When not otherwise stated, the resoruce is related to Linux administration. 
+When not otherwise stated, the resource is related to Linux administration. 
+
 
 
 # Linux/Terminal Basics
@@ -34,6 +35,16 @@ When not otherwise stated, the resoruce is related to Linux administration.
 ## Troubleshooting servers
 
 [SadServers](https://sadservers.com/)
+
+
+# Documentation (writing)
+
+
+
+[Divio Documentation System](https://documentation.divio.com/) — More about differences between the types of documentation; there's actually 4 types. 
+
+[Software Technical Writings — A guidebook (pdf)](https://jamesg.blog/book.pdf) — nitty gritty technical writing details. 
+
 
 
 ## Hacking
