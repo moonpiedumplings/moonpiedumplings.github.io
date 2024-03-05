@@ -693,9 +693,72 @@ It seems I forgot another environment variable, which has been [documented on au
 
 I did that, and it still dies.
 
-Investigating the error, it seems to be something about relevant file permissions, it is unable to create the necessary file. I need to do more research into how rootless podman, and the different userns modes, interact with volumes. 
+Investigating the error, it seems to be something about relevant file permissions, it is unable to create the necessary file.
+
+```{.default}
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/lifecycle/migrate.py", line 98, in <module>
+    migration.run()
+  File "/lifecycle/system_migrations/tenant_files.py", line 15, in run
+    TENANT_MEDIA_ROOT.mkdir(parents=True)
+  File "/usr/local/lib/python3.12/pathlib.py", line 1311, in mkdir
+    os.mkdir(self, mode)
+PermissionError: [Errno 13] Permission denied: '/media/public'
+```
+
+I need to do more research into how rootless podman, and the different userns modes, interact with volumes. 
 
 I found [one article](https://www.tutorialworks.com/podman-rootless-volumes/), but it's focus isn't quite what I want, and it lacks overview of the different userns modes, and how they interact with volume mounts. 
+
+I spent some time experimenting, and did some more research. Something crucial was a comment I noticed in the docker-compose, under the section related to the "worker" node of authentik: 
+
+```{.default}
+# `user: root` and the docker socket volume are optional.
+    # See more for the docker socket integration here:
+    # https://goauthentik.io/docs/outposts/integrations/docker
+    # Removing `user: root` also prevents the worker from fixing the permissions
+    # on the mounted folders, so when removing this make sure the folders have the correct UID/GID
+    # (1000:1000 by default)
+```
+
+So apparently, authentik expects to exist as user 1000 and group 1000, and not anything else. Thankfully, podman has a special userns mode, to map a UID/GID inside the container to a different host user:
+
+
+```{.yaml}
+- name: Create relevant podman pod  
+  containers.podman.podman_pod:
+    name: authentik_pod
+    recreate: true
+    # userns: host
+    userns: keep-id:uid=1000,gid=1000
+    state: started
+    ......
+```
+
+After this, it works. But I'm still not satisfied. Postgres keeps on changing the permissions of it's own bind mount. 
+
+According to the [docker library page for postgres](https://hub.docker.com/_/postgres) (from Arbitrary --user Notes):
+
+> The main caveat to note is that postgres doesn't care what UID it runs as (as long as the owner of /var/lib/postgresql/data matches), but initdb does care (and needs the user to exist in /etc/passwd):
+
+It then offers three ways to get around this, and one way is to use the  `--user` flag, in docker. Red Hat has an [article mentioning that this exists in podman as well](https://www.redhat.com/sysadmin/user-flag-rootless-containers). It didn't work.
+
+I did [some more research](https://github.com/containers/crun/issues/396) into why it is not possible for there to be a different usernamespace mapping for each container in a pod, and the short version is that containers within a pod need to be in the same user namespace in order for them to interact with eachother properly, like networking. 
+
+I made a Dockerfile for postgres, adding the authentik user to the container:
+
+```{.Dockerfile}
+FROM docker.io/library/postgres:12-alpine
+
+RUN echo "authentik:x:1000:1000::/authentik:/usr/sbin/nologin" > /etc/passwd
+```
+
+It still chowns/chmods the whole directory to be 700, but that's okay. Apparently, this is intended behavior, hardcoded, and [postgres refuses to start if file permissions are not 700](https://github.com/postgres/postgres/blob/d42294fc00da4b97d04ddb4401b76295e8d86816/src/backend/postmaster/postmaster.c#L1539). It's required that the user running postgres, exclusively owns the postgres data folders.
+
+But now file permissions are correct at least, and the user in the container is mapped to the user outside the container, enabling the directory to be manipulated properly (backed up, restored, etc) outside of the container.
+
 
 # Presearch for future pieces
 

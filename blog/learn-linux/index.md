@@ -96,6 +96,8 @@ k8s
 https://learnk8s.io/troubleshooting-deployments
 https://wellarchitectedlabs.com/security/
 
+<https://sre.google/sre-book/table-of-contents/>odma
+
 
 # Low Level Operating System Programming
 
