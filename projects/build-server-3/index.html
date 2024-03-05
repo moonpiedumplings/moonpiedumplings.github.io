@@ -738,8 +738,48 @@ Show error
 </details>
 <p>It seems I forgot another environment variable, which has been <a href="https://goauthentik.io/docs/installation/docker-compose#preparation">documented on authentik’s site</a>.</p>
 <p>I did that, and it still dies.</p>
-<p>Investigating the error, it seems to be something about relevant file permissions, it is unable to create the necessary file. I need to do more research into how rootless podman, and the different userns modes, interact with volumes.</p>
+<p>Investigating the error, it seems to be something about relevant file permissions, it is unable to create the necessary file.</p>
+<div class="sourceCode" id="cb30"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a>Traceback (most recent call last):</span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>  File "&lt;frozen runpy&gt;", line 198, in _run_module_as_main</span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a>  File "&lt;frozen runpy&gt;", line 88, in _run_code</span>
+<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a>  File "/lifecycle/migrate.py", line 98, in &lt;module&gt;</span>
+<span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a>    migration.run()</span>
+<span id="cb30-6"><a href="#cb30-6" aria-hidden="true" tabindex="-1"></a>  File "/lifecycle/system_migrations/tenant_files.py", line 15, in run</span>
+<span id="cb30-7"><a href="#cb30-7" aria-hidden="true" tabindex="-1"></a>    TENANT_MEDIA_ROOT.mkdir(parents=True)</span>
+<span id="cb30-8"><a href="#cb30-8" aria-hidden="true" tabindex="-1"></a>  File "/usr/local/lib/python3.12/pathlib.py", line 1311, in mkdir</span>
+<span id="cb30-9"><a href="#cb30-9" aria-hidden="true" tabindex="-1"></a>    os.mkdir(self, mode)</span>
+<span id="cb30-10"><a href="#cb30-10" aria-hidden="true" tabindex="-1"></a>PermissionError: [Errno 13] Permission denied: '/media/public'</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>I need to do more research into how rootless podman, and the different userns modes, interact with volumes.</p>
 <p>I found <a href="https://www.tutorialworks.com/podman-rootless-volumes/">one article</a>, but it’s focus isn’t quite what I want, and it lacks overview of the different userns modes, and how they interact with volume mounts.</p>
+<p>I spent some time experimenting, and did some more research. Something crucial was a comment I noticed in the docker-compose, under the section related to the “worker” node of authentik:</p>
+<div class="sourceCode" id="cb31"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a># `user: root` and the docker socket volume are optional.</span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>    # See more for the docker socket integration here:</span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a>    # https://goauthentik.io/docs/outposts/integrations/docker</span>
+<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a>    # Removing `user: root` also prevents the worker from fixing the permissions</span>
+<span id="cb31-5"><a href="#cb31-5" aria-hidden="true" tabindex="-1"></a>    # on the mounted folders, so when removing this make sure the folders have the correct UID/GID</span>
+<span id="cb31-6"><a href="#cb31-6" aria-hidden="true" tabindex="-1"></a>    # (1000:1000 by default)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>So apparently, authentik expects to exist as user 1000 and group 1000, and not anything else. Thankfully, podman has a special userns mode, to map a UID/GID inside the container to a different host user:</p>
+<div class="sourceCode" id="cb32"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> Create relevant podman pod  </span></span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">containers.podman.podman_pod</span><span class="kw">:</span></span>
+<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">name</span><span class="kw">:</span><span class="at"> authentik_pod</span></span>
+<span id="cb32-4"><a href="#cb32-4" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">recreate</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb32-5"><a href="#cb32-5" aria-hidden="true" tabindex="-1"></a><span class="co">    # userns: host</span></span>
+<span id="cb32-6"><a href="#cb32-6" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">userns</span><span class="kw">:</span><span class="at"> keep-id:uid=1000,gid=1000</span></span>
+<span id="cb32-7"><a href="#cb32-7" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">state</span><span class="kw">:</span><span class="at"> started</span></span>
+<span id="cb32-8"><a href="#cb32-8" aria-hidden="true" tabindex="-1"></a><span class="at">    ......</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>After this, it works. But I’m still not satisfied. Postgres keeps on changing the permissions of it’s own bind mount.</p>
+<p>According to the <a href="https://hub.docker.com/_/postgres">docker library page for postgres</a> (from Arbitrary –user Notes):</p>
+<blockquote class="blockquote">
+<p>The main caveat to note is that postgres doesn’t care what UID it runs as (as long as the owner of /var/lib/postgresql/data matches), but initdb does care (and needs the user to exist in /etc/passwd):</p>
+</blockquote>
+<p>It then offers three ways to get around this, and one way is to use the <code>--user</code> flag, in docker. Red Hat has an <a href="https://www.redhat.com/sysadmin/user-flag-rootless-containers">article mentioning that this exists in podman as well</a>. It didn’t work.</p>
+<p>I did <a href="https://github.com/containers/crun/issues/396">some more research</a> into why it is not possible for there to be a different usernamespace mapping for each container in a pod, and the short version is that containers within a pod need to be in the same user namespace in order for them to interact with eachother properly, like networking.</p>
+<p>I made a Dockerfile for postgres, adding the authentik user to the container:</p>
+<div class="sourceCode" id="cb33"><pre class="sourceCode Dockerfile code-with-copy"><code class="sourceCode dockerfile"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="kw">FROM</span> docker.io/library/postgres:12-alpine</span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a><span class="kw">RUN</span> <span class="bu">echo</span> <span class="st">"authentik:x:1000:1000::/authentik:/usr/sbin/nologin"</span> <span class="op">&gt;</span> /etc/passwd</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>It still chowns/chmods the whole directory to be 700, but that’s okay. Apparently, this is intended behavior, hardcoded, and <a href="https://github.com/postgres/postgres/blob/d42294fc00da4b97d04ddb4401b76295e8d86816/src/backend/postmaster/postmaster.c#L1539">postgres refuses to start if file permissions are not 700</a>. It’s required that the user running postgres, exclusively owns the postgres data folders.</p>
+<p>But now file permissions are correct at least, and the user in the container is mapped to the user outside the container, enabling the directory to be manipulated properly (backed up, restored, etc) outside of the container.</p>
 </section>
 </section>
 <section id="presearch-for-future-pieces" class="level1">

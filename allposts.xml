@@ -74,6 +74,7 @@
 <section id="devopsk8s" class="level1">
 <h1>Devops/K8s</h1>
 <p>devops https://nubenetes.com/ https://killercoda.com/ k8s https://learnk8s.io/troubleshooting-deployments https://wellarchitectedlabs.com/security/</p>
+<p><a href="https://sre.google/sre-book/table-of-contents/" class="uri">https://sre.google/sre-book/table-of-contents/</a>odma</p>
 </section>
 <section id="low-level-operating-system-programming" class="level1">
 <h1>Low Level Operating System Programming</h1>
@@ -1292,8 +1293,112 @@ Show error
 </details>
 <p>It seems I forgot another environment variable, which has been <a href="https://goauthentik.io/docs/installation/docker-compose#preparation">documented on authentik’s site</a>.</p>
 <p>I did that, and it still dies.</p>
-<p>Investigating the error, it seems to be something about relevant file permissions, it is unable to create the necessary file. I need to do more research into how rootless podman, and the different userns modes, interact with volumes.</p>
+<p>Investigating the error, it seems to be something about relevant file permissions, it is unable to create the necessary file.</p>
+<div class="sourceCode" id="cb30" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb30-1">Traceback (most recent call last):</span>
+<span id="cb30-2">  File "&lt;frozen runpy&gt;", line 198, in _run_module_as_main</span>
+<span id="cb30-3">  File "&lt;frozen runpy&gt;", line 88, in _run_code</span>
+<span id="cb30-4">  File "/lifecycle/migrate.py", line 98, in &lt;module&gt;</span>
+<span id="cb30-5">    migration.run()</span>
+<span id="cb30-6">  File "/lifecycle/system_migrations/tenant_files.py", line 15, in run</span>
+<span id="cb30-7">    TENANT_MEDIA_ROOT.mkdir(parents=True)</span>
+<span id="cb30-8">  File "/usr/local/lib/python3.12/pathlib.py", line 1311, in mkdir</span>
+<span id="cb30-9">    os.mkdir(self, mode)</span>
+<span id="cb30-10">PermissionError: [Errno 13] Permission denied: '/media/public'</span></code></pre></div>
+<p>I need to do more research into how rootless podman, and the different userns modes, interact with volumes.</p>
 <p>I found <a href="https://www.tutorialworks.com/podman-rootless-volumes/">one article</a>, but it’s focus isn’t quite what I want, and it lacks overview of the different userns modes, and how they interact with volume mounts.</p>
+<p>I spent some time experimenting, and did some more research. Something crucial was a comment I noticed in the docker-compose, under the section related to the “worker” node of authentik:</p>
+<div class="sourceCode" id="cb31" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb31-1"># `user: root` and the docker socket volume are optional.</span>
+<span id="cb31-2">    # See more for the docker socket integration here:</span>
+<span id="cb31-3">    # https://goauthentik.io/docs/outposts/integrations/docker</span>
+<span id="cb31-4">    # Removing `user: root` also prevents the worker from fixing the permissions</span>
+<span id="cb31-5">    # on the mounted folders, so when removing this make sure the folders have the correct UID/GID</span>
+<span id="cb31-6">    # (1000:1000 by default)</span></code></pre></div>
+<p>So apparently, authentik expects to exist as user 1000 and group 1000, and not anything else. Thankfully, podman has a special userns mode, to map a UID/GID inside the container to a different host user:</p>
+<div class="sourceCode" id="cb32" style="background: #f1f3f5;"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb32-1"><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">-</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">name</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> Create relevant podman pod  </span></span>
+<span id="cb32-2"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">containers.podman.podman_pod</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">:</span></span>
+<span id="cb32-3"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">name</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> authentik_pod</span></span>
+<span id="cb32-4"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">recreate</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> </span><span class="ch" style="color: #20794D;
+background-color: null;
+font-style: inherit;">true</span></span>
+<span id="cb32-5"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">    # userns: host</span></span>
+<span id="cb32-6"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">userns</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> keep-id:uid=1000,gid=1000</span></span>
+<span id="cb32-7"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">state</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> started</span></span>
+<span id="cb32-8"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">    ......</span></span></code></pre></div>
+<p>After this, it works. But I’m still not satisfied. Postgres keeps on changing the permissions of it’s own bind mount.</p>
+<p>According to the <a href="https://hub.docker.com/_/postgres">docker library page for postgres</a> (from Arbitrary –user Notes):</p>
+<blockquote class="blockquote">
+<p>The main caveat to note is that postgres doesn’t care what UID it runs as (as long as the owner of /var/lib/postgresql/data matches), but initdb does care (and needs the user to exist in /etc/passwd):</p>
+</blockquote>
+<p>It then offers three ways to get around this, and one way is to use the <code>--user</code> flag, in docker. Red Hat has an <a href="https://www.redhat.com/sysadmin/user-flag-rootless-containers">article mentioning that this exists in podman as well</a>. It didn’t work.</p>
+<p>I did <a href="https://github.com/containers/crun/issues/396">some more research</a> into why it is not possible for there to be a different usernamespace mapping for each container in a pod, and the short version is that containers within a pod need to be in the same user namespace in order for them to interact with eachother properly, like networking.</p>
+<p>I made a Dockerfile for postgres, adding the authentik user to the container:</p>
+<div class="sourceCode" id="cb33" style="background: #f1f3f5;"><pre class="sourceCode Dockerfile code-with-copy"><code class="sourceCode dockerfile"><span id="cb33-1"><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">FROM</span> docker.io/library/postgres:12-alpine</span>
+<span id="cb33-2"></span>
+<span id="cb33-3"><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">RUN</span> <span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">echo</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"authentik:x:1000:1000::/authentik:/usr/sbin/nologin"</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">&gt;</span> /etc/passwd</span></code></pre></div>
+<p>It still chowns/chmods the whole directory to be 700, but that’s okay. Apparently, this is intended behavior, hardcoded, and <a href="https://github.com/postgres/postgres/blob/d42294fc00da4b97d04ddb4401b76295e8d86816/src/backend/postmaster/postmaster.c#L1539">postgres refuses to start if file permissions are not 700</a>. It’s required that the user running postgres, exclusively owns the postgres data folders.</p>
+<p>But now file permissions are correct at least, and the user in the container is mapped to the user outside the container, enabling the directory to be manipulated properly (backed up, restored, etc) outside of the container.</p>
 </section>
 </section>
 <section id="presearch-for-future-pieces" class="level1">
