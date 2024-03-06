@@ -510,10 +510,21 @@ Why is Caddy forwarding ports? My ansible playbooks set the podman networking to
 
 After changing this, it works properly ☺. Running a test server, I can access it publicly. 
 
-I saw another interesting thing: [caddy security module](https://authp.github.io/) ([github](https://github.com/greenpau/caddy-security)), which lets you integrate caddy with ldap or other forms of authentication. I will consider integrating them in, or using authentik's reverse proxy features. 
+I saw another interesting thing: [caddy security module](https://authp.github.io/) ([github](https://github.com/greenpau/caddy-security)), which lets you integrate caddy with ldap or other forms of authentication. I want to inegrate this, because it would be better to have auth built into the single sign on. 
 
+```{.Dockerfile}
+#jinja2:lstrip_blocks: True
 
+FROM docker.io/library/caddy:{{ caddy_version }}-builder AS builder
 
+RUN xcaddy build {% for plugin in caddy_plugins %}--with {{ plugin }}{% endfor %} 
+
+FROM docker.io/library/caddy:{{ caddy_version }}
+
+COPY --from=builder /usr/bin/caddy /usr/bin/caddy
+```
+
+I decided to use this jinja2 template for a dockerfile to build the 
 
 ## Authentik
 
