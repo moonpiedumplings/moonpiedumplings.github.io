@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.4.550">
+<meta name="generator" content="quarto-1.4.551">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -236,7 +236,7 @@ Author
 </tr>
 </thead>
 <tbody class="list">
-<tr data-index="0" data-categories="linux" data-listing-date-sort="1707782400000" data-listing-file-modified-sort="1709628779123" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="4" data-listing-word-count-sort="638" data-listing-title-sort="Nice Challenge 3" data-listing-filename-sort="index.md">
+<tr data-index="0" data-categories="linux" data-listing-date-sort="1707782400000" data-listing-file-modified-sort="1709753548667" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="4" data-listing-word-count-sort="638" data-listing-title-sort="Nice Challenge 3" data-listing-filename-sort="index.md">
 <td>
 <span class="listing-date">Feb 13, 2024</span>
 </td>
@@ -247,7 +247,7 @@ Author
 <span class="listing-author">Jeffrey Fonseca</span>
 </td>
 </tr>
-<tr data-index="1" data-categories="linux" data-listing-date-sort="1707177600000" data-listing-file-modified-sort="1709628779119" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="5" data-listing-word-count-sort="924" data-listing-title-sort="Nice Challenge 2" data-listing-filename-sort="index.qmd">
+<tr data-index="1" data-categories="linux" data-listing-date-sort="1707177600000" data-listing-file-modified-sort="1709753548667" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="5" data-listing-word-count-sort="924" data-listing-title-sort="Nice Challenge 2" data-listing-filename-sort="index.qmd">
 <td>
 <span class="listing-date">Feb 6, 2024</span>
 </td>
@@ -258,7 +258,7 @@ Author
 <span class="listing-author">Jeffrey Fonseca</span>
 </td>
 </tr>
-<tr data-index="2" data-categories="linux" data-listing-date-sort="1706572800000" data-listing-file-modified-sort="1709628779123" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="7" data-listing-word-count-sort="1294" data-listing-title-sort="Nice Challenge 1" data-listing-filename-sort="index.qmd">
+<tr data-index="2" data-categories="linux" data-listing-date-sort="1706572800000" data-listing-file-modified-sort="1709753548671" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="7" data-listing-word-count-sort="1294" data-listing-title-sort="Nice Challenge 1" data-listing-filename-sort="index.qmd">
 <td>
 <span class="listing-date">Jan 30, 2024</span>
 </td>
@@ -354,6 +354,24 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
     // clear code selection
     e.clearSelection();
   });
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp("https:\/\/moonpiedumplings\.github\.io");
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+      }
+    }
   function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
     const config = {
       allowHTML: true,
@@ -388,7 +406,11 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
       try { href = new URL(href).hash; } catch {}
       const id = href.replace(/^#\/?/, "");
       const note = window.document.getElementById(id);
-      return note.innerHTML;
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
     });
   }
   const xrefs = window.document.querySelectorAll('a.quarto-xref');
