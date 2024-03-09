@@ -508,7 +508,70 @@ CONTAINER ID  IMAGE                                      COMMAND               C
 
 Why is Caddy forwarding ports? My ansible playbooks set the podman networking to be host networking. It seems that, when rerunning a podman container using ansible, it doesn't properly destroy it, leaving some lingering configs. 
 
-After changing this, it works properly ☺. Running a test server, I can access it publicly. 
+However, I get an error:
+
+```{.default}
+podmaner@thoth:~$ podman logs caddy
+...
+...
+{"level":"info","ts":1709764202.9553177,"logger":"tls.issuance.acme","msg":"waiting on internal rate limiter","identifiers":["hello.moonpiedumpl.ing"],"ca":"https://acme-v02.api.letsencrypt.org/directory","account":"moonpiedumplings2@gmail.com"}
+{"level":"info","ts":1709764202.955384,"logger":"tls.issuance.acme","msg":"done waiting on internal rate limiter","identifiers":["hello.moonpiedumpl.ing"],"ca":"https://acme-v02.api.letsencrypt.org/directory","account":"moonpiedumplings2@gmail.com"}
+{"level":"info","ts":1709764202.9641545,"logger":"tls.issuance.acme","msg":"waiting on internal rate limiter","identifiers":["test.moonpiedumpl.ing"],"ca":"https://acme-v02.api.letsencrypt.org/directory","account":"moonpiedumplings2@gmail.com"}
+{"level":"info","ts":1709764202.964186,"logger":"tls.issuance.acme","msg":"done waiting on internal rate limiter","identifiers":["test.moonpiedumpl.ing"],"ca":"https://acme-v02.api.letsencrypt.org/directory","account":"moonpiedumplings2@gmail.com"}
+{"level":"info","ts":1709764203.0985403,"logger":"tls.issuance.acme","msg":"waiting on internal rate limiter","identifiers":["sso.moonpiedumpl.ing"],"ca":"https://acme-v02.api.letsencrypt.org/directory","account":"moonpiedumplings2@gmail.com"}
+{"level":"info","ts":1709764203.0985787,"logger":"tls.issuance.acme","msg":"done waiting on internal rate limiter","identifiers":["sso.moonpiedumpl.ing"],"ca":"https://acme-v02.api.letsencrypt.org/directory","account":"moonpiedumplings2@gmail.com"}
+{"level":"info","ts":1709764203.2928238,"logger":"tls.issuance.acme.acme_client","msg":"trying to solve challenge","identifier":"test.moonpiedumpl.ing","challenge_type":"tls-alpn-01","ca":"https://acme-v02.api.letsencrypt.org/directory"}
+{"level":"info","ts":1709764203.434616,"logger":"tls.issuance.acme.acme_client","msg":"trying to solve challenge","identifier":"sso.moonpiedumpl.ing","challenge_type":"tls-alpn-01","ca":"https://acme-v02.api.letsencrypt.org/directory"}
+{"level":"error","ts":1709764203.478285,"logger":"tls.obtain","msg":"could not get certificate from issuer","identifier":"test.moonpiedumpl.ing","issuer":"acme-v02.api.letsencrypt.org-directory","error":"[test.moonpiedumpl.ing] solving challenges: presenting for challenge: presenting with embedded solver: could not start listener for challenge server at :443: listen tcp :443: bind: permission denied (order=https://acme-v02.api.letsencrypt.org/acme/order/1605766427/250173951227) (ca=https://acme-v02.api.letsencrypt.org/directory)"}
+```
+
+And more of the same. 
+
+So apparently, Caddy doesn't automatically do the acme challenge on the `http_port` or `https_port`, and you have to explicitly specify an alternate port:
+
+```{.Caddyfile}
+sso.moonpiedumpl.ing {
+    reverse_proxy http://127.0.0.1:9000
+
+    tls {
+        issuer acme {
+            alt_http_port 8080
+            alt_tlsalpn_port 8443
+        }
+    }
+}
+```
+
+And of course, this is templated as part of my Caddyfile:
+
+```{.jinja2}
+{% for service in caddy_services %}
+{{ service.domain_name }} {
+    {% if service.port is defined %}
+    reverse_proxy http://127.0.0.1:{{ service.port }}
+    {% if service.request_body is defined %}
+    request_body {
+        max_size 2048MB
+    }
+    {% endif %}
+    {% endif %}
+    {% if service.file_root is defined %}
+    root * {{ service.file_root }}
+    file_server
+    {% endif %}
+    
+    tls {
+        issuer acme {
+            alt_http_port {{ caddy_http_port }}
+            alt_tlsalpn_port {{ caddy_https_port }}
+        }
+    }
+}
+{% endfor %}
+```
+
+But with this, Caddy *finally* works properly. 
+
 
 I saw another interesting thing: [caddy security module](https://authp.github.io/) ([github](https://github.com/greenpau/caddy-security)), which lets you integrate caddy with ldap or other forms of authentication. I want to inegrate this, because it would be better to have auth built into the single sign on. 
 
@@ -523,8 +586,6 @@ FROM docker.io/library/caddy:{{ caddy_version }}
 
 COPY --from=builder /usr/bin/caddy /usr/bin/caddy
 ```
-
-I decided to use this jinja2 template for a dockerfile to build the 
 
 ## Authentik
 
