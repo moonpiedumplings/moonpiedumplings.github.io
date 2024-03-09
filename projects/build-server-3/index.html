@@ -601,182 +601,230 @@ Show Logs
 <span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>868115b4e818  docker.io/moonpiedumplings/rathole:latest  rathole --client ...  2 weeks ago  Up 7 minutes ago                                               rathole</span>
 <span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>860ec72e5c78  docker.io/library/caddy:latest             caddy run --confi...  2 weeks ago  Up 7 minutes ago  0.0.0.0:8080-&gt;80/tcp, 0.0.0.0:8443-&gt;443/tcp  caddy</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Why is Caddy forwarding ports? My ansible playbooks set the podman networking to be host networking. It seems that, when rerunning a podman container using ansible, it doesn’t properly destroy it, leaving some lingering configs.</p>
-<p>After changing this, it works properly ☺. Running a test server, I can access it publicly.</p>
+<p>However, I get an error:</p>
+<div class="sourceCode" id="cb22"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>podmaner@thoth:~$ podman logs caddy</span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>...</span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>...</span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>{"level":"info","ts":1709764202.9553177,"logger":"tls.issuance.acme","msg":"waiting on internal rate limiter","identifiers":["hello.moonpiedumpl.ing"],"ca":"https://acme-v02.api.letsencrypt.org/directory","account":"moonpiedumplings2@gmail.com"}</span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a>{"level":"info","ts":1709764202.955384,"logger":"tls.issuance.acme","msg":"done waiting on internal rate limiter","identifiers":["hello.moonpiedumpl.ing"],"ca":"https://acme-v02.api.letsencrypt.org/directory","account":"moonpiedumplings2@gmail.com"}</span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a>{"level":"info","ts":1709764202.9641545,"logger":"tls.issuance.acme","msg":"waiting on internal rate limiter","identifiers":["test.moonpiedumpl.ing"],"ca":"https://acme-v02.api.letsencrypt.org/directory","account":"moonpiedumplings2@gmail.com"}</span>
+<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a>{"level":"info","ts":1709764202.964186,"logger":"tls.issuance.acme","msg":"done waiting on internal rate limiter","identifiers":["test.moonpiedumpl.ing"],"ca":"https://acme-v02.api.letsencrypt.org/directory","account":"moonpiedumplings2@gmail.com"}</span>
+<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a>{"level":"info","ts":1709764203.0985403,"logger":"tls.issuance.acme","msg":"waiting on internal rate limiter","identifiers":["sso.moonpiedumpl.ing"],"ca":"https://acme-v02.api.letsencrypt.org/directory","account":"moonpiedumplings2@gmail.com"}</span>
+<span id="cb22-9"><a href="#cb22-9" aria-hidden="true" tabindex="-1"></a>{"level":"info","ts":1709764203.0985787,"logger":"tls.issuance.acme","msg":"done waiting on internal rate limiter","identifiers":["sso.moonpiedumpl.ing"],"ca":"https://acme-v02.api.letsencrypt.org/directory","account":"moonpiedumplings2@gmail.com"}</span>
+<span id="cb22-10"><a href="#cb22-10" aria-hidden="true" tabindex="-1"></a>{"level":"info","ts":1709764203.2928238,"logger":"tls.issuance.acme.acme_client","msg":"trying to solve challenge","identifier":"test.moonpiedumpl.ing","challenge_type":"tls-alpn-01","ca":"https://acme-v02.api.letsencrypt.org/directory"}</span>
+<span id="cb22-11"><a href="#cb22-11" aria-hidden="true" tabindex="-1"></a>{"level":"info","ts":1709764203.434616,"logger":"tls.issuance.acme.acme_client","msg":"trying to solve challenge","identifier":"sso.moonpiedumpl.ing","challenge_type":"tls-alpn-01","ca":"https://acme-v02.api.letsencrypt.org/directory"}</span>
+<span id="cb22-12"><a href="#cb22-12" aria-hidden="true" tabindex="-1"></a>{"level":"error","ts":1709764203.478285,"logger":"tls.obtain","msg":"could not get certificate from issuer","identifier":"test.moonpiedumpl.ing","issuer":"acme-v02.api.letsencrypt.org-directory","error":"[test.moonpiedumpl.ing] solving challenges: presenting for challenge: presenting with embedded solver: could not start listener for challenge server at :443: listen tcp :443: bind: permission denied (order=https://acme-v02.api.letsencrypt.org/acme/order/1605766427/250173951227) (ca=https://acme-v02.api.letsencrypt.org/directory)"}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>And more of the same.</p>
+<p>So apparently, Caddy doesn’t automatically do the acme challenge on the <code>http_port</code> or <code>https_port</code>, and you have to explicitly specify an alternate port:</p>
+<pre class="Caddyfile"><code>sso.moonpiedumpl.ing {
+    reverse_proxy http://127.0.0.1:9000
+
+    tls {
+        issuer acme {
+            alt_http_port 8080
+            alt_tlsalpn_port 8443
+        }
+    }
+}</code></pre>
+<p>And of course, this is templated as part of my Caddyfile:</p>
+<pre class="jinja2"><code>{% for service in caddy_services %}
+{{ service.domain_name }} {
+    {% if service.port is defined %}
+    reverse_proxy http://127.0.0.1:{{ service.port }}
+    {% if service.request_body is defined %}
+    request_body {
+        max_size 2048MB
+    }
+    {% endif %}
+    {% endif %}
+    {% if service.file_root is defined %}
+    root * {{ service.file_root }}
+    file_server
+    {% endif %}
+    
+    tls {
+        issuer acme {
+            alt_http_port {{ caddy_http_port }}
+            alt_tlsalpn_port {{ caddy_https_port }}
+        }
+    }
+}
+{% endfor %}</code></pre>
+<p>But with this, Caddy <em>finally</em> works properly.</p>
 <p>I saw another interesting thing: <a href="https://authp.github.io/">caddy security module</a> (<a href="https://github.com/greenpau/caddy-security">github</a>), which lets you integrate caddy with ldap or other forms of authentication. I want to inegrate this, because it would be better to have auth built into the single sign on.</p>
-<div class="sourceCode" id="cb22"><pre class="sourceCode Dockerfile code-with-copy"><code class="sourceCode dockerfile"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="co">#jinja2:lstrip_blocks: True</span></span>
-<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a><span class="kw">FROM</span> docker.io/library/caddy:{{ caddy_version }}-builder <span class="kw">AS</span> builder</span>
-<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a><span class="kw">RUN</span> <span class="ex">xcaddy</span> build {% for plugin in caddy_plugins %}--with {{ plugin }}{% endfor %} </span>
-<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a><span class="kw">FROM</span> docker.io/library/caddy:{{ caddy_version }}</span>
-<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb22-9"><a href="#cb22-9" aria-hidden="true" tabindex="-1"></a><span class="kw">COPY</span> <span class="op">--from=builder</span> /usr/bin/caddy /usr/bin/caddy</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>I decided to use this jinja2 template for a dockerfile to build the</p>
+<div class="sourceCode" id="cb25"><pre class="sourceCode Dockerfile code-with-copy"><code class="sourceCode dockerfile"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="co">#jinja2:lstrip_blocks: True</span></span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a><span class="kw">FROM</span> docker.io/library/caddy:{{ caddy_version }}-builder <span class="kw">AS</span> builder</span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a><span class="kw">RUN</span> <span class="ex">xcaddy</span> build {% for plugin in caddy_plugins %}--with {{ plugin }}{% endfor %} </span>
+<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-7"><a href="#cb25-7" aria-hidden="true" tabindex="-1"></a><span class="kw">FROM</span> docker.io/library/caddy:{{ caddy_version }}</span>
+<span id="cb25-8"><a href="#cb25-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-9"><a href="#cb25-9" aria-hidden="true" tabindex="-1"></a><span class="kw">COPY</span> <span class="op">--from=builder</span> /usr/bin/caddy /usr/bin/caddy</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </section>
 <section id="authentik" class="level2">
 <h2 class="anchored" data-anchor-id="authentik">Authentik</h2>
 <p>The listen settings are here: <a href="https://goauthentik.io/docs/installation/configuration/#listen-settings" class="uri">https://goauthentik.io/docs/installation/configuration/#listen-settings</a></p>
 <p>So the podman pod which runs all of authentik will have those ports forwarded.</p>
-<div class="sourceCode" id="cb23"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> Create relevant podman pod</span></span>
-<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">containers.podman.podman_pod</span><span class="kw">:</span></span>
-<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">name</span><span class="kw">:</span><span class="at"> authentik_pod</span></span>
-<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">state</span><span class="kw">:</span><span class="at"> present</span></span>
-<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">ports</span><span class="kw">:</span></span>
-<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="st">"9000:9000"</span></span>
-<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="st">"9443:9443"</span></span>
-<span id="cb23-8"><a href="#cb23-8" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="st">"3389:3389"</span></span>
-<span id="cb23-9"><a href="#cb23-9" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="st">"6636:3389"</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb26"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> Create relevant podman pod</span></span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">containers.podman.podman_pod</span><span class="kw">:</span></span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">name</span><span class="kw">:</span><span class="at"> authentik_pod</span></span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">state</span><span class="kw">:</span><span class="at"> present</span></span>
+<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">ports</span><span class="kw">:</span></span>
+<span id="cb26-6"><a href="#cb26-6" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="st">"9000:9000"</span></span>
+<span id="cb26-7"><a href="#cb26-7" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="st">"9443:9443"</span></span>
+<span id="cb26-8"><a href="#cb26-8" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="st">"3389:3389"</span></span>
+<span id="cb26-9"><a href="#cb26-9" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="st">"6636:3389"</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>I designed a role, and deployment was going pretty smoothly. Until it errored:</p>
-<div class="sourceCode" id="cb24"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>failed: [moonstack] (item=postgres) =&gt; {</span>
-<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>    "ansible_loop_var": "item",</span>
-<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>    "changed": false,</span>
-<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a>    "item": "postgres",</span>
-<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a>    "module_stderr": "Shared connection to 192.168.17.197 closed.",</span>
-<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a>    "module_stdout": "</span>
-<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a>Traceback (most recent call last):</span>
-<span id="cb24-8"><a href="#cb24-8" aria-hidden="true" tabindex="-1"></a>  File \"/var/tmp/ansible-tmp-1708731694.1592944-80284-196261000245469/AnsiballZ_file.py\", line 107, in &lt;module&gt;</span>
-<span id="cb24-9"><a href="#cb24-9" aria-hidden="true" tabindex="-1"></a>    _ansiballz_main()</span>
-<span id="cb24-10"><a href="#cb24-10" aria-hidden="true" tabindex="-1"></a>  File \"/var/tmp/ansible-tmp-1708731694.1592944-80284-196261000245469/AnsiballZ_file.py\", line 99, in _ansiballz_main</span>
-<span id="cb24-11"><a href="#cb24-11" aria-hidden="true" tabindex="-1"></a>    invoke_module(zipped_mod, temp_path, ANSIBALLZ_PARAMS)</span>
-<span id="cb24-12"><a href="#cb24-12" aria-hidden="true" tabindex="-1"></a>  File \"/var/tmp/ansible-tmp-1708731694.1592944-80284-196261000245469/AnsiballZ_file.py\", line 47, in invoke_module</span>
-<span id="cb24-13"><a href="#cb24-13" aria-hidden="true" tabindex="-1"></a>    runpy.run_module(mod_name='ansible.modules.file', init_globals=dict(_module_fqn='ansible.modules.file', _modlib_path=modlib_path),</span>
-<span id="cb24-14"><a href="#cb24-14" aria-hidden="true" tabindex="-1"></a>  File \"&lt;frozen runpy&gt;\", line 226, in run_module</span>
-<span id="cb24-15"><a href="#cb24-15" aria-hidden="true" tabindex="-1"></a>  File \"&lt;frozen runpy&gt;\", line 98, in _run_module_code</span>
-<span id="cb24-16"><a href="#cb24-16" aria-hidden="true" tabindex="-1"></a>  File \"&lt;frozen runpy&gt;\", line 88, in _run_code</span>
-<span id="cb24-17"><a href="#cb24-17" aria-hidden="true" tabindex="-1"></a>  File \"/tmp/ansible_ansible.builtin.file_payload_37zf8n_k/ansible_ansible.builtin.file_payload.zip/ansible/modules/file.py\", line 987, in &lt;module&gt;</span>
-<span id="cb24-18"><a href="#cb24-18" aria-hidden="true" tabindex="-1"></a>  File \"/tmp/ansible_ansible.builtin.file_payload_37zf8n_k/ansible_ansible.builtin.file_payload.zip/ansible/modules/file.py\", line 973, in main</span>
-<span id="cb24-19"><a href="#cb24-19" aria-hidden="true" tabindex="-1"></a>  File \"/tmp/ansible_ansible.builtin.file_payload_37zf8n_k/ansible_ansible.builtin.file_payload.zip/ansible/modules/file.py\", line 680, in ensure_directory</span>
-<span id="cb24-20"><a href="#cb24-20" aria-hidden="true" tabindex="-1"></a>  File \"/tmp/ansible_ansible.builtin.file_payload_37zf8n_k/ansible_ansible.builtin.file_payload.zip/ansible/module_utils/basic.py\", line 1159, in set_fs_attributes_if_different</span>
-<span id="cb24-21"><a href="#cb24-21" aria-hidden="true" tabindex="-1"></a>  File \"/tmp/ansible_ansible.builtin.file_payload_37zf8n_k/ansible_ansible.builtin.file_payload.zip/ansible/module_utils/basic.py\", line 919, in set_mode_if_different</span>
-<span id="cb24-22"><a href="#cb24-22" aria-hidden="true" tabindex="-1"></a>PermissionError: [Errno 1] Operation not permitted: b'/home/podmaner/authentik/postgres'",</span>
-<span id="cb24-23"><a href="#cb24-23" aria-hidden="true" tabindex="-1"></a>    "msg": "MODULE FAILURE\nSee stdout/stderr for the exact error",</span>
-<span id="cb24-24"><a href="#cb24-24" aria-hidden="true" tabindex="-1"></a>    "rc": 1</span>
-<span id="cb24-25"><a href="#cb24-25" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb27"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>failed: [moonstack] (item=postgres) =&gt; {</span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>    "ansible_loop_var": "item",</span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>    "changed": false,</span>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a>    "item": "postgres",</span>
+<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a>    "module_stderr": "Shared connection to 192.168.17.197 closed.",</span>
+<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a>    "module_stdout": "</span>
+<span id="cb27-7"><a href="#cb27-7" aria-hidden="true" tabindex="-1"></a>Traceback (most recent call last):</span>
+<span id="cb27-8"><a href="#cb27-8" aria-hidden="true" tabindex="-1"></a>  File \"/var/tmp/ansible-tmp-1708731694.1592944-80284-196261000245469/AnsiballZ_file.py\", line 107, in &lt;module&gt;</span>
+<span id="cb27-9"><a href="#cb27-9" aria-hidden="true" tabindex="-1"></a>    _ansiballz_main()</span>
+<span id="cb27-10"><a href="#cb27-10" aria-hidden="true" tabindex="-1"></a>  File \"/var/tmp/ansible-tmp-1708731694.1592944-80284-196261000245469/AnsiballZ_file.py\", line 99, in _ansiballz_main</span>
+<span id="cb27-11"><a href="#cb27-11" aria-hidden="true" tabindex="-1"></a>    invoke_module(zipped_mod, temp_path, ANSIBALLZ_PARAMS)</span>
+<span id="cb27-12"><a href="#cb27-12" aria-hidden="true" tabindex="-1"></a>  File \"/var/tmp/ansible-tmp-1708731694.1592944-80284-196261000245469/AnsiballZ_file.py\", line 47, in invoke_module</span>
+<span id="cb27-13"><a href="#cb27-13" aria-hidden="true" tabindex="-1"></a>    runpy.run_module(mod_name='ansible.modules.file', init_globals=dict(_module_fqn='ansible.modules.file', _modlib_path=modlib_path),</span>
+<span id="cb27-14"><a href="#cb27-14" aria-hidden="true" tabindex="-1"></a>  File \"&lt;frozen runpy&gt;\", line 226, in run_module</span>
+<span id="cb27-15"><a href="#cb27-15" aria-hidden="true" tabindex="-1"></a>  File \"&lt;frozen runpy&gt;\", line 98, in _run_module_code</span>
+<span id="cb27-16"><a href="#cb27-16" aria-hidden="true" tabindex="-1"></a>  File \"&lt;frozen runpy&gt;\", line 88, in _run_code</span>
+<span id="cb27-17"><a href="#cb27-17" aria-hidden="true" tabindex="-1"></a>  File \"/tmp/ansible_ansible.builtin.file_payload_37zf8n_k/ansible_ansible.builtin.file_payload.zip/ansible/modules/file.py\", line 987, in &lt;module&gt;</span>
+<span id="cb27-18"><a href="#cb27-18" aria-hidden="true" tabindex="-1"></a>  File \"/tmp/ansible_ansible.builtin.file_payload_37zf8n_k/ansible_ansible.builtin.file_payload.zip/ansible/modules/file.py\", line 973, in main</span>
+<span id="cb27-19"><a href="#cb27-19" aria-hidden="true" tabindex="-1"></a>  File \"/tmp/ansible_ansible.builtin.file_payload_37zf8n_k/ansible_ansible.builtin.file_payload.zip/ansible/modules/file.py\", line 680, in ensure_directory</span>
+<span id="cb27-20"><a href="#cb27-20" aria-hidden="true" tabindex="-1"></a>  File \"/tmp/ansible_ansible.builtin.file_payload_37zf8n_k/ansible_ansible.builtin.file_payload.zip/ansible/module_utils/basic.py\", line 1159, in set_fs_attributes_if_different</span>
+<span id="cb27-21"><a href="#cb27-21" aria-hidden="true" tabindex="-1"></a>  File \"/tmp/ansible_ansible.builtin.file_payload_37zf8n_k/ansible_ansible.builtin.file_payload.zip/ansible/module_utils/basic.py\", line 919, in set_mode_if_different</span>
+<span id="cb27-22"><a href="#cb27-22" aria-hidden="true" tabindex="-1"></a>PermissionError: [Errno 1] Operation not permitted: b'/home/podmaner/authentik/postgres'",</span>
+<span id="cb27-23"><a href="#cb27-23" aria-hidden="true" tabindex="-1"></a>    "msg": "MODULE FAILURE\nSee stdout/stderr for the exact error",</span>
+<span id="cb27-24"><a href="#cb27-24" aria-hidden="true" tabindex="-1"></a>    "rc": 1</span>
+<span id="cb27-25"><a href="#cb27-25" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Which is… weird. Looking at the ansible code that generates this:</p>
-<div class="sourceCode" id="cb25"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> Create relevant configuration files</span></span>
-<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">ansible.builtin.file</span><span class="kw">:</span></span>
-<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">path</span><span class="kw">:</span><span class="at"> </span><span class="st">"{{ homepath.stdout }}/authentik/{{ item }}"</span></span>
-<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">state</span><span class="kw">:</span><span class="at"> directory</span></span>
-<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">mode</span><span class="kw">:</span><span class="at"> </span><span class="st">'0755'</span></span>
-<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">loop</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="st">"media"</span><span class="kw">,</span><span class="at"> </span><span class="st">"custom-templates"</span><span class="kw">,</span><span class="at"> </span><span class="st">"certs"</span><span class="kw">,</span><span class="at"> </span><span class="st">"postgres"</span><span class="kw">,</span><span class="at"> </span><span class="st">"redis"</span><span class="kw">]</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb28"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> Create relevant configuration files</span></span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">ansible.builtin.file</span><span class="kw">:</span></span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">path</span><span class="kw">:</span><span class="at"> </span><span class="st">"{{ homepath.stdout }}/authentik/{{ item }}"</span></span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">state</span><span class="kw">:</span><span class="at"> directory</span></span>
+<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">mode</span><span class="kw">:</span><span class="at"> </span><span class="st">'0755'</span></span>
+<span id="cb28-6"><a href="#cb28-6" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">loop</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="st">"media"</span><span class="kw">,</span><span class="at"> </span><span class="st">"custom-templates"</span><span class="kw">,</span><span class="at"> </span><span class="st">"certs"</span><span class="kw">,</span><span class="at"> </span><span class="st">"postgres"</span><span class="kw">,</span><span class="at"> </span><span class="st">"redis"</span><span class="kw">]</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>It’s the same exact task, looped through… but it <em>only errors for /home/podmaner/authentik/postgres</em> ‽</p>
-<div class="sourceCode" id="cb26"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a>podmaner@thoth:~/authentik$ ls -la</span>
-<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>total 28</span>
-<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>drwxr-xr-x 7 podmaner podmaner 4096 Feb 23 15:37 .</span>
-<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a>drwx------ 9 podmaner podmaner 4096 Feb 23 15:37 ..</span>
-<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a>drwxr-xr-x 2 podmaner podmaner 4096 Feb 23 15:37 certs</span>
-<span id="cb26-6"><a href="#cb26-6" aria-hidden="true" tabindex="-1"></a>drwxr-xr-x 2 podmaner podmaner 4096 Feb 23 15:37 custom-templates</span>
-<span id="cb26-7"><a href="#cb26-7" aria-hidden="true" tabindex="-1"></a>drwxr-xr-x 2 podmaner podmaner 4096 Feb 23 15:37 media</span>
-<span id="cb26-8"><a href="#cb26-8" aria-hidden="true" tabindex="-1"></a>drwx------ 2   165605 podmaner 4096 Feb 23 15:37 postgres</span>
-<span id="cb26-9"><a href="#cb26-9" aria-hidden="true" tabindex="-1"></a>drwxr-xr-x 2   166534 podmaner 4096 Feb 23 15:39 redis</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb29"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>podmaner@thoth:~/authentik$ ls -la</span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>total 28</span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a>drwxr-xr-x 7 podmaner podmaner 4096 Feb 23 15:37 .</span>
+<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a>drwx------ 9 podmaner podmaner 4096 Feb 23 15:37 ..</span>
+<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a>drwxr-xr-x 2 podmaner podmaner 4096 Feb 23 15:37 certs</span>
+<span id="cb29-6"><a href="#cb29-6" aria-hidden="true" tabindex="-1"></a>drwxr-xr-x 2 podmaner podmaner 4096 Feb 23 15:37 custom-templates</span>
+<span id="cb29-7"><a href="#cb29-7" aria-hidden="true" tabindex="-1"></a>drwxr-xr-x 2 podmaner podmaner 4096 Feb 23 15:37 media</span>
+<span id="cb29-8"><a href="#cb29-8" aria-hidden="true" tabindex="-1"></a>drwx------ 2   165605 podmaner 4096 Feb 23 15:37 postgres</span>
+<span id="cb29-9"><a href="#cb29-9" aria-hidden="true" tabindex="-1"></a>drwxr-xr-x 2   166534 podmaner 4096 Feb 23 15:39 redis</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>For some reason, only the postgres directory has incorrect permissions?</p>
 <p>And the weirdest part: This only happens upon a rerun of the role. If I delete the <code>/home/podmaner/authentik/</code> directory, and run the role, then everything runs properly, and the <code>postgres</code> directory gets the proper permissions.</p>
 <p>Why does this happen? My intuition is telling me this is a bug, since the behavior is so blatantly inconsistent.</p>
 <p>It’s not really that though. After deleting the <code>postgres</code> directory, it was recreated.</p>
-<div class="sourceCode" id="cb27"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>podmaner@thoth:~/authentik$ podman logs authentik_postgres</span>
-<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>Error: Database is uninitialized and superuser password is not specified.</span>
-<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>       You must specify POSTGRES_PASSWORD to a non-empty value for the</span>
-<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a>       superuser. For example, "-e POSTGRES_PASSWORD=password" on "docker run".</span>
-<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a>       You may also use "POSTGRES_HOST_AUTH_METHOD=trust" to allow all</span>
-<span id="cb27-7"><a href="#cb27-7" aria-hidden="true" tabindex="-1"></a>       connections without a password. This is *not* recommended.</span>
-<span id="cb27-8"><a href="#cb27-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb27-9"><a href="#cb27-9" aria-hidden="true" tabindex="-1"></a>       See PostgreSQL documentation about "trust":</span>
-<span id="cb27-10"><a href="#cb27-10" aria-hidden="true" tabindex="-1"></a>       https://www.postgresql.org/docs/current/auth-trust.html</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb30"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a>podmaner@thoth:~/authentik$ podman logs authentik_postgres</span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>Error: Database is uninitialized and superuser password is not specified.</span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a>       You must specify POSTGRES_PASSWORD to a non-empty value for the</span>
+<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a>       superuser. For example, "-e POSTGRES_PASSWORD=password" on "docker run".</span>
+<span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-6"><a href="#cb30-6" aria-hidden="true" tabindex="-1"></a>       You may also use "POSTGRES_HOST_AUTH_METHOD=trust" to allow all</span>
+<span id="cb30-7"><a href="#cb30-7" aria-hidden="true" tabindex="-1"></a>       connections without a password. This is *not* recommended.</span>
+<span id="cb30-8"><a href="#cb30-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-9"><a href="#cb30-9" aria-hidden="true" tabindex="-1"></a>       See PostgreSQL documentation about "trust":</span>
+<span id="cb30-10"><a href="#cb30-10" aria-hidden="true" tabindex="-1"></a>       https://www.postgresql.org/docs/current/auth-trust.html</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Whoops. Lol. I was attempting to convet <a href="https://goauthentik.io/docs/installation/docker-compose">authentik’s docker-compose.yml</a> to podman+ansible instructions, but my copy was incomplete, and I forgot to configure the postgres container properly.</p>
 <p>That explains why the container won’t start… but it still doesn’t explain the file permissions error.</p>
 <p>After taking a closer look at the output of <code>ls -la</code>, it seems that the podman containers change ownership of the files. Why doesn’t it do this for any of my other containers?</p>
 <p>I’m guessing this is because the postgres and redis container, unlike every other container, have the main process inside as a different user other than root.</p>
 <p>I looked into <a href="https://www.redhat.com/sysadmin/rootless-podman-user-namespace-modes">podman user namespaces</a>. I tried setting user namespaces for the relevant containers, first, but I got an error:</p>
-<div class="sourceCode" id="cb28"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a>TASK [authentik : Authentik postgres database] ***********************************************************************************************************************</span>
-<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>fatal: [moonstack]: FAILED! =&gt; {"changed": false, "msg": "Can't run container authentik_postgres", "stderr": "Error: --userns and --pod cannot be set together\n", "stderr_lines": ["Error: --userns and --pod cannot be set together"], "stdout": "", "stdout_lines": []}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb31"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a>TASK [authentik : Authentik postgres database] ***********************************************************************************************************************</span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>fatal: [moonstack]: FAILED! =&gt; {"changed": false, "msg": "Can't run container authentik_postgres", "stderr": "Error: --userns and --pod cannot be set together\n", "stderr_lines": ["Error: --userns and --pod cannot be set together"], "stdout": "", "stdout_lines": []}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>So instead, I set the usernamespace for the whole pod, and it didn’t erorr:</p>
-<div class="sourceCode" id="cb29"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> Create relevant podman pod  </span></span>
-<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">containers.podman.podman_pod</span><span class="kw">:</span></span>
-<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">name</span><span class="kw">:</span><span class="at"> authentik_pod</span></span>
-<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">recreate</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb32"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> Create relevant podman pod  </span></span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">containers.podman.podman_pod</span><span class="kw">:</span></span>
+<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">name</span><span class="kw">:</span><span class="at"> authentik_pod</span></span>
+<span id="cb32-4"><a href="#cb32-4" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">recreate</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>It seems like the error is that, the podmaner user would no longer have write permissions, preventing it from doing anything to those specific files.</p>
 <p>However, the podman container still died.</p>
 <details>
 <summary>
 Show error
 </summary>
-<div class="sourceCode" id="cb30"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a>podmaner@thoth:~$ podman logs authentik_worker</span>
-<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>{"event": "Loaded config", "level": "debug", "logger": "authentik.lib.config", "timestamp": 1708731540.8134813, "file": "/authentik/lib/default.yml"}</span>
-<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a>{"event": "Loaded environment variables", "level": "debug", "logger": "authentik.lib.config", "timestamp": 1708731540.813802, "count": 5}</span>
-<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a>{"event": "Starting authentik bootstrap", "level": "info", "logger": "authentik.lib.config", "timestamp": 1708731540.8138793}</span>
-<span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a>{"event": "----------------------------------------------------------------------", "level": "info", "logger": "authentik.lib.config", "timestamp": 1708731540.8139021}</span>
-<span id="cb30-6"><a href="#cb30-6" aria-hidden="true" tabindex="-1"></a>{"event": "Secret key missing, check https://goauthentik.io/docs/installation/.", "level": "info", "logger": "authentik.lib.config", "timestamp": 1708731540.8139138}</span>
-<span id="cb30-7"><a href="#cb30-7" aria-hidden="true" tabindex="-1"></a>{"event": "----------------------------------------------------------------------", "level": "info", "logger": "authentik.lib.config", "timestamp": 1708731540.8139226}</span>
-<span id="cb30-8"><a href="#cb30-8" aria-hidden="true" tabindex="-1"></a>{"event": "Loaded config", "level": "debug", "logger": "authentik.lib.config", "timestamp": 1708807909.1802225, "file": "/authentik/lib/default.yml"}</span>
-<span id="cb30-9"><a href="#cb30-9" aria-hidden="true" tabindex="-1"></a>{"event": "Loaded environment variables", "level": "debug", "logger": "authentik.lib.config", "timestamp": 1708807909.1805325, "count": 5}</span>
-<span id="cb30-10"><a href="#cb30-10" aria-hidden="true" tabindex="-1"></a>{"event": "Starting authentik bootstrap", "level": "info", "logger": "authentik.lib.config", "timestamp": 1708807909.1806104}</span>
-<span id="cb30-11"><a href="#cb30-11" aria-hidden="true" tabindex="-1"></a>{"event": "----------------------------------------------------------------------", "level": "info", "logger": "authentik.lib.config", "timestamp": 1708807909.180633}</span>
-<span id="cb30-12"><a href="#cb30-12" aria-hidden="true" tabindex="-1"></a>{"event": "Secret key missing, check https://goauthentik.io/docs/installation/.", "level": "info", "logger": "authentik.lib.config", "timestamp": 1708807909.1806445}</span>
-<span id="cb30-13"><a href="#cb30-13" aria-hidden="true" tabindex="-1"></a>{"event": "----------------------------------------------------------------------", "level": "info", "logger": "authentik.lib.config", "timestamp": 1708807909.1806536}</span>
-<span id="cb30-14"><a href="#cb30-14" aria-hidden="true" tabindex="-1"></a>{"event": "Loaded config", "level": "debug", "logger": "authentik.lib.config", "timestamp": 1708817283.6261683, "file": "/authentik/lib/default.yml"}</span>
-<span id="cb30-15"><a href="#cb30-15" aria-hidden="true" tabindex="-1"></a>{"event": "Loaded environment variables", "level": "debug", "logger": "authentik.lib.config", "timestamp": 1708817283.6264079, "count": 5}</span>
-<span id="cb30-16"><a href="#cb30-16" aria-hidden="true" tabindex="-1"></a>{"event": "Starting authentik bootstrap", "level": "info", "logger": "authentik.lib.config", "timestamp": 1708817283.6264803}</span>
-<span id="cb30-17"><a href="#cb30-17" aria-hidden="true" tabindex="-1"></a>{"event": "----------------------------------------------------------------------", "level": "info", "logger": "authentik.lib.config", "timestamp": 1708817283.6265018}</span>
-<span id="cb30-18"><a href="#cb30-18" aria-hidden="true" tabindex="-1"></a>{"event": "Secret key missing, check https://goauthentik.io/docs/installation/.", "level": "info", "logger": "authentik.lib.config", "timestamp": 1708817283.626513}</span>
-<span id="cb30-19"><a href="#cb30-19" aria-hidden="true" tabindex="-1"></a>{"event": "----------------------------------------------------------------------", "level": "info", "logger": "authentik.lib.config", "timestamp": 1708817283.6265216}</span>
-<span id="cb30-20"><a href="#cb30-20" aria-hidden="true" tabindex="-1"></a>podmaner@thoth:~$ podman logs authentik_server</span>
-<span id="cb30-21"><a href="#cb30-21" aria-hidden="true" tabindex="-1"></a>{"event": "Loaded config", "level": "debug", "logger": "authentik.lib.config", "timestamp": 1708817279.5668721, "file": "/authentik/lib/default.yml"}</span>
-<span id="cb30-22"><a href="#cb30-22" aria-hidden="true" tabindex="-1"></a>{"event": "Loaded environment variables", "level": "debug", "logger": "authentik.lib.config", "timestamp": 1708817279.567172, "count": 5}</span>
-<span id="cb30-23"><a href="#cb30-23" aria-hidden="true" tabindex="-1"></a>{"event": "Loaded app settings", "level": "debug", "logger": "authentik.lib.config", "timestamp": 1708817281.6441257, "path": "authentik.admin.settings"}</span>
-<span id="cb30-24"><a href="#cb30-24" aria-hidden="true" tabindex="-1"></a>{"event": "Loaded app settings", "level": "debug", "logger": "authentik.lib.config", "timestamp": 1708817281.644982, "path": "authentik.crypto.settings"}</span>
-<span id="cb30-25"><a href="#cb30-25" aria-hidden="true" tabindex="-1"></a>{"event": "Loaded app settings", "level": "debug", "logger": "authentik.lib.config", "timestamp": 1708817281.6455739, "path": "authentik.events.settings"}</span>
-<span id="cb30-26"><a href="#cb30-26" aria-hidden="true" tabindex="-1"></a>{"event": "Loaded app settings", "level": "debug", "logger": "authentik.lib.config", "timestamp": 1708817281.6467671, "path": "authentik.outposts.settings"}</span>
-<span id="cb30-27"><a href="#cb30-27" aria-hidden="true" tabindex="-1"></a>{"event": "Loaded app settings", "level": "debug", "logger": "authentik.lib.config", "timestamp": 1708817281.6484737, "path": "authentik.policies.reputation.settings"}</span>
-<span id="cb30-28"><a href="#cb30-28" aria-hidden="true" tabindex="-1"></a>{"event": "Loaded app settings", "level": "debug", "logger": "authentik.lib.config", "timestamp": 1708817281.651618, "path": "authentik.providers.scim.settings"}</span>
-<span id="cb30-29"><a href="#cb30-29" aria-hidden="true" tabindex="-1"></a>{"event": "Loaded app settings", "level": "debug", "logger": "authentik.lib.config", "timestamp": 1708817281.6528664, "path": "authentik.sources.ldap.settings"}</span>
-<span id="cb30-30"><a href="#cb30-30" aria-hidden="true" tabindex="-1"></a>{"event": "Loaded app settings", "level": "debug", "logger": "authentik.lib.config", "timestamp": 1708817281.6535037, "path": "authentik.sources.oauth.settings"}</span>
-<span id="cb30-31"><a href="#cb30-31" aria-hidden="true" tabindex="-1"></a>{"event": "Loaded app settings", "level": "debug", "logger": "authentik.lib.config", "timestamp": 1708817281.6540685, "path": "authentik.sources.plex.settings"}</span>
-<span id="cb30-32"><a href="#cb30-32" aria-hidden="true" tabindex="-1"></a>{"event": "Loaded app settings", "level": "debug", "logger": "authentik.lib.config", "timestamp": 1708817281.6560044, "path": "authentik.stages.authenticator_totp.settings"}</span>
-<span id="cb30-33"><a href="#cb30-33" aria-hidden="true" tabindex="-1"></a>{"event": "Loaded app settings", "level": "debug", "logger": "authentik.lib.config", "timestamp": 1708817281.6598718, "path": "authentik.blueprints.settings"}</span>
-<span id="cb30-34"><a href="#cb30-34" aria-hidden="true" tabindex="-1"></a>{"event": "Booting authentik", "level": "info", "logger": "authentik.lib.config", "timestamp": 1708817281.6600318, "version": "2023.10.7"}</span>
-<span id="cb30-35"><a href="#cb30-35" aria-hidden="true" tabindex="-1"></a>{"event": "Enabled authentik enterprise", "level": "info", "logger": "authentik.lib.config", "timestamp": 1708817281.661141}</span>
-<span id="cb30-36"><a href="#cb30-36" aria-hidden="true" tabindex="-1"></a>{"event": "Loaded app settings", "level": "debug", "logger": "authentik.lib.config", "timestamp": 1708817281.661508, "path": "authentik.enterprise.settings"}</span>
-<span id="cb30-37"><a href="#cb30-37" aria-hidden="true" tabindex="-1"></a>{"event": "Loaded GeoIP database", "last_write": 1706549214.0, "level": "info", "logger": "authentik.events.geo", "pid": 2, "timestamp": "2024-02-24T23:28:02.805111"}</span>
-<span id="cb30-38"><a href="#cb30-38" aria-hidden="true" tabindex="-1"></a>{"app_name": "authentik.crypto", "event": "Failed to run reconcile", "exc": "ProgrammingError('relation \"authentik_crypto_certificatekeypair\" does not exist\\nLINE 1: ...hentik_crypto_certificatekeypair\".\"key_data\" FROM \"authentik...\\n                                                             ^')", "level": "warning", "logger": "authentik.blueprints.apps", "name": "managed_jwt_cert", "pid": 2, "timestamp": "2024-02-24T23:28:03.610865"}</span>
-<span id="cb30-39"><a href="#cb30-39" aria-hidden="true" tabindex="-1"></a>{"app_name": "authentik.crypto", "event": "Failed to run reconcile", "exc": "ProgrammingError('relation \"authentik_crypto_certificatekeypair\" does not exist\\nLINE 1: SELECT 1 AS \"a\" FROM \"authentik_crypto_certificatekeypair\" W...\\n                             ^')", "level": "warning", "logger": "authentik.blueprints.apps", "name": "self_signed", "pid": 2, "timestamp": "2024-02-24T23:28:03.612779"}</span>
-<span id="cb30-40"><a href="#cb30-40" aria-hidden="true" tabindex="-1"></a>{"app_name": "authentik.outposts", "event": "Failed to run reconcile", "exc": "ProgrammingError('relation \"authentik_outposts_outpost\" does not exist\\nLINE 1: ..._id\", \"authentik_outposts_outpost\".\"_config\" FROM \"authentik...\\n                                                             ^')", "level": "warning", "logger": "authentik.blueprints.apps", "name": "embedded_outpost", "pid": 2, "timestamp": "2024-02-24T23:28:03.647866"}</span>
-<span id="cb30-41"><a href="#cb30-41" aria-hidden="true" tabindex="-1"></a>{"event": "Task published", "level": "info", "logger": "authentik.root.celery", "pid": 2, "task_id": "d28b9ddc12eb44eaa99a25dfe3477f37", "task_name": "authentik.blueprints.v1.tasks.blueprints_discovery", "timestamp": "2024-02-24T23:28:03.876853"}</span>
-<span id="cb30-42"><a href="#cb30-42" aria-hidden="true" tabindex="-1"></a>{"event": "Task published", "level": "info", "logger": "authentik.root.celery", "pid": 2, "task_id": "763c497b4e4c43e2bb745de6a613e104", "task_name": "authentik.blueprints.v1.tasks.clear_failed_blueprints", "timestamp": "2024-02-24T23:28:03.878293"}</span>
-<span id="cb30-43"><a href="#cb30-43" aria-hidden="true" tabindex="-1"></a>{"app_name": "authentik.core", "event": "Failed to run reconcile", "exc": "ProgrammingError('relation \"authentik_core_source\" does not exist\\nLINE 1: ...\"authentik_core_source\".\"user_matching_mode\" FROM \"authentik...\\n                                                             ^')", "level": "warning", "logger": "authentik.blueprints.apps", "name": "source_inbuilt", "pid": 2, "timestamp": "2024-02-24T23:28:03.881205"}\</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb33"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a>podmaner@thoth:~$ podman logs authentik_worker</span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>{"event": "Loaded config", "level": "debug", "logger": "authentik.lib.config", "timestamp": 1708731540.8134813, "file": "/authentik/lib/default.yml"}</span>
+<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a>{"event": "Loaded environment variables", "level": "debug", "logger": "authentik.lib.config", "timestamp": 1708731540.813802, "count": 5}</span>
+<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a>{"event": "Starting authentik bootstrap", "level": "info", "logger": "authentik.lib.config", "timestamp": 1708731540.8138793}</span>
+<span id="cb33-5"><a href="#cb33-5" aria-hidden="true" tabindex="-1"></a>{"event": "----------------------------------------------------------------------", "level": "info", "logger": "authentik.lib.config", "timestamp": 1708731540.8139021}</span>
+<span id="cb33-6"><a href="#cb33-6" aria-hidden="true" tabindex="-1"></a>{"event": "Secret key missing, check https://goauthentik.io/docs/installation/.", "level": "info", "logger": "authentik.lib.config", "timestamp": 1708731540.8139138}</span>
+<span id="cb33-7"><a href="#cb33-7" aria-hidden="true" tabindex="-1"></a>{"event": "----------------------------------------------------------------------", "level": "info", "logger": "authentik.lib.config", "timestamp": 1708731540.8139226}</span>
+<span id="cb33-8"><a href="#cb33-8" aria-hidden="true" tabindex="-1"></a>{"event": "Loaded config", "level": "debug", "logger": "authentik.lib.config", "timestamp": 1708807909.1802225, "file": "/authentik/lib/default.yml"}</span>
+<span id="cb33-9"><a href="#cb33-9" aria-hidden="true" tabindex="-1"></a>{"event": "Loaded environment variables", "level": "debug", "logger": "authentik.lib.config", "timestamp": 1708807909.1805325, "count": 5}</span>
+<span id="cb33-10"><a href="#cb33-10" aria-hidden="true" tabindex="-1"></a>{"event": "Starting authentik bootstrap", "level": "info", "logger": "authentik.lib.config", "timestamp": 1708807909.1806104}</span>
+<span id="cb33-11"><a href="#cb33-11" aria-hidden="true" tabindex="-1"></a>{"event": "----------------------------------------------------------------------", "level": "info", "logger": "authentik.lib.config", "timestamp": 1708807909.180633}</span>
+<span id="cb33-12"><a href="#cb33-12" aria-hidden="true" tabindex="-1"></a>{"event": "Secret key missing, check https://goauthentik.io/docs/installation/.", "level": "info", "logger": "authentik.lib.config", "timestamp": 1708807909.1806445}</span>
+<span id="cb33-13"><a href="#cb33-13" aria-hidden="true" tabindex="-1"></a>{"event": "----------------------------------------------------------------------", "level": "info", "logger": "authentik.lib.config", "timestamp": 1708807909.1806536}</span>
+<span id="cb33-14"><a href="#cb33-14" aria-hidden="true" tabindex="-1"></a>{"event": "Loaded config", "level": "debug", "logger": "authentik.lib.config", "timestamp": 1708817283.6261683, "file": "/authentik/lib/default.yml"}</span>
+<span id="cb33-15"><a href="#cb33-15" aria-hidden="true" tabindex="-1"></a>{"event": "Loaded environment variables", "level": "debug", "logger": "authentik.lib.config", "timestamp": 1708817283.6264079, "count": 5}</span>
+<span id="cb33-16"><a href="#cb33-16" aria-hidden="true" tabindex="-1"></a>{"event": "Starting authentik bootstrap", "level": "info", "logger": "authentik.lib.config", "timestamp": 1708817283.6264803}</span>
+<span id="cb33-17"><a href="#cb33-17" aria-hidden="true" tabindex="-1"></a>{"event": "----------------------------------------------------------------------", "level": "info", "logger": "authentik.lib.config", "timestamp": 1708817283.6265018}</span>
+<span id="cb33-18"><a href="#cb33-18" aria-hidden="true" tabindex="-1"></a>{"event": "Secret key missing, check https://goauthentik.io/docs/installation/.", "level": "info", "logger": "authentik.lib.config", "timestamp": 1708817283.626513}</span>
+<span id="cb33-19"><a href="#cb33-19" aria-hidden="true" tabindex="-1"></a>{"event": "----------------------------------------------------------------------", "level": "info", "logger": "authentik.lib.config", "timestamp": 1708817283.6265216}</span>
+<span id="cb33-20"><a href="#cb33-20" aria-hidden="true" tabindex="-1"></a>podmaner@thoth:~$ podman logs authentik_server</span>
+<span id="cb33-21"><a href="#cb33-21" aria-hidden="true" tabindex="-1"></a>{"event": "Loaded config", "level": "debug", "logger": "authentik.lib.config", "timestamp": 1708817279.5668721, "file": "/authentik/lib/default.yml"}</span>
+<span id="cb33-22"><a href="#cb33-22" aria-hidden="true" tabindex="-1"></a>{"event": "Loaded environment variables", "level": "debug", "logger": "authentik.lib.config", "timestamp": 1708817279.567172, "count": 5}</span>
+<span id="cb33-23"><a href="#cb33-23" aria-hidden="true" tabindex="-1"></a>{"event": "Loaded app settings", "level": "debug", "logger": "authentik.lib.config", "timestamp": 1708817281.6441257, "path": "authentik.admin.settings"}</span>
+<span id="cb33-24"><a href="#cb33-24" aria-hidden="true" tabindex="-1"></a>{"event": "Loaded app settings", "level": "debug", "logger": "authentik.lib.config", "timestamp": 1708817281.644982, "path": "authentik.crypto.settings"}</span>
+<span id="cb33-25"><a href="#cb33-25" aria-hidden="true" tabindex="-1"></a>{"event": "Loaded app settings", "level": "debug", "logger": "authentik.lib.config", "timestamp": 1708817281.6455739, "path": "authentik.events.settings"}</span>
+<span id="cb33-26"><a href="#cb33-26" aria-hidden="true" tabindex="-1"></a>{"event": "Loaded app settings", "level": "debug", "logger": "authentik.lib.config", "timestamp": 1708817281.6467671, "path": "authentik.outposts.settings"}</span>
+<span id="cb33-27"><a href="#cb33-27" aria-hidden="true" tabindex="-1"></a>{"event": "Loaded app settings", "level": "debug", "logger": "authentik.lib.config", "timestamp": 1708817281.6484737, "path": "authentik.policies.reputation.settings"}</span>
+<span id="cb33-28"><a href="#cb33-28" aria-hidden="true" tabindex="-1"></a>{"event": "Loaded app settings", "level": "debug", "logger": "authentik.lib.config", "timestamp": 1708817281.651618, "path": "authentik.providers.scim.settings"}</span>
+<span id="cb33-29"><a href="#cb33-29" aria-hidden="true" tabindex="-1"></a>{"event": "Loaded app settings", "level": "debug", "logger": "authentik.lib.config", "timestamp": 1708817281.6528664, "path": "authentik.sources.ldap.settings"}</span>
+<span id="cb33-30"><a href="#cb33-30" aria-hidden="true" tabindex="-1"></a>{"event": "Loaded app settings", "level": "debug", "logger": "authentik.lib.config", "timestamp": 1708817281.6535037, "path": "authentik.sources.oauth.settings"}</span>
+<span id="cb33-31"><a href="#cb33-31" aria-hidden="true" tabindex="-1"></a>{"event": "Loaded app settings", "level": "debug", "logger": "authentik.lib.config", "timestamp": 1708817281.6540685, "path": "authentik.sources.plex.settings"}</span>
+<span id="cb33-32"><a href="#cb33-32" aria-hidden="true" tabindex="-1"></a>{"event": "Loaded app settings", "level": "debug", "logger": "authentik.lib.config", "timestamp": 1708817281.6560044, "path": "authentik.stages.authenticator_totp.settings"}</span>
+<span id="cb33-33"><a href="#cb33-33" aria-hidden="true" tabindex="-1"></a>{"event": "Loaded app settings", "level": "debug", "logger": "authentik.lib.config", "timestamp": 1708817281.6598718, "path": "authentik.blueprints.settings"}</span>
+<span id="cb33-34"><a href="#cb33-34" aria-hidden="true" tabindex="-1"></a>{"event": "Booting authentik", "level": "info", "logger": "authentik.lib.config", "timestamp": 1708817281.6600318, "version": "2023.10.7"}</span>
+<span id="cb33-35"><a href="#cb33-35" aria-hidden="true" tabindex="-1"></a>{"event": "Enabled authentik enterprise", "level": "info", "logger": "authentik.lib.config", "timestamp": 1708817281.661141}</span>
+<span id="cb33-36"><a href="#cb33-36" aria-hidden="true" tabindex="-1"></a>{"event": "Loaded app settings", "level": "debug", "logger": "authentik.lib.config", "timestamp": 1708817281.661508, "path": "authentik.enterprise.settings"}</span>
+<span id="cb33-37"><a href="#cb33-37" aria-hidden="true" tabindex="-1"></a>{"event": "Loaded GeoIP database", "last_write": 1706549214.0, "level": "info", "logger": "authentik.events.geo", "pid": 2, "timestamp": "2024-02-24T23:28:02.805111"}</span>
+<span id="cb33-38"><a href="#cb33-38" aria-hidden="true" tabindex="-1"></a>{"app_name": "authentik.crypto", "event": "Failed to run reconcile", "exc": "ProgrammingError('relation \"authentik_crypto_certificatekeypair\" does not exist\\nLINE 1: ...hentik_crypto_certificatekeypair\".\"key_data\" FROM \"authentik...\\n                                                             ^')", "level": "warning", "logger": "authentik.blueprints.apps", "name": "managed_jwt_cert", "pid": 2, "timestamp": "2024-02-24T23:28:03.610865"}</span>
+<span id="cb33-39"><a href="#cb33-39" aria-hidden="true" tabindex="-1"></a>{"app_name": "authentik.crypto", "event": "Failed to run reconcile", "exc": "ProgrammingError('relation \"authentik_crypto_certificatekeypair\" does not exist\\nLINE 1: SELECT 1 AS \"a\" FROM \"authentik_crypto_certificatekeypair\" W...\\n                             ^')", "level": "warning", "logger": "authentik.blueprints.apps", "name": "self_signed", "pid": 2, "timestamp": "2024-02-24T23:28:03.612779"}</span>
+<span id="cb33-40"><a href="#cb33-40" aria-hidden="true" tabindex="-1"></a>{"app_name": "authentik.outposts", "event": "Failed to run reconcile", "exc": "ProgrammingError('relation \"authentik_outposts_outpost\" does not exist\\nLINE 1: ..._id\", \"authentik_outposts_outpost\".\"_config\" FROM \"authentik...\\n                                                             ^')", "level": "warning", "logger": "authentik.blueprints.apps", "name": "embedded_outpost", "pid": 2, "timestamp": "2024-02-24T23:28:03.647866"}</span>
+<span id="cb33-41"><a href="#cb33-41" aria-hidden="true" tabindex="-1"></a>{"event": "Task published", "level": "info", "logger": "authentik.root.celery", "pid": 2, "task_id": "d28b9ddc12eb44eaa99a25dfe3477f37", "task_name": "authentik.blueprints.v1.tasks.blueprints_discovery", "timestamp": "2024-02-24T23:28:03.876853"}</span>
+<span id="cb33-42"><a href="#cb33-42" aria-hidden="true" tabindex="-1"></a>{"event": "Task published", "level": "info", "logger": "authentik.root.celery", "pid": 2, "task_id": "763c497b4e4c43e2bb745de6a613e104", "task_name": "authentik.blueprints.v1.tasks.clear_failed_blueprints", "timestamp": "2024-02-24T23:28:03.878293"}</span>
+<span id="cb33-43"><a href="#cb33-43" aria-hidden="true" tabindex="-1"></a>{"app_name": "authentik.core", "event": "Failed to run reconcile", "exc": "ProgrammingError('relation \"authentik_core_source\" does not exist\\nLINE 1: ...\"authentik_core_source\".\"user_matching_mode\" FROM \"authentik...\\n                                                             ^')", "level": "warning", "logger": "authentik.blueprints.apps", "name": "source_inbuilt", "pid": 2, "timestamp": "2024-02-24T23:28:03.881205"}\</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <p>It seems I forgot another environment variable, which has been <a href="https://goauthentik.io/docs/installation/docker-compose#preparation">documented on authentik’s site</a>.</p>
 <p>I did that, and it still dies.</p>
 <p>Investigating the error, it seems to be something about relevant file permissions, it is unable to create the necessary file.</p>
-<div class="sourceCode" id="cb31"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a>Traceback (most recent call last):</span>
-<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>  File "&lt;frozen runpy&gt;", line 198, in _run_module_as_main</span>
-<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a>  File "&lt;frozen runpy&gt;", line 88, in _run_code</span>
-<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a>  File "/lifecycle/migrate.py", line 98, in &lt;module&gt;</span>
-<span id="cb31-5"><a href="#cb31-5" aria-hidden="true" tabindex="-1"></a>    migration.run()</span>
-<span id="cb31-6"><a href="#cb31-6" aria-hidden="true" tabindex="-1"></a>  File "/lifecycle/system_migrations/tenant_files.py", line 15, in run</span>
-<span id="cb31-7"><a href="#cb31-7" aria-hidden="true" tabindex="-1"></a>    TENANT_MEDIA_ROOT.mkdir(parents=True)</span>
-<span id="cb31-8"><a href="#cb31-8" aria-hidden="true" tabindex="-1"></a>  File "/usr/local/lib/python3.12/pathlib.py", line 1311, in mkdir</span>
-<span id="cb31-9"><a href="#cb31-9" aria-hidden="true" tabindex="-1"></a>    os.mkdir(self, mode)</span>
-<span id="cb31-10"><a href="#cb31-10" aria-hidden="true" tabindex="-1"></a>PermissionError: [Errno 13] Permission denied: '/media/public'</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb34"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a>Traceback (most recent call last):</span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a>  File "&lt;frozen runpy&gt;", line 198, in _run_module_as_main</span>
+<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a>  File "&lt;frozen runpy&gt;", line 88, in _run_code</span>
+<span id="cb34-4"><a href="#cb34-4" aria-hidden="true" tabindex="-1"></a>  File "/lifecycle/migrate.py", line 98, in &lt;module&gt;</span>
+<span id="cb34-5"><a href="#cb34-5" aria-hidden="true" tabindex="-1"></a>    migration.run()</span>
+<span id="cb34-6"><a href="#cb34-6" aria-hidden="true" tabindex="-1"></a>  File "/lifecycle/system_migrations/tenant_files.py", line 15, in run</span>
+<span id="cb34-7"><a href="#cb34-7" aria-hidden="true" tabindex="-1"></a>    TENANT_MEDIA_ROOT.mkdir(parents=True)</span>
+<span id="cb34-8"><a href="#cb34-8" aria-hidden="true" tabindex="-1"></a>  File "/usr/local/lib/python3.12/pathlib.py", line 1311, in mkdir</span>
+<span id="cb34-9"><a href="#cb34-9" aria-hidden="true" tabindex="-1"></a>    os.mkdir(self, mode)</span>
+<span id="cb34-10"><a href="#cb34-10" aria-hidden="true" tabindex="-1"></a>PermissionError: [Errno 13] Permission denied: '/media/public'</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>I need to do more research into how rootless podman, and the different userns modes, interact with volumes.</p>
 <p>I found <a href="https://www.tutorialworks.com/podman-rootless-volumes/">one article</a>, but it’s focus isn’t quite what I want, and it lacks overview of the different userns modes, and how they interact with volume mounts.</p>
 <p>I spent some time experimenting, and did some more research. Something crucial was a comment I noticed in the docker-compose, under the section related to the “worker” node of authentik:</p>
-<div class="sourceCode" id="cb32"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a># `user: root` and the docker socket volume are optional.</span>
-<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a>    # See more for the docker socket integration here:</span>
-<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a>    # https://goauthentik.io/docs/outposts/integrations/docker</span>
-<span id="cb32-4"><a href="#cb32-4" aria-hidden="true" tabindex="-1"></a>    # Removing `user: root` also prevents the worker from fixing the permissions</span>
-<span id="cb32-5"><a href="#cb32-5" aria-hidden="true" tabindex="-1"></a>    # on the mounted folders, so when removing this make sure the folders have the correct UID/GID</span>
-<span id="cb32-6"><a href="#cb32-6" aria-hidden="true" tabindex="-1"></a>    # (1000:1000 by default)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb35"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a># `user: root` and the docker socket volume are optional.</span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a>    # See more for the docker socket integration here:</span>
+<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a>    # https://goauthentik.io/docs/outposts/integrations/docker</span>
+<span id="cb35-4"><a href="#cb35-4" aria-hidden="true" tabindex="-1"></a>    # Removing `user: root` also prevents the worker from fixing the permissions</span>
+<span id="cb35-5"><a href="#cb35-5" aria-hidden="true" tabindex="-1"></a>    # on the mounted folders, so when removing this make sure the folders have the correct UID/GID</span>
+<span id="cb35-6"><a href="#cb35-6" aria-hidden="true" tabindex="-1"></a>    # (1000:1000 by default)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>So apparently, authentik expects to exist as user 1000 and group 1000, and not anything else. Thankfully, podman has a special userns mode, to map a UID/GID inside the container to a different host user:</p>
-<div class="sourceCode" id="cb33"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> Create relevant podman pod  </span></span>
-<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">containers.podman.podman_pod</span><span class="kw">:</span></span>
-<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">name</span><span class="kw">:</span><span class="at"> authentik_pod</span></span>
-<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">recreate</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
-<span id="cb33-5"><a href="#cb33-5" aria-hidden="true" tabindex="-1"></a><span class="co">    # userns: host</span></span>
-<span id="cb33-6"><a href="#cb33-6" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">userns</span><span class="kw">:</span><span class="at"> keep-id:uid=1000,gid=1000</span></span>
-<span id="cb33-7"><a href="#cb33-7" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">state</span><span class="kw">:</span><span class="at"> started</span></span>
-<span id="cb33-8"><a href="#cb33-8" aria-hidden="true" tabindex="-1"></a><span class="at">    ......</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb36"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> Create relevant podman pod  </span></span>
+<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">containers.podman.podman_pod</span><span class="kw">:</span></span>
+<span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">name</span><span class="kw">:</span><span class="at"> authentik_pod</span></span>
+<span id="cb36-4"><a href="#cb36-4" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">recreate</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb36-5"><a href="#cb36-5" aria-hidden="true" tabindex="-1"></a><span class="co">    # userns: host</span></span>
+<span id="cb36-6"><a href="#cb36-6" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">userns</span><span class="kw">:</span><span class="at"> keep-id:uid=1000,gid=1000</span></span>
+<span id="cb36-7"><a href="#cb36-7" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">state</span><span class="kw">:</span><span class="at"> started</span></span>
+<span id="cb36-8"><a href="#cb36-8" aria-hidden="true" tabindex="-1"></a><span class="at">    ......</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>After this, it works. But I’m still not satisfied. Postgres keeps on changing the permissions of it’s own bind mount.</p>
 <p>According to the <a href="https://hub.docker.com/_/postgres">docker library page for postgres</a> (from Arbitrary –user Notes):</p>
 <blockquote class="blockquote">
@@ -785,9 +833,9 @@ Show error
 <p>It then offers three ways to get around this, and one way is to use the <code>--user</code> flag, in docker. Red Hat has an <a href="https://www.redhat.com/sysadmin/user-flag-rootless-containers">article mentioning that this exists in podman as well</a>. It didn’t work.</p>
 <p>I did <a href="https://github.com/containers/crun/issues/396">some more research</a> into why it is not possible for there to be a different usernamespace mapping for each container in a pod, and the short version is that containers within a pod need to be in the same user namespace in order for them to interact with eachother properly, like networking.</p>
 <p>I made a Dockerfile for postgres, adding the authentik user to the container:</p>
-<div class="sourceCode" id="cb34"><pre class="sourceCode Dockerfile code-with-copy"><code class="sourceCode dockerfile"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="kw">FROM</span> docker.io/library/postgres:12-alpine</span>
-<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a><span class="kw">RUN</span> <span class="bu">echo</span> <span class="st">"authentik:x:1000:1000::/authentik:/usr/sbin/nologin"</span> <span class="op">&gt;</span> /etc/passwd</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb37"><pre class="sourceCode Dockerfile code-with-copy"><code class="sourceCode dockerfile"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="kw">FROM</span> docker.io/library/postgres:12-alpine</span>
+<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a><span class="kw">RUN</span> <span class="bu">echo</span> <span class="st">"authentik:x:1000:1000::/authentik:/usr/sbin/nologin"</span> <span class="op">&gt;</span> /etc/passwd</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>It still chowns/chmods the whole directory to be 700, but that’s okay. Apparently, this is intended behavior, hardcoded, and <a href="https://github.com/postgres/postgres/blob/d42294fc00da4b97d04ddb4401b76295e8d86816/src/backend/postmaster/postmaster.c#L1539">postgres refuses to start if file permissions are not 700</a>. It’s required that the user running postgres, exclusively owns the postgres data folders.</p>
 <p>But now file permissions are correct at least, and the user in the container is mapped to the user outside the container, enabling the directory to be manipulated properly (backed up, restored, etc) outside of the container.</p>
 </section>
