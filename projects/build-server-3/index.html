@@ -2,13 +2,13 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.4.551">
+<meta name="generator" content="quarto-1.5.24">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 <meta name="dcterms.date" content="2024-01-17">
 
-<title>Jeffrey Fonseca - Building my server part 3 — The switch to debian</title>
+<title>Jeffrey Fonseca – Building my server part 3 — The switch to debian</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -156,7 +156,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   </li>  
 </ul>
           </div> <!-- /navcollapse -->
-          <div class="quarto-navbar-tools">
+            <div class="quarto-navbar-tools">
 </div>
       </div> <!-- /container-fluid -->
     </nav>
@@ -186,7 +186,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <ul class="collapse">
   <li><a href="#rathole" id="toc-rathole" class="nav-link" data-scroll-target="#rathole">Rathole</a></li>
   <li><a href="#caddy" id="toc-caddy" class="nav-link" data-scroll-target="#caddy">Caddy</a></li>
-  <li><a href="#authentik" id="toc-authentik" class="nav-link" data-scroll-target="#authentik">Authentik</a></li>
+  <li><a href="#authentik" id="toc-authentik" class="nav-link" data-scroll-target="#authentik">Authentik</a>
+  <ul class="collapse">
+  <li><a href="#configuration" id="toc-configuration" class="nav-link" data-scroll-target="#configuration">Configuration</a></li>
+  </ul></li>
   </ul></li>
   <li><a href="#presearch-for-future-pieces" id="toc-presearch-for-future-pieces" class="nav-link" data-scroll-target="#presearch-for-future-pieces">Presearch for future pieces</a>
   <ul class="collapse">
@@ -661,6 +664,9 @@ Show Logs
 <span id="cb25-7"><a href="#cb25-7" aria-hidden="true" tabindex="-1"></a><span class="kw">FROM</span> docker.io/library/caddy:{{ caddy_version }}</span>
 <span id="cb25-8"><a href="#cb25-8" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb25-9"><a href="#cb25-9" aria-hidden="true" tabindex="-1"></a><span class="kw">COPY</span> <span class="op">--from=builder</span> /usr/bin/caddy /usr/bin/caddy</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>With this, I have the caddy_security module installed.</p>
+<p>Configuring it, is much, much harder.</p>
+<p>I started with copying the existing example Caddyfile they give:</p>
 </section>
 <section id="authentik" class="level2">
 <h2 class="anchored" data-anchor-id="authentik">Authentik</h2>
@@ -838,6 +844,11 @@ Show error
 <span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a><span class="kw">RUN</span> <span class="bu">echo</span> <span class="st">"authentik:x:1000:1000::/authentik:/usr/sbin/nologin"</span> <span class="op">&gt;</span> /etc/passwd</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>It still chowns/chmods the whole directory to be 700, but that’s okay. Apparently, this is intended behavior, hardcoded, and <a href="https://github.com/postgres/postgres/blob/d42294fc00da4b97d04ddb4401b76295e8d86816/src/backend/postmaster/postmaster.c#L1539">postgres refuses to start if file permissions are not 700</a>. It’s required that the user running postgres, exclusively owns the postgres data folders.</p>
 <p>But now file permissions are correct at least, and the user in the container is mapped to the user outside the container, enabling the directory to be manipulated properly (backed up, restored, etc) outside of the container.</p>
+<section id="configuration" class="level3">
+<h3 class="anchored" data-anchor-id="configuration">Configuration</h3>
+<p>Yeah, there’s a lot of stuff to configure. Single-Sign-On is very, very complex.</p>
+<p>I started out by adding a single user, my main user under Directory &gt; Users, called “moonpiedumplings”.</p>
+</section>
 </section>
 </section>
 <section id="presearch-for-future-pieces" class="level1">
@@ -942,7 +953,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
         return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
     }
     // Inspect non-navigation links and adorn them if external
- 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool)');
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
     for (var i=0; i<links.length; i++) {
       const link = links[i];
       if (!isInternal(link.href)) {
