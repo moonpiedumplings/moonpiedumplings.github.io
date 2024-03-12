@@ -587,6 +587,12 @@ FROM docker.io/library/caddy:{{ caddy_version }}
 COPY --from=builder /usr/bin/caddy /usr/bin/caddy
 ```
 
+With this, I have the caddy_security module installed. 
+
+Configuring it, is much, much harder. 
+
+
+
 ## Authentik
 
 The listen settings are here: <https://goauthentik.io/docs/installation/configuration/#listen-settings>
@@ -830,6 +836,14 @@ RUN echo "authentik:x:1000:1000::/authentik:/usr/sbin/nologin" > /etc/passwd
 It still chowns/chmods the whole directory to be 700, but that's okay. Apparently, this is intended behavior, hardcoded, and [postgres refuses to start if file permissions are not 700](https://github.com/postgres/postgres/blob/d42294fc00da4b97d04ddb4401b76295e8d86816/src/backend/postmaster/postmaster.c#L1539). It's required that the user running postgres, exclusively owns the postgres data folders.
 
 But now file permissions are correct at least, and the user in the container is mapped to the user outside the container, enabling the directory to be manipulated properly (backed up, restored, etc) outside of the container.
+
+### Configuration
+
+Yeah, there's a lot of stuff to configure. Single-Sign-On is very, very complex. 
+
+I started out by adding a single user, my main user under Directory > Users, called "moonpiedumplings". 
+
+
 
 
 # Presearch for future pieces

@@ -11,6 +11,11 @@ let
 
 		];
      quarto = pkgs.quarto.overrideAttrs (oldAttrs: rec {
+     version = "1.5.24";
+          src = pkgs.fetchurl {
+              url = "https://github.com/quarto-dev/quarto-cli/releases/download/v${version}/quarto-${version}-linux-amd64.tar.gz";
+              sha256 = "sha256-JRcuD2fwLfGohyOhh5EmNRrDaNMEHOi0r4+newHRIFw=";
+          };
          preFixup = ''
           wrapProgram $out/bin/quarto \
             --prefix PATH : ${pkgs.lib.makeBinPath [ pkgs.deno ]} \
@@ -33,7 +38,10 @@ in
     pkgs.mkShell {
         PYTHONPATH = "${pkgs.python3.withPackages pythonDeps}/bin/python3";
         QUARTO_PYTHON = "${pkgs.python3.withPackages pythonDeps}/bin/python3";
-        QUARTO_PANDOC = "${quarto}/bin/tools/pandoc";
+
+        # This will warn if not on an x68_64 system, but still work. 
+        # Too lazy to figure out how to get the current architecture in Nix for now, especially since this is currenntly non-breaking. 
+        QUARTO_PANDOC = "${quarto}/bin/tools/x86_64/pandoc";
         packages = with pkgs; [ 
             nodePackages_latest.npm
             (python3.withPackages pythonDeps)
