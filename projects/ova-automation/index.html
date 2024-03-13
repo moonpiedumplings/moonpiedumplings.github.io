@@ -21,40 +21,6 @@ ul.task-list li input[type="checkbox"] {
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
 }
-/* CSS for syntax highlighting */
-pre > code.sourceCode { white-space: pre; position: relative; }
-pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
-pre > code.sourceCode > span:empty { height: 1.2em; }
-.sourceCode { overflow: visible; }
-code.sourceCode > span { color: inherit; text-decoration: inherit; }
-div.sourceCode { margin: 1em 0; }
-pre.sourceCode { margin: 0; }
-@media screen {
-div.sourceCode { overflow: auto; }
-}
-@media print {
-pre > code.sourceCode { white-space: pre-wrap; }
-pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
-}
-pre.numberSource code
-  { counter-reset: source-line 0; }
-pre.numberSource code > span
-  { position: relative; left: -4em; counter-increment: source-line; }
-pre.numberSource code > span > a:first-child::before
-  { content: counter(source-line);
-    position: relative; left: -1em; text-align: right; vertical-align: baseline;
-    border: none; display: inline-block;
-    -webkit-touch-callout: none; -webkit-user-select: none;
-    -khtml-user-select: none; -moz-user-select: none;
-    -ms-user-select: none; user-select: none;
-    padding: 0 4px; width: 4em;
-  }
-pre.numberSource { margin-left: 3em;  padding-left: 4px; }
-div.sourceCode
-  {   }
-@media screen {
-pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
-}
 </style>
 
 
@@ -136,10 +102,6 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <a class="nav-link" href="../../talks/index.html" rel="" target="">
  <span class="menu-text">Talks</span></a>
   </li>  
-  <li class="nav-item">
-    <a class="nav-link" href="../../writeups/index.html" rel="" target="">
- <span class="menu-text">Writeups</span></a>
-  </li>  
 </ul>
             <ul class="navbar-nav navbar-nav-scroll ms-auto">
   <li class="nav-item compact">
@@ -163,12 +125,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#probably-wont-continue-this-moving-to-playground" id="toc-probably-wont-continue-this-moving-to-playground" class="nav-link active" data-scroll-target="#probably-wont-continue-this-moving-to-playground">Probably won’t continue this / Moving to Playground</a></li>
-  <li><a href="#goals-and-context" id="toc-goals-and-context" class="nav-link" data-scroll-target="#goals-and-context">Goals and Context</a></li>
+  <li><a href="#goals-and-context" id="toc-goals-and-context" class="nav-link active" data-scroll-target="#goals-and-context">Goals and Context</a></li>
   <li><a href="#work" id="toc-work" class="nav-link" data-scroll-target="#work">Work</a>
   <ul>
   <li><a href="#proxmox" id="toc-proxmox" class="nav-link" data-scroll-target="#proxmox">Proxmox</a></li>
-  <li><a href="#lxdincus" id="toc-lxdincus" class="nav-link" data-scroll-target="#lxdincus">LXD/Incus</a></li>
   </ul></li>
   </ul>
 </nav>
@@ -202,22 +162,6 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 </header>
 
-<section id="probably-wont-continue-this-moving-to-playground" class="level1">
-<h1>Probably won’t continue this / Moving to Playground</h1>
-<p>(see the “Goals and Context” section for more context)</p>
-<p>Wasabi, head of black (operations and deployment) team sent out a message, after the first qualifiers:</p>
-<p><img src="images/wasabi-message.jpeg" class="img-fluid"></p>
-<blockquote class="blockquote">
-<p>I can’t remember, but you guys only recently started playing I believe I had a conversation with other schools on this.. But there’s a huge separation from teams in terms of practice</p>
-</blockquote>
-<blockquote class="blockquote">
-<p>So my recommendation to all the new teams and all the teams who struggled this year. Don’t use https://archive.wrccdc.org/images/ except as reference. Take our environment and topology and build it yourselves. Spend the time to learn and help each other learn how systems work and how to troubleshoot things. This will help you a ton. The teams in the top do this. If your one of the teams not making it forward please feel free to send me a message for advice and use Q&amp;A channel to get help from Ops / Red / White team for your off season. We are happy to help and excited to see you back next year!</p>
-</blockquote>
-<p>My original goal of this project was to be able to quickly recreate WRCCDC environments, so we could run mock competitions, since currently we were setting them up manually.</p>
-<p>But even the 3 or 4 mocks we ran didn’t help us. Ater actually <em>doing</em> first real competition, I agree with Wasabi on this.</p>
-<p>So I don’t think this project is worth continuing. It would be better having people recreating the competition environments, and really <em>using</em> Linux, Windows Server, and the various firewalls so we have an understanding of how they work.</p>
-<p>So yeah. The work is still valuable, it just doesn’t get to stay in the “projects” section of my blog — the difference between “playground” and “projects” is not topics, but rather the commmitment I have to them. Projects I will see to either the end, or until I hit significant failure that I can’t overcome. The content in playground, I am free to give up on it at any point.</p>
-</section>
 <section id="goals-and-context" class="level1">
 <h1>Goals and Context</h1>
 <p>I am currently participating on the cybersercurity team of Cal State Northridge, for a competition called CCDC.</p>
@@ -246,43 +190,6 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>So after extracting the ova, you have to extract the vmdk (it’s gzipped), and then it would be something like:</p>
 <p><code>qm importdisk numberhere image.vmdk --format qcow2|vmware</code></p>
 <p>The manpage for qm says that –format specifies the target format, so I’m assuming it’s the format to convert to.</p>
-</section>
-<section id="lxdincus" class="level2">
-<h2 class="anchored" data-anchor-id="lxdincus">LXD/Incus</h2>
-<p>LXD is a “containervisor”, capable of managing both lxc containers and qemu-kvm virtual machinwees.</p>
-<p>For this usecase, I only need it’s hypervisor management capibilities, but I also want to the automation capabilities that it may offer, since that seems to be an often criticized lacking feature of proxmox.</p>
-<p>I also tried out incus. I put together <a href="./vms/provisioners/debincus.yml">an ansible playbook</a> to install incus on debian.</p>
-<p>However, I am having trouble with their official web ui. Authentication is certificate based, so it asks for me to import a browser certificate… not fun.</p>
-<p>I am going to collect and test multiple alternatives:</p>
-<ul>
-<li>Offical Canonical One</li>
-<li><a href="https://lxdware.com/">LXDWare</a></li>
-<li><a href="https://github.com/AdaptiveScale/lxdui" class="uri">https://github.com/AdaptiveScale/lxdui</a></li>
-<li><a href="https://github.com/PenningLabs/lxconsole" class="uri">https://github.com/PenningLabs/lxconsole</a> still in beta, according to the readme</li>
-</ul>
-<p>I tried lxdware, but when I tried to add a remote, and connect it to the incus daemon, it I get an error “Remote host connection is not trusted”.</p>
-<p>I do some investiagting.</p>
-<div class="sourceCode" id="cb1"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>root@f6ded1cb73d7:/# incus remote add 192.168.121.103</span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>Generating a client certificate. This may take a minute...</span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>Certificate fingerprint: 7cf0d7d12fed498811e485d8dec4655012873876e9f45e15974cfdb9a8fd810a</span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>ok (y/n/[fingerprint])? y</span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>Trust token for 192.168.121.103: eyJjbGllbnRfbmFtZSI6ImluY3VzLXVpLTE5Mi4xNjguMTIxLjEwMy5jcnQiLCJmaW5nZXJwcmludCI6IjdjZjBkN2QxMmZlZDQ5ODgxMWU0ODVkOGRlYzQ2NTUwMTI4NzM4NzZlOWY0NWUxNTk3NGNmZGI5YThmZDgxMGEiLCJhZGRyZXNzZXMiOlsiMTkyLjE2OC4xMjEuMTAzOjg0NDMiXSwic2VjcmV0IjoiMjRjNWNjZjkzZTgzMTBmNGRlMzAwMTgyOTc0YWE4Nzg1MDAxMTkzZWQ3NTEyYTk0ZjlmZGRkZWQwMzBkNWJkZSIsImV4cGlyZXNfYXQiOiIwMDAxLTAxLTAxVDAwOjAwOjAwWiJ9</span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>Client certificate now trusted by server: 192.168.121.103</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="sourceCode" id="cb2"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>root@d90da14b48e9:/# lxc remote add 192.168.121.103</span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>Admin password (or token) for 192.168.121.103:</span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>Error: not authorized</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>In short, it seems like the api is not compatible, since using the lxc client fails, but the incus client succeeds.</p>
-<p>Luckily, I got incus working. In addition to the normal steps, I had to run <a href="https://discuss.linuxcontainers.org/t/incus-ui-install-error-using-token-not-authorized/18822/2"><code>incus config trust add-certificate certficatefile.crt</code></a></p>
-<p>Testing, I was able to download a debian image, and put it up.</p>
-<p>Incus looks very promising, because it also comes with a <a href="https://registry.terraform.io/providers/lxc/incus/latest/docs/resources/instance">terraform provider</a></p>
-<p>Incus also provides docs on <a href="https://linuxcontainers.org/incus/docs/main/howto/server_migrate_lxd/">migrating machines</a> (<a href="https://documentation.ubuntu.com/lxd/en/latest/migration/">canonical lxd version</a>)</p>
-<p>On that page, it recommends using virt-v2v, which has support for importing from <a href="https://libguestfs.org/virt-v2v-input-vmware.1.html">vmware ova’s</a></p>
-<p>(It seems it requires a newer version of <a href="https://libguestfs.org/virt-v2v.1.html">virt-v2v</a>, and <a href="https://github.com/rwmjones/rhsrvany">rhsrvany</a>, which only debian sid and ubuntu 23 package both right now.)</p>
-<p>Once you use that tool, you can use incus-migrate to interactively or programmaticly import the raw disk images as incus images.</p>
-<p>So that’s pretty promising. But what about networking? For a replica of the competition environment, we will need to have firewalls (vyos, pfsense, etc) and to my understanding, that is essentially having a virtual machine act as a bridge. How can I do that on LXD/Incus?</p>
-<p>It seems to be possible. Here are some guides I found:</p>
-<p><a href="https://www.cloudwizard.nl/build-your-own-windows-cloud-with-lxd/" class="uri">https://www.cloudwizard.nl/build-your-own-windows-cloud-with-lxd/</a></p>
-<p><a href="https://forum.netgate.com/topic/154906/how-to-install-pfsense-on-lxc-vm-qemu" class="uri">https://forum.netgate.com/topic/154906/how-to-install-pfsense-on-lxc-vm-qemu</a></p>
 
 
 </section>
