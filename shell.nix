@@ -11,10 +11,16 @@ let
 
 		];
      quarto = pkgs.quarto.overrideAttrs (oldAttrs: rec {
-     version = "1.5.24";
+     # 1.3 + newer (I think) has a weird bug with the text boxes where they are white on a black background. Readable, but ugly
+#      version = "1.5.24";
+#           src = pkgs.fetchurl {
+#               url = "https://github.com/quarto-dev/quarto-cli/releases/download/v${version}/quarto-${version}-linux-amd64.tar.gz";
+#               sha256 = "sha256-JRcuD2fwLfGohyOhh5EmNRrDaNMEHOi0r4+newHRIFw=";
+#           };
+      version = "1.4.551";
           src = pkgs.fetchurl {
               url = "https://github.com/quarto-dev/quarto-cli/releases/download/v${version}/quarto-${version}-linux-amd64.tar.gz";
-              sha256 = "sha256-JRcuD2fwLfGohyOhh5EmNRrDaNMEHOi0r4+newHRIFw=";
+              sha256 = "sha256-RUnlLjJOf8hSj7aRCrmDSXFeNHCXnMY/bdbE3fbbThQ=";
           };
          preFixup = ''
           wrapProgram $out/bin/quarto \
