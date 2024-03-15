@@ -21,6 +21,40 @@ ul.task-list li input[type="checkbox"] {
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
 }
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
 </style>
 
 
@@ -141,6 +175,7 @@ ul.task-list li input[type="checkbox"] {
   <ul>
   <li><a href="#obs" id="toc-obs" class="nav-link active" data-scroll-target="#obs">OBS</a></li>
   <li><a href="#drawing-tablets" id="toc-drawing-tablets" class="nav-link" data-scroll-target="#drawing-tablets">Drawing Tablets</a></li>
+  <li><a href="#bugs" id="toc-bugs" class="nav-link" data-scroll-target="#bugs">Bugs</a></li>
   </ul>
 </nav>
     </div>
@@ -191,7 +226,19 @@ ul.task-list li input[type="checkbox"] {
 </section>
 <section id="drawing-tablets" class="level1">
 <h1>Drawing Tablets</h1>
-<p>KDE 6 finally makes support for drawing tablets first class.</p>
+<p>KDE 6 finally makes support for drawing tablets first class. You can now configure drawing tablets directly from the settings menu.</p>
+<p><img src="images/drawingtablets.jpg" class="img-fluid"></p>
+<p>So all the buttons, but also another, more important feature I need: mapping the drawing tablet to a smaller portion of the screen.</p>
+<p>I typically take notes with <a href="https://xournalpp.github.io">xournal++</a>, but I struggle because my handwriting is large and sloppy, especially when I am trying to take notes more quickly. From my testing, this feature is amazing, since it makes it easier to write, and read what I’ve wrote afterwards.</p>
+</section>
+<section id="bugs" class="level1">
+<h1>Bugs</h1>
+<p>So far, I’ve encountered two crashes with KDE, after like a week of usage, which is pretty good from what I hear, compared to other people.</p>
+<p>To recover from a crash, I just switch to a TTY, and/or use a terminal, and then run:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>systemctl --user restart plasma-plasmallshell</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>This only works on systemd, however. Since Plasma-5.25, <a href="https://wiki.archlinux.org/title/KDE#systemd_startup">KDE consisting of systemd user services has been the default method</a></p>
+<p>On non systemd distros, what I’ve heard works is:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>killall plasmashell &amp;&amp; kstart5 plasmashell</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 
 
 </section>
