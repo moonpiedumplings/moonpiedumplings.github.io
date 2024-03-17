@@ -177,7 +177,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#obs" id="toc-obs" class="nav-link active" data-scroll-target="#obs">OBS</a></li>
+  <li><a href="#smoothing-out-the-wayland-migration" id="toc-smoothing-out-the-wayland-migration" class="nav-link active" data-scroll-target="#smoothing-out-the-wayland-migration">Smoothing out the Wayland migration</a></li>
+  <li><a href="#obs" id="toc-obs" class="nav-link" data-scroll-target="#obs">OBS</a></li>
   <li><a href="#drawing-tablets" id="toc-drawing-tablets" class="nav-link" data-scroll-target="#drawing-tablets">Drawing Tablets</a></li>
   <li><a href="#bugs" id="toc-bugs" class="nav-link" data-scroll-target="#bugs">Bugs</a></li>
   </ul>
@@ -215,7 +216,19 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 
 <p>KDE 6 is released, and it comes with quite a few new features.</p>
-<p>Firstly, I can finally use Nvidia + Wayland on my larger laptop! It’s very smooth and performant, and exciting because there are certain wayland specific features I want.</p>
+<section id="smoothing-out-the-wayland-migration" class="level1">
+<h1>Smoothing out the Wayland migration</h1>
+<p>In addition to the other things mentioned, KDE 6 also comes with some new security and privacy features.</p>
+<p><img src="images/legacyx11apps.jpg" class="img-fluid"></p>
+<p>KDE 6 now adds a new settings panel where users can configure if X11 apps can read global inputs.</p>
+<p>For context, the Linux desktop used to be built on top of this software called <a href="https://en.wikipedia.org/wiki/X_Window_System">X11</a>. X11 worked, but it had some pretty severe flaws, the two main one’s being code rot, and security.</p>
+<p>Code rot is self explanatory. X11 was first built in 1984. It’s been a while since it was made, and it has a lot of old code. The project is so big and complex, that it’s nearly impossible to add significant features to it.</p>
+<p>The other problem is security. By default, X11 lets running apps have basically absolute control over the other graphical interface. They can “view” the whole screen, read all keypresses, and insert, or modify keypresses.</p>
+<p><a href="https://en.wikipedia.org/wiki/Wayland_(protocol)">Wayland</a>, is the newer replacement, although it is technically just a protocol, a definition, as opposed to an actual piece of software. Different pieces of software choose to implement this protocol, with KDE being one of them.</p>
+<p>One of the issues people have with Wayland, is that, by design, it doesn’t allow all apps to read everything on the screen. This breaks things like screen sharing, with native Discord (although sharing your screen to Discord running in Firefox works).</p>
+<p>It also breaks push-to-talk on Discord, since that uses a global hotkey. The above setting allows users to temporarily restore that functionality, at the cost of desktop security. , since Discord hasn’t developed it for native wayland yet.</p>
+<p>Another issue people have with Wayland is problems with Nvidia. Due to Nvidia’s insistence on proprietary drivers and their own standards, it’s been very difficult ot get Wayland support on Nvidia. However, KDE comes with some big changes as, I can finally use Nvidia + Wayland on my larger laptop!</p>
+</section>
 <section id="obs" class="level1">
 <h1>OBS</h1>
 <p>One features I’ve been waiting on, which I think will only end up coming in Wayland, is the ability to share some windows, but not all. I experimented with some of the new features of OBS, but they don’t do quite what I want.</p>
