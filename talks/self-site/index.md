@@ -1,6 +1,6 @@
 ---
 title: "Your very own site on GH pages"
-date: "2024-3-20"
+date: "2024-3-25"
 categories: []
 format:
   html:
@@ -11,9 +11,8 @@ execute:
   freeze: true
 ---
 
-For the Layer8 Cybersecurity club here at Cal State Northridge, and potentially more clubs, I will do a presentation on how I set up my site with Github pages, and how to set up your own site.
+For the Layer8 Cybersecurity club here at Cal State Northridge, and potentially more clubs, I will do a presentation on how I set up my site with Github pages, and how to set up your own site the same way. 
 
-Currently, this is only WIP, as I haven't finished with the slides, the site template, or the presentation. 
+This guide uses Github Actions to autodeploy, so all users need to do is commit from the web interface of Github, their site will automatically render changes.
 
 Slides are [linked here](./revealjs.md)
-
