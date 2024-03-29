@@ -16,3 +16,5 @@ For the Layer8 Cybersecurity club here at Cal State Northridge, and potentially 
 This guide uses Github Actions to autodeploy, so all users need to do is commit from the web interface of Github, their site will automatically render changes.
 
 Slides are [linked here](./revealjs.md)
+
+Video is recorded, and I will have it clipped and uploaded soon™.
