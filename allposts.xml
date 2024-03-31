@@ -269,7 +269,7 @@ print(yeet)</pre>
 <p>My original goal of this project was to be able to quickly recreate WRCCDC environments, so we could run mock competitions, since currently we were setting them up manually.</p>
 <p>But even the 3 or 4 mocks we ran didn’t help us. Ater actually <em>doing</em> first real competition, I agree with Wasabi on this.</p>
 <p>So I don’t think this project is worth continuing. It would be better having people recreating the competition environments, and really <em>using</em> Linux, Windows Server, and the various firewalls so we have an understanding of how they work.</p>
-<p>So yeah. The work is still valuable, it just doesn’t get to stay in the “projects” section of my blog — the difference between “playground” and “projects” is not topics, but rather the commmitment I have to them. Projects I will see to either the end, or until I hit significant failure that I can’t overcome. The content in playground, I am free to give up on it at any point, for any reason, and because of that, many of the miniprojects in there is incomplete.</p>
+<p>So yeah. The work is still valuable, it just doesn’t get to stay in the “projects” section of my blog — the difference between “playground” and “projects” is not topics, but rather the commmitment I have to them. Projects I will see to either the end, or until I hit significant failure that I can’t overcome. The content in playground, I am free to give up on it at any point, for any reason, and because of that, many of the miniprojects in there are incomplete.</p>
 </section>
 <section id="goals-and-context" class="level1">
 <h1>Goals and Context</h1>
@@ -1776,6 +1776,9 @@ font-style: inherit;">&gt;</span> /etc/passwd</span></code></pre></div>
 <section id="forgejo" class="level2">
 <h2 class="anchored" data-anchor-id="forgejo">Forgejo</h2>
 <p>I started by finding forgejo’s docker installation guides: <a href="https://forgejo.org/docs/next/admin/installation-docker/" class="uri">https://forgejo.org/docs/next/admin/installation-docker/</a></p>
+<p>However, there is another problem:</p>
+<p>Although forgejo supports <a href="https://forgejo.org/docs/next/admin/installation-docker/#rootless">rootless</a>, it seems to expect a userid and groupid of 1000:1000, which is not the user I am running it as.</p>
+<p>Similar to Authentik, I will have to create the pod with userns mapping.</p>
 </section>
 </section>
 <section id="presearch-for-future-pieces" class="level1">
