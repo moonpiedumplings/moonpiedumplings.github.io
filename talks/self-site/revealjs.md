@@ -41,6 +41,7 @@ execute:
 * Go to [github.com/moonpiedumplings/blog-template](https://github.com/moonpiedumplings/blog-template) and select "use template"
   - The repo name should be "username.github.io"
   - make sure to select "include all branches"
+  - in the github settings, make sure "gh-pages" is selected as the deploy  
 
 
 ## Directory Structure
