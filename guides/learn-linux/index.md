@@ -132,5 +132,10 @@ https://wellarchitectedlabs.com/security/
 
 * I really like this one to explain the differences between the four types of documentation: tutorial, how-to, reference, and explanation.
 
-[Software Technical Writings — A guidebook (pdf)](https://jamesg.blog/book.pdf) — nitty gritty technical writing details. 
+[Software Technical Writings — A guidebook (pdf)](https://jamesg.blog/book.pdf) — nitty gritty technical writing details.
+
+
+# Teaching
+
+[How to help someone use a computer (1996)](https://pages.gseis.ucla.edu/faculty/agre/how-to-help.html)
 
