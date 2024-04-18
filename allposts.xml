@@ -99,6 +99,13 @@
 <section id="teaching" class="level1">
 <h1>Teaching</h1>
 <p><a href="https://pages.gseis.ucla.edu/faculty/agre/how-to-help.html">How to help someone use a computer (1996)</a></p>
+</section>
+<section id="git" class="level1">
+<h1>Git</h1>
+<p><a href="https://shafiul.github.io/gitbook/index.html" class="uri">https://shafiul.github.io/gitbook/index.html</a></p>
+<ul>
+<li>Data structure oriented guide to git. It starts at explaining what an object is, rather than how the command line works. I like this guide of git more than many other guides I’ve seen, although it’s still missing things (yes, git does a snapshot of the repo’s state at every point, as seperate objects, but it deduplicates data between those objects).</li>
+</ul>
 
 
 </section>
@@ -1817,8 +1824,11 @@ font-style: inherit;">&gt;</span> /etc/passwd</span></code></pre></div>
 <h2 class="anchored" data-anchor-id="forgejo">Forgejo</h2>
 <p>I started by finding forgejo’s docker installation guides: <a href="https://forgejo.org/docs/next/admin/installation-docker/" class="uri">https://forgejo.org/docs/next/admin/installation-docker/</a></p>
 <p>However, there is another problem:</p>
-<p>Although forgejo supports <a href="https://forgejo.org/docs/next/admin/installation-docker/#rootless">rootless</a>, it seems to expect a userid and groupid of 1000:1000, which is not the user I am running it as.</p>
-<p>Similar to Authentik, I will have to create the pod with userns mapping.</p>
+<p>Although forgejo supports <a href="https://forgejo.org/docs/next/admin/installation-docker/#rootless">rootless</a>, it seems to expect a userid and groupid of 1000:1000, which is not the user I am running it as. Similar to Authentik, I will have to create the pod with userns mapping.</p>
+<p>I basically copied the Authentik deployment, and got it deployed.</p>
+<p><img src="https://moonpiedumplings.github.io/projects/build-server-3/images/openidforge.jpeg" class="img-fluid"></p>
+<p>So it seems that, when forgejo is first created, the initial user that registrates will be the “admin” user, able to administrate the site. I can’t add the oauth2 from the openid.</p>
+<p>I created an admin account, and am given an interface to add an oauth2 provider, but I’m wondering if there is some way to do this via configuration files, instead of from the GUI.</p>
 </section>
 </section>
 <section id="presearch-for-future-pieces" class="level1">

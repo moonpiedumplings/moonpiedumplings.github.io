@@ -155,6 +155,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </ul>
             <ul class="navbar-nav navbar-nav-scroll ms-auto">
   <li class="nav-item compact">
+    <a class="nav-link" href="https://moonpiedumplings.github.io/allposts.xml"> <i class="bi bi-rss" role="img">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
     <a class="nav-link" href="https://github.com/moonpiedumplings"> <i class="bi bi-github" role="img">
 </i> 
 <span class="menu-text"></span></a>
@@ -861,8 +866,11 @@ Show error
 <h2 class="anchored" data-anchor-id="forgejo">Forgejo</h2>
 <p>I started by finding forgejo’s docker installation guides: <a href="https://forgejo.org/docs/next/admin/installation-docker/" class="uri">https://forgejo.org/docs/next/admin/installation-docker/</a></p>
 <p>However, there is another problem:</p>
-<p>Although forgejo supports <a href="https://forgejo.org/docs/next/admin/installation-docker/#rootless">rootless</a>, it seems to expect a userid and groupid of 1000:1000, which is not the user I am running it as.</p>
-<p>Similar to Authentik, I will have to create the pod with userns mapping.</p>
+<p>Although forgejo supports <a href="https://forgejo.org/docs/next/admin/installation-docker/#rootless">rootless</a>, it seems to expect a userid and groupid of 1000:1000, which is not the user I am running it as. Similar to Authentik, I will have to create the pod with userns mapping.</p>
+<p>I basically copied the Authentik deployment, and got it deployed.</p>
+<p><img src="images/openidforge.jpeg" class="img-fluid"></p>
+<p>So it seems that, when forgejo is first created, the initial user that registrates will be the “admin” user, able to administrate the site. I can’t add the oauth2 from the openid.</p>
+<p>I created an admin account, and am given an interface to add an oauth2 provider, but I’m wondering if there is some way to do this via configuration files, instead of from the GUI.</p>
 </section>
 </section>
 <section id="presearch-for-future-pieces" class="level1">
