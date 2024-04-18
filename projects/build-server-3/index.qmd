@@ -854,8 +854,15 @@ I started by finding forgejo's docker installation guides: <https://forgejo.org/
 However, there is another problem: 
 
 Although forgejo supports [rootless](https://forgejo.org/docs/next/admin/installation-docker/#rootless), it seems to expect a userid and groupid of 1000:1000, which is not the user I am running it as. 
-
 Similar to Authentik, I will have to create the pod with userns mapping.
+
+I basically copied the Authentik deployment, and got it deployed. 
+
+![](images/openidforge.jpeg)
+
+So it seems that, when forgejo is first created, the initial user that registrates will be the "admin" user, able to administrate the site. I can't add the oauth2 from the openid. 
+
+I created an admin account, and am given an interface to add an oauth2 provider, but I'm wondering if there is some way to do this via configuration files, instead of from the GUI. 
 
 # Presearch for future pieces
 
@@ -872,7 +879,3 @@ Something like this is definitely possible.
 <https://serverfault.com/questions/608517/how-to-route-traffic-from-private-network-to-openvpn-subnet-and-back>
 
 <https://superuser.com/questions/1162231/route-public-subnet-over-vpn>
-
-
-
-

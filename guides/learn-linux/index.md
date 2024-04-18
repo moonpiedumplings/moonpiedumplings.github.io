@@ -139,3 +139,10 @@ https://wellarchitectedlabs.com/security/
 
 [How to help someone use a computer (1996)](https://pages.gseis.ucla.edu/faculty/agre/how-to-help.html)
 
+
+# Git
+
+<https://shafiul.github.io/gitbook/index.html>
+
+* Data structure oriented guide to git. It starts at explaining what an object is, rather than how the command line works. I like this guide of git more than many other guides I've seen, although it's still missing things (yes, git does a snapshot of the repo's state at every point, as seperate objects, but it deduplicates data between those objects).
+
