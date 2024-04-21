@@ -8,7 +8,7 @@
 
 <meta name="author" content="Jeffrey Fonseca">
 <meta name="dcterms.date" content="2024-02-06">
-<meta name="description" content="The Incompetent Intern">
+<meta name="description" content="eCitadel/WRCCDC Traning — The Incompetent Intern">
 
 <title>Jeffrey Fonseca – Nice Challenge 2</title>
 <style>
@@ -204,7 +204,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <div>
   <div class="description">
-    The Incompetent Intern
+    eCitadel/WRCCDC Traning — The Incompetent Intern
   </div>
 </div>
 
@@ -322,110 +322,102 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>Trying to load <code>/wp-admin</code>, the wp admin console, gives me a little more info.</p>
 <p><img src="images/wordpressadminfailed.png" class="img-fluid"></p>
 <p>So I decide to go look at the file:</p>
-<p>```{.default filename=“/var/www/html/config.php} <!--?php
-/**
- * The base configuration for WordPress
- *
- * The wp-config.php creation script uses this file during the
- * installation. You don't have to use the web site, you can
- * copy this file to "wp-config.php" and fill in the values.
- *
- * This file contains the following configurations:
- *
- * * MySQL settings
- */
-
-// ** MySQL settings - You can get this info from your web host ** //
-/** The name of the database for WordPress */
-define( 'DB_NAME', 'wordpress' );
-
-/** MySQL database username */
-define( 'DB_USER', 'playerone' );
-
-/** MySQL database password */
-define( 'DB_PASSWORD', 'password123' );
-
-/** MySQL hostname */
-define( 'DB_HOST', 'database.daswebs.com' );
-
-/** Database Charset to use in creating database tables. */
-define( 'DB_CHARSET', 'utf8mb4' );
-
-/** The Database Collate type. Don't change this if in doubt. */
-define( 'DB_COLLATE', '');
-
-/**#@+
- * Authentication Unique Keys and Salts.
- *
- * Change these to different unique phrases!
- * You can generate these using the {@link https://api.wordpress.org/secret-key/1.1/salt/ WordPress.org secret-key service}
- * You can change these at any point in time to invalidate all existing cookies. This will force all users to have to log in again.
- *
- * @since 2.6.0
- */
-define( 'AUTH_KEY',         'ea355b607a03e1dc4fdbf0b6307b05303073e640');
-define( 'SECURE_AUTH_KEY',  'f33aec49919d2584c113a0c97e6fe6521c899ceb');
-define( 'LOGGED_IN_KEY',    'c366b663c1d82456edb8e88c592013f6c93b54e9');
-define( 'NONCE_KEY',        '1d210afe29e77dd29dd6c444314b6b3d5389f47d');
-define( 'AUTH_SALT',        '5ed4f5d28661e0b29b4651e051907704e517e81d');
-define( 'SECURE_AUTH_SALT', '98c1307b17e104f4b0f9d17771cd3f6fe781b60e');
-define( 'LOGGED_IN_SALT',   'bcb58b6319635fa3f6fed8154e8e56f151a1bd18');
-define( 'NONCE_SALT',       '796f651b2fbb7175080e390b31a68ea08dca928f');
-
-/**#@-*/
-
-/**
- * WordPress Database Table prefix.
- *
- * You can have multiple installations in one database if you give each
- * a unique prefix. Only numbers, letters, and underscores please!
- */
-$table_prefix = 'wp_';
-
-....
-....
-```
-
-I had to do some commands on the "database machine", since it seems that something was likely wrong there. 
-
-
-```{.default}
-USE wordpress;
-CREATE USER 'playerone'@'*' IDENTIFIED BY 'password123';
-GRANT ALL PRIVILEGES ON wordpress.* TO 'playerone'@'*';
-GRANT ALL PRIVILEGES ON wordpress TO 'playerone'@'*';
-FLUSH PRIVILEGES;
-```
-
-But this wasn't enough. Wordpress still could not connect to the database. I checked to make sure the mysql service was running, and that the firewall was open, both were the case. An nmap scan from the wordpress server sees the port open, and the service, as well.
-
-
-I was even able to authenticate to the database from the webserver machine manually, using the mysql client included in the mariadb package. 
-
-So it's likely an SELinux issue, as mentioned in the meeting notes. 
-
-Sure enough, when [searching through the logs](https://www.redhat.com/sysadmin/selinux-denial), I find something:
-
-![](images/selinuxdenied.png)
-
-I used this: <https://serverfault.com/a/456875--> for steps.</p>
-<div class="sourceCode" id="cb6"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>[root@www~]# getsebool -a | grep httpd</span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>...</span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>...</span>
-<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>httpd_can_connect_mythtv --&gt; off</span>
-<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>httpd_can_connect_zabbix --&gt; off</span>
-<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>httpd_can_network_connect --&gt; off</span>
-<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>httpd_can_network_connect_cobbler --&gt; off</span>
-<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>httpd_can_network_connect_db --&gt; off</span>
-<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>httpd_can_network_memcache --&gt; off</span>
-<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>httpd_can_network_relay --&gt; off</span>
-<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>httpd_can_sendmail --&gt; off</span>
-<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>...</span>
-<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>...</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="code-with-filename">
+<div class="code-with-filename-file">
+<pre><strong>/var/www/html/config.php</strong></pre>
+</div>
+<div class="sourceCode" id="cb6" data-filename="/var/www/html/config.php"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>&lt;?php</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>/**</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a> * The base configuration for WordPress</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a> *</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a> * The wp-config.php creation script uses this file during the</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a> * installation. You don't have to use the web site, you can</span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a> * copy this file to "wp-config.php" and fill in the values.</span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a> *</span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a> * This file contains the following configurations:</span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a> *</span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a> * * MySQL settings</span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a> */</span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>// ** MySQL settings - You can get this info from your web host ** //</span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>/** The name of the database for WordPress */</span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>define( 'DB_NAME', 'wordpress' );</span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a>/** MySQL database username */</span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a>define( 'DB_USER', 'playerone' );</span>
+<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a>/** MySQL database password */</span>
+<span id="cb6-22"><a href="#cb6-22" aria-hidden="true" tabindex="-1"></a>define( 'DB_PASSWORD', 'password123' );</span>
+<span id="cb6-23"><a href="#cb6-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-24"><a href="#cb6-24" aria-hidden="true" tabindex="-1"></a>/** MySQL hostname */</span>
+<span id="cb6-25"><a href="#cb6-25" aria-hidden="true" tabindex="-1"></a>define( 'DB_HOST', 'database.daswebs.com' );</span>
+<span id="cb6-26"><a href="#cb6-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-27"><a href="#cb6-27" aria-hidden="true" tabindex="-1"></a>/** Database Charset to use in creating database tables. */</span>
+<span id="cb6-28"><a href="#cb6-28" aria-hidden="true" tabindex="-1"></a>define( 'DB_CHARSET', 'utf8mb4' );</span>
+<span id="cb6-29"><a href="#cb6-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-30"><a href="#cb6-30" aria-hidden="true" tabindex="-1"></a>/** The Database Collate type. Don't change this if in doubt. */</span>
+<span id="cb6-31"><a href="#cb6-31" aria-hidden="true" tabindex="-1"></a>define( 'DB_COLLATE', '');</span>
+<span id="cb6-32"><a href="#cb6-32" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-33"><a href="#cb6-33" aria-hidden="true" tabindex="-1"></a>/**#@+</span>
+<span id="cb6-34"><a href="#cb6-34" aria-hidden="true" tabindex="-1"></a> * Authentication Unique Keys and Salts.</span>
+<span id="cb6-35"><a href="#cb6-35" aria-hidden="true" tabindex="-1"></a> *</span>
+<span id="cb6-36"><a href="#cb6-36" aria-hidden="true" tabindex="-1"></a> * Change these to different unique phrases!</span>
+<span id="cb6-37"><a href="#cb6-37" aria-hidden="true" tabindex="-1"></a> * You can generate these using the {@link https://api.wordpress.org/secret-key/1.1/salt/ WordPress.org secret-key service}</span>
+<span id="cb6-38"><a href="#cb6-38" aria-hidden="true" tabindex="-1"></a> * You can change these at any point in time to invalidate all existing cookies. This will force all users to have to log in again.</span>
+<span id="cb6-39"><a href="#cb6-39" aria-hidden="true" tabindex="-1"></a> *</span>
+<span id="cb6-40"><a href="#cb6-40" aria-hidden="true" tabindex="-1"></a> * @since 2.6.0</span>
+<span id="cb6-41"><a href="#cb6-41" aria-hidden="true" tabindex="-1"></a> */</span>
+<span id="cb6-42"><a href="#cb6-42" aria-hidden="true" tabindex="-1"></a>define( 'AUTH_KEY',         'ea355b607a03e1dc4fdbf0b6307b05303073e640');</span>
+<span id="cb6-43"><a href="#cb6-43" aria-hidden="true" tabindex="-1"></a>define( 'SECURE_AUTH_KEY',  'f33aec49919d2584c113a0c97e6fe6521c899ceb');</span>
+<span id="cb6-44"><a href="#cb6-44" aria-hidden="true" tabindex="-1"></a>define( 'LOGGED_IN_KEY',    'c366b663c1d82456edb8e88c592013f6c93b54e9');</span>
+<span id="cb6-45"><a href="#cb6-45" aria-hidden="true" tabindex="-1"></a>define( 'NONCE_KEY',        '1d210afe29e77dd29dd6c444314b6b3d5389f47d');</span>
+<span id="cb6-46"><a href="#cb6-46" aria-hidden="true" tabindex="-1"></a>define( 'AUTH_SALT',        '5ed4f5d28661e0b29b4651e051907704e517e81d');</span>
+<span id="cb6-47"><a href="#cb6-47" aria-hidden="true" tabindex="-1"></a>define( 'SECURE_AUTH_SALT', '98c1307b17e104f4b0f9d17771cd3f6fe781b60e');</span>
+<span id="cb6-48"><a href="#cb6-48" aria-hidden="true" tabindex="-1"></a>define( 'LOGGED_IN_SALT',   'bcb58b6319635fa3f6fed8154e8e56f151a1bd18');</span>
+<span id="cb6-49"><a href="#cb6-49" aria-hidden="true" tabindex="-1"></a>define( 'NONCE_SALT',       '796f651b2fbb7175080e390b31a68ea08dca928f');</span>
+<span id="cb6-50"><a href="#cb6-50" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-51"><a href="#cb6-51" aria-hidden="true" tabindex="-1"></a>/**#@-*/</span>
+<span id="cb6-52"><a href="#cb6-52" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-53"><a href="#cb6-53" aria-hidden="true" tabindex="-1"></a>/**</span>
+<span id="cb6-54"><a href="#cb6-54" aria-hidden="true" tabindex="-1"></a> * WordPress Database Table prefix.</span>
+<span id="cb6-55"><a href="#cb6-55" aria-hidden="true" tabindex="-1"></a> *</span>
+<span id="cb6-56"><a href="#cb6-56" aria-hidden="true" tabindex="-1"></a> * You can have multiple installations in one database if you give each</span>
+<span id="cb6-57"><a href="#cb6-57" aria-hidden="true" tabindex="-1"></a> * a unique prefix. Only numbers, letters, and underscores please!</span>
+<span id="cb6-58"><a href="#cb6-58" aria-hidden="true" tabindex="-1"></a> */</span>
+<span id="cb6-59"><a href="#cb6-59" aria-hidden="true" tabindex="-1"></a>$table_prefix = 'wp_';</span>
+<span id="cb6-60"><a href="#cb6-60" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-61"><a href="#cb6-61" aria-hidden="true" tabindex="-1"></a>....</span>
+<span id="cb6-62"><a href="#cb6-62" aria-hidden="true" tabindex="-1"></a>....</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>I had to do some commands on the “database machine”, since it seems that something was likely wrong there.</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>USE wordpress;</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>CREATE USER 'playerone'@'*' IDENTIFIED BY 'password123';</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>GRANT ALL PRIVILEGES ON wordpress.* TO 'playerone'@'*';</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>GRANT ALL PRIVILEGES ON wordpress TO 'playerone'@'*';</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>FLUSH PRIVILEGES;</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>But this wasn’t enough. Wordpress still could not connect to the database. I checked to make sure the mysql service was running, and that the firewall was open, both were the case. An nmap scan from the wordpress server sees the port open, and the service, as well.</p>
+<p>I was even able to authenticate to the database from the webserver machine manually, using the mysql client included in the mariadb package.</p>
+<p>So it’s likely an SELinux issue, as mentioned in the meeting notes.</p>
+<p>Sure enough, when <a href="https://www.redhat.com/sysadmin/selinux-denial">searching through the logs</a>, I find something:</p>
+<p><img src="images/selinuxdenied.png" class="img-fluid"></p>
+<p>I used this: <a href="https://serverfault.com/a/456875" class="uri">https://serverfault.com/a/456875</a> for steps.</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>[root@www~]# getsebool -a | grep httpd</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>...</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>...</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>httpd_can_connect_mythtv --&gt; off</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>httpd_can_connect_zabbix --&gt; off</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>httpd_can_network_connect --&gt; off</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>httpd_can_network_connect_cobbler --&gt; off</span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>httpd_can_network_connect_db --&gt; off</span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>httpd_can_network_memcache --&gt; off</span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>httpd_can_network_relay --&gt; off</span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>httpd_can_sendmail --&gt; off</span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>...</span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>...</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>It seems as if the apache httpd server doesn’t have permissions for that port.</p>
 <p>Following those steps:</p>
-<div class="sourceCode" id="cb7"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>setsebool httpd_can_network_connect_db 1</span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>setsebool httpd_can_network_connect_db 1 -P</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb9"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>setsebool httpd_can_network_connect_db 1</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>setsebool httpd_can_network_connect_db 1 -P</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>And httpd can connect to the database!</p>
 </section>
 <section id="fileshare" class="level1">
@@ -435,29 +427,29 @@ I used this: <https://serverfault.com/a/456875--> for steps.</p>
 <div class="code-with-filename-file">
 <pre><strong>/etc/proftpd/proftpd.conf</strong></pre>
 </div>
-<div class="sourceCode" id="cb8" data-filename="/etc/proftpd/proftpd.conf"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>Include /etc/proftpd/modules.conf</span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>....</span>
-<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>....</span>
-<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>TimesGMT off</span>
-<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>&lt;/Directory&gt;</span>
-<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>&lt;Anonymous ~ftp&gt;</span>
-<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>  User ftp</span>
-<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>  Group nogroup</span>
-<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>  UserAlias anonymous ftp</span>
-<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>  DirFakeUser on ftp</span>
-<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>  DirFakeGroup on ftp</span>
-<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>  RequireValidShell off</span>
-<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>  &lt;Directory *&gt;</span>
-<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>    Umask 000 000</span>
-<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a>    HideFiles (welcome.msg)</span>
-<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a>    &lt;Limit WRITE&gt;</span>
-<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a>      DenyAll</span>
-<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a>    &lt;/Limit&gt;</span>
-<span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a>  &lt;/Directory&gt;</span>
-<span id="cb8-20"><a href="#cb8-20" aria-hidden="true" tabindex="-1"></a>&lt;/Anonymous&gt;</span>
-<span id="cb8-21"><a href="#cb8-21" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-22"><a href="#cb8-22" aria-hidden="true" tabindex="-1"></a>....</span>
-<span id="cb8-23"><a href="#cb8-23" aria-hidden="true" tabindex="-1"></a>....</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb10" data-filename="/etc/proftpd/proftpd.conf"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>Include /etc/proftpd/modules.conf</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>....</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>....</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>TimesGMT off</span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>&lt;/Directory&gt;</span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>&lt;Anonymous ~ftp&gt;</span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>  User ftp</span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>  Group nogroup</span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>  UserAlias anonymous ftp</span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>  DirFakeUser on ftp</span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>  DirFakeGroup on ftp</span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>  RequireValidShell off</span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a>  &lt;Directory *&gt;</span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a>    Umask 000 000</span>
+<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a>    HideFiles (welcome.msg)</span>
+<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a>    &lt;Limit WRITE&gt;</span>
+<span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a>      DenyAll</span>
+<span id="cb10-18"><a href="#cb10-18" aria-hidden="true" tabindex="-1"></a>    &lt;/Limit&gt;</span>
+<span id="cb10-19"><a href="#cb10-19" aria-hidden="true" tabindex="-1"></a>  &lt;/Directory&gt;</span>
+<span id="cb10-20"><a href="#cb10-20" aria-hidden="true" tabindex="-1"></a>&lt;/Anonymous&gt;</span>
+<span id="cb10-21"><a href="#cb10-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-22"><a href="#cb10-22" aria-hidden="true" tabindex="-1"></a>....</span>
+<span id="cb10-23"><a href="#cb10-23" aria-hidden="true" tabindex="-1"></a>....</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>According to some <a href="http://www.proftpd.org/docs/howto/Authentication.html">docs</a>, that <code>&lt;Anonymous&gt;</code> section defines anonymous access, so I can simply comment it out to deny anonymous access.</p>
 <p>And after a <code>sudo systemctl restart proftpd</code>, the check passes.</p>
