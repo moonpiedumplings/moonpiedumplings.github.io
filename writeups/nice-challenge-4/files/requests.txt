@@ -1,0 +1,25 @@
+Create Active Directory security group named DasNetworkAdmins with Gary Thatcher, Brimlock Stones, and yourself as members. Grant members of DasNetworkAdmins the privileges required to sign in to pfSense (Firewall) and make changes on all pages as admins.
+
+For the pfSense LDAP authentication, I have created a bind user for you on the domain. The credentials are 'pfSenseBind' with the password 'password123'. The system for getting that setup works much better in new versions of pfSense, so you should do that first.
+
+Please create a new database called production_site and create the user das_user for the website to connect with using the backup located at /ftp on Backup.
+das_user only needs to have privilege on that database, since we're trying to keep a least privilege model.
+
+Please patch shellshock on Fileshare
+
+For the Domain Group Policy we are making for the new security group, DasNetworkAdmins, please:
+
+Name it Network-Policy
+Please ensure that the Computers Security Setting Account Password Policy is set to not allow passwords to be shorter than 14 characters.
+
+Please enable the Computers Security Setting Local Policy for Auditing Policy Changes on both successes and failures.
+    
+
+Please enable the Computers Security Setting Local Policy Security Option to limit the amount of cached previous logons to 0.
+    
+
+Then make sure to apply and enforce the new GPO.
+
+Make sure that after migrating the website to the production server that it is all accessible at www.daswebs.com.
+
+DO NOT CHANGE ANY PASSWORDS
