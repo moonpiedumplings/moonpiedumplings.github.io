@@ -235,6 +235,50 @@ Podman pods work a bit differently. Every pod can contain multiple containers, b
 
 I am using ansible to create pods. 
 
+#### Systemd Integration
+
+
+Ansible can generate systemd units for pods and containers:
+
+* Pods: <https://docs.ansible.com/ansible/latest/collections/containers/podman/podman_pod_module.html#parameter-generate_systemd>
+* Containers: <https://docs.ansible.com/ansible/latest/collections/containers/podman/podman_container_module.html#parameter-generate_systemd>
+
+Rather than starting the containers using ansible, I can then start the whole pod using the systemd unit for the pod, and [ansible's systemd service module](https://docs.ansible.com/ansible/latest/collections/ansible/builtin/systemd_service_module.html). (From my testing, if you start a pod, it also starts all containers in the pod).
+
+In order for this to work, I need to have systemd user services configured and working. However, I get an error:
+
+```{.default}
+podmaner@thoth:~$ systemctl status --user
+Failed to connect to bus: No medium found
+```
+
+A bit of research says that this is because the systemd daemon is not running... but it is:
+
+```{.default}
+root@thoth:~# ps aux | grep "systemd --user"
+podmaner    1095  0.0  0.0  18984 10760 ?        Ss   13:33   0:00 /lib/systemd/systemd --user
+moonpie     1513  0.1  0.0  19140 10780 ?        Ss   13:33   0:00 /lib/systemd/systemd --user
+root        1648  0.0  0.0   6332  2036 pts/6    S+   13:35   0:00 grep systemd --user
+```
+
+It works on my `moonpie` user:
+
+```{.default}
+moonpie@thoth:~$ systemctl status --user
+● thoth
+    State: running
+    Units: 139 loaded (incl. loaded aliases)
+     Jobs: 0 queued
+   Failed: 0 units
+    Since: Sat 2024-04-20 13:33:22 PDT; 1min 27s ago
+  systemd: 252.22-1~deb12u1
+   CGroup: /user.slice/user-1000.slice/user@1000.service
+           └─init.scope
+             ├─1513 /lib/systemd/systemd --user
+             └─1514 "(sd-pam)"
+```
+
+
 ### Ansible facts HOME =/= $HOME
 
 I was having ansible run some things as another user, and using something like this to get the home directory of the user it was running as:
@@ -837,13 +881,64 @@ It still chowns/chmods the whole directory to be 700, but that's okay. Apparentl
 
 But now file permissions are correct at least, and the user in the container is mapped to the user outside the container, enabling the directory to be manipulated properly (backed up, restored, etc) outside of the container.
 
+However, I still get another error. Even with a fresh authentik deployment, the `authentik_worker` container gives an error:
+
+```{.default}
+Traceback (most recent call last):
+  File "/lifecycle/migrate.py", line 98, in <module>
+    migration.run()
+  File "/lifecycle/system_migrations/tenant_to_brand.py", line 25, in run
+    self.cur.execute(SQL_STATEMENT)
+  File "/ak-root/venv/lib/python3.12/site-packages/psycopg/cursor.py", line 732, in execute
+    raise ex.with_traceback(None)
+psycopg.errors.DuplicateTable: relation "authentik_brands_brand" already exists
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/lifecycle/migrate.py", line 118, in <module>
+    release_lock(curr)
+  File "/lifecycle/migrate.py", line 67, in release_lock
+    cursor.execute("SELECT pg_advisory_unlock(%s)", (ADV_LOCK_UID,))
+  File "/ak-root/venv/lib/python3.12/site-packages/psycopg/cursor.py", line 732, in execute
+    raise ex.with_traceback(None)
+psycopg.errors.InFailedSqlTransaction: current transaction is aborted, commands ignored until end of transaction block
+```
+
+I think this is because there is no container dependecies or the like set up, so the authentik_worker starts before postgres is finished doing it's thing. To test, I deployed the databases first, and then started the worker and server containers. Sure enough, authentik then deploys properly, without erroring. 
+
+To get around this, I need to add dependencies to my containers. To do that, I need to use podman's systemd integration. Since it's not appropriate for this section (since it will apply to many other services), I am continuing in [podman systemd integration](#systemd-integration)
+
+
+
+
 ### Configuration
 
 Yeah, there's a lot of stuff to configure. Single-Sign-On is very, very complex. 
 
 I started out by adding a single user, my main user under Directory > Users, called "moonpiedumplings". 
 
+This user is usable via 
 
+#### Applications
+
+
+
+#### Invitations
+
+Authentik has a feature called "invitations", where it can generate a one or multiple time usable link that people can use to self register. 
+
+The goal here is that **all** my users are stored within authentik, and no services have any local users. I can use invites to 
+
+Here are the docs on invitations: <https://docs.goauthentik.io/docs/user-group-role/user/invitations>
+
+#### Teraform
+
+Authentik has a terraform provider: <https://registry.terraform.io/providers/goauthentik/authentik/latest/docs>
+
+But I don't think I'm going to use it, as that's yet another layer of complexity. 
 
 
 ## Forgejo
@@ -863,6 +958,33 @@ I basically copied the Authentik deployment, and got it deployed.
 So it seems that, when forgejo is first created, the initial user that registrates will be the "admin" user, able to administrate the site. I can't add the oauth2 from the openid. 
 
 I created an admin account, and am given an interface to add an oauth2 provider, but I'm wondering if there is some way to do this via configuration files, instead of from the GUI. 
+
+
+
+
+## Bitwarden/Vaultwarden
+
+I want to self host a password manager, and I have selected [vaultwarden](https://github.com/dani-garcia/vaultwarden), the open source version of bitwarden. 
+
+Like other services, I don't want vaultwrden to thave any of it's own users, and instead to connect to Authentik via LDAP or Oauth2. 
+
+However, I quickly realized a problem: Password managers (when properly architectured), encrypt the password database via a master password... if Vaultwarden is authneticating users via LDAP, then how will it get the master password?
+
+I found a few solutions
+
+
+
+* <https://github.com/dani-garcia/vaultwarden/wiki/Syncing-users-from-LDAP> 
+
+This seems more doable, but it doesn't sync passwords, merely automates invites to vaultwarden. 
+
+* <https://github.com/bitwarden/directory-connector>
+
+I don't understand how this software works fully yet, but it seems ot sync vaultwarden users with LDAP. 
+
+Here are some docs: <https://bitwarden.com/help/ldap-directory/> 
+
+This seems to a be better, but more complex to use. I think it syncs passwords as well, but I don't know yet. 
 
 
 
