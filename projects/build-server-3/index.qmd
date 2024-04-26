@@ -205,12 +205,9 @@ CMD ["/bin/rathole"]
 It uses a multi stage build to copy the statically compiled binary to the final container. 
 
 
+## Podman
 
-## Ansibilizing the server
-
-### Podman
-
-#### Rootless
+### Rootless
 
 I was actually doing really good, but I encountered a roadblock:
 
@@ -225,7 +222,7 @@ It links to some docs here: <https://docs.ansible.com/ansible-core/2.16/playbook
 
 This was fixed after I installed the `acl` package. 
 
-#### Pods
+### Pods
 
 Podman has "pods". These are somewhat similar to docker networks, which I prefer. 
 
@@ -235,7 +232,7 @@ Podman pods work a bit differently. Every pod can contain multiple containers, b
 
 I am using ansible to create pods. 
 
-#### Systemd Integration
+### Systemd Integration
 
 
 Ansible can generate systemd units for pods and containers:
@@ -278,6 +275,100 @@ moonpie@thoth:~$ systemctl status --user
              └─1514 "(sd-pam)"
 ```
 
+I found an [askubuntu answer](https://askubuntu.com/a/1468012) which has the solution I need. The variable `$XDG_RUNTIME_DIR` and `$DBUS_SESSION_ADDRESS` need to be set — however, in my testing, only the former actually needed to be set. 
+
+[Ansible's documentation on user services](https://docs.ansible.com/ansible/latest/collections/ansible/builtin/systemd_service_module.html) actually addresses this. 
+
+```{.yaml}
+- name: Run a user service when XDG_RUNTIME_DIR is not set on remote login
+  ansible.builtin.systemd_service:
+    name: myservice
+    state: started
+    scope: user
+  environment:
+    XDG_RUNTIME_DIR: "/run/user/{{ myuid }}"
+```
+
+The `environment` dictionary sets environment variables for a task. 
+
+And then of course, when configuring and testing, I like the solution as suggested by the stackoverflow answer:
+
+`sudo machinectl shell user@` to log into a local user with dbus and environment variables properly set up. 
+
+Now, I simply have to ensure that generated systemd unitfiles for containers go in the right place, `$HOME/.config/systemd/user/`, like so:
+
+```{.yaml}
+- name: Authentik Redis database
+      containers.podman.podman_container:
+        name: authentik_redis
+        pod: authentik_pod
+        image: docker.io/library/redis:alpine
+        command: --save 60 1 --loglevel warning
+        env:
+          AUTHENTIK_SECRET_KEY: "{{ authentik_secret_key }}"
+        volumes:
+          - "{{ homepath.stdout }}/authentik/redis:/data"
+        generate_systemd: 
+          restart_policy: "always"
+          path: "{{ homepath.stdout }}/.config/systemd/user/"
+```
+
+And the services shows up in the systemd user session:
+
+```{.default}
+podmaner@thoth:~/.config$ systemctl --user status container-authentik_redis.service
+○ container-authentik_redis.service - Podman container-authentik_redis.service
+     Loaded: loaded (/home/podmaner/.config/systemd/user/container-authentik_redis.service; disabled; preset: enabled)
+     Active: inactive (dead)
+       Docs: man:podman-generate-systemd(1)
+```
+
+
+However...
+
+```{.ini filename="$HOME/.config/systemd/user/container-authentik_redis.service"}
+[Unit]
+Description=Podman container-authentik_redis.service
+Documentation=man:podman-generate-systemd(1)
+Wants=network-online.target
+After=network-online.target
+RequiresMountsFor=/tmp/podman-run-1001/containers
+
+[Service]
+Environment=PODMAN_SYSTEMD_UNIT=%n
+Restart=always
+TimeoutStopSec=70
+ExecStart=/usr/bin/podman start authentik_redis
+ExecStop=/usr/bin/podman stop  \
+        -t 10 authentik_redis
+ExecStopPost=/usr/bin/podman stop  \
+        -t 10 authentik_redis
+PIDFile=/tmp/podman-run-1001/containers/vfs-containers/5fed7e5a1116899a7e1915793f0f8d3bd0f09c1884e8d574138a72b55964211f/userdata/conmon.pid
+Type=forking
+
+[Install]
+WantedBy=default.target
+```
+
+`podman generate systemd` doesn't actually generate [quadlets](https://www.redhat.com/sysadmin/quadlet-podman) for systemd, but rather a unit user service that calls podman. This is problematic because I was expecting quadlets to be used because quadlets define the container themselves in the unit file. 
+
+Without quadlets, podman manages it's own state, which has issues, and was the entire reason I was looking into alternatives to podman for managing state. 
+
+More research: <https://github.com/linux-system-roles/podman>: I found an ansible role to generate podman quadlets, but I don't really want to include ansible roles in my existing ansible roles. Also, it intakes kubernetes yaml, which is very complex for what I am trying to do. At that point, why not just use a single node kubernetes cluster and let kubernetes manage state?
+
+However:
+
+> Quadlet, a tool merged into Podman 4.4
+
+```{.default}
+podmaner@thoth:~/.config/systemd/user$ podman --version
+podman version 4.3.1
+```
+
+My Debian system doesn't support quadlets. I couuld use nix or something else to get a newer version of podman, since I am doing rootless, but that feels like way to much complexity for what will ultimately not be a permanent solution, as I plan to eventually move to a kubernetes cluster. 
+
+
+## Ansibilizing the server
 
 ### Ansible facts HOME =/= $HOME
 
@@ -341,6 +432,56 @@ I also decided to try  `ansible_facts['env']['HOME']`, but that still outpus `/h
 
 This was a fun little tangent, I think I am going to return to using `$HOME` and other environment variables. Since things like podman volumes can't simply be fed environment variables, I have to echo $HOME to get it first, and then save it to stdout. It feels like there should be a cleaner way to do this, but this does work.
 
+### Ansible Podman Healthchecks
+
+I think I found some undocumented behavior. I was attempting to adapt the [authentik docker compose](https://docs.goauthentik.io/docs/installation/docker-compose) healthchecks to be configured via ansible and podman instead. 
+
+The [ansible podman_container docs](https://docs.ansible.com/ansible/latest/collections/containers/podman/podman_container_module.html#parameter-healthcheck) have a section on healthchecks. 
+
+The official docs say this is correct:
+
+```{.yaml}
+- name: Authentik postgres database
+  containers.podman.podman_container:
+    name: authentik_postgres
+    pod: authentik_pod
+    image: "moonpiedumplings/authentik_postgres:12"
+    healthcheck: "CMD-SHELL pg_isready -d $${POSTGRES_DB} -U $${POSTGRES_USER}"
+    healthcheck_retries: 5
+    healthcheck_start_period: 20s
+  ```
+  
+  And it is. But I attempted to copy and paste the official authentik docker-compose for this anyway, to see if it worked: 
+
+```{.yaml}
+- name: Authentik Redis database
+  containers.podman.podman_container:
+    name: authentik_redis
+    pod: authentik_pod
+    image: docker.io/library/redis:alpine
+    command: --save 60 1 --loglevel warning
+    healthcheck:
+      test: "CMD-SHELL redis-cli ping | grep PONG"
+      start_period: 20s
+      interval: 30s
+      retries: 5
+      timeout: 3s
+```
+
+And I found that this actually still worked. 
+
+```{.default}
+podmaner@thoth:~$ podman inspect authentik_redis
+...
+....
+"--healthcheck-command",
+"{'test': 'CMD-SHELL redis-cli ping | grep PONG', 'start_period': '20s', 'interval': '30s', 'retries': 5, 'timeout': '3s'}",
+...
+...
+```
+
+I find this interesting that it works despite not being documented. Should I rely on this behavior? I like the way it looks, as it's much more readable than the _underscore format for these particular variables.
+
 
 ### Ansible vault
 
@@ -358,6 +499,9 @@ I only need a few variables encrypted, so maybe:
 Or I could encrypt a file with the variables I want and add them? :
 
 [Docs on encrypting files](https://docs.ansible.com/ansible/latest/vault_guide/vault_encrypting_content.html#encrypting-files-with-ansible-vault)
+
+
+I opted for the only encrypting certain variables within my inventory file, using a single password.
 
 
 # Service deployment
@@ -989,6 +1133,24 @@ This seems to a be better, but more complex to use. I think it syncs passwords a
 
 
 # Presearch for future pieces
+
+## Kubernetes
+
+()
+
+```{.default}
+podmaner@thoth:~$ podman kube generate authentik_pod
+spec:
+  automountServiceAccountToken: false
+  containers:
+  ....
+  ....
+  hostUsers: false
+  hostname: authentik_pod
+ 
+```
+
+This isn't quite right. `hostUsers: false` means to *not* use user namespaces, which I am using right now in podman. See the [kubernetes docs]
 
 ## Openstack Notes
 
