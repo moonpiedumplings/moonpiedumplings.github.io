@@ -367,6 +367,15 @@ podman version 4.3.1
 
 My Debian system doesn't support quadlets. I couuld use nix or something else to get a newer version of podman, since I am doing rootless, but that feels like way to much complexity for what will ultimately not be a permanent solution, as I plan to eventually move to a kubernetes cluster. 
 
+Later, I did discover that ansible supports writing quadlet files, rather than creating a container:
+
+From [ansible docs on podman_container](https://docs.ansible.com/ansible/latest/collections/containers/podman/podman_container_module.html#parameter-state):
+
+> quadlet - Write a quadlet file with the specified configuration. Requires the quadlet_dir option to be set.
+
+I still don't think I'm going to use quadlets, but the option is nice.
+
+Rather, I opted for something else: Generating a systemd service
 
 ## Ansibilizing the server
 
