@@ -6,9 +6,9 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
-<meta name="description" content="This is I blog my progress on my projects. I often use this as a reference sheet when I come back to incomplete projects.">
+<meta name="dcterms.date" content="2024-03-20">
 
-<title>Jeffrey Fonseca – Projects</title>
+<title>Jeffrey Fonseca – My server part 4 — Kubernetes</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -24,26 +24,24 @@ ul.task-list li input[type="checkbox"] {
 </style>
 
 
-<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
-<script src="../site_libs/quarto-nav/headroom.min.js"></script>
-<script src="../site_libs/clipboard/clipboard.min.js"></script>
-<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
-<script src="../site_libs/quarto-search/fuse.min.js"></script>
-<script src="../site_libs/quarto-search/quarto-search.js"></script>
-<meta name="quarto:offset" content="../">
-<script src="../site_libs/quarto-listing/list.min.js"></script>
-<script src="../site_libs/quarto-listing/quarto-listing.js"></script>
-<script src="../site_libs/quarto-html/quarto.js"></script>
-<script src="../site_libs/quarto-html/popper.min.js"></script>
-<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
-<script src="../site_libs/quarto-html/anchor.min.js"></script>
-<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="../site_libs/quarto-html/quarto-syntax-highlighting-dark.css" rel="prefetch" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
-<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../site_libs/bootstrap/bootstrap-dark.min.css" rel="prefetch" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<script src="../../site_libs/quarto-html/quarto.js"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark.css" rel="prefetch" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark.min.css" rel="prefetch" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -71,76 +69,18 @@ ul.task-list li input[type="checkbox"] {
     "search-label": "Search"
   }
 }</script>
-<script>
 
-  window.document.addEventListener("DOMContentLoaded", function (_event) {
-    const listingTargetEl = window.document.querySelector('#listing-listing .list');
-    if (!listingTargetEl) {
-      // No listing discovered, do not attach.
-      return; 
-    }
-
-    const options = {
-      valueNames: ['listing-date','listing-title','listing-author',{ data: ['index'] },{ data: ['categories'] },{ data: ['listing-date-sort'] },{ data: ['listing-title-sort'] }],
-      
-      searchColumns: ["listing-date","listing-title","listing-author"],
-    };
-
-    window['quarto-listings'] = window['quarto-listings'] || {};
-    window['quarto-listings']['listing-listing'] = new List('listing-listing', options);
-
-    if (window['quarto-listing-loaded']) {
-      window['quarto-listing-loaded']();
-    }
-  });
-
-  window.addEventListener('hashchange',() => {
-    if (window['quarto-listing-loaded']) {
-      window['quarto-listing-loaded']();
-    }
-  })
-  </script>
-
-  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
-  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
-
-<script type="text/javascript">
-const typesetMath = (el) => {
-  if (window.MathJax) {
-    // MathJax Typeset
-    window.MathJax.typeset([el]);
-  } else if (window.katex) {
-    // KaTeX Render
-    var mathElements = el.getElementsByClassName("math");
-    var macros = [];
-    for (var i = 0; i < mathElements.length; i++) {
-      var texText = mathElements[i].firstChild;
-      if (mathElements[i].tagName == "SPAN") {
-        window.katex.render(texText.data, mathElements[i], {
-          displayMode: mathElements[i].classList.contains('display'),
-          throwOnError: false,
-          macros: macros,
-          fleqn: false
-        });
-      }
-    }
-  }
-}
-window.Quarto = {
-  typesetMath
-};
-</script>
 
 </head>
 
 <body class="nav-fixed">
 
 <div id="quarto-search-results"></div>
-  <header id="quarto-header" class="headroom fixed-top quarto-banner">
+  <header id="quarto-header" class="headroom fixed-top">
     <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
       <div class="navbar-container container-fluid">
       <div class="navbar-brand-container mx-auto">
-    <a class="navbar-brand" href="../index.html">
+    <a class="navbar-brand" href="../../index.html">
     <span class="navbar-title">Jeffrey Fonseca</span>
     </a>
   </div>
@@ -151,31 +91,31 @@ window.Quarto = {
           <div class="collapse navbar-collapse" id="navbarCollapse">
             <ul class="navbar-nav navbar-nav-scroll me-auto">
   <li class="nav-item">
-    <a class="nav-link active" href="../projects/index.html" aria-current="page"> 
+    <a class="nav-link" href="../../projects/index.html"> 
 <span class="menu-text">Projects</span></a>
   </li>  
   <li class="nav-item">
-    <a class="nav-link" href="../blog/index.html"> 
+    <a class="nav-link" href="../../blog/index.html"> 
 <span class="menu-text">Blog</span></a>
   </li>  
   <li class="nav-item">
-    <a class="nav-link" href="../playground/index.html"> 
+    <a class="nav-link" href="../../playground/index.html"> 
 <span class="menu-text">Playground</span></a>
   </li>  
   <li class="nav-item">
-    <a class="nav-link" href="../guides/index.html"> 
+    <a class="nav-link" href="../../guides/index.html"> 
 <span class="menu-text">Guides</span></a>
   </li>  
   <li class="nav-item">
-    <a class="nav-link" href="../talks/index.html"> 
+    <a class="nav-link" href="../../talks/index.html"> 
 <span class="menu-text">Talks</span></a>
   </li>  
   <li class="nav-item">
-    <a class="nav-link" href="../writeups/index.html"> 
+    <a class="nav-link" href="../../writeups/index.html"> 
 <span class="menu-text">Writeups</span></a>
   </li>  
   <li class="nav-item">
-    <a class="nav-link" href="../resume/index.html"> 
+    <a class="nav-link" href="../../resume/index.html"> 
 <span class="menu-text">Resume</span></a>
   </li>  
 </ul>
@@ -199,165 +139,121 @@ window.Quarto = {
     </nav>
 </header>
 <!-- content -->
-<header id="title-block-header" class="quarto-title-block default page-columns page-full">
-  <div class="quarto-title-banner page-columns page-full">
-    <div class="quarto-title column-page-left">
-      <h1 class="title">Projects</h1>
-                  <div>
-        <div class="description">
-          This is I blog my progress on my projects. I often use this as a reference sheet when I come back to incomplete projects.
-        </div>
-      </div>
-                </div>
-  </div>
-    
-  
-  <div class="quarto-title-meta column-page-left">
-
-      
-    
-      
-    </div>
-    
-  
-  </header><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-full page-navbar">
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
 <!-- sidebar -->
 <!-- margin-sidebar -->
     <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
-        
-    <h5 class="quarto-listing-category-title">Categories</h5><div class="quarto-listing-category category-default"><div class="category" data-category="">All <span class="quarto-category-count">(9)</span></div><div class="category" data-category="ansible">ansible <span class="quarto-category-count">(1)</span></div><div class="category" data-category="devops">devops <span class="quarto-category-count">(2)</span></div><div class="category" data-category="hci">hci <span class="quarto-category-count">(1)</span></div><div class="category" data-category="kasm">kasm <span class="quarto-category-count">(2)</span></div><div class="category" data-category="linux">linux <span class="quarto-category-count">(7)</span></div><div class="category" data-category="nix">nix <span class="quarto-category-count">(5)</span></div><div class="category" data-category="quarto">quarto <span class="quarto-category-count">(1)</span></div><div class="category" data-category="ubuntu">ubuntu <span class="quarto-category-count">(1)</span></div></div></div>
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#why-the-switch" id="toc-why-the-switch" class="nav-link active" data-scroll-target="#why-the-switch">Why the switch?</a></li>
+  <li><a href="#rootless-kubernetes" id="toc-rootless-kubernetes" class="nav-link" data-scroll-target="#rootless-kubernetes">Rootless (?) Kubernetes</a>
+  <ul class="collapse">
+  <li><a href="#user-namespaces" id="toc-user-namespaces" class="nav-link" data-scroll-target="#user-namespaces">User Namespaces</a></li>
+  <li><a href="#helm" id="toc-helm" class="nav-link" data-scroll-target="#helm">Helm</a></li>
+  <li><a href="#kubernetes-distro" id="toc-kubernetes-distro" class="nav-link" data-scroll-target="#kubernetes-distro">Kubernetes Distro</a></li>
+  <li><a href="#gitops-software" id="toc-gitops-software" class="nav-link" data-scroll-target="#gitops-software">Gitops Software</a></li>
+  </ul></li>
+  </ul>
+</nav>
+    </div>
 <!-- main -->
-<main class="content quarto-banner-title-block column-page-left" id="quarto-document-content">
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">My server part 4 — Kubernetes</h1>
+  <div class="quarto-categories">
+    <div class="quarto-category">linux</div>
+  </div>
+  </div>
 
 
 
+<div class="quarto-title-meta">
+
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">March 20, 2024</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
 
 
+</header>
 
 
+<section id="why-the-switch" class="level1">
+<h1>Why the switch?</h1>
+<p>I was working on configuring rootless podman via ansible, but I had trouble because the tooling was incomplete. Ansible is a suboptiomal way to manage containers, and rootless podman can’t manage it’s own services.</p>
+<p>For the whole journey, see the <a href="../../projects/build-server-3/index.html#systemd-integration">previous post</a></p>
+<p>So yeah. I’ve decided to switch to Kubernetes, because Kubernetes can manage it’s own services, and be rootless. The configuration-as-code landscape for Kubernetes, is much, much better than podman, and I will get many more options. For example, I can use <a href="">helm</a>, which is somewhat like a package manager for kubernetes, to install apps. Both Caddy and Authentik offer helm packages. Using the offered packages is probably less work than converting a docker compose to a podman container.</p>
+</section>
+<section id="rootless-kubernetes" class="level1">
+<h1>Rootless (?) Kubernetes</h1>
+<section id="user-namespaces" class="level2">
+<h2 class="anchored" data-anchor-id="user-namespaces">User Namespaces</h2>
+<p>Just like how Linux has “distributions”, or bundles of software that build ontop of the Linxu kernels, Kubernetes has distros. I want rootless Kubernetes,</p>
+<p>I started by looking at <a href="">k3s</a>, the version of kubernetes I have experience with. However, there appear to be some <a href="https://docs.k3s.io/advanced#known-issues-with-rootless-mode">caveats with rootless mode</a>… including not being able to run a multi node cluster.</p>
+<p>There is an article related to Kubernetes rootless containers: <a href="https://rootlesscontaine.rs/getting-started/kubernetes/" class="uri">https://rootlesscontaine.rs/getting-started/kubernetes/</a></p>
+<p>And what I see is… not promising. I don’t really desire to do run <code>kind</code> or <code>minikube</code>, because they are stripped down compared to more feature-full Kubernetes distros like <code>k3s</code></p>
+<p>Minikube, from that list above, is promising, but it is designed for development/testing, and <a href="https://github.com/kubernetes/minikube/issues/94">doesn’t support a multi-machine multi node setup</a></p>
+<p>Kind has a similar usecasde, and limitation. Despite how easy it is to do rootless on them, that makes them unsuitable for me.</p>
+<p>Okay, I seem to have misunderstood what &lt;rootlesscontaine.rs&gt; want, as compared to what I want. That site documentes how to run all of the kubernetes components, as rootless using a user namespace. What I want, is using user namespaces to isolate pods.</p>
+<p>Kubernetes seems to support this natively: <a href="https://kubernetes.io/docs/tasks/configure-pod-container/user-namespaces/" class="uri">https://kubernetes.io/docs/tasks/configure-pod-container/user-namespaces/</a></p>
+<p>To enable user namespaces, all you need to do is set <code>hostUsers: false</code> in your kubernetes yaml… except, how can I override this for an existing helm chart?</p>
+</section>
+<section id="helm" class="level2">
+<h2 class="anchored" data-anchor-id="helm">Helm</h2>
+<p>Helm is very nice. However, from what I’ve heard, it is difficult to modify repackaged charts. This is especially concerning to me, because I intend to run all of my containers within user namespaces, and many helm charts don’t provide this. In order to run prepackaged apps in user namespaces, I need to modify existing helm charts.</p>
+<p><a href="https://helm.sh/docs/intro/using_helm/#customizing-the-chart-before-installing" class="uri">https://helm.sh/docs/intro/using_helm/#customizing-the-chart-before-installing</a></p>
+<p>Helm has docs on customizing the chart before installing.</p>
+</section>
+<section id="kubernetes-distro" class="level2">
+<h2 class="anchored" data-anchor-id="kubernetes-distro">Kubernetes Distro</h2>
+<p>I see three main options available to me:</p>
+<ul>
+<li><a href="https://kubespray.io/#/">Kubespray</a> (ansible)</li>
+<li><a href="https://k3s.io/">K3s</a></li>
+<li><a href="https://docs.rke2.io/">RKE2</a></li>
+</ul>
+<p>I don’t really want to opt for manual installation, or anything that’s too complex for too little gains.</p>
+<p>Kubespray appeals to me since it’s ansible, and it would be cool to manage the kubernetes cluster installation and the services from the same spot — but I got ruled out:</p>
+<p>From <a href="https://github.com/kubernetes-sigs/kubespray?tab=readme-ov-file#container-runtime-notes">the README</a></p>
+<blockquote class="blockquote">
+<p>Supported Docker versions are 18.09, 19.03, 20.10, 23.0 and 24.0. The recommended Docker version is 24.0. Kubelet might break on docker’s non-standard version numbering (it no longer uses semantic versioning). To ensure auto-updates don’t break your cluster look into e.g.&nbsp;the YUM versionlock plugin or apt pin</p>
+</blockquote>
+<p>It seems as kubespray deploys kubernetes by installing docker, and then deploying kubespray in docker. Although this is a neat decision, I cannot use docker at all, becuause I intend to deploy openstack using <a href="https://docs.openstack.org/kolla-ansible/latest/">kolla-ansible</a>, which also uses docker. From my testing, the openstack deployment completely destroys docker’s networking, so I probably can’t use both at once.</p>
+<p>In addition to that, kubespray completely <a href="https://github.com/search?q=repo%3Akubernetes-sigs%2Fkubespray%20%22podman%22&amp;type=code">uninstalls podman</a>, meaning I can’t use podman as a provider for kubespray either.</p>
+<p>I found an <a href="https://github.com/rancherfederal/rke2-ansible">ansible role</a> to deploy RKE2, but it seems that it just deploys vanilla RKE2, with none of the goodies that I am searching for like a load balancer or external storage.</p>
+<p>I also found something similer for <a href="https://github.com/k3s-io/k3s-ansible">k3s, an ansible role</a> to deploy a “vanilla” kubernetes cluster. However, at the bottom, they mention <a href="https://github.com/k3s-io/k3s-ansible?tab=readme-ov-file#need-more-features">some other ansible roles</a> to deploy a more than vanilla k3s cluster.</p>
+<p>I found a <a href="https://www.reddit.com/r/kubernetes/comments/1c09jfz/i_opensourced_today_my_fully_automated_k3s/">reddit post</a> where someone open sourced their own <a href="https://github.com/axivo/k3s-cluster">ansible playbook</a> — Only 22 days ago (as of the time of writing this), and it’s quite comprehensive. It comes with Argocd, Cilium, Longhorn, Prometheus, Cloudfare Let’s Encrypt certificates with cert-manager, and more.</p>
+<p>I looks very appealing to me, despite the fact that it seems to be opinionated, and designed for personal use. In addition to that, they are simply using ansible’s helm modules to deploy stuff — what would be different from me doing that, with my own deployment choices?</p>
+</section>
+<section id="gitops-software" class="level2">
+<h2 class="anchored" data-anchor-id="gitops-software">Gitops Software</h2>
+<p><a href="https://en.wikipedia.org/wiki/DevOps#GitOps">Gitops</a> is a principle of software deployment, where the deployment infrastructure, services, and configuration, are stored in git — hence the name, Git Operations.</p>
+<p>There are several ways to do Gitops on Kubernetes, but the core challenge I am encountering, is that some Gitops software must be deployed to Kubernetes in order to manage the cluster, but you cannot use that sotware to deploy itself.</p>
+<p>What likely happens is that after you deploy the software to the cluster, then it records itself and adds itself to the state, but I have to ensure this works properly.</p>
+<p>Or maybe the GitOps software stays outside of the configuration, eternally untracked, but still self updating?</p>
+<p>I still haven’t selected a GitOps software, but I am looking at:</p>
+<ul>
+<li>ArgoCD</li>
+<li>FluxCD</li>
+<li>Fleet (made by SUSE, just like k3s, RKE2, rancher, and longhorn)</li>
+</ul>
 
 
-<div class="quarto-listing quarto-listing-container-table" id="listing-listing">
-<table class="quarto-listing-table table">
-<thead>
-<tr>
-<th>
-Date
-</th>
-<th>
-Title
-</th>
-<th>
-Author
-</th>
-</tr>
-</thead>
-<tbody class="list">
-<tr data-index="0" data-categories="linux" data-listing-date-sort="1710918000000" data-listing-file-modified-sort="1714701513374" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="5" data-listing-word-count-sort="881" data-listing-title-sort="My server part 4 — Kubernetes" data-listing-filename-sort="index.md">
-<td>
-<span class="listing-date">Mar 20, 2024</span>
-</td>
-<td>
-<a href="../projects/build-server-4/index.html" class="title listing-title">My server part 4 — Kubernetes</a>
-</td>
-<td>
-<span class="listing-author">&nbsp;</span>
-</td>
-</tr>
-<tr data-index="1" data-categories="linux" data-listing-date-sort="1705478400000" data-listing-file-modified-sort="1714601200462" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="40" data-listing-word-count-sort="7880" data-listing-title-sort="Building my server part 3 — The switch to debian" data-listing-filename-sort="index.qmd">
-<td>
-<span class="listing-date">Jan 17, 2024</span>
-</td>
-<td>
-<a href="../projects/build-server-3/index.html" class="title listing-title">Building my server part 3 — The switch to debian</a>
-</td>
-<td>
-<span class="listing-author">&nbsp;</span>
-</td>
-</tr>
-<tr data-index="2" data-categories="nix,quarto" data-listing-date-sort="1705305600000" data-listing-file-modified-sort="1705786332320" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="42" data-listing-word-count-sort="8247" data-listing-title-sort="Packaging quarto using nix" data-listing-filename-sort="index.qmd">
-<td>
-<span class="listing-date">Jan 15, 2024</span>
-</td>
-<td>
-<a href="../projects/quarto-via-nix/index.html" class="title listing-title">Packaging quarto using nix</a>
-</td>
-<td>
-<span class="listing-author">&nbsp;</span>
-</td>
-</tr>
-<tr data-index="3" data-categories="linux" data-listing-date-sort="1690959600000" data-listing-file-modified-sort="1706031313448" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="101" data-listing-word-count-sort="20134" data-listing-title-sort="Building my own Server Part 2 — Software" data-listing-filename-sort="index.qmd">
-<td>
-<span class="listing-date">Aug 2, 2023</span>
-</td>
-<td>
-<a href="../projects/build-server-2/index.html" class="title listing-title">Building my own Server Part 2 — Software</a>
-</td>
-<td>
-<span class="listing-author">&nbsp;</span>
-</td>
-</tr>
-<tr data-index="4" data-categories="linux" data-listing-date-sort="1690873200000" data-listing-file-modified-sort="1699495047594" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="12" data-listing-word-count-sort="2348" data-listing-title-sort="Building my own Server Part 1 — Hardware" data-listing-filename-sort="index.qmd">
-<td>
-<span class="listing-date">Aug 1, 2023</span>
-</td>
-<td>
-<a href="../projects/build-server/index.html" class="title listing-title">Building my own Server Part 1 — Hardware</a>
-</td>
-<td>
-<span class="listing-author">&nbsp;</span>
-</td>
-</tr>
-<tr data-index="5" data-categories="nix,linux,ansible" data-listing-date-sort="1689318000000" data-listing-file-modified-sort="1699495047594" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="18" data-listing-word-count-sort="3473" data-listing-title-sort="Automating my server config, first nix, then ansible" data-listing-filename-sort="index.qmd">
-<td>
-<span class="listing-date">Jul 14, 2023</span>
-</td>
-<td>
-<a href="../projects/nixos-vps/index.html" class="title listing-title">Automating my server config, first nix, then ansible</a>
-</td>
-<td>
-<span class="listing-author">&nbsp;</span>
-</td>
-</tr>
-<tr data-index="6" data-categories="nix,hci" data-listing-date-sort="1686466800000" data-listing-file-modified-sort="1699495047596" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="34" data-listing-word-count-sort="6636" data-listing-title-sort="Packaging Openstack on Nixos" data-listing-filename-sort="index.qmd">
-<td>
-<span class="listing-date">Jun 11, 2023</span>
-</td>
-<td>
-<a href="../projects/openstack-on-nixos/index.html" class="title listing-title">Packaging Openstack on Nixos</a>
-</td>
-<td>
-<span class="listing-author">&nbsp;</span>
-</td>
-</tr>
-<tr data-index="7" data-categories="linux,devops,nix,kasm" data-listing-date-sort="1683010800000" data-listing-file-modified-sort="1699495047594" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="11" data-listing-word-count-sort="2178" data-listing-title-sort="Compiling KasmVNC on NixOS" data-listing-filename-sort="index.qmd">
-<td>
-<span class="listing-date">May 2, 2023</span>
-</td>
-<td>
-<a href="../projects/compiling-kasmvnc-on-nixos/index.html" class="title listing-title">Compiling KasmVNC on NixOS</a>
-</td>
-<td>
-<span class="listing-author">&nbsp;</span>
-</td>
-</tr>
-<tr data-index="8" data-categories="nix,linux,devops,ubuntu,kasm" data-listing-date-sort="1674720000000" data-listing-file-modified-sort="1699495047598" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="10" data-listing-word-count-sort="1895" data-listing-title-sort="Kasmweb setup" data-listing-filename-sort="index.qmd">
-<td>
-<span class="listing-date">Jan 26, 2023</span>
-</td>
-<td>
-<a href="../projects/setting-up-kasm/index.html" class="title listing-title">Kasmweb setup</a>
-</td>
-<td>
-<span class="listing-author">&nbsp;</span>
-</td>
-</tr>
-</tbody>
-</table>
-<div class="listing-no-matching d-none">
-No matching items
-</div>
-</div></main> <!-- /main -->
+</section>
+</section>
+
+</main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">
 window.document.addEventListener("DOMContentLoaded", function (event) {
   const toggleBodyColorMode = (bsSheetEl) => {

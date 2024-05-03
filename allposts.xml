@@ -10,7 +10,173 @@
 <atom:link href="https://moonpiedumplings.github.io/allposts.xml" rel="self" type="application/rss+xml"/>
 <description>All posts, intended to be used in an RSS feed. </description>
 <generator>quarto-1.5.24</generator>
-<lastBuildDate>Sat, 06 Apr 2024 07:00:00 GMT</lastBuildDate>
+<lastBuildDate>Thu, 02 May 2024 07:00:00 GMT</lastBuildDate>
+<item>
+  <title>Container images and setuid binaries</title>
+  <link>https://moonpiedumplings.github.io/playground/setuid-containers/</link>
+  <description><![CDATA[ 
+
+
+
+
+<p>A friend sends me a message in Discord:</p>
+<p><code>$ find / -perm /4000</code></p>
+<blockquote class="blockquote">
+<p>That will show all suid executables on your system</p>
+</blockquote>
+<p>They then post the output of this command on openbsd:</p>
+<div class="sourceCode" id="cb1" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb1-1">/usr/bin/chfn</span>
+<span id="cb1-2">/usr/bin/chpass</span>
+<span id="cb1-3">/usr/bin/chsh</span>
+<span id="cb1-4">/usr/bin/doas</span>
+<span id="cb1-5">/usr/bin/lpr</span>
+<span id="cb1-6">/usr/bin/lprm</span>
+<span id="cb1-7">/usr/bin/passwd</span>
+<span id="cb1-8">/usr/bin/su</span>
+<span id="cb1-9">/usr/libexec/lockspool</span>
+<span id="cb1-10">/usr/libexec/ssh-keysign</span>
+<span id="cb1-11">/usr/sbin/authpf</span>
+<span id="cb1-12">/usr/sbin/authpf-noip</span>
+<span id="cb1-13">/usr/sbin/pppd</span>
+<span id="cb1-14">/usr/sbin/traceroute</span>
+<span id="cb1-15">/usr/sbin/traceroute6</span>
+<span id="cb1-16">/sbin/ping</span>
+<span id="cb1-17">/sbin/ping6</span>
+<span id="cb1-18">/sbin/shutdown</span></code></pre></div>
+<p>Another friend tries it out on Gentoo Linux</p>
+<div class="sourceCode" id="cb2" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb2-1">/usr/bin/chfn</span>
+<span id="cb2-2">/usr/bin/chpass</span>
+<span id="cb2-3">/usr/bin/chsh</span>
+<span id="cb2-4">/usr/bin/doas</span>
+<span id="cb2-5">/usr/bin/lpr</span>
+<span id="cb2-6">/usr/bin/lprm</span>
+<span id="cb2-7">/usr/bin/passwd</span>
+<span id="cb2-8">/usr/bin/su</span>
+<span id="cb2-9">/usr/libexec/lockspool</span>
+<span id="cb2-10">/usr/libexec/ssh-keysign</span>
+<span id="cb2-11">/usr/sbin/authpf</span>
+<span id="cb2-12">/usr/sbin/authpf-noip</span>
+<span id="cb2-13">/usr/sbin/pppd</span>
+<span id="cb2-14">/usr/sbin/traceroute</span>
+<span id="cb2-15">/usr/sbin/traceroute6</span>
+<span id="cb2-16">/sbin/ping</span>
+<span id="cb2-17">/sbin/ping6</span>
+<span id="cb2-18">/sbin/shutdown</span></code></pre></div>
+<p>I suppose I should explain what setuid binaries are. Setuid binaries run with the permissions of the user who owns the binary. Usually, it’s used for things like <code>sudo</code>, which use setuid to elevate the binary to root first, and then the rootful binary then does the things, like grant permissions.</p>
+<p>Setuid binaries are typically considered a security risk, because an exploit like a buffer overflow or some other exploit can be disasterous in a process running as root. In fact, that’s how many privilege escalation vulnerabilities on Linux have happened — exploiting a setuid binary owned by root.</p>
+<p>I then run the command on my own system (Arch Linux)</p>
+<div class="sourceCode" id="cb3" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb3-1">[moonpie@lizard ~]$ find / -perm /4000 2&gt;/dev/null</span>
+<span id="cb3-2">/home/moonpie/.local/share/containers/storage/overlay/2fa37f2ee66efbd308b9b91bce81c262f5e6ab6c3bf8056632afc60cc602785c/diff/usr/bin/chfn</span>
+<span id="cb3-3">/home/moonpie/.local/share/containers/storage/overlay/2fa37f2ee66efbd308b9b91bce81c262f5e6ab6c3bf8056632afc60cc602785c/diff/usr/bin/chsh</span>
+<span id="cb3-4">/home/moonpie/.local/share/containers/storage/overlay/2fa37f2ee66efbd308b9b91bce81c262f5e6ab6c3bf8056632afc60cc602785c/diff/usr/bin/gpasswd</span>
+<span id="cb3-5">/home/moonpie/.local/share/containers/storage/overlay/2fa37f2ee66efbd308b9b91bce81c262f5e6ab6c3bf8056632afc60cc602785c/diff/usr/bin/mount</span>
+<span id="cb3-6">/home/moonpie/.local/share/containers/storage/overlay/2fa37f2ee66efbd308b9b91bce81c262f5e6ab6c3bf8056632afc60cc602785c/diff/usr/bin/newgrp</span>
+<span id="cb3-7">/home/moonpie/.local/share/containers/storage/overlay/2fa37f2ee66efbd308b9b91bce81c262f5e6ab6c3bf8056632afc60cc602785c/diff/usr/bin/passwd</span>
+<span id="cb3-8">/home/moonpie/.local/share/containers/storage/overlay/2fa37f2ee66efbd308b9b91bce81c262f5e6ab6c3bf8056632afc60cc602785c/diff/usr/bin/su</span>
+<span id="cb3-9">/home/moonpie/.local/share/containers/storage/overlay/2fa37f2ee66efbd308b9b91bce81c262f5e6ab6c3bf8056632afc60cc602785c/diff/usr/bin/umount</span>
+<span id="cb3-10">/home/moonpie/.local/share/containers/storage/overlay/b2a22dd93936f487715bbc38b3a93f3f8e7d927fbf473871581c0a333f94d23a/diff/usr/lib/dbus-1.0/dbus-daemon-launch-helper</span>
+<span id="cb3-11">/home/moonpie/.local/share/containers/storage/overlay/af21757bc7d5f497f4ce0552dbad07cf0725413c3a305e1ff2c8a7b5097eeb49/diff/usr/lib/dbus-1.0/dbus-daemon-launch-helper</span>
+<span id="cb3-12">/home/moonpie/.local/share/containers/storage/overlay/ae134c61b154341a1dd932bd88cb44e805837508284e5d60ead8e94519eb339f/diff/usr/bin/chfn</span>
+<span id="cb3-13">/home/moonpie/.local/share/containers/storage/overlay/ae134c61b154341a1dd932bd88cb44e805837508284e5d60ead8e94519eb339f/diff/usr/bin/chsh</span>
+<span id="cb3-14">/home/moonpie/.local/share/containers/storage/overlay/ae134c61b154341a1dd932bd88cb44e805837508284e5d60ead8e94519eb339f/diff/usr/bin/gpasswd</span>
+<span id="cb3-15">/home/moonpie/.local/share/containers/storage/overlay/ae134c61b154341a1dd932bd88cb44e805837508284e5d60ead8e94519eb339f/diff/usr/bin/mount</span>
+<span id="cb3-16">/home/moonpie/.local/share/containers/storage/overlay/ae134c61b154341a1dd932bd88cb44e805837508284e5d60ead8e94519eb339f/diff/usr/bin/newgrp</span>
+<span id="cb3-17">/home/moonpie/.local/share/containers/storage/overlay/ae134c61b154341a1dd932bd88cb44e805837508284e5d60ead8e94519eb339f/diff/usr/bin/passwd</span>
+<span id="cb3-18">/home/moonpie/.local/share/containers/storage/overlay/ae134c61b154341a1dd932bd88cb44e805837508284e5d60ead8e94519eb339f/diff/usr/bin/su</span>
+<span id="cb3-19">/home/moonpie/.local/share/containers/storage/overlay/ae134c61b154341a1dd932bd88cb44e805837508284e5d60ead8e94519eb339f/diff/usr/bin/umount</span>
+<span id="cb3-20">/home/moonpie/.local/share/containers/storage/overlay/fd77695eba64b4eb5db10dd9ef0181d0053dbc23e6c465f3001d664f19e621d7/diff/usr/lib/openssh/ssh-keysign</span>
+<span id="cb3-21">/home/moonpie/.local/share/containers/storage/overlay/ede391454aeab91f6777dd38e55e085975ffcfd298987b8ec685196f2a6c811a/diff/usr/bin/chfn</span>
+<span id="cb3-22">/home/moonpie/.local/share/containers/storage/overlay/ede391454aeab91f6777dd38e55e085975ffcfd298987b8ec685196f2a6c811a/diff/usr/bin/chsh</span>
+<span id="cb3-23">/home/moonpie/.local/share/containers/storage/overlay/ede391454aeab91f6777dd38e55e085975ffcfd298987b8ec685196f2a6c811a/diff/usr/bin/gpasswd</span>
+<span id="cb3-24">/home/moonpie/.local/share/containers/storage/overlay/ede391454aeab91f6777dd38e55e085975ffcfd298987b8ec685196f2a6c811a/diff/usr/bin/mount</span>
+<span id="cb3-25">/home/moonpie/.local/share/containers/storage/overlay/ede391454aeab91f6777dd38e55e085975ffcfd298987b8ec685196f2a6c811a/diff/usr/bin/newgrp</span>
+<span id="cb3-26">/home/moonpie/.local/share/containers/storage/overlay/ede391454aeab91f6777dd38e55e085975ffcfd298987b8ec685196f2a6c811a/diff/usr/bin/passwd</span>
+<span id="cb3-27">/home/moonpie/.local/share/containers/storage/overlay/ede391454aeab91f6777dd38e55e085975ffcfd298987b8ec685196f2a6c811a/diff/usr/bin/su</span>
+<span id="cb3-28">/home/moonpie/.local/share/containers/storage/overlay/ede391454aeab91f6777dd38e55e085975ffcfd298987b8ec685196f2a6c811a/diff/usr/bin/umount</span>
+<span id="cb3-29">/home/moonpie/.local/share/containers/storage/overlay/c4bc4a1387e82c199a05c950a61d31aba8e1481a94c63196b82e25ac8367e5d1/diff/usr/bin/chage</span>
+<span id="cb3-30">/home/moonpie/.local/share/containers/storage/overlay/c4bc4a1387e82c199a05c950a61d31aba8e1481a94c63196b82e25ac8367e5d1/diff/usr/bin/gpasswd</span>
+<span id="cb3-31">/home/moonpie/.local/share/containers/storage/overlay/c4bc4a1387e82c199a05c950a61d31aba8e1481a94c63196b82e25ac8367e5d1/diff/usr/bin/mount</span>
+<span id="cb3-32">/home/moonpie/.local/share/containers/storage/overlay/c4bc4a1387e82c199a05c950a61d31aba8e1481a94c63196b82e25ac8367e5d1/diff/usr/bin/newgrp</span>
+<span id="cb3-33">/home/moonpie/.local/share/containers/storage/overlay/c4bc4a1387e82c199a05c950a61d31aba8e1481a94c63196b82e25ac8367e5d1/diff/usr/bin/passwd</span>
+<span id="cb3-34">/home/moonpie/.local/share/containers/storage/overlay/c4bc4a1387e82c199a05c950a61d31aba8e1481a94c63196b82e25ac8367e5d1/diff/usr/bin/su</span>
+<span id="cb3-35">/home/moonpie/.local/share/containers/storage/overlay/c4bc4a1387e82c199a05c950a61d31aba8e1481a94c63196b82e25ac8367e5d1/diff/usr/bin/umount</span>
+<span id="cb3-36">/home/moonpie/.local/share/containers/storage/overlay/c4bc4a1387e82c199a05c950a61d31aba8e1481a94c63196b82e25ac8367e5d1/diff/usr/sbin/pam_timestamp_check</span>
+<span id="cb3-37">/home/moonpie/.local/share/containers/storage/overlay/c4bc4a1387e82c199a05c950a61d31aba8e1481a94c63196b82e25ac8367e5d1/diff/usr/sbin/unix_chkpwd</span>
+<span id="cb3-38">/home/moonpie/.local/share/containers/storage/overlay/c4bc4a1387e82c199a05c950a61d31aba8e1481a94c63196b82e25ac8367e5d1/diff/usr/sbin/userhelper</span>
+<span id="cb3-39">/home/moonpie/.local/share/containers/storage/overlay/9b1016e74f7eb4282d4aa84ecefedda2bc0f6625203e5085e070bd649945a965/diff/usr/bin/fusermount3</span>
+<span id="cb3-40">/usr/bin/fusermount</span>
+<span id="cb3-41">/usr/bin/mount.cifs</span>
+<span id="cb3-42">/usr/bin/fusermount3</span>
+<span id="cb3-43">/usr/bin/mount.nfs</span>
+<span id="cb3-44">/usr/bin/ksu</span>
+<span id="cb3-45">/usr/bin/sudo</span>
+<span id="cb3-46">/usr/bin/pkexec</span>
+<span id="cb3-47">/usr/bin/chage</span>
+<span id="cb3-48">/usr/bin/expiry</span>
+<span id="cb3-49">/usr/bin/gpasswd</span>
+<span id="cb3-50">/usr/bin/passwd</span>
+<span id="cb3-51">/usr/bin/sg</span>
+<span id="cb3-52">/usr/bin/unix_chkpwd</span>
+<span id="cb3-53">/usr/bin/crontab</span>
+<span id="cb3-54">/usr/bin/vmware-authd</span>
+<span id="cb3-55">/usr/bin/chfn</span>
+<span id="cb3-56">/usr/bin/chsh</span>
+<span id="cb3-57">/usr/bin/mount</span>
+<span id="cb3-58">/usr/bin/newgrp</span>
+<span id="cb3-59">/usr/bin/su</span>
+<span id="cb3-60">/usr/bin/umount</span>
+<span id="cb3-61">/usr/lib/dbus-1.0/dbus-daemon-launch-helper</span>
+<span id="cb3-62">/usr/lib/polkit-1/polkit-agent-helper-1</span>
+<span id="cb3-63">/usr/lib/mail-dotlock</span>
+<span id="cb3-64">/usr/lib/ssh/ssh-keysign</span>
+<span id="cb3-65">/usr/lib/kf5/fileshareset</span>
+<span id="cb3-66">/usr/lib/qemu/qemu-bridge-helper</span>
+<span id="cb3-67">/usr/lib/cockpit/cockpit-session</span>
+<span id="cb3-68">/usr/lib/vmware/bin/vmware-vmx</span>
+<span id="cb3-69">/usr/lib/vmware/bin/vmware-vmx-debug</span>
+<span id="cb3-70">/usr/lib/vmware/bin/vmware-vmx-stats</span>
+<span id="cb3-71">/usr/lib/virtualbox/VBoxHeadless</span>
+<span id="cb3-72">/usr/lib/virtualbox/VBoxNetAdpCtl</span>
+<span id="cb3-73">/usr/lib/virtualbox/VBoxNetDHCP</span>
+<span id="cb3-74">/usr/lib/virtualbox/VBoxNetNAT</span>
+<span id="cb3-75">/usr/lib/virtualbox/VBoxSDL</span>
+<span id="cb3-76">/usr/lib/virtualbox/VirtualBoxVM</span>
+<span id="cb3-77">/usr/lib/electron27/chrome-sandbox</span>
+<span id="cb3-78">/usr/lib/chromium/chrome-sandbox</span>
+<span id="cb3-79">/usr/lib/electron28/chrome-sandbox</span>
+<span id="cb3-80">/usr/lib/Xorg.wrap</span>
+<span id="cb3-81">/opt/microsoft/msedge/msedge-sandbox</span></code></pre></div>
+<p>But okay. This isn’t too bad. Maybe I can’t execute binaries from the contianer images, outside the container images.</p>
+<div class="sourceCode" id="cb4" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb4-1">[moonpie@lizard ~]$ cd /home/moonpie/.local/share/containers/storage/overlay/2fa37f2ee66efbd308b9b91bce81c262f5e6ab6c3bf8056632afc60cc602785c/diff/usr/bin/</span>
+<span id="cb4-2">[moonpie@lizard bin]$ ./gpasswd</span>
+<span id="cb4-3">configuration error - unknown item 'FAIL_DELAY' (notify administrator)</span>
+<span id="cb4-4">Usage: gpasswd [option] GROUP</span>
+<span id="cb4-5"></span>
+<span id="cb4-6">Options:</span>
+<span id="cb4-7">  -a, --add USER                add USER to GROUP</span>
+<span id="cb4-8">  -d, --delete USER             remove USER from GROUP</span>
+<span id="cb4-9">  -h, --help                    display this help message and exit</span>
+<span id="cb4-10">  -Q, --root CHROOT_DIR         directory to chroot into</span>
+<span id="cb4-11">  -r, --remove-password         remove the GROUP's password</span>
+<span id="cb4-12">  -R, --restrict                restrict access to GROUP to its members</span>
+<span id="cb4-13">  -M, --members USER,...        set the list of members of GROUP</span>
+<span id="cb4-14">  -A, --administrators ADMIN,...</span>
+<span id="cb4-15">                                set the list of administrators for GROUP</span>
+<span id="cb4-16">Except for the -A and -M options, the options cannot be combined.</span></code></pre></div>
+<p>That error is likely due to the fact that my Arch system has a newer version of the config file then whatever this <code>gpasswd</code> binary is expecting.</p>
+<p>Theoretically, if there was a vulnerable setuid binary in one of these containers, then someone could execute it to become able to do things as my user.</p>
+<p>However, this isn’t actually that big of an issue, because only I can access my home direcotry, where the container images are stored.</p>
+<p>I also experimented with docker images, with the rootful docker daemon. The same thing happened, where only root has permission to read and execuite the directories those docker images are stored in.</p>
+<p>I panicked at first, seeing all those setuid binaries, but it doesn’t seem to be that much of a deal, and doesn’t give people access to things they don’t already have access to.. by default at least.</p>
+
+
+
+ ]]></description>
+  <category>linux</category>
+  <category>cybersecurity</category>
+  <guid>https://moonpiedumplings.github.io/playground/setuid-containers/</guid>
+  <pubDate>Thu, 02 May 2024 07:00:00 GMT</pubDate>
+</item>
 <item>
   <title>Free resources to learn various software things</title>
   <link>https://moonpiedumplings.github.io/guides/learn-linux/</link>
@@ -133,6 +299,83 @@
  ]]></description>
   <guid>https://moonpiedumplings.github.io/talks/self-site/</guid>
   <pubDate>Mon, 25 Mar 2024 07:00:00 GMT</pubDate>
+</item>
+<item>
+  <title>My server part 4 — Kubernetes</title>
+  <link>https://moonpiedumplings.github.io/projects/build-server-4/</link>
+  <description><![CDATA[ 
+
+
+
+
+<section id="why-the-switch" class="level1">
+<h1>Why the switch?</h1>
+<p>I was working on configuring rootless podman via ansible, but I had trouble because the tooling was incomplete. Ansible is a suboptiomal way to manage containers, and rootless podman can’t manage it’s own services.</p>
+<p>For the whole journey, see the <a href="../../projects/build-server-3/index.html#systemd-integration">previous post</a></p>
+<p>So yeah. I’ve decided to switch to Kubernetes, because Kubernetes can manage it’s own services, and be rootless. The configuration-as-code landscape for Kubernetes, is much, much better than podman, and I will get many more options. For example, I can use <a href="">helm</a>, which is somewhat like a package manager for kubernetes, to install apps. Both Caddy and Authentik offer helm packages. Using the offered packages is probably less work than converting a docker compose to a podman container.</p>
+</section>
+<section id="rootless-kubernetes" class="level1">
+<h1>Rootless (?) Kubernetes</h1>
+<section id="user-namespaces" class="level2">
+<h2 class="anchored" data-anchor-id="user-namespaces">User Namespaces</h2>
+<p>Just like how Linux has “distributions”, or bundles of software that build ontop of the Linxu kernels, Kubernetes has distros. I want rootless Kubernetes,</p>
+<p>I started by looking at <a href="">k3s</a>, the version of kubernetes I have experience with. However, there appear to be some <a href="https://docs.k3s.io/advanced#known-issues-with-rootless-mode">caveats with rootless mode</a>… including not being able to run a multi node cluster.</p>
+<p>There is an article related to Kubernetes rootless containers: <a href="https://rootlesscontaine.rs/getting-started/kubernetes/" class="uri">https://rootlesscontaine.rs/getting-started/kubernetes/</a></p>
+<p>And what I see is… not promising. I don’t really desire to do run <code>kind</code> or <code>minikube</code>, because they are stripped down compared to more feature-full Kubernetes distros like <code>k3s</code></p>
+<p>Minikube, from that list above, is promising, but it is designed for development/testing, and <a href="https://github.com/kubernetes/minikube/issues/94">doesn’t support a multi-machine multi node setup</a></p>
+<p>Kind has a similar usecasde, and limitation. Despite how easy it is to do rootless on them, that makes them unsuitable for me.</p>
+<p>Okay, I seem to have misunderstood what &lt;rootlesscontaine.rs&gt; want, as compared to what I want. That site documentes how to run all of the kubernetes components, as rootless using a user namespace. What I want, is using user namespaces to isolate pods.</p>
+<p>Kubernetes seems to support this natively: <a href="https://kubernetes.io/docs/tasks/configure-pod-container/user-namespaces/" class="uri">https://kubernetes.io/docs/tasks/configure-pod-container/user-namespaces/</a></p>
+<p>To enable user namespaces, all you need to do is set <code>hostUsers: false</code> in your kubernetes yaml… except, how can I override this for an existing helm chart?</p>
+</section>
+<section id="helm" class="level2">
+<h2 class="anchored" data-anchor-id="helm">Helm</h2>
+<p>Helm is very nice. However, from what I’ve heard, it is difficult to modify repackaged charts. This is especially concerning to me, because I intend to run all of my containers within user namespaces, and many helm charts don’t provide this. In order to run prepackaged apps in user namespaces, I need to modify existing helm charts.</p>
+<p><a href="https://helm.sh/docs/intro/using_helm/#customizing-the-chart-before-installing" class="uri">https://helm.sh/docs/intro/using_helm/#customizing-the-chart-before-installing</a></p>
+<p>Helm has docs on customizing the chart before installing.</p>
+</section>
+<section id="kubernetes-distro" class="level2">
+<h2 class="anchored" data-anchor-id="kubernetes-distro">Kubernetes Distro</h2>
+<p>I see three main options available to me:</p>
+<ul>
+<li><a href="https://kubespray.io/#/">Kubespray</a> (ansible)</li>
+<li><a href="https://k3s.io/">K3s</a></li>
+<li><a href="https://docs.rke2.io/">RKE2</a></li>
+</ul>
+<p>I don’t really want to opt for manual installation, or anything that’s too complex for too little gains.</p>
+<p>Kubespray appeals to me since it’s ansible, and it would be cool to manage the kubernetes cluster installation and the services from the same spot — but I got ruled out:</p>
+<p>From <a href="https://github.com/kubernetes-sigs/kubespray?tab=readme-ov-file#container-runtime-notes">the README</a></p>
+<blockquote class="blockquote">
+<p>Supported Docker versions are 18.09, 19.03, 20.10, 23.0 and 24.0. The recommended Docker version is 24.0. Kubelet might break on docker’s non-standard version numbering (it no longer uses semantic versioning). To ensure auto-updates don’t break your cluster look into e.g.&nbsp;the YUM versionlock plugin or apt pin</p>
+</blockquote>
+<p>It seems as kubespray deploys kubernetes by installing docker, and then deploying kubespray in docker. Although this is a neat decision, I cannot use docker at all, becuause I intend to deploy openstack using <a href="https://docs.openstack.org/kolla-ansible/latest/">kolla-ansible</a>, which also uses docker. From my testing, the openstack deployment completely destroys docker’s networking, so I probably can’t use both at once.</p>
+<p>In addition to that, kubespray completely <a href="https://github.com/search?q=repo%3Akubernetes-sigs%2Fkubespray%20%22podman%22&amp;type=code">uninstalls podman</a>, meaning I can’t use podman as a provider for kubespray either.</p>
+<p>I found an <a href="https://github.com/rancherfederal/rke2-ansible">ansible role</a> to deploy RKE2, but it seems that it just deploys vanilla RKE2, with none of the goodies that I am searching for like a load balancer or external storage.</p>
+<p>I also found something similer for <a href="https://github.com/k3s-io/k3s-ansible">k3s, an ansible role</a> to deploy a “vanilla” kubernetes cluster. However, at the bottom, they mention <a href="https://github.com/k3s-io/k3s-ansible?tab=readme-ov-file#need-more-features">some other ansible roles</a> to deploy a more than vanilla k3s cluster.</p>
+<p>I found a <a href="https://www.reddit.com/r/kubernetes/comments/1c09jfz/i_opensourced_today_my_fully_automated_k3s/">reddit post</a> where someone open sourced their own <a href="https://github.com/axivo/k3s-cluster">ansible playbook</a> — Only 22 days ago (as of the time of writing this), and it’s quite comprehensive. It comes with Argocd, Cilium, Longhorn, Prometheus, Cloudfare Let’s Encrypt certificates with cert-manager, and more.</p>
+<p>I looks very appealing to me, despite the fact that it seems to be opinionated, and designed for personal use. In addition to that, they are simply using ansible’s helm modules to deploy stuff — what would be different from me doing that, with my own deployment choices?</p>
+</section>
+<section id="gitops-software" class="level2">
+<h2 class="anchored" data-anchor-id="gitops-software">Gitops Software</h2>
+<p><a href="https://en.wikipedia.org/wiki/DevOps#GitOps">Gitops</a> is a principle of software deployment, where the deployment infrastructure, services, and configuration, are stored in git — hence the name, Git Operations.</p>
+<p>There are several ways to do Gitops on Kubernetes, but the core challenge I am encountering, is that some Gitops software must be deployed to Kubernetes in order to manage the cluster, but you cannot use that sotware to deploy itself.</p>
+<p>What likely happens is that after you deploy the software to the cluster, then it records itself and adds itself to the state, but I have to ensure this works properly.</p>
+<p>Or maybe the GitOps software stays outside of the configuration, eternally untracked, but still self updating?</p>
+<p>I still haven’t selected a GitOps software, but I am looking at:</p>
+<ul>
+<li>ArgoCD</li>
+<li>FluxCD</li>
+<li>Fleet (made by SUSE, just like k3s, RKE2, rancher, and longhorn)</li>
+</ul>
+
+
+</section>
+</section>
+
+ ]]></description>
+  <category>linux</category>
+  <guid>https://moonpiedumplings.github.io/projects/build-server-4/</guid>
+  <pubDate>Wed, 20 Mar 2024 07:00:00 GMT</pubDate>
 </item>
 <item>
   <title>KDE 6 — New features</title>
@@ -1183,6 +1426,255 @@ font-style: inherit;">default.target</span></span></code></pre></div>
 <div class="sourceCode" id="cb11" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb11-1">podmaner@thoth:~/.config/systemd/user$ podman --version</span>
 <span id="cb11-2">podman version 4.3.1</span></code></pre></div>
 <p>My Debian system doesn’t support quadlets. I couuld use nix or something else to get a newer version of podman, since I am doing rootless, but that feels like way to much complexity for what will ultimately not be a permanent solution, as I plan to eventually move to a kubernetes cluster.</p>
+<p>Later, I did discover that ansible supports writing quadlet files, rather than creating a container:</p>
+<p>From <a href="https://docs.ansible.com/ansible/latest/collections/containers/podman/podman_container_module.html#parameter-state">ansible docs on podman_container</a>:</p>
+<blockquote class="blockquote">
+<p>quadlet - Write a quadlet file with the specified configuration. Requires the quadlet_dir option to be set.</p>
+</blockquote>
+<p>I still don’t think I’m going to use quadlets, but the option is nice.</p>
+<p>Rather, I opted for something else: Generating a systemd service using ansible.</p>
+<p>From my testing, starting a pod using <code>podman start pod-name</code> starts all containers in a pod, so I can simply generate a container for systemd service for each pod and then when that service is started (or stopped), it also controls all containers in the pod.</p>
+<div class="sourceCode" id="cb12" style="background: #f1f3f5;"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb12-1"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> </span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">-</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">name</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> Create relevant podman pod  </span></span>
+<span id="cb12-2"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">      </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">containers.podman.podman_pod</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span></span>
+<span id="cb12-3"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">        </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">name</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> authentik_pod</span></span>
+<span id="cb12-4"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">        </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">userns</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> keep-id:uid=1000,gid=1000</span></span>
+<span id="cb12-5"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">        </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">state</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> created</span></span>
+<span id="cb12-6"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">        </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">generate_systemd</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> </span></span>
+<span id="cb12-7"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">          </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">restart_policy</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> </span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"always"</span></span>
+<span id="cb12-8"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">          </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">path</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> </span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"{{ homepath.stdout }}/.config/systemd/user/"</span></span></code></pre></div>
+<p>Then, I can use ansible’s systemd service module to start the pod, and all the containers in it… except not.</p>
+<div class="code-with-filename">
+<div class="code-with-filename-file">
+<pre><strong>$HOME/.config/systemd/user/pod-authentik_pod.service</strong></pre>
+</div>
+<div class="sourceCode" id="cb13" data-filename="$HOME/.config/systemd/user/pod-authentik_pod.service" style="background: #f1f3f5;"><pre class="sourceCode ini code-with-copy"><code class="sourceCode ini"><span id="cb13-1"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># pod-authentik_pod.service</span></span>
+<span id="cb13-2"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># autogenerated by Podman 4.3.1</span></span>
+<span id="cb13-3"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># Sat Apr 27 16:07:36 PDT 2024</span></span>
+<span id="cb13-4"></span>
+<span id="cb13-5"><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">[Unit]</span></span>
+<span id="cb13-6"><span class="dt" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">Description</span><span class="ot" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">Podman pod-authentik_pod.service</span></span>
+<span id="cb13-7"><span class="dt" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">Documentation</span><span class="ot" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">man:podman-generate-systemd(1)</span></span>
+<span id="cb13-8"><span class="dt" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">Wants</span><span class="ot" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">network-online.target</span></span>
+<span id="cb13-9"><span class="dt" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">After</span><span class="ot" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">network-online.target</span></span>
+<span id="cb13-10"><span class="dt" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">RequiresMountsFor</span><span class="ot" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">/tmp/podman-run-1001/containers</span></span>
+<span id="cb13-11"><span class="dt" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">Wants</span><span class="ot" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">=</span></span>
+<span id="cb13-12"><span class="dt" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">Before</span><span class="ot" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">=</span></span>
+<span id="cb13-13"></span>
+<span id="cb13-14"><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">[Service]</span></span>
+<span id="cb13-15"><span class="dt" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">Environment</span><span class="ot" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">PODMAN_SYSTEMD_UNIT=%n</span></span>
+<span id="cb13-16"><span class="dt" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">Restart</span><span class="ot" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">always</span></span>
+<span id="cb13-17"><span class="dt" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">TimeoutStopSec</span><span class="ot" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">=</span><span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">70</span></span>
+<span id="cb13-18"><span class="dt" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">ExecStart</span><span class="ot" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">/usr/bin/podman start f596f20d51c2-infra</span></span>
+<span id="cb13-19"><span class="dt" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">ExecStop</span><span class="ot" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">/usr/bin/podman stop  \</span></span>
+<span id="cb13-20"><span class="dt" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">        -t 10 f596f20d51c2-infra</span></span>
+<span id="cb13-21"><span class="dt" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">ExecStopPost</span><span class="ot" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">/usr/bin/podman stop  \</span></span>
+<span id="cb13-22"><span class="dt" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">        -t 10 f596f20d51c2-infra</span></span>
+<span id="cb13-23"><span class="dt" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">PIDFile</span><span class="ot" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">/tmp/podman-run-1001/containers/vfs-containers/f3f084bceb1041e2a9aa18a9b8088de1efa6ff6ea7bb81f0fbfb4bf8fd1558d2/userdata/conmon.pid</span></span>
+<span id="cb13-24"><span class="dt" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">Type</span><span class="ot" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">forking</span></span>
+<span id="cb13-25"></span>
+<span id="cb13-26"><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">[Install]</span></span>
+<span id="cb13-27"><span class="dt" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">WantedBy</span><span class="ot" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">default.target</span></span></code></pre></div>
+</div>
+<p>Rather than <code>podman start pod-name</code>, it just starts the <em>infrastructure</em> for that pod, meaning the containers in the pod itself aren’t started. Same goes for stopping pods as well. Although I suspect I can manage pods using systemd, similar to containers, podman’s systemd unit file generation doesn’t do that.</p>
+<p>So, now what?</p>
+<p>I see two options:</p>
+<ul>
+<li>Line/word replace the systemd file to reference the pod itself, rather than the infrastructure pod</li>
+<li>Generate systemd unit files for each container, and then start those</li>
+</ul>
+<p>Both of these suck. The first is hacky, and the second is way to wordy and probably redundant.</p>
+<p>Why isn’t there an easier way to start an entire pod at once, rootless?</p>
+<p>Podman doesn’t support this. But do you know what does? Kubernetes. I think it’s time too switch. I’ve had too many issues with podman.</p>
 </section>
 </section>
 <section id="ansibilizing-the-server" class="level2">
@@ -1190,7 +1682,7 @@ font-style: inherit;">default.target</span></span></code></pre></div>
 <section id="ansible-facts-home-home" class="level3">
 <h3 class="anchored" data-anchor-id="ansible-facts-home-home">Ansible facts HOME =/= $HOME</h3>
 <p>I was having ansible run some things as another user, and using something like this to get the home directory of the user it was running as:</p>
-<div class="sourceCode" id="cb12" style="background: #f1f3f5;"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb12-1"><span class="kw" style="color: #003B4F;
+<div class="sourceCode" id="cb14" style="background: #f1f3f5;"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb14-1"><span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">-</span><span class="at" style="color: #657422;
@@ -1203,7 +1695,7 @@ font-weight: bold;
 font-style: inherit;">:</span><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;"> Do podmaner container</span></span>
-<span id="cb12-2"><span class="at" style="color: #657422;
+<span id="cb14-2"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -1215,7 +1707,7 @@ background-color: null;
 font-style: inherit;"> </span><span class="ch" style="color: #20794D;
 background-color: null;
 font-style: inherit;">true</span></span>
-<span id="cb12-3"><span class="at" style="color: #657422;
+<span id="cb14-3"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -1227,7 +1719,7 @@ background-color: null;
 font-style: inherit;"> </span><span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">"{{ rathole_user }}"</span></span>
-<span id="cb12-4"><span class="at" style="color: #657422;
+<span id="cb14-4"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -1235,7 +1727,7 @@ font-style: inherit;">block</span><span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">:</span></span>
-<span id="cb12-5"><span class="at" style="color: #657422;
+<span id="cb14-5"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">    </span><span class="kw" style="color: #003B4F;
 background-color: null;
@@ -1250,7 +1742,7 @@ font-weight: bold;
 font-style: inherit;">:</span><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;"> Create rathole config</span></span>
-<span id="cb12-6"><span class="at" style="color: #657422;
+<span id="cb14-6"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">      </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -1258,7 +1750,7 @@ font-style: inherit;">ansible.builtin.file</span><span class="kw" style="color: 
 background-color: null;
 font-weight: bold;
 font-style: inherit;">:</span></span>
-<span id="cb12-7"><span class="at" style="color: #657422;
+<span id="cb14-7"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">        </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -1270,7 +1762,7 @@ background-color: null;
 font-style: inherit;"> </span><span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">"{{ lookup('ansible.builtin.env', 'HOME') }}/rathole/config"</span></span>
-<span id="cb12-8"><span class="at" style="color: #657422;
+<span id="cb14-8"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">        </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -1280,7 +1772,7 @@ font-weight: bold;
 font-style: inherit;">:</span><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;"> directory</span></span>
-<span id="cb12-9"><span class="at" style="color: #657422;
+<span id="cb14-9"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">        </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -1293,13 +1785,13 @@ font-style: inherit;"> </span><span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">'0775'</span></span></code></pre></div>
 <p>But this errors. Despite <code>rathole_user</code> being <code>podmaner</code>, the error is something like:</p>
-<div class="sourceCode" id="cb13" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb13-1">TASK [rathole : Create rathole config] *******************************************************************************************</span>
-<span id="cb13-2">fatal: [moonstack]: FAILED! =&gt; {"changed": false, "msg": "There was an issue creating /home/moonpie/rathole as requested: [Errno 13] Permission denied: b'/home/moonpie/rathole'", "path": "/home/moonpie/rathole/config"}</span></code></pre></div>
+<div class="sourceCode" id="cb15" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb15-1">TASK [rathole : Create rathole config] *******************************************************************************************</span>
+<span id="cb15-2">fatal: [moonstack]: FAILED! =&gt; {"changed": false, "msg": "There was an issue creating /home/moonpie/rathole as requested: [Errno 13] Permission denied: b'/home/moonpie/rathole'", "path": "/home/moonpie/rathole/config"}</span></code></pre></div>
 <p>This might be because, when executing one off commands, sudo does not keep environment variables</p>
-<div class="sourceCode" id="cb14" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb14-1">moonpie@thoth:~$ sudo -iu podmaner echo $HOME</span>
-<span id="cb14-2">/home/moonpie</span></code></pre></div>
+<div class="sourceCode" id="cb16" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb16-1">moonpie@thoth:~$ sudo -iu podmaner echo $HOME</span>
+<span id="cb16-2">/home/moonpie</span></code></pre></div>
 <p>Interestingly enough, using the $HOME environment variable works though.</p>
-<div class="sourceCode" id="cb15" style="background: #f1f3f5;"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb15-1"><span class="kw" style="color: #003B4F;
+<div class="sourceCode" id="cb17" style="background: #f1f3f5;"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb17-1"><span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">-</span><span class="at" style="color: #657422;
@@ -1312,7 +1804,7 @@ font-weight: bold;
 font-style: inherit;">:</span><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;"> Do podmaner container</span></span>
-<span id="cb15-2"><span class="at" style="color: #657422;
+<span id="cb17-2"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -1324,7 +1816,7 @@ background-color: null;
 font-style: inherit;"> </span><span class="ch" style="color: #20794D;
 background-color: null;
 font-style: inherit;">true</span></span>
-<span id="cb15-3"><span class="at" style="color: #657422;
+<span id="cb17-3"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -1336,7 +1828,7 @@ background-color: null;
 font-style: inherit;"> </span><span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">"{{ rathole_user }}"</span></span>
-<span id="cb15-4"><span class="at" style="color: #657422;
+<span id="cb17-4"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -1344,7 +1836,7 @@ font-style: inherit;">block</span><span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">:</span></span>
-<span id="cb15-5"><span class="at" style="color: #657422;
+<span id="cb17-5"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">    </span><span class="kw" style="color: #003B4F;
 background-color: null;
@@ -1359,7 +1851,7 @@ font-weight: bold;
 font-style: inherit;">:</span><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;"> Get home</span></span>
-<span id="cb15-6"><span class="at" style="color: #657422;
+<span id="cb17-6"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">      </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -1371,7 +1863,7 @@ background-color: null;
 font-style: inherit;"> </span><span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">"echo $HOME"</span></span>
-<span id="cb15-7"><span class="at" style="color: #657422;
+<span id="cb17-7"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">      </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -1381,7 +1873,7 @@ font-weight: bold;
 font-style: inherit;">:</span><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;"> homepath</span></span>
-<span id="cb15-8"><span class="at" style="color: #657422;
+<span id="cb17-8"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">    </span><span class="kw" style="color: #003B4F;
 background-color: null;
@@ -1396,7 +1888,7 @@ font-weight: bold;
 font-style: inherit;">:</span><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;"> Print current home</span></span>
-<span id="cb15-9"><span class="at" style="color: #657422;
+<span id="cb17-9"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">      </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -1404,7 +1896,7 @@ font-style: inherit;">ansible.builtin.debug</span><span class="kw" style="color:
 background-color: null;
 font-weight: bold;
 font-style: inherit;">:</span></span>
-<span id="cb15-10"><span class="at" style="color: #657422;
+<span id="cb17-10"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">        </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -1416,10 +1908,10 @@ background-color: null;
 font-style: inherit;"> </span><span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">"{{ homepath.stdout }}"</span></span></code></pre></div>
-<div class="sourceCode" id="cb16" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb16-1">TASK [rathole : Print current home] **********************************************************************************************</span>
-<span id="cb16-2">ok: [moonstack] =&gt; {</span>
-<span id="cb16-3">    "msg": "/home/podmaner"</span>
-<span id="cb16-4">}</span></code></pre></div>
+<div class="sourceCode" id="cb18" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb18-1">TASK [rathole : Print current home] **********************************************************************************************</span>
+<span id="cb18-2">ok: [moonstack] =&gt; {</span>
+<span id="cb18-3">    "msg": "/home/podmaner"</span>
+<span id="cb18-4">}</span></code></pre></div>
 <p>Oh, I figured it out. After a quick google, this is because this lookup runs on the control node, rather than the server being managed.</p>
 <p>From the <a href="https://docs.ansible.com/ansible/latest/collections/ansible/builtin/env_lookup.html">ansible docs</a>: “query the environment variables available on the controller”</p>
 <p>I also decided to try <code>ansible_facts['env']['HOME']</code>, but that still outpus <code>/home/moonpie</code>. It seems that facts are gathered using hte user ansible initially logs in as.</p>
@@ -1431,7 +1923,7 @@ font-style: inherit;">"{{ homepath.stdout }}"</span></span></code></pre></div>
 <p>I think I found some undocumented behavior. I was attempting to adapt the <a href="https://docs.goauthentik.io/docs/installation/docker-compose">authentik docker compose</a> healthchecks to be configured via ansible and podman instead.</p>
 <p>The <a href="https://docs.ansible.com/ansible/latest/collections/containers/podman/podman_container_module.html#parameter-healthcheck">ansible podman_container docs</a> have a section on healthchecks.</p>
 <p>The official docs say this is correct:</p>
-<div class="sourceCode" id="cb17" style="background: #f1f3f5;"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb17-1"><span class="kw" style="color: #003B4F;
+<div class="sourceCode" id="cb19" style="background: #f1f3f5;"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb19-1"><span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">-</span><span class="at" style="color: #657422;
@@ -1444,7 +1936,7 @@ font-weight: bold;
 font-style: inherit;">:</span><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;"> Authentik postgres database</span></span>
-<span id="cb17-2"><span class="at" style="color: #657422;
+<span id="cb19-2"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -1452,7 +1944,7 @@ font-style: inherit;">containers.podman.podman_container</span><span class="kw" 
 background-color: null;
 font-weight: bold;
 font-style: inherit;">:</span></span>
-<span id="cb17-3"><span class="at" style="color: #657422;
+<span id="cb19-3"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -1462,7 +1954,7 @@ font-weight: bold;
 font-style: inherit;">:</span><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;"> authentik_postgres</span></span>
-<span id="cb17-4"><span class="at" style="color: #657422;
+<span id="cb19-4"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -1472,7 +1964,7 @@ font-weight: bold;
 font-style: inherit;">:</span><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;"> authentik_pod</span></span>
-<span id="cb17-5"><span class="at" style="color: #657422;
+<span id="cb19-5"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -1484,7 +1976,7 @@ background-color: null;
 font-style: inherit;"> </span><span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">"moonpiedumplings/authentik_postgres:12"</span></span>
-<span id="cb17-6"><span class="at" style="color: #657422;
+<span id="cb19-6"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -1496,7 +1988,7 @@ background-color: null;
 font-style: inherit;"> </span><span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">"CMD-SHELL pg_isready -d $${POSTGRES_DB} -U $${POSTGRES_USER}"</span></span>
-<span id="cb17-7"><span class="at" style="color: #657422;
+<span id="cb19-7"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -1508,7 +2000,7 @@ background-color: null;
 font-style: inherit;"> </span><span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">5</span></span>
-<span id="cb17-8"><span class="at" style="color: #657422;
+<span id="cb19-8"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -1519,7 +2011,7 @@ font-style: inherit;">:</span><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;"> 20s</span></span></code></pre></div>
 <p>And it is. But I attempted to copy and paste the official authentik docker-compose for this anyway, to see if it worked:</p>
-<div class="sourceCode" id="cb18" style="background: #f1f3f5;"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb18-1"><span class="kw" style="color: #003B4F;
+<div class="sourceCode" id="cb20" style="background: #f1f3f5;"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb20-1"><span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">-</span><span class="at" style="color: #657422;
@@ -1532,7 +2024,7 @@ font-weight: bold;
 font-style: inherit;">:</span><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;"> Authentik Redis database</span></span>
-<span id="cb18-2"><span class="at" style="color: #657422;
+<span id="cb20-2"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -1540,7 +2032,7 @@ font-style: inherit;">containers.podman.podman_container</span><span class="kw" 
 background-color: null;
 font-weight: bold;
 font-style: inherit;">:</span></span>
-<span id="cb18-3"><span class="at" style="color: #657422;
+<span id="cb20-3"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -1550,7 +2042,7 @@ font-weight: bold;
 font-style: inherit;">:</span><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;"> authentik_redis</span></span>
-<span id="cb18-4"><span class="at" style="color: #657422;
+<span id="cb20-4"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -1560,7 +2052,7 @@ font-weight: bold;
 font-style: inherit;">:</span><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;"> authentik_pod</span></span>
-<span id="cb18-5"><span class="at" style="color: #657422;
+<span id="cb20-5"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -1570,7 +2062,7 @@ font-weight: bold;
 font-style: inherit;">:</span><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;"> docker.io/library/redis:alpine</span></span>
-<span id="cb18-6"><span class="at" style="color: #657422;
+<span id="cb20-6"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -1580,7 +2072,7 @@ font-weight: bold;
 font-style: inherit;">:</span><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;"> --save 60 1 --loglevel warning</span></span>
-<span id="cb18-7"><span class="at" style="color: #657422;
+<span id="cb20-7"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -1588,7 +2080,7 @@ font-style: inherit;">healthcheck</span><span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">:</span></span>
-<span id="cb18-8"><span class="at" style="color: #657422;
+<span id="cb20-8"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">      </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -1600,7 +2092,7 @@ background-color: null;
 font-style: inherit;"> </span><span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">"CMD-SHELL redis-cli ping | grep PONG"</span></span>
-<span id="cb18-9"><span class="at" style="color: #657422;
+<span id="cb20-9"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">      </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -1610,7 +2102,7 @@ font-weight: bold;
 font-style: inherit;">:</span><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;"> 20s</span></span>
-<span id="cb18-10"><span class="at" style="color: #657422;
+<span id="cb20-10"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">      </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -1620,7 +2112,7 @@ font-weight: bold;
 font-style: inherit;">:</span><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;"> 30s</span></span>
-<span id="cb18-11"><span class="at" style="color: #657422;
+<span id="cb20-11"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">      </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -1632,7 +2124,7 @@ background-color: null;
 font-style: inherit;"> </span><span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">5</span></span>
-<span id="cb18-12"><span class="at" style="color: #657422;
+<span id="cb20-12"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">      </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -1643,13 +2135,13 @@ font-style: inherit;">:</span><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;"> 3s</span></span></code></pre></div>
 <p>And I found that this actually still worked.</p>
-<div class="sourceCode" id="cb19" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb19-1">podmaner@thoth:~$ podman inspect authentik_redis</span>
-<span id="cb19-2">...</span>
-<span id="cb19-3">....</span>
-<span id="cb19-4">"--healthcheck-command",</span>
-<span id="cb19-5">"{'test': 'CMD-SHELL redis-cli ping | grep PONG', 'start_period': '20s', 'interval': '30s', 'retries': 5, 'timeout': '3s'}",</span>
-<span id="cb19-6">...</span>
-<span id="cb19-7">...</span></code></pre></div>
+<div class="sourceCode" id="cb21" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb21-1">podmaner@thoth:~$ podman inspect authentik_redis</span>
+<span id="cb21-2">...</span>
+<span id="cb21-3">....</span>
+<span id="cb21-4">"--healthcheck-command",</span>
+<span id="cb21-5">"{'test': 'CMD-SHELL redis-cli ping | grep PONG', 'start_period': '20s', 'interval': '30s', 'retries': 5, 'timeout': '3s'}",</span>
+<span id="cb21-6">...</span>
+<span id="cb21-7">...</span></code></pre></div>
 <p>I find this interesting that it works despite not being documented. Should I rely on this behavior? I like the way it looks, as it’s much more readable than the _underscore format for these particular variables.</p>
 </section>
 <section id="ansible-vault" class="level3">
@@ -1676,12 +2168,12 @@ font-style: inherit;"> 3s</span></span></code></pre></div>
 <div class="code-with-filename-file">
 <pre><strong>client.toml.j2</strong></pre>
 </div>
-<div class="sourceCode" id="cb20" data-filename="client.toml.j2" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb20-1">{% for service in rathole_services %}</span>
-<span id="cb20-2"></span>
-<span id="cb20-3">[client.services.{{ service.name }}]</span>
-<span id="cb20-4">token = "{{ rathole_secret }}"</span>
-<span id="cb20-5">local_addr = "{{ service.local_addr }}"</span>
-<span id="cb20-6">{% endfor %}</span></code></pre></div>
+<div class="sourceCode" id="cb22" data-filename="client.toml.j2" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb22-1">{% for service in rathole_services %}</span>
+<span id="cb22-2"></span>
+<span id="cb22-3">[client.services.{{ service.name }}]</span>
+<span id="cb22-4">token = "{{ rathole_secret }}"</span>
+<span id="cb22-5">local_addr = "{{ service.local_addr }}"</span>
+<span id="cb22-6">{% endfor %}</span></code></pre></div>
 </div>
 <p>Using ansible’s ability to do for loops. The server config has something similar.</p>
 </section>
@@ -1692,9 +2184,9 @@ font-style: inherit;"> 3s</span></span></code></pre></div>
 <div class="code-with-filename-file">
 <pre><strong>Caddyfile.j2</strong></pre>
 </div>
-<div class="sourceCode" id="cb21" data-filename="Caddyfile.j2" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb21-1">http://test.moonpiedumpl.ing { </span>
-<span id="cb21-2">  reverse_proxy * http://localhost:8000</span>
-<span id="cb21-3">}</span></code></pre></div>
+<div class="sourceCode" id="cb23" data-filename="Caddyfile.j2" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb23-1">http://test.moonpiedumpl.ing { </span>
+<span id="cb23-2">  reverse_proxy * http://localhost:8000</span>
+<span id="cb23-3">}</span></code></pre></div>
 </div>
 <p>I need to expand this. I dislike how Caddy only takes a config file, and there isn’t something like a premade docker container that takes environment variables, but it is what it is.</p>
 <p>For a <a href="https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_templating.html">jinja2</a> template, something like this:</p>
@@ -1702,25 +2194,25 @@ font-style: inherit;"> 3s</span></span></code></pre></div>
 <div class="code-with-filename-file">
 <pre><strong>Caddyfile.j2</strong></pre>
 </div>
-<div class="sourceCode" id="cb22" data-filename="Caddyfile.j2" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb22-1">{% for service in caddy_services %}</span>
-<span id="cb22-2">{{ service.domain_name }} {</span>
-<span id="cb22-3">    {% if service.port is defined %}</span>
-<span id="cb22-4">    reverse_proxy http://127.0.0.1:{{ service.port }}</span>
-<span id="cb22-5">    {% if service.request_body is defined %}</span>
-<span id="cb22-6">    request_body {</span>
-<span id="cb22-7">        max_size 2048MB</span>
-<span id="cb22-8">    }</span>
-<span id="cb22-9">    {% endif %}</span>
-<span id="cb22-10">    {% endif %}</span>
-<span id="cb22-11">    {% if service.file_root is defined %}</span>
-<span id="cb22-12">    root * {{ service.file_root }}</span>
-<span id="cb22-13">    file_server</span>
-<span id="cb22-14">    {% endif %}</span>
-<span id="cb22-15">}</span>
-<span id="cb22-16">{% endfor %}</span></code></pre></div>
+<div class="sourceCode" id="cb24" data-filename="Caddyfile.j2" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb24-1">{% for service in caddy_services %}</span>
+<span id="cb24-2">{{ service.domain_name }} {</span>
+<span id="cb24-3">    {% if service.port is defined %}</span>
+<span id="cb24-4">    reverse_proxy http://127.0.0.1:{{ service.port }}</span>
+<span id="cb24-5">    {% if service.request_body is defined %}</span>
+<span id="cb24-6">    request_body {</span>
+<span id="cb24-7">        max_size 2048MB</span>
+<span id="cb24-8">    }</span>
+<span id="cb24-9">    {% endif %}</span>
+<span id="cb24-10">    {% endif %}</span>
+<span id="cb24-11">    {% if service.file_root is defined %}</span>
+<span id="cb24-12">    root * {{ service.file_root }}</span>
+<span id="cb24-13">    file_server</span>
+<span id="cb24-14">    {% endif %}</span>
+<span id="cb24-15">}</span>
+<span id="cb24-16">{% endfor %}</span></code></pre></div>
 </div>
 <p>And then the caddy role would take these hosts:</p>
-<div class="sourceCode" id="cb23" style="background: #f1f3f5;"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb23-1"><span class="kw" style="color: #003B4F;
+<div class="sourceCode" id="cb25" style="background: #f1f3f5;"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb25-1"><span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">-</span><span class="at" style="color: #657422;
@@ -1733,7 +2225,7 @@ font-weight: bold;
 font-style: inherit;">:</span><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;"> caddy</span></span>
-<span id="cb23-2"><span class="at" style="color: #657422;
+<span id="cb25-2"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -1741,7 +2233,7 @@ font-style: inherit;">vars</span><span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">:</span></span>
-<span id="cb23-3"><span class="at" style="color: #657422;
+<span id="cb25-3"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -1749,7 +2241,7 @@ font-style: inherit;">caddy_services</span><span class="kw" style="color: #003B4
 background-color: null;
 font-weight: bold;
 font-style: inherit;">:</span></span>
-<span id="cb23-4"><span class="at" style="color: #657422;
+<span id="cb25-4"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">      </span><span class="kw" style="color: #003B4F;
 background-color: null;
@@ -1766,7 +2258,7 @@ background-color: null;
 font-style: inherit;"> </span><span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">"test.moonpiedumpl.ing"</span></span>
-<span id="cb23-5"><span class="at" style="color: #657422;
+<span id="cb25-5"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">        </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -1781,7 +2273,7 @@ font-style: inherit;">8000</span><span class="co" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;"> # This is where the python http server runs by default, for my tests.</span></span></code></pre></div>
 <p>This almost worked, but I got an error in the caddy logs</p>
-<div class="sourceCode" id="cb24" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb24-1">dial tcp 127.0.0.1:8000: connect: connection refused</span></code></pre></div>
+<div class="sourceCode" id="cb26" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb26-1">dial tcp 127.0.0.1:8000: connect: connection refused</span></code></pre></div>
 <p>The issue is that, unlike docker containers, podman containers have their own network interface. Attempting to curl localhost on them would result in the wrong network interface being accessed.</p>
 <p>Also, I need to add the <a href="https://caddyserver.com/docs/caddyfile/options#trusted-proxies">trusted_proxies</a> option, otherwise caddy will not report the real ip address of the client.</p>
 <p>I adjusted the podman container to not forward any ports, and instead to be in “host” networking mode, where it shares the interfaces with the host.</p>
@@ -1803,14 +2295,14 @@ font-style: inherit;"> # This is where the python http server runs by default, f
 <div class="code-with-filename-file">
 <pre><strong>Caddyfile</strong></pre>
 </div>
-<div class="sourceCode" id="cb26" data-filename="Caddyfile" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb26-1">{</span>
-<span id="cb26-2">    http_port 8080</span>
-<span id="cb26-3">    https_port 8443</span>
-<span id="cb26-4">        trusted_proxies staic 154.12.245.181</span>
-<span id="cb26-5">    }</span>
-<span id="cb26-6">test.moonpiedumpl.ing {</span>
-<span id="cb26-7">        reverse_proxy http://127.0.0.1:8000</span>
-<span id="cb26-8">            }</span></code></pre></div>
+<div class="sourceCode" id="cb28" data-filename="Caddyfile" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb28-1">{</span>
+<span id="cb28-2">    http_port 8080</span>
+<span id="cb28-3">    https_port 8443</span>
+<span id="cb28-4">        trusted_proxies staic 154.12.245.181</span>
+<span id="cb28-5">    }</span>
+<span id="cb28-6">test.moonpiedumpl.ing {</span>
+<span id="cb28-7">        reverse_proxy http://127.0.0.1:8000</span>
+<span id="cb28-8">            }</span></code></pre></div>
 </div>
 <p>The spacing is off, and that might be the reason why it errors?</p>
 <p>I corrected the jinja2 spacing according to <a href="https://jinja.palletsprojects.com/en/latest/templates/#whitespace-control">it’s docs</a>, and also corrected the caddy config. <code>trusted_proxies</code> needs to be placed inside a <code>servers</code> block for it to be a global option, or inside each of the sites, if you want to make it site specific.</p>
@@ -1819,73 +2311,73 @@ font-style: inherit;"> # This is where the python http server runs by default, f
 <div class="code-with-filename-file">
 <pre><strong>Caddyfile</strong></pre>
 </div>
-<div class="sourceCode" id="cb27" data-filename="Caddyfile" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb27-1">{</span>
-<span id="cb27-2">    http_port 8080</span>
-<span id="cb27-3">    https_port 8443</span>
-<span id="cb27-4">    servers {</span>
-<span id="cb27-5">        trusted_proxies static 154.12.245.181</span>
-<span id="cb27-6">    }</span>
-<span id="cb27-7">}</span>
-<span id="cb27-8">test.moonpiedumpl.ing {</span>
-<span id="cb27-9">    reverse_proxy http://127.0.0.1:8000</span>
-<span id="cb27-10">}</span></code></pre></div>
+<div class="sourceCode" id="cb29" data-filename="Caddyfile" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb29-1">{</span>
+<span id="cb29-2">    http_port 8080</span>
+<span id="cb29-3">    https_port 8443</span>
+<span id="cb29-4">    servers {</span>
+<span id="cb29-5">        trusted_proxies static 154.12.245.181</span>
+<span id="cb29-6">    }</span>
+<span id="cb29-7">}</span>
+<span id="cb29-8">test.moonpiedumpl.ing {</span>
+<span id="cb29-9">    reverse_proxy http://127.0.0.1:8000</span>
+<span id="cb29-10">}</span></code></pre></div>
 </div>
 <p>However, this does not work. I only get:</p>
-<div class="sourceCode" id="cb28" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb28-1">[moonpie@lizard moonpiedumplings.github.io]$ curl test.moonpiedumpl.ing</span>
-<span id="cb28-2">curl: (52) Empty reply from server</span></code></pre></div>
+<div class="sourceCode" id="cb30" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb30-1">[moonpie@lizard moonpiedumplings.github.io]$ curl test.moonpiedumpl.ing</span>
+<span id="cb30-2">curl: (52) Empty reply from server</span></code></pre></div>
 <p>The caddy logs do not show anything relevant. I also did an additional test, by running a podman alpine container with host networking, where it was able to curl localhost just fine.</p>
 <p>It is interesting, how Caddy returns an “empty reply”, rather than what I am expecting, a “502 Bad Gateway” — that’s the reply that you usually get when the backend server is down, which it was in a lot of my testing.</p>
 <p>So I throw in a quick “Hello World”</p>
-<div class="sourceCode" id="cb29" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb29-1">hello.moonpiedumpl.ing {</span>
-<span id="cb29-2">    respond "Hello World!"</span>
-<span id="cb29-3">}</span></code></pre></div>
+<div class="sourceCode" id="cb31" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb31-1">hello.moonpiedumpl.ing {</span>
+<span id="cb31-2">    respond "Hello World!"</span>
+<span id="cb31-3">}</span></code></pre></div>
 <p>And still get an empty reply.</p>
 <p>The caddy logs, however, do say soemthign interesting:</p>
 <details>
 <summary>
 Show Logs
 </summary>
-<div class="sourceCode" id="cb30" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb30-1">{"level":"info","ts":1707778344.991714,"logger":"http.auto_https","msg":"server is listening only on the HTTPS port but has no TLS connection policies; adding one to enable TLS","server_name":"srv0","https_port":8443}</span>
-<span id="cb30-2">.....</span>
-<span id="cb30-3">....</span>
-<span id="cb30-4">.....</span>
-<span id="cb30-5">{"level":"info","ts":1707778344.991727,"logger":"http.auto_https","msg":"enabling automatic HTTP-&gt;HTTPS redirects","server_name":"srv0"}</span>
-<span id="cb30-6">{"level":"error","ts":1708452118.3423748,"logger":"http.acme_client","msg":"validating authorization","identifier":"hello.moonpiedumpl.ing","problem":{"type":"urn:ietf:params:acme:error:connection","title":"","detail":"154.12.245.181: Fetching http://hello.moonpiedumpl.ing/.well-known/acme-challenge/1qnsZcobKUGtdEG2KON-FeFwio97TFxWCu7hqXSY89s: Error getting validation data","instance":"","subproblems":[]},"order":"https://acme-v02.api.letsencrypt.org/acme/order/1560639027/246082250997","attempt":2,"max_attempts":3}</span>
-<span id="cb30-7">{"level":"error","ts":1708452118.3424225,"logger":"tls.obtain","msg":"could not get certificate from issuer","identifier":"hello.moonpiedumpl.ing","issuer":"acme-v02.api.letsencrypt.org-directory","error":"HTTP 400 urn:ietf:params:acme:error:connection - 154.12.245.181: Fetching http://hello.moonpiedumpl.ing/.well-known/acme-challenge/1qnsZcobKUGtdEG2KON-FeFwio97TFxWCu7hqXSY89s: Error getting validation data"}</span>
-<span id="cb30-8">{"level":"warn","ts":1708452118.3426523,"logger":"http","msg":"missing email address for ZeroSSL; it is strongly recommended to set one for next time"}</span>
-<span id="cb30-9">{"level":"info","ts":1708452119.2906954,"logger":"http","msg":"generated EAB credentials","key_id":"N8YqjedBRmclRYYFjYqZGw"}</span>
-<span id="cb30-10">{"level":"info","ts":1708452136.0253348,"logger":"http","msg":"waiting on internal rate limiter","identifiers":["hello.moonpiedumpl.ing"],"ca":"https://acme.zerossl.com/v2/DV90","account":""}</span>
-<span id="cb30-11">{"level":"info","ts":1708452136.0253737,"logger":"http","msg":"done waiting on internal rate limiter","identifiers":["hello.moonpiedumpl.ing"],"ca":"https://acme.zerossl.com/v2/DV90","account":""}</span>
-<span id="cb30-12">{"level":"info","ts":1708452143.7124622,"logger":"http.acme_client","msg":"trying to solve challenge","identifier":"hello.moonpiedumpl.ing","challenge_type":"http-01","ca":"https://acme.zerossl.com/v2/DV90"}</span>
-<span id="cb30-13">{"level":"error","ts":1708452153.466225,"logger":"http.acme_client","msg":"challenge failed","identifier":"hello.moonpiedumpl.ing","challenge_type":"http-01","problem":{"type":"","title":"","detail":"","instance":"","subproblems":[]}}</span>
-<span id="cb30-14">{"level":"error","ts":1708452153.4662635,"logger":"http.acme_client","msg":"validating authorization","identifier":"hello.moonpiedumpl.ing","problem":{"type":"","title":"","detail":"","instance":"","subproblems":[]},"order":"https://acme.zerossl.com/v2/DV90/order/mlTQtXTaA_eyy7PFDbdZSg","attempt":1,"max_attempts":3}</span>
-<span id="cb30-15">{"level":"error","ts":1708452153.4663181,"logger":"tls.obtain","msg":"could not get certificate from issuer","identifier":"hello.moonpiedumpl.ing","issuer":"acme.zerossl.com-v2-DV90","error":"HTTP 0  - "}</span>
-<span id="cb30-16">{"level":"error","ts":1708452153.466387,"logger":"tls.obtain","msg":"will retry","error":"[hello.moonpiedumpl.ing] Obtain: [hello.moonpiedumpl.ing] solving challenge: hello.moonpiedumpl.ing: [hello.moonpiedumpl.ing] authorization failed: HTTP 0  -  (ca=https://acme.zerossl.com/v2/DV90)","attempt":1,"retrying_in":60,"elapsed":41.717184567,"max_duration":2592000}</span></code></pre></div>
+<div class="sourceCode" id="cb32" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb32-1">{"level":"info","ts":1707778344.991714,"logger":"http.auto_https","msg":"server is listening only on the HTTPS port but has no TLS connection policies; adding one to enable TLS","server_name":"srv0","https_port":8443}</span>
+<span id="cb32-2">.....</span>
+<span id="cb32-3">....</span>
+<span id="cb32-4">.....</span>
+<span id="cb32-5">{"level":"info","ts":1707778344.991727,"logger":"http.auto_https","msg":"enabling automatic HTTP-&gt;HTTPS redirects","server_name":"srv0"}</span>
+<span id="cb32-6">{"level":"error","ts":1708452118.3423748,"logger":"http.acme_client","msg":"validating authorization","identifier":"hello.moonpiedumpl.ing","problem":{"type":"urn:ietf:params:acme:error:connection","title":"","detail":"154.12.245.181: Fetching http://hello.moonpiedumpl.ing/.well-known/acme-challenge/1qnsZcobKUGtdEG2KON-FeFwio97TFxWCu7hqXSY89s: Error getting validation data","instance":"","subproblems":[]},"order":"https://acme-v02.api.letsencrypt.org/acme/order/1560639027/246082250997","attempt":2,"max_attempts":3}</span>
+<span id="cb32-7">{"level":"error","ts":1708452118.3424225,"logger":"tls.obtain","msg":"could not get certificate from issuer","identifier":"hello.moonpiedumpl.ing","issuer":"acme-v02.api.letsencrypt.org-directory","error":"HTTP 400 urn:ietf:params:acme:error:connection - 154.12.245.181: Fetching http://hello.moonpiedumpl.ing/.well-known/acme-challenge/1qnsZcobKUGtdEG2KON-FeFwio97TFxWCu7hqXSY89s: Error getting validation data"}</span>
+<span id="cb32-8">{"level":"warn","ts":1708452118.3426523,"logger":"http","msg":"missing email address for ZeroSSL; it is strongly recommended to set one for next time"}</span>
+<span id="cb32-9">{"level":"info","ts":1708452119.2906954,"logger":"http","msg":"generated EAB credentials","key_id":"N8YqjedBRmclRYYFjYqZGw"}</span>
+<span id="cb32-10">{"level":"info","ts":1708452136.0253348,"logger":"http","msg":"waiting on internal rate limiter","identifiers":["hello.moonpiedumpl.ing"],"ca":"https://acme.zerossl.com/v2/DV90","account":""}</span>
+<span id="cb32-11">{"level":"info","ts":1708452136.0253737,"logger":"http","msg":"done waiting on internal rate limiter","identifiers":["hello.moonpiedumpl.ing"],"ca":"https://acme.zerossl.com/v2/DV90","account":""}</span>
+<span id="cb32-12">{"level":"info","ts":1708452143.7124622,"logger":"http.acme_client","msg":"trying to solve challenge","identifier":"hello.moonpiedumpl.ing","challenge_type":"http-01","ca":"https://acme.zerossl.com/v2/DV90"}</span>
+<span id="cb32-13">{"level":"error","ts":1708452153.466225,"logger":"http.acme_client","msg":"challenge failed","identifier":"hello.moonpiedumpl.ing","challenge_type":"http-01","problem":{"type":"","title":"","detail":"","instance":"","subproblems":[]}}</span>
+<span id="cb32-14">{"level":"error","ts":1708452153.4662635,"logger":"http.acme_client","msg":"validating authorization","identifier":"hello.moonpiedumpl.ing","problem":{"type":"","title":"","detail":"","instance":"","subproblems":[]},"order":"https://acme.zerossl.com/v2/DV90/order/mlTQtXTaA_eyy7PFDbdZSg","attempt":1,"max_attempts":3}</span>
+<span id="cb32-15">{"level":"error","ts":1708452153.4663181,"logger":"tls.obtain","msg":"could not get certificate from issuer","identifier":"hello.moonpiedumpl.ing","issuer":"acme.zerossl.com-v2-DV90","error":"HTTP 0  - "}</span>
+<span id="cb32-16">{"level":"error","ts":1708452153.466387,"logger":"tls.obtain","msg":"will retry","error":"[hello.moonpiedumpl.ing] Obtain: [hello.moonpiedumpl.ing] solving challenge: hello.moonpiedumpl.ing: [hello.moonpiedumpl.ing] authorization failed: HTTP 0  -  (ca=https://acme.zerossl.com/v2/DV90)","attempt":1,"retrying_in":60,"elapsed":41.717184567,"max_duration":2592000}</span></code></pre></div>
 </details>
 <p>It seems like the certificate challenge fails. If caddy is doing auto https redirects, then it makes sense that the reply is empty.</p>
 <p>And curling https?</p>
-<div class="sourceCode" id="cb31" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb31-1">[moonpie@lizard server-configs]$ curl https://hello.moonpiedumpl.ing</span>
-<span id="cb31-2">curl: (35) OpenSSL SSL_connect: SSL_ERROR_SYSCALL in connection to hello.moonpiedumpl.ing:443</span></code></pre></div>
+<div class="sourceCode" id="cb33" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb33-1">[moonpie@lizard server-configs]$ curl https://hello.moonpiedumpl.ing</span>
+<span id="cb33-2">curl: (35) OpenSSL SSL_connect: SSL_ERROR_SYSCALL in connection to hello.moonpiedumpl.ing:443</span></code></pre></div>
 <p>If caddy isn’t serving on https properly, then it makes sense that this fails.</p>
 <p>Later, I think I discover the issue:</p>
-<div class="sourceCode" id="cb32" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb32-1">podmaner@thoth:~/rathole$ podman ps</span>
-<span id="cb32-2">CONTAINER ID  IMAGE                                      COMMAND               CREATED      STATUS            PORTS                                        NAMES</span>
-<span id="cb32-3">868115b4e818  docker.io/moonpiedumplings/rathole:latest  rathole --client ...  2 weeks ago  Up 7 minutes ago                                               rathole</span>
-<span id="cb32-4">860ec72e5c78  docker.io/library/caddy:latest             caddy run --confi...  2 weeks ago  Up 7 minutes ago  0.0.0.0:8080-&gt;80/tcp, 0.0.0.0:8443-&gt;443/tcp  caddy</span></code></pre></div>
+<div class="sourceCode" id="cb34" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb34-1">podmaner@thoth:~/rathole$ podman ps</span>
+<span id="cb34-2">CONTAINER ID  IMAGE                                      COMMAND               CREATED      STATUS            PORTS                                        NAMES</span>
+<span id="cb34-3">868115b4e818  docker.io/moonpiedumplings/rathole:latest  rathole --client ...  2 weeks ago  Up 7 minutes ago                                               rathole</span>
+<span id="cb34-4">860ec72e5c78  docker.io/library/caddy:latest             caddy run --confi...  2 weeks ago  Up 7 minutes ago  0.0.0.0:8080-&gt;80/tcp, 0.0.0.0:8443-&gt;443/tcp  caddy</span></code></pre></div>
 <p>Why is Caddy forwarding ports? My ansible playbooks set the podman networking to be host networking. It seems that, when rerunning a podman container using ansible, it doesn’t properly destroy it, leaving some lingering configs.</p>
 <p>However, I get an error:</p>
-<div class="sourceCode" id="cb33" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb33-1">podmaner@thoth:~$ podman logs caddy</span>
-<span id="cb33-2">...</span>
-<span id="cb33-3">...</span>
-<span id="cb33-4">{"level":"info","ts":1709764202.9553177,"logger":"tls.issuance.acme","msg":"waiting on internal rate limiter","identifiers":["hello.moonpiedumpl.ing"],"ca":"https://acme-v02.api.letsencrypt.org/directory","account":"moonpiedumplings2@gmail.com"}</span>
-<span id="cb33-5">{"level":"info","ts":1709764202.955384,"logger":"tls.issuance.acme","msg":"done waiting on internal rate limiter","identifiers":["hello.moonpiedumpl.ing"],"ca":"https://acme-v02.api.letsencrypt.org/directory","account":"moonpiedumplings2@gmail.com"}</span>
-<span id="cb33-6">{"level":"info","ts":1709764202.9641545,"logger":"tls.issuance.acme","msg":"waiting on internal rate limiter","identifiers":["test.moonpiedumpl.ing"],"ca":"https://acme-v02.api.letsencrypt.org/directory","account":"moonpiedumplings2@gmail.com"}</span>
-<span id="cb33-7">{"level":"info","ts":1709764202.964186,"logger":"tls.issuance.acme","msg":"done waiting on internal rate limiter","identifiers":["test.moonpiedumpl.ing"],"ca":"https://acme-v02.api.letsencrypt.org/directory","account":"moonpiedumplings2@gmail.com"}</span>
-<span id="cb33-8">{"level":"info","ts":1709764203.0985403,"logger":"tls.issuance.acme","msg":"waiting on internal rate limiter","identifiers":["sso.moonpiedumpl.ing"],"ca":"https://acme-v02.api.letsencrypt.org/directory","account":"moonpiedumplings2@gmail.com"}</span>
-<span id="cb33-9">{"level":"info","ts":1709764203.0985787,"logger":"tls.issuance.acme","msg":"done waiting on internal rate limiter","identifiers":["sso.moonpiedumpl.ing"],"ca":"https://acme-v02.api.letsencrypt.org/directory","account":"moonpiedumplings2@gmail.com"}</span>
-<span id="cb33-10">{"level":"info","ts":1709764203.2928238,"logger":"tls.issuance.acme.acme_client","msg":"trying to solve challenge","identifier":"test.moonpiedumpl.ing","challenge_type":"tls-alpn-01","ca":"https://acme-v02.api.letsencrypt.org/directory"}</span>
-<span id="cb33-11">{"level":"info","ts":1709764203.434616,"logger":"tls.issuance.acme.acme_client","msg":"trying to solve challenge","identifier":"sso.moonpiedumpl.ing","challenge_type":"tls-alpn-01","ca":"https://acme-v02.api.letsencrypt.org/directory"}</span>
-<span id="cb33-12">{"level":"error","ts":1709764203.478285,"logger":"tls.obtain","msg":"could not get certificate from issuer","identifier":"test.moonpiedumpl.ing","issuer":"acme-v02.api.letsencrypt.org-directory","error":"[test.moonpiedumpl.ing] solving challenges: presenting for challenge: presenting with embedded solver: could not start listener for challenge server at :443: listen tcp :443: bind: permission denied (order=https://acme-v02.api.letsencrypt.org/acme/order/1605766427/250173951227) (ca=https://acme-v02.api.letsencrypt.org/directory)"}</span></code></pre></div>
+<div class="sourceCode" id="cb35" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb35-1">podmaner@thoth:~$ podman logs caddy</span>
+<span id="cb35-2">...</span>
+<span id="cb35-3">...</span>
+<span id="cb35-4">{"level":"info","ts":1709764202.9553177,"logger":"tls.issuance.acme","msg":"waiting on internal rate limiter","identifiers":["hello.moonpiedumpl.ing"],"ca":"https://acme-v02.api.letsencrypt.org/directory","account":"moonpiedumplings2@gmail.com"}</span>
+<span id="cb35-5">{"level":"info","ts":1709764202.955384,"logger":"tls.issuance.acme","msg":"done waiting on internal rate limiter","identifiers":["hello.moonpiedumpl.ing"],"ca":"https://acme-v02.api.letsencrypt.org/directory","account":"moonpiedumplings2@gmail.com"}</span>
+<span id="cb35-6">{"level":"info","ts":1709764202.9641545,"logger":"tls.issuance.acme","msg":"waiting on internal rate limiter","identifiers":["test.moonpiedumpl.ing"],"ca":"https://acme-v02.api.letsencrypt.org/directory","account":"moonpiedumplings2@gmail.com"}</span>
+<span id="cb35-7">{"level":"info","ts":1709764202.964186,"logger":"tls.issuance.acme","msg":"done waiting on internal rate limiter","identifiers":["test.moonpiedumpl.ing"],"ca":"https://acme-v02.api.letsencrypt.org/directory","account":"moonpiedumplings2@gmail.com"}</span>
+<span id="cb35-8">{"level":"info","ts":1709764203.0985403,"logger":"tls.issuance.acme","msg":"waiting on internal rate limiter","identifiers":["sso.moonpiedumpl.ing"],"ca":"https://acme-v02.api.letsencrypt.org/directory","account":"moonpiedumplings2@gmail.com"}</span>
+<span id="cb35-9">{"level":"info","ts":1709764203.0985787,"logger":"tls.issuance.acme","msg":"done waiting on internal rate limiter","identifiers":["sso.moonpiedumpl.ing"],"ca":"https://acme-v02.api.letsencrypt.org/directory","account":"moonpiedumplings2@gmail.com"}</span>
+<span id="cb35-10">{"level":"info","ts":1709764203.2928238,"logger":"tls.issuance.acme.acme_client","msg":"trying to solve challenge","identifier":"test.moonpiedumpl.ing","challenge_type":"tls-alpn-01","ca":"https://acme-v02.api.letsencrypt.org/directory"}</span>
+<span id="cb35-11">{"level":"info","ts":1709764203.434616,"logger":"tls.issuance.acme.acme_client","msg":"trying to solve challenge","identifier":"sso.moonpiedumpl.ing","challenge_type":"tls-alpn-01","ca":"https://acme-v02.api.letsencrypt.org/directory"}</span>
+<span id="cb35-12">{"level":"error","ts":1709764203.478285,"logger":"tls.obtain","msg":"could not get certificate from issuer","identifier":"test.moonpiedumpl.ing","issuer":"acme-v02.api.letsencrypt.org-directory","error":"[test.moonpiedumpl.ing] solving challenges: presenting for challenge: presenting with embedded solver: could not start listener for challenge server at :443: listen tcp :443: bind: permission denied (order=https://acme-v02.api.letsencrypt.org/acme/order/1605766427/250173951227) (ca=https://acme-v02.api.letsencrypt.org/directory)"}</span></code></pre></div>
 <p>And more of the same.</p>
 <p>So apparently, Caddy doesn’t automatically do the acme challenge on the <code>http_port</code> or <code>https_port</code>, and you have to explicitly specify an alternate port:</p>
 <pre class="Caddyfile"><code>sso.moonpiedumpl.ing {
@@ -1924,31 +2416,31 @@ Show Logs
 {% endfor %}</code></pre>
 <p>But with this, Caddy <em>finally</em> works properly.</p>
 <p>I saw another interesting thing: <a href="https://authp.github.io/">caddy security module</a> (<a href="https://github.com/greenpau/caddy-security">github</a>), which lets you integrate caddy with ldap or other forms of authentication. I want to inegrate this, because it would be better to have auth built into the single sign on.</p>
-<div class="sourceCode" id="cb36" style="background: #f1f3f5;"><pre class="sourceCode Dockerfile code-with-copy"><code class="sourceCode dockerfile"><span id="cb36-1"><span class="co" style="color: #5E5E5E;
+<div class="sourceCode" id="cb38" style="background: #f1f3f5;"><pre class="sourceCode Dockerfile code-with-copy"><code class="sourceCode dockerfile"><span id="cb38-1"><span class="co" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;">#jinja2:lstrip_blocks: True</span></span>
-<span id="cb36-2"></span>
-<span id="cb36-3"><span class="kw" style="color: #003B4F;
+<span id="cb38-2"></span>
+<span id="cb38-3"><span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">FROM</span> docker.io/library/caddy:{{ caddy_version }}-builder <span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">AS</span> builder</span>
-<span id="cb36-4"></span>
-<span id="cb36-5"><span class="kw" style="color: #003B4F;
+<span id="cb38-4"></span>
+<span id="cb38-5"><span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">RUN</span> <span class="ex" style="color: null;
 background-color: null;
 font-style: inherit;">xcaddy</span> build {% for plugin in caddy_plugins %}--with {{ plugin }}{% endfor %} </span>
-<span id="cb36-6"></span>
-<span id="cb36-7"><span class="kw" style="color: #003B4F;
+<span id="cb38-6"></span>
+<span id="cb38-7"><span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">FROM</span> docker.io/library/caddy:{{ caddy_version }}</span>
-<span id="cb36-8"></span>
-<span id="cb36-9"><span class="kw" style="color: #003B4F;
+<span id="cb38-8"></span>
+<span id="cb38-9"><span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">COPY</span> <span class="op" style="color: #5E5E5E;
@@ -1962,122 +2454,6 @@ font-style: inherit;">--from=builder</span> /usr/bin/caddy /usr/bin/caddy</span>
 <h2 class="anchored" data-anchor-id="authentik">Authentik</h2>
 <p>The listen settings are here: <a href="https://goauthentik.io/docs/installation/configuration/#listen-settings" class="uri">https://goauthentik.io/docs/installation/configuration/#listen-settings</a></p>
 <p>So the podman pod which runs all of authentik will have those ports forwarded.</p>
-<div class="sourceCode" id="cb37" style="background: #f1f3f5;"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb37-1"><span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">-</span><span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;"> </span><span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">name</span><span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">:</span><span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;"> Create relevant podman pod</span></span>
-<span id="cb37-2"><span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">containers.podman.podman_pod</span><span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">:</span></span>
-<span id="cb37-3"><span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">name</span><span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">:</span><span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;"> authentik_pod</span></span>
-<span id="cb37-4"><span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">state</span><span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">:</span><span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;"> present</span></span>
-<span id="cb37-5"><span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">ports</span><span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">:</span></span>
-<span id="cb37-6"><span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">      </span><span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">-</span><span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;"> </span><span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">"9000:9000"</span></span>
-<span id="cb37-7"><span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">      </span><span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">-</span><span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;"> </span><span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">"9443:9443"</span></span>
-<span id="cb37-8"><span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">      </span><span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">-</span><span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;"> </span><span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">"3389:3389"</span></span>
-<span id="cb37-9"><span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">      </span><span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">-</span><span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;"> </span><span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">"6636:3389"</span></span></code></pre></div>
-<p>I designed a role, and deployment was going pretty smoothly. Until it errored:</p>
-<div class="sourceCode" id="cb38" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb38-1">failed: [moonstack] (item=postgres) =&gt; {</span>
-<span id="cb38-2">    "ansible_loop_var": "item",</span>
-<span id="cb38-3">    "changed": false,</span>
-<span id="cb38-4">    "item": "postgres",</span>
-<span id="cb38-5">    "module_stderr": "Shared connection to 192.168.17.197 closed.",</span>
-<span id="cb38-6">    "module_stdout": "</span>
-<span id="cb38-7">Traceback (most recent call last):</span>
-<span id="cb38-8">  File \"/var/tmp/ansible-tmp-1708731694.1592944-80284-196261000245469/AnsiballZ_file.py\", line 107, in &lt;module&gt;</span>
-<span id="cb38-9">    _ansiballz_main()</span>
-<span id="cb38-10">  File \"/var/tmp/ansible-tmp-1708731694.1592944-80284-196261000245469/AnsiballZ_file.py\", line 99, in _ansiballz_main</span>
-<span id="cb38-11">    invoke_module(zipped_mod, temp_path, ANSIBALLZ_PARAMS)</span>
-<span id="cb38-12">  File \"/var/tmp/ansible-tmp-1708731694.1592944-80284-196261000245469/AnsiballZ_file.py\", line 47, in invoke_module</span>
-<span id="cb38-13">    runpy.run_module(mod_name='ansible.modules.file', init_globals=dict(_module_fqn='ansible.modules.file', _modlib_path=modlib_path),</span>
-<span id="cb38-14">  File \"&lt;frozen runpy&gt;\", line 226, in run_module</span>
-<span id="cb38-15">  File \"&lt;frozen runpy&gt;\", line 98, in _run_module_code</span>
-<span id="cb38-16">  File \"&lt;frozen runpy&gt;\", line 88, in _run_code</span>
-<span id="cb38-17">  File \"/tmp/ansible_ansible.builtin.file_payload_37zf8n_k/ansible_ansible.builtin.file_payload.zip/ansible/modules/file.py\", line 987, in &lt;module&gt;</span>
-<span id="cb38-18">  File \"/tmp/ansible_ansible.builtin.file_payload_37zf8n_k/ansible_ansible.builtin.file_payload.zip/ansible/modules/file.py\", line 973, in main</span>
-<span id="cb38-19">  File \"/tmp/ansible_ansible.builtin.file_payload_37zf8n_k/ansible_ansible.builtin.file_payload.zip/ansible/modules/file.py\", line 680, in ensure_directory</span>
-<span id="cb38-20">  File \"/tmp/ansible_ansible.builtin.file_payload_37zf8n_k/ansible_ansible.builtin.file_payload.zip/ansible/module_utils/basic.py\", line 1159, in set_fs_attributes_if_different</span>
-<span id="cb38-21">  File \"/tmp/ansible_ansible.builtin.file_payload_37zf8n_k/ansible_ansible.builtin.file_payload.zip/ansible/module_utils/basic.py\", line 919, in set_mode_if_different</span>
-<span id="cb38-22">PermissionError: [Errno 1] Operation not permitted: b'/home/podmaner/authentik/postgres'",</span>
-<span id="cb38-23">    "msg": "MODULE FAILURE\nSee stdout/stderr for the exact error",</span>
-<span id="cb38-24">    "rc": 1</span>
-<span id="cb38-25">}</span></code></pre></div>
-<p>Which is… weird. Looking at the ansible code that generates this:</p>
 <div class="sourceCode" id="cb39" style="background: #f1f3f5;"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb39-1"><span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
@@ -2090,8 +2466,124 @@ background-color: null;
 font-weight: bold;
 font-style: inherit;">:</span><span class="at" style="color: #657422;
 background-color: null;
-font-style: inherit;"> Create relevant configuration files</span></span>
+font-style: inherit;"> Create relevant podman pod</span></span>
 <span id="cb39-2"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">containers.podman.podman_pod</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span></span>
+<span id="cb39-3"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">name</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> authentik_pod</span></span>
+<span id="cb39-4"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">state</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> present</span></span>
+<span id="cb39-5"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">ports</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span></span>
+<span id="cb39-6"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">      </span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">-</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> </span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"9000:9000"</span></span>
+<span id="cb39-7"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">      </span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">-</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> </span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"9443:9443"</span></span>
+<span id="cb39-8"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">      </span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">-</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> </span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"3389:3389"</span></span>
+<span id="cb39-9"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">      </span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">-</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> </span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"6636:3389"</span></span></code></pre></div>
+<p>I designed a role, and deployment was going pretty smoothly. Until it errored:</p>
+<div class="sourceCode" id="cb40" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb40-1">failed: [moonstack] (item=postgres) =&gt; {</span>
+<span id="cb40-2">    "ansible_loop_var": "item",</span>
+<span id="cb40-3">    "changed": false,</span>
+<span id="cb40-4">    "item": "postgres",</span>
+<span id="cb40-5">    "module_stderr": "Shared connection to 192.168.17.197 closed.",</span>
+<span id="cb40-6">    "module_stdout": "</span>
+<span id="cb40-7">Traceback (most recent call last):</span>
+<span id="cb40-8">  File \"/var/tmp/ansible-tmp-1708731694.1592944-80284-196261000245469/AnsiballZ_file.py\", line 107, in &lt;module&gt;</span>
+<span id="cb40-9">    _ansiballz_main()</span>
+<span id="cb40-10">  File \"/var/tmp/ansible-tmp-1708731694.1592944-80284-196261000245469/AnsiballZ_file.py\", line 99, in _ansiballz_main</span>
+<span id="cb40-11">    invoke_module(zipped_mod, temp_path, ANSIBALLZ_PARAMS)</span>
+<span id="cb40-12">  File \"/var/tmp/ansible-tmp-1708731694.1592944-80284-196261000245469/AnsiballZ_file.py\", line 47, in invoke_module</span>
+<span id="cb40-13">    runpy.run_module(mod_name='ansible.modules.file', init_globals=dict(_module_fqn='ansible.modules.file', _modlib_path=modlib_path),</span>
+<span id="cb40-14">  File \"&lt;frozen runpy&gt;\", line 226, in run_module</span>
+<span id="cb40-15">  File \"&lt;frozen runpy&gt;\", line 98, in _run_module_code</span>
+<span id="cb40-16">  File \"&lt;frozen runpy&gt;\", line 88, in _run_code</span>
+<span id="cb40-17">  File \"/tmp/ansible_ansible.builtin.file_payload_37zf8n_k/ansible_ansible.builtin.file_payload.zip/ansible/modules/file.py\", line 987, in &lt;module&gt;</span>
+<span id="cb40-18">  File \"/tmp/ansible_ansible.builtin.file_payload_37zf8n_k/ansible_ansible.builtin.file_payload.zip/ansible/modules/file.py\", line 973, in main</span>
+<span id="cb40-19">  File \"/tmp/ansible_ansible.builtin.file_payload_37zf8n_k/ansible_ansible.builtin.file_payload.zip/ansible/modules/file.py\", line 680, in ensure_directory</span>
+<span id="cb40-20">  File \"/tmp/ansible_ansible.builtin.file_payload_37zf8n_k/ansible_ansible.builtin.file_payload.zip/ansible/module_utils/basic.py\", line 1159, in set_fs_attributes_if_different</span>
+<span id="cb40-21">  File \"/tmp/ansible_ansible.builtin.file_payload_37zf8n_k/ansible_ansible.builtin.file_payload.zip/ansible/module_utils/basic.py\", line 919, in set_mode_if_different</span>
+<span id="cb40-22">PermissionError: [Errno 1] Operation not permitted: b'/home/podmaner/authentik/postgres'",</span>
+<span id="cb40-23">    "msg": "MODULE FAILURE\nSee stdout/stderr for the exact error",</span>
+<span id="cb40-24">    "rc": 1</span>
+<span id="cb40-25">}</span></code></pre></div>
+<p>Which is… weird. Looking at the ansible code that generates this:</p>
+<div class="sourceCode" id="cb41" style="background: #f1f3f5;"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb41-1"><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">-</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">name</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> Create relevant configuration files</span></span>
+<span id="cb41-2"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -2099,7 +2591,7 @@ font-style: inherit;">ansible.builtin.file</span><span class="kw" style="color: 
 background-color: null;
 font-weight: bold;
 font-style: inherit;">:</span></span>
-<span id="cb39-3"><span class="at" style="color: #657422;
+<span id="cb41-3"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -2111,7 +2603,7 @@ background-color: null;
 font-style: inherit;"> </span><span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">"{{ homepath.stdout }}/authentik/{{ item }}"</span></span>
-<span id="cb39-4"><span class="at" style="color: #657422;
+<span id="cb41-4"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -2121,7 +2613,7 @@ font-weight: bold;
 font-style: inherit;">:</span><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;"> directory</span></span>
-<span id="cb39-5"><span class="at" style="color: #657422;
+<span id="cb41-5"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -2133,7 +2625,7 @@ background-color: null;
 font-style: inherit;"> </span><span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">'0755'</span></span>
-<span id="cb39-6"><span class="at" style="color: #657422;
+<span id="cb41-6"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -2180,38 +2672,38 @@ background-color: null;
 font-weight: bold;
 font-style: inherit;">]</span></span></code></pre></div>
 <p>It’s the same exact task, looped through… but it <em>only errors for /home/podmaner/authentik/postgres</em> ‽</p>
-<div class="sourceCode" id="cb40" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb40-1">podmaner@thoth:~/authentik$ ls -la</span>
-<span id="cb40-2">total 28</span>
-<span id="cb40-3">drwxr-xr-x 7 podmaner podmaner 4096 Feb 23 15:37 .</span>
-<span id="cb40-4">drwx------ 9 podmaner podmaner 4096 Feb 23 15:37 ..</span>
-<span id="cb40-5">drwxr-xr-x 2 podmaner podmaner 4096 Feb 23 15:37 certs</span>
-<span id="cb40-6">drwxr-xr-x 2 podmaner podmaner 4096 Feb 23 15:37 custom-templates</span>
-<span id="cb40-7">drwxr-xr-x 2 podmaner podmaner 4096 Feb 23 15:37 media</span>
-<span id="cb40-8">drwx------ 2   165605 podmaner 4096 Feb 23 15:37 postgres</span>
-<span id="cb40-9">drwxr-xr-x 2   166534 podmaner 4096 Feb 23 15:39 redis</span></code></pre></div>
+<div class="sourceCode" id="cb42" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb42-1">podmaner@thoth:~/authentik$ ls -la</span>
+<span id="cb42-2">total 28</span>
+<span id="cb42-3">drwxr-xr-x 7 podmaner podmaner 4096 Feb 23 15:37 .</span>
+<span id="cb42-4">drwx------ 9 podmaner podmaner 4096 Feb 23 15:37 ..</span>
+<span id="cb42-5">drwxr-xr-x 2 podmaner podmaner 4096 Feb 23 15:37 certs</span>
+<span id="cb42-6">drwxr-xr-x 2 podmaner podmaner 4096 Feb 23 15:37 custom-templates</span>
+<span id="cb42-7">drwxr-xr-x 2 podmaner podmaner 4096 Feb 23 15:37 media</span>
+<span id="cb42-8">drwx------ 2   165605 podmaner 4096 Feb 23 15:37 postgres</span>
+<span id="cb42-9">drwxr-xr-x 2   166534 podmaner 4096 Feb 23 15:39 redis</span></code></pre></div>
 <p>For some reason, only the postgres directory has incorrect permissions?</p>
 <p>And the weirdest part: This only happens upon a rerun of the role. If I delete the <code>/home/podmaner/authentik/</code> directory, and run the role, then everything runs properly, and the <code>postgres</code> directory gets the proper permissions.</p>
 <p>Why does this happen? My intuition is telling me this is a bug, since the behavior is so blatantly inconsistent.</p>
 <p>It’s not really that though. After deleting the <code>postgres</code> directory, it was recreated.</p>
-<div class="sourceCode" id="cb41" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb41-1">podmaner@thoth:~/authentik$ podman logs authentik_postgres</span>
-<span id="cb41-2">Error: Database is uninitialized and superuser password is not specified.</span>
-<span id="cb41-3">       You must specify POSTGRES_PASSWORD to a non-empty value for the</span>
-<span id="cb41-4">       superuser. For example, "-e POSTGRES_PASSWORD=password" on "docker run".</span>
-<span id="cb41-5"></span>
-<span id="cb41-6">       You may also use "POSTGRES_HOST_AUTH_METHOD=trust" to allow all</span>
-<span id="cb41-7">       connections without a password. This is *not* recommended.</span>
-<span id="cb41-8"></span>
-<span id="cb41-9">       See PostgreSQL documentation about "trust":</span>
-<span id="cb41-10">       https://www.postgresql.org/docs/current/auth-trust.html</span></code></pre></div>
+<div class="sourceCode" id="cb43" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb43-1">podmaner@thoth:~/authentik$ podman logs authentik_postgres</span>
+<span id="cb43-2">Error: Database is uninitialized and superuser password is not specified.</span>
+<span id="cb43-3">       You must specify POSTGRES_PASSWORD to a non-empty value for the</span>
+<span id="cb43-4">       superuser. For example, "-e POSTGRES_PASSWORD=password" on "docker run".</span>
+<span id="cb43-5"></span>
+<span id="cb43-6">       You may also use "POSTGRES_HOST_AUTH_METHOD=trust" to allow all</span>
+<span id="cb43-7">       connections without a password. This is *not* recommended.</span>
+<span id="cb43-8"></span>
+<span id="cb43-9">       See PostgreSQL documentation about "trust":</span>
+<span id="cb43-10">       https://www.postgresql.org/docs/current/auth-trust.html</span></code></pre></div>
 <p>Whoops. Lol. I was attempting to convet <a href="https://goauthentik.io/docs/installation/docker-compose">authentik’s docker-compose.yml</a> to podman+ansible instructions, but my copy was incomplete, and I forgot to configure the postgres container properly.</p>
 <p>That explains why the container won’t start… but it still doesn’t explain the file permissions error.</p>
 <p>After taking a closer look at the output of <code>ls -la</code>, it seems that the podman containers change ownership of the files. Why doesn’t it do this for any of my other containers?</p>
 <p>I’m guessing this is because the postgres and redis container, unlike every other container, have the main process inside as a different user other than root.</p>
 <p>I looked into <a href="https://www.redhat.com/sysadmin/rootless-podman-user-namespace-modes">podman user namespaces</a>. I tried setting user namespaces for the relevant containers, first, but I got an error:</p>
-<div class="sourceCode" id="cb42" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb42-1">TASK [authentik : Authentik postgres database] ***********************************************************************************************************************</span>
-<span id="cb42-2">fatal: [moonstack]: FAILED! =&gt; {"changed": false, "msg": "Can't run container authentik_postgres", "stderr": "Error: --userns and --pod cannot be set together\n", "stderr_lines": ["Error: --userns and --pod cannot be set together"], "stdout": "", "stdout_lines": []}</span></code></pre></div>
+<div class="sourceCode" id="cb44" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb44-1">TASK [authentik : Authentik postgres database] ***********************************************************************************************************************</span>
+<span id="cb44-2">fatal: [moonstack]: FAILED! =&gt; {"changed": false, "msg": "Can't run container authentik_postgres", "stderr": "Error: --userns and --pod cannot be set together\n", "stderr_lines": ["Error: --userns and --pod cannot be set together"], "stdout": "", "stdout_lines": []}</span></code></pre></div>
 <p>So instead, I set the usernamespace for the whole pod, and it didn’t erorr:</p>
-<div class="sourceCode" id="cb43" style="background: #f1f3f5;"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb43-1"><span class="kw" style="color: #003B4F;
+<div class="sourceCode" id="cb45" style="background: #f1f3f5;"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb45-1"><span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">-</span><span class="at" style="color: #657422;
@@ -2224,7 +2716,7 @@ font-weight: bold;
 font-style: inherit;">:</span><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;"> Create relevant podman pod  </span></span>
-<span id="cb43-2"><span class="at" style="color: #657422;
+<span id="cb45-2"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">      </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -2232,7 +2724,7 @@ font-style: inherit;">containers.podman.podman_pod</span><span class="kw" style=
 background-color: null;
 font-weight: bold;
 font-style: inherit;">:</span></span>
-<span id="cb43-3"><span class="at" style="color: #657422;
+<span id="cb45-3"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">        </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -2242,7 +2734,7 @@ font-weight: bold;
 font-style: inherit;">:</span><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;"> authentik_pod</span></span>
-<span id="cb43-4"><span class="at" style="color: #657422;
+<span id="cb45-4"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">        </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -2260,74 +2752,74 @@ font-style: inherit;">true</span></span></code></pre></div>
 <summary>
 Show error
 </summary>
-<div class="sourceCode" id="cb44" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb44-1">podmaner@thoth:~$ podman logs authentik_worker</span>
-<span id="cb44-2">{"event": "Loaded config", "level": "debug", "logger": "authentik.lib.config", "timestamp": 1708731540.8134813, "file": "/authentik/lib/default.yml"}</span>
-<span id="cb44-3">{"event": "Loaded environment variables", "level": "debug", "logger": "authentik.lib.config", "timestamp": 1708731540.813802, "count": 5}</span>
-<span id="cb44-4">{"event": "Starting authentik bootstrap", "level": "info", "logger": "authentik.lib.config", "timestamp": 1708731540.8138793}</span>
-<span id="cb44-5">{"event": "----------------------------------------------------------------------", "level": "info", "logger": "authentik.lib.config", "timestamp": 1708731540.8139021}</span>
-<span id="cb44-6">{"event": "Secret key missing, check https://goauthentik.io/docs/installation/.", "level": "info", "logger": "authentik.lib.config", "timestamp": 1708731540.8139138}</span>
-<span id="cb44-7">{"event": "----------------------------------------------------------------------", "level": "info", "logger": "authentik.lib.config", "timestamp": 1708731540.8139226}</span>
-<span id="cb44-8">{"event": "Loaded config", "level": "debug", "logger": "authentik.lib.config", "timestamp": 1708807909.1802225, "file": "/authentik/lib/default.yml"}</span>
-<span id="cb44-9">{"event": "Loaded environment variables", "level": "debug", "logger": "authentik.lib.config", "timestamp": 1708807909.1805325, "count": 5}</span>
-<span id="cb44-10">{"event": "Starting authentik bootstrap", "level": "info", "logger": "authentik.lib.config", "timestamp": 1708807909.1806104}</span>
-<span id="cb44-11">{"event": "----------------------------------------------------------------------", "level": "info", "logger": "authentik.lib.config", "timestamp": 1708807909.180633}</span>
-<span id="cb44-12">{"event": "Secret key missing, check https://goauthentik.io/docs/installation/.", "level": "info", "logger": "authentik.lib.config", "timestamp": 1708807909.1806445}</span>
-<span id="cb44-13">{"event": "----------------------------------------------------------------------", "level": "info", "logger": "authentik.lib.config", "timestamp": 1708807909.1806536}</span>
-<span id="cb44-14">{"event": "Loaded config", "level": "debug", "logger": "authentik.lib.config", "timestamp": 1708817283.6261683, "file": "/authentik/lib/default.yml"}</span>
-<span id="cb44-15">{"event": "Loaded environment variables", "level": "debug", "logger": "authentik.lib.config", "timestamp": 1708817283.6264079, "count": 5}</span>
-<span id="cb44-16">{"event": "Starting authentik bootstrap", "level": "info", "logger": "authentik.lib.config", "timestamp": 1708817283.6264803}</span>
-<span id="cb44-17">{"event": "----------------------------------------------------------------------", "level": "info", "logger": "authentik.lib.config", "timestamp": 1708817283.6265018}</span>
-<span id="cb44-18">{"event": "Secret key missing, check https://goauthentik.io/docs/installation/.", "level": "info", "logger": "authentik.lib.config", "timestamp": 1708817283.626513}</span>
-<span id="cb44-19">{"event": "----------------------------------------------------------------------", "level": "info", "logger": "authentik.lib.config", "timestamp": 1708817283.6265216}</span>
-<span id="cb44-20">podmaner@thoth:~$ podman logs authentik_server</span>
-<span id="cb44-21">{"event": "Loaded config", "level": "debug", "logger": "authentik.lib.config", "timestamp": 1708817279.5668721, "file": "/authentik/lib/default.yml"}</span>
-<span id="cb44-22">{"event": "Loaded environment variables", "level": "debug", "logger": "authentik.lib.config", "timestamp": 1708817279.567172, "count": 5}</span>
-<span id="cb44-23">{"event": "Loaded app settings", "level": "debug", "logger": "authentik.lib.config", "timestamp": 1708817281.6441257, "path": "authentik.admin.settings"}</span>
-<span id="cb44-24">{"event": "Loaded app settings", "level": "debug", "logger": "authentik.lib.config", "timestamp": 1708817281.644982, "path": "authentik.crypto.settings"}</span>
-<span id="cb44-25">{"event": "Loaded app settings", "level": "debug", "logger": "authentik.lib.config", "timestamp": 1708817281.6455739, "path": "authentik.events.settings"}</span>
-<span id="cb44-26">{"event": "Loaded app settings", "level": "debug", "logger": "authentik.lib.config", "timestamp": 1708817281.6467671, "path": "authentik.outposts.settings"}</span>
-<span id="cb44-27">{"event": "Loaded app settings", "level": "debug", "logger": "authentik.lib.config", "timestamp": 1708817281.6484737, "path": "authentik.policies.reputation.settings"}</span>
-<span id="cb44-28">{"event": "Loaded app settings", "level": "debug", "logger": "authentik.lib.config", "timestamp": 1708817281.651618, "path": "authentik.providers.scim.settings"}</span>
-<span id="cb44-29">{"event": "Loaded app settings", "level": "debug", "logger": "authentik.lib.config", "timestamp": 1708817281.6528664, "path": "authentik.sources.ldap.settings"}</span>
-<span id="cb44-30">{"event": "Loaded app settings", "level": "debug", "logger": "authentik.lib.config", "timestamp": 1708817281.6535037, "path": "authentik.sources.oauth.settings"}</span>
-<span id="cb44-31">{"event": "Loaded app settings", "level": "debug", "logger": "authentik.lib.config", "timestamp": 1708817281.6540685, "path": "authentik.sources.plex.settings"}</span>
-<span id="cb44-32">{"event": "Loaded app settings", "level": "debug", "logger": "authentik.lib.config", "timestamp": 1708817281.6560044, "path": "authentik.stages.authenticator_totp.settings"}</span>
-<span id="cb44-33">{"event": "Loaded app settings", "level": "debug", "logger": "authentik.lib.config", "timestamp": 1708817281.6598718, "path": "authentik.blueprints.settings"}</span>
-<span id="cb44-34">{"event": "Booting authentik", "level": "info", "logger": "authentik.lib.config", "timestamp": 1708817281.6600318, "version": "2023.10.7"}</span>
-<span id="cb44-35">{"event": "Enabled authentik enterprise", "level": "info", "logger": "authentik.lib.config", "timestamp": 1708817281.661141}</span>
-<span id="cb44-36">{"event": "Loaded app settings", "level": "debug", "logger": "authentik.lib.config", "timestamp": 1708817281.661508, "path": "authentik.enterprise.settings"}</span>
-<span id="cb44-37">{"event": "Loaded GeoIP database", "last_write": 1706549214.0, "level": "info", "logger": "authentik.events.geo", "pid": 2, "timestamp": "2024-02-24T23:28:02.805111"}</span>
-<span id="cb44-38">{"app_name": "authentik.crypto", "event": "Failed to run reconcile", "exc": "ProgrammingError('relation \"authentik_crypto_certificatekeypair\" does not exist\\nLINE 1: ...hentik_crypto_certificatekeypair\".\"key_data\" FROM \"authentik...\\n                                                             ^')", "level": "warning", "logger": "authentik.blueprints.apps", "name": "managed_jwt_cert", "pid": 2, "timestamp": "2024-02-24T23:28:03.610865"}</span>
-<span id="cb44-39">{"app_name": "authentik.crypto", "event": "Failed to run reconcile", "exc": "ProgrammingError('relation \"authentik_crypto_certificatekeypair\" does not exist\\nLINE 1: SELECT 1 AS \"a\" FROM \"authentik_crypto_certificatekeypair\" W...\\n                             ^')", "level": "warning", "logger": "authentik.blueprints.apps", "name": "self_signed", "pid": 2, "timestamp": "2024-02-24T23:28:03.612779"}</span>
-<span id="cb44-40">{"app_name": "authentik.outposts", "event": "Failed to run reconcile", "exc": "ProgrammingError('relation \"authentik_outposts_outpost\" does not exist\\nLINE 1: ..._id\", \"authentik_outposts_outpost\".\"_config\" FROM \"authentik...\\n                                                             ^')", "level": "warning", "logger": "authentik.blueprints.apps", "name": "embedded_outpost", "pid": 2, "timestamp": "2024-02-24T23:28:03.647866"}</span>
-<span id="cb44-41">{"event": "Task published", "level": "info", "logger": "authentik.root.celery", "pid": 2, "task_id": "d28b9ddc12eb44eaa99a25dfe3477f37", "task_name": "authentik.blueprints.v1.tasks.blueprints_discovery", "timestamp": "2024-02-24T23:28:03.876853"}</span>
-<span id="cb44-42">{"event": "Task published", "level": "info", "logger": "authentik.root.celery", "pid": 2, "task_id": "763c497b4e4c43e2bb745de6a613e104", "task_name": "authentik.blueprints.v1.tasks.clear_failed_blueprints", "timestamp": "2024-02-24T23:28:03.878293"}</span>
-<span id="cb44-43">{"app_name": "authentik.core", "event": "Failed to run reconcile", "exc": "ProgrammingError('relation \"authentik_core_source\" does not exist\\nLINE 1: ...\"authentik_core_source\".\"user_matching_mode\" FROM \"authentik...\\n                                                             ^')", "level": "warning", "logger": "authentik.blueprints.apps", "name": "source_inbuilt", "pid": 2, "timestamp": "2024-02-24T23:28:03.881205"}\</span></code></pre></div>
+<div class="sourceCode" id="cb46" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb46-1">podmaner@thoth:~$ podman logs authentik_worker</span>
+<span id="cb46-2">{"event": "Loaded config", "level": "debug", "logger": "authentik.lib.config", "timestamp": 1708731540.8134813, "file": "/authentik/lib/default.yml"}</span>
+<span id="cb46-3">{"event": "Loaded environment variables", "level": "debug", "logger": "authentik.lib.config", "timestamp": 1708731540.813802, "count": 5}</span>
+<span id="cb46-4">{"event": "Starting authentik bootstrap", "level": "info", "logger": "authentik.lib.config", "timestamp": 1708731540.8138793}</span>
+<span id="cb46-5">{"event": "----------------------------------------------------------------------", "level": "info", "logger": "authentik.lib.config", "timestamp": 1708731540.8139021}</span>
+<span id="cb46-6">{"event": "Secret key missing, check https://goauthentik.io/docs/installation/.", "level": "info", "logger": "authentik.lib.config", "timestamp": 1708731540.8139138}</span>
+<span id="cb46-7">{"event": "----------------------------------------------------------------------", "level": "info", "logger": "authentik.lib.config", "timestamp": 1708731540.8139226}</span>
+<span id="cb46-8">{"event": "Loaded config", "level": "debug", "logger": "authentik.lib.config", "timestamp": 1708807909.1802225, "file": "/authentik/lib/default.yml"}</span>
+<span id="cb46-9">{"event": "Loaded environment variables", "level": "debug", "logger": "authentik.lib.config", "timestamp": 1708807909.1805325, "count": 5}</span>
+<span id="cb46-10">{"event": "Starting authentik bootstrap", "level": "info", "logger": "authentik.lib.config", "timestamp": 1708807909.1806104}</span>
+<span id="cb46-11">{"event": "----------------------------------------------------------------------", "level": "info", "logger": "authentik.lib.config", "timestamp": 1708807909.180633}</span>
+<span id="cb46-12">{"event": "Secret key missing, check https://goauthentik.io/docs/installation/.", "level": "info", "logger": "authentik.lib.config", "timestamp": 1708807909.1806445}</span>
+<span id="cb46-13">{"event": "----------------------------------------------------------------------", "level": "info", "logger": "authentik.lib.config", "timestamp": 1708807909.1806536}</span>
+<span id="cb46-14">{"event": "Loaded config", "level": "debug", "logger": "authentik.lib.config", "timestamp": 1708817283.6261683, "file": "/authentik/lib/default.yml"}</span>
+<span id="cb46-15">{"event": "Loaded environment variables", "level": "debug", "logger": "authentik.lib.config", "timestamp": 1708817283.6264079, "count": 5}</span>
+<span id="cb46-16">{"event": "Starting authentik bootstrap", "level": "info", "logger": "authentik.lib.config", "timestamp": 1708817283.6264803}</span>
+<span id="cb46-17">{"event": "----------------------------------------------------------------------", "level": "info", "logger": "authentik.lib.config", "timestamp": 1708817283.6265018}</span>
+<span id="cb46-18">{"event": "Secret key missing, check https://goauthentik.io/docs/installation/.", "level": "info", "logger": "authentik.lib.config", "timestamp": 1708817283.626513}</span>
+<span id="cb46-19">{"event": "----------------------------------------------------------------------", "level": "info", "logger": "authentik.lib.config", "timestamp": 1708817283.6265216}</span>
+<span id="cb46-20">podmaner@thoth:~$ podman logs authentik_server</span>
+<span id="cb46-21">{"event": "Loaded config", "level": "debug", "logger": "authentik.lib.config", "timestamp": 1708817279.5668721, "file": "/authentik/lib/default.yml"}</span>
+<span id="cb46-22">{"event": "Loaded environment variables", "level": "debug", "logger": "authentik.lib.config", "timestamp": 1708817279.567172, "count": 5}</span>
+<span id="cb46-23">{"event": "Loaded app settings", "level": "debug", "logger": "authentik.lib.config", "timestamp": 1708817281.6441257, "path": "authentik.admin.settings"}</span>
+<span id="cb46-24">{"event": "Loaded app settings", "level": "debug", "logger": "authentik.lib.config", "timestamp": 1708817281.644982, "path": "authentik.crypto.settings"}</span>
+<span id="cb46-25">{"event": "Loaded app settings", "level": "debug", "logger": "authentik.lib.config", "timestamp": 1708817281.6455739, "path": "authentik.events.settings"}</span>
+<span id="cb46-26">{"event": "Loaded app settings", "level": "debug", "logger": "authentik.lib.config", "timestamp": 1708817281.6467671, "path": "authentik.outposts.settings"}</span>
+<span id="cb46-27">{"event": "Loaded app settings", "level": "debug", "logger": "authentik.lib.config", "timestamp": 1708817281.6484737, "path": "authentik.policies.reputation.settings"}</span>
+<span id="cb46-28">{"event": "Loaded app settings", "level": "debug", "logger": "authentik.lib.config", "timestamp": 1708817281.651618, "path": "authentik.providers.scim.settings"}</span>
+<span id="cb46-29">{"event": "Loaded app settings", "level": "debug", "logger": "authentik.lib.config", "timestamp": 1708817281.6528664, "path": "authentik.sources.ldap.settings"}</span>
+<span id="cb46-30">{"event": "Loaded app settings", "level": "debug", "logger": "authentik.lib.config", "timestamp": 1708817281.6535037, "path": "authentik.sources.oauth.settings"}</span>
+<span id="cb46-31">{"event": "Loaded app settings", "level": "debug", "logger": "authentik.lib.config", "timestamp": 1708817281.6540685, "path": "authentik.sources.plex.settings"}</span>
+<span id="cb46-32">{"event": "Loaded app settings", "level": "debug", "logger": "authentik.lib.config", "timestamp": 1708817281.6560044, "path": "authentik.stages.authenticator_totp.settings"}</span>
+<span id="cb46-33">{"event": "Loaded app settings", "level": "debug", "logger": "authentik.lib.config", "timestamp": 1708817281.6598718, "path": "authentik.blueprints.settings"}</span>
+<span id="cb46-34">{"event": "Booting authentik", "level": "info", "logger": "authentik.lib.config", "timestamp": 1708817281.6600318, "version": "2023.10.7"}</span>
+<span id="cb46-35">{"event": "Enabled authentik enterprise", "level": "info", "logger": "authentik.lib.config", "timestamp": 1708817281.661141}</span>
+<span id="cb46-36">{"event": "Loaded app settings", "level": "debug", "logger": "authentik.lib.config", "timestamp": 1708817281.661508, "path": "authentik.enterprise.settings"}</span>
+<span id="cb46-37">{"event": "Loaded GeoIP database", "last_write": 1706549214.0, "level": "info", "logger": "authentik.events.geo", "pid": 2, "timestamp": "2024-02-24T23:28:02.805111"}</span>
+<span id="cb46-38">{"app_name": "authentik.crypto", "event": "Failed to run reconcile", "exc": "ProgrammingError('relation \"authentik_crypto_certificatekeypair\" does not exist\\nLINE 1: ...hentik_crypto_certificatekeypair\".\"key_data\" FROM \"authentik...\\n                                                             ^')", "level": "warning", "logger": "authentik.blueprints.apps", "name": "managed_jwt_cert", "pid": 2, "timestamp": "2024-02-24T23:28:03.610865"}</span>
+<span id="cb46-39">{"app_name": "authentik.crypto", "event": "Failed to run reconcile", "exc": "ProgrammingError('relation \"authentik_crypto_certificatekeypair\" does not exist\\nLINE 1: SELECT 1 AS \"a\" FROM \"authentik_crypto_certificatekeypair\" W...\\n                             ^')", "level": "warning", "logger": "authentik.blueprints.apps", "name": "self_signed", "pid": 2, "timestamp": "2024-02-24T23:28:03.612779"}</span>
+<span id="cb46-40">{"app_name": "authentik.outposts", "event": "Failed to run reconcile", "exc": "ProgrammingError('relation \"authentik_outposts_outpost\" does not exist\\nLINE 1: ..._id\", \"authentik_outposts_outpost\".\"_config\" FROM \"authentik...\\n                                                             ^')", "level": "warning", "logger": "authentik.blueprints.apps", "name": "embedded_outpost", "pid": 2, "timestamp": "2024-02-24T23:28:03.647866"}</span>
+<span id="cb46-41">{"event": "Task published", "level": "info", "logger": "authentik.root.celery", "pid": 2, "task_id": "d28b9ddc12eb44eaa99a25dfe3477f37", "task_name": "authentik.blueprints.v1.tasks.blueprints_discovery", "timestamp": "2024-02-24T23:28:03.876853"}</span>
+<span id="cb46-42">{"event": "Task published", "level": "info", "logger": "authentik.root.celery", "pid": 2, "task_id": "763c497b4e4c43e2bb745de6a613e104", "task_name": "authentik.blueprints.v1.tasks.clear_failed_blueprints", "timestamp": "2024-02-24T23:28:03.878293"}</span>
+<span id="cb46-43">{"app_name": "authentik.core", "event": "Failed to run reconcile", "exc": "ProgrammingError('relation \"authentik_core_source\" does not exist\\nLINE 1: ...\"authentik_core_source\".\"user_matching_mode\" FROM \"authentik...\\n                                                             ^')", "level": "warning", "logger": "authentik.blueprints.apps", "name": "source_inbuilt", "pid": 2, "timestamp": "2024-02-24T23:28:03.881205"}\</span></code></pre></div>
 </details>
 <p>It seems I forgot another environment variable, which has been <a href="https://goauthentik.io/docs/installation/docker-compose#preparation">documented on authentik’s site</a>.</p>
 <p>I did that, and it still dies.</p>
 <p>Investigating the error, it seems to be something about relevant file permissions, it is unable to create the necessary file.</p>
-<div class="sourceCode" id="cb45" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb45-1">Traceback (most recent call last):</span>
-<span id="cb45-2">  File "&lt;frozen runpy&gt;", line 198, in _run_module_as_main</span>
-<span id="cb45-3">  File "&lt;frozen runpy&gt;", line 88, in _run_code</span>
-<span id="cb45-4">  File "/lifecycle/migrate.py", line 98, in &lt;module&gt;</span>
-<span id="cb45-5">    migration.run()</span>
-<span id="cb45-6">  File "/lifecycle/system_migrations/tenant_files.py", line 15, in run</span>
-<span id="cb45-7">    TENANT_MEDIA_ROOT.mkdir(parents=True)</span>
-<span id="cb45-8">  File "/usr/local/lib/python3.12/pathlib.py", line 1311, in mkdir</span>
-<span id="cb45-9">    os.mkdir(self, mode)</span>
-<span id="cb45-10">PermissionError: [Errno 13] Permission denied: '/media/public'</span></code></pre></div>
+<div class="sourceCode" id="cb47" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb47-1">Traceback (most recent call last):</span>
+<span id="cb47-2">  File "&lt;frozen runpy&gt;", line 198, in _run_module_as_main</span>
+<span id="cb47-3">  File "&lt;frozen runpy&gt;", line 88, in _run_code</span>
+<span id="cb47-4">  File "/lifecycle/migrate.py", line 98, in &lt;module&gt;</span>
+<span id="cb47-5">    migration.run()</span>
+<span id="cb47-6">  File "/lifecycle/system_migrations/tenant_files.py", line 15, in run</span>
+<span id="cb47-7">    TENANT_MEDIA_ROOT.mkdir(parents=True)</span>
+<span id="cb47-8">  File "/usr/local/lib/python3.12/pathlib.py", line 1311, in mkdir</span>
+<span id="cb47-9">    os.mkdir(self, mode)</span>
+<span id="cb47-10">PermissionError: [Errno 13] Permission denied: '/media/public'</span></code></pre></div>
 <p>I need to do more research into how rootless podman, and the different userns modes, interact with volumes.</p>
 <p>I found <a href="https://www.tutorialworks.com/podman-rootless-volumes/">one article</a>, but it’s focus isn’t quite what I want, and it lacks overview of the different userns modes, and how they interact with volume mounts.</p>
 <p>I spent some time experimenting, and did some more research. Something crucial was a comment I noticed in the docker-compose, under the section related to the “worker” node of authentik:</p>
-<div class="sourceCode" id="cb46" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb46-1"># `user: root` and the docker socket volume are optional.</span>
-<span id="cb46-2">    # See more for the docker socket integration here:</span>
-<span id="cb46-3">    # https://goauthentik.io/docs/outposts/integrations/docker</span>
-<span id="cb46-4">    # Removing `user: root` also prevents the worker from fixing the permissions</span>
-<span id="cb46-5">    # on the mounted folders, so when removing this make sure the folders have the correct UID/GID</span>
-<span id="cb46-6">    # (1000:1000 by default)</span></code></pre></div>
+<div class="sourceCode" id="cb48" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb48-1"># `user: root` and the docker socket volume are optional.</span>
+<span id="cb48-2">    # See more for the docker socket integration here:</span>
+<span id="cb48-3">    # https://goauthentik.io/docs/outposts/integrations/docker</span>
+<span id="cb48-4">    # Removing `user: root` also prevents the worker from fixing the permissions</span>
+<span id="cb48-5">    # on the mounted folders, so when removing this make sure the folders have the correct UID/GID</span>
+<span id="cb48-6">    # (1000:1000 by default)</span></code></pre></div>
 <p>So apparently, authentik expects to exist as user 1000 and group 1000, and not anything else. Thankfully, podman has a special userns mode, to map a UID/GID inside the container to a different host user:</p>
-<div class="sourceCode" id="cb47" style="background: #f1f3f5;"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb47-1"><span class="kw" style="color: #003B4F;
+<div class="sourceCode" id="cb49" style="background: #f1f3f5;"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb49-1"><span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">-</span><span class="at" style="color: #657422;
@@ -2340,7 +2832,7 @@ font-weight: bold;
 font-style: inherit;">:</span><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;"> Create relevant podman pod  </span></span>
-<span id="cb47-2"><span class="at" style="color: #657422;
+<span id="cb49-2"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -2348,7 +2840,7 @@ font-style: inherit;">containers.podman.podman_pod</span><span class="kw" style=
 background-color: null;
 font-weight: bold;
 font-style: inherit;">:</span></span>
-<span id="cb47-3"><span class="at" style="color: #657422;
+<span id="cb49-3"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -2358,7 +2850,7 @@ font-weight: bold;
 font-style: inherit;">:</span><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;"> authentik_pod</span></span>
-<span id="cb47-4"><span class="at" style="color: #657422;
+<span id="cb49-4"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -2370,10 +2862,10 @@ background-color: null;
 font-style: inherit;"> </span><span class="ch" style="color: #20794D;
 background-color: null;
 font-style: inherit;">true</span></span>
-<span id="cb47-5"><span class="co" style="color: #5E5E5E;
+<span id="cb49-5"><span class="co" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;">    # userns: host</span></span>
-<span id="cb47-6"><span class="at" style="color: #657422;
+<span id="cb49-6"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -2383,7 +2875,7 @@ font-weight: bold;
 font-style: inherit;">:</span><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;"> keep-id:uid=1000,gid=1000</span></span>
-<span id="cb47-7"><span class="at" style="color: #657422;
+<span id="cb49-7"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -2393,7 +2885,7 @@ font-weight: bold;
 font-style: inherit;">:</span><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;"> started</span></span>
-<span id="cb47-8"><span class="at" style="color: #657422;
+<span id="cb49-8"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">    ......</span></span></code></pre></div>
 <p>After this, it works. But I’m still not satisfied. Postgres keeps on changing the permissions of it’s own bind mount.</p>
@@ -2404,12 +2896,12 @@ font-style: inherit;">    ......</span></span></code></pre></div>
 <p>It then offers three ways to get around this, and one way is to use the <code>--user</code> flag, in docker. Red Hat has an <a href="https://www.redhat.com/sysadmin/user-flag-rootless-containers">article mentioning that this exists in podman as well</a>. It didn’t work.</p>
 <p>I did <a href="https://github.com/containers/crun/issues/396">some more research</a> into why it is not possible for there to be a different usernamespace mapping for each container in a pod, and the short version is that containers within a pod need to be in the same user namespace in order for them to interact with eachother properly, like networking.</p>
 <p>I made a Dockerfile for postgres, adding the authentik user to the container:</p>
-<div class="sourceCode" id="cb48" style="background: #f1f3f5;"><pre class="sourceCode Dockerfile code-with-copy"><code class="sourceCode dockerfile"><span id="cb48-1"><span class="kw" style="color: #003B4F;
+<div class="sourceCode" id="cb50" style="background: #f1f3f5;"><pre class="sourceCode Dockerfile code-with-copy"><code class="sourceCode dockerfile"><span id="cb50-1"><span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">FROM</span> docker.io/library/postgres:12-alpine</span>
-<span id="cb48-2"></span>
-<span id="cb48-3"><span class="kw" style="color: #003B4F;
+<span id="cb50-2"></span>
+<span id="cb50-3"><span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">RUN</span> <span class="bu" style="color: null;
@@ -2422,27 +2914,27 @@ font-style: inherit;">&gt;</span> /etc/passwd</span></code></pre></div>
 <p>It still chowns/chmods the whole directory to be 700, but that’s okay. Apparently, this is intended behavior, hardcoded, and <a href="https://github.com/postgres/postgres/blob/d42294fc00da4b97d04ddb4401b76295e8d86816/src/backend/postmaster/postmaster.c#L1539">postgres refuses to start if file permissions are not 700</a>. It’s required that the user running postgres, exclusively owns the postgres data folders.</p>
 <p>But now file permissions are correct at least, and the user in the container is mapped to the user outside the container, enabling the directory to be manipulated properly (backed up, restored, etc) outside of the container.</p>
 <p>However, I still get another error. Even with a fresh authentik deployment, the <code>authentik_worker</code> container gives an error:</p>
-<div class="sourceCode" id="cb49" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb49-1">Traceback (most recent call last):</span>
-<span id="cb49-2">  File "/lifecycle/migrate.py", line 98, in &lt;module&gt;</span>
-<span id="cb49-3">    migration.run()</span>
-<span id="cb49-4">  File "/lifecycle/system_migrations/tenant_to_brand.py", line 25, in run</span>
-<span id="cb49-5">    self.cur.execute(SQL_STATEMENT)</span>
-<span id="cb49-6">  File "/ak-root/venv/lib/python3.12/site-packages/psycopg/cursor.py", line 732, in execute</span>
-<span id="cb49-7">    raise ex.with_traceback(None)</span>
-<span id="cb49-8">psycopg.errors.DuplicateTable: relation "authentik_brands_brand" already exists</span>
-<span id="cb49-9"></span>
-<span id="cb49-10">During handling of the above exception, another exception occurred:</span>
-<span id="cb49-11"></span>
-<span id="cb49-12">Traceback (most recent call last):</span>
-<span id="cb49-13">  File "&lt;frozen runpy&gt;", line 198, in _run_module_as_main</span>
-<span id="cb49-14">  File "&lt;frozen runpy&gt;", line 88, in _run_code</span>
-<span id="cb49-15">  File "/lifecycle/migrate.py", line 118, in &lt;module&gt;</span>
-<span id="cb49-16">    release_lock(curr)</span>
-<span id="cb49-17">  File "/lifecycle/migrate.py", line 67, in release_lock</span>
-<span id="cb49-18">    cursor.execute("SELECT pg_advisory_unlock(%s)", (ADV_LOCK_UID,))</span>
-<span id="cb49-19">  File "/ak-root/venv/lib/python3.12/site-packages/psycopg/cursor.py", line 732, in execute</span>
-<span id="cb49-20">    raise ex.with_traceback(None)</span>
-<span id="cb49-21">psycopg.errors.InFailedSqlTransaction: current transaction is aborted, commands ignored until end of transaction block</span></code></pre></div>
+<div class="sourceCode" id="cb51" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb51-1">Traceback (most recent call last):</span>
+<span id="cb51-2">  File "/lifecycle/migrate.py", line 98, in &lt;module&gt;</span>
+<span id="cb51-3">    migration.run()</span>
+<span id="cb51-4">  File "/lifecycle/system_migrations/tenant_to_brand.py", line 25, in run</span>
+<span id="cb51-5">    self.cur.execute(SQL_STATEMENT)</span>
+<span id="cb51-6">  File "/ak-root/venv/lib/python3.12/site-packages/psycopg/cursor.py", line 732, in execute</span>
+<span id="cb51-7">    raise ex.with_traceback(None)</span>
+<span id="cb51-8">psycopg.errors.DuplicateTable: relation "authentik_brands_brand" already exists</span>
+<span id="cb51-9"></span>
+<span id="cb51-10">During handling of the above exception, another exception occurred:</span>
+<span id="cb51-11"></span>
+<span id="cb51-12">Traceback (most recent call last):</span>
+<span id="cb51-13">  File "&lt;frozen runpy&gt;", line 198, in _run_module_as_main</span>
+<span id="cb51-14">  File "&lt;frozen runpy&gt;", line 88, in _run_code</span>
+<span id="cb51-15">  File "/lifecycle/migrate.py", line 118, in &lt;module&gt;</span>
+<span id="cb51-16">    release_lock(curr)</span>
+<span id="cb51-17">  File "/lifecycle/migrate.py", line 67, in release_lock</span>
+<span id="cb51-18">    cursor.execute("SELECT pg_advisory_unlock(%s)", (ADV_LOCK_UID,))</span>
+<span id="cb51-19">  File "/ak-root/venv/lib/python3.12/site-packages/psycopg/cursor.py", line 732, in execute</span>
+<span id="cb51-20">    raise ex.with_traceback(None)</span>
+<span id="cb51-21">psycopg.errors.InFailedSqlTransaction: current transaction is aborted, commands ignored until end of transaction block</span></code></pre></div>
 <p>I think this is because there is no container dependecies or the like set up, so the authentik_worker starts before postgres is finished doing it’s thing. To test, I deployed the databases first, and then started the worker and server containers. Sure enough, authentik then deploys properly, without erroring.</p>
 <p>To get around this, I need to add dependencies to my containers. To do that, I need to use podman’s systemd integration. Since it’s not appropriate for this section (since it will apply to many other services), I am continuing in podman systemd integration</p>
 <section id="configuration" class="level3">
@@ -2499,15 +2991,15 @@ font-style: inherit;">&gt;</span> /etc/passwd</span></code></pre></div>
 <section id="kubernetes" class="level2">
 <h2 class="anchored" data-anchor-id="kubernetes">Kubernetes</h2>
 <p>()</p>
-<div class="sourceCode" id="cb50" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb50-1">podmaner@thoth:~$ podman kube generate authentik_pod</span>
-<span id="cb50-2">spec:</span>
-<span id="cb50-3">  automountServiceAccountToken: false</span>
-<span id="cb50-4">  containers:</span>
-<span id="cb50-5">  ....</span>
-<span id="cb50-6">  ....</span>
-<span id="cb50-7">  hostUsers: false</span>
-<span id="cb50-8">  hostname: authentik_pod</span>
-<span id="cb50-9"> </span></code></pre></div>
+<div class="sourceCode" id="cb52" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb52-1">podmaner@thoth:~$ podman kube generate authentik_pod</span>
+<span id="cb52-2">spec:</span>
+<span id="cb52-3">  automountServiceAccountToken: false</span>
+<span id="cb52-4">  containers:</span>
+<span id="cb52-5">  ....</span>
+<span id="cb52-6">  ....</span>
+<span id="cb52-7">  hostUsers: false</span>
+<span id="cb52-8">  hostname: authentik_pod</span>
+<span id="cb52-9"> </span></code></pre></div>
 <p>This isn’t quite right. <code>hostUsers: false</code> means to <em>not</em> use user namespaces, which I am using right now in podman. See the [kubernetes docs]</p>
 </section>
 <section id="openstack-notes" class="level2">
@@ -10276,109 +10768,6 @@ sed -i 's/boot/efi/EFI/cachyos/' grubx64.efi</code></pre>
   <category>cybersecurity</category>
   <guid>https://moonpiedumplings.github.io/playground/csun-computers/</guid>
   <pubDate>Mon, 28 Aug 2023 07:00:00 GMT</pubDate>
-</item>
-<item>
-  <title>Getting situated in my dorms</title>
-  <link>https://moonpiedumplings.github.io/blog/dorm/</link>
-  <description><![CDATA[ 
-
-
-
-
-<p>For my college, I am going to California State University, Northridge (CSUN). In addition to bringing along normal supplies, I also brought my homelab along.</p>
-<p><img src="https://media.discordapp.net/attachments/1084930216314556476/1145222722616578148/IMG_20230826_220529.jpg" class="img-fluid"></p>
-<p>On the right, is a desktop comuputer, which would be the server I am using for my homelab things.</p>
-<p>On top of that, is my router, which I have configured to wireguard vpn into a VPS I am renting. In addition to that, the router will connect via ethernet to campus internet, and then give me internet, which I have found to be suprisingly faster than accessing campus wifi via internet.</p>
-<p>To the left, is my laptop, which I have “docked” there. It connects up to my monitor and keyboard:</p>
-<p><img src="https://media.discordapp.net/attachments/1084930216314556476/1145222722922745896/IMG_20230826_220522.jpg" class="img-fluid"></p>
-<p>However, the ethernet isn’t currently activated. Apparently, you have to submit a maintenence request for them to turn it on. And since the maintenence workers don’t work on weekends, I have to wait until monday.</p>
-<p>One thing that would really suck is if it wasn’t just the wifi that used eduroam to authenticate, but also the ethernet.</p>
-<p>Eduroam wifi requires special tools to authenticate, and it’s possible that my router may not have these tools installed.</p>
-<p>I visited <a href="https://test-ipv6.com" class="uri">https://test-ipv6.com</a> in order to test ipv6 networking:</p>
-<p><img src="https://media.discordapp.net/attachments/749116247245062164/1145420511581573210/image.png" class="img-fluid"></p>
-<p>I did some futher testing. Both my phone, my laptop, and my other laptop had different public ip addresses. Except they weren’t truly public:</p>
-<pre><code>[moonpie@cachyos-x8664 moonpiedumplings.github.io]$ nmap -sV 130.166.192.250
-Starting Nmap 7.94 ( https://nmap.org ) at 2023-08-27 11:10 PDT
-Note: Host seems down. If it is really up, but blocking our ping probes, try -Pn
-Nmap done: 1 IP address (0 hosts up) scanned in 3.07 seconds
-[moonpie@cachyos-x8664 moonpiedumplings.github.io]$ nmap -Pn 130.166.192.250
-Starting Nmap 7.94 ( https://nmap.org ) at 2023-08-27 11:10 PDT
-sits here forever</code></pre>
-<p>It seems that, despite the machines having public ip addresses, there is a a firewall in place to prevent any access from the external world. So it isn’t truly a “public” ip address.</p>
-<p>The output of <code>ip a</code> agrees with this.</p>
-<pre><code>[moonpie@cachyos-x8664 ~]$ ip a
-... extraneous stuff omitted for brevity
-...
-3: wlan0: &lt;BROADCAST,MULTICAST,UP,LOWER_UP&gt; mtu 1500 qdisc noqueue state UP group default qlen 1000
-    link/ether 4c:d5:77:2d:b2:6d brd ff:ff:ff:ff:ff:ff
-    inet 10.40.66.133/20 brd 10.40.79.255 scope global dynamic noprefixroute wlan0
-       valid_lft 26229sec preferred_lft 26229sec
-    inet6 fe80::e25c:14be:fd65:8944/64 scope link noprefixroute 
-       valid_lft forever preferred_lft forever</code></pre>
-<p>So despite having private ip addresses, each and every ip address maps to a public ip address.</p>
-<p>Apparently the whole of <a href="https://www.whois.com/whois/130.166.0.0">130.166.0.0/16</a> is owned by CSUN.</p>
-<p>This is honestly a tragedy. Entire countries don’t have ipv4, only v6 because the US hoards v4 addresses, like in this case, what could be one or a few NAT’s is instead an ip address for every device.</p>
-<p>As for speed:</p>
-<p><img src="https://media.discordapp.net/attachments/749116247245062164/1145419395548598433/image.png" class="img-fluid"></p>
-<p>Pretty good, but it’s 11 AM when I did this. That’s more than double the speeds I was seeing last night, something around 110 down and 20 up. I may rerun the test again at a more congested time just to make sure.</p>
-<p>Overall, the setup is niceish, but not having ethernet working immediately is frustrating.</p>
-<p>Alright, a week later I got ethernet working. My router is set up and when I test the speeds on my router internet:</p>
-<p><img src="https://moonpiedumplings.github.io/blog/dorm/images/routerspeedtest.jpg" class="img-fluid"></p>
-<p>Vs the campus wifi:</p>
-<p><img src="https://moonpiedumplings.github.io/blog/dorm/images/eduroamspeedtest.jpg" class="img-fluid"></p>
-<p>I’m seeing around double the speeds, as opposed to normal campus wifi.</p>
-
-
-
- ]]></description>
-  <category>linux</category>
-  <guid>https://moonpiedumplings.github.io/blog/dorm/</guid>
-  <pubDate>Sun, 27 Aug 2023 07:00:00 GMT</pubDate>
-</item>
-<item>
-  <title>My Firefox Setup</title>
-  <link>https://moonpiedumplings.github.io/blog/firefox/</link>
-  <description><![CDATA[ 
-
-
-
-
-<section id="multiple-profiles" class="level1">
-<h1>Multiple Profiles</h1>
-<p>So Mozilla, the company behind the Firefox web browser, offers a feature called Firefox sync. It enables you to sync your firefox browser, with your mozilla account, to any device.</p>
-<p>However, it has a caveat: it can only sync one firefox profile. Firefox profiles, are basically completely different instances on firefox, capable of having every single thing be seperate, down to things like advanced settings.</p>
-<p>Generally, what is recommended to do to seperate accounts, is to use <a href="https://support.mozilla.org/en-US/kb/containers">firefox multi account containers</a>. These seperates cookies and logins between sites. This lets people protect their privacy, because sites like Facebook can no longer snoop to see what other sites have also given you a facebook cookie.</p>
-<p>However, I found multi account containers very frustrating to use. If you are trying to manage multiple accounts on the same site, on a site that doesn’t let you do that natively (google/gmail do, but microsoft doesn’t), it constantly asks you if you are sure that you want to open this site in this container. In addition to that, it does that for other sites as well, like google search, which makes it very frustrating.</p>
-<p>Firefox profiles, don’t have that annoyance, but I also enjoy the greater degree of seperation they give. Because each firefox profile can have completely differenct settings, this means that I can do things like configure one firefox profile for performance, but at the cost of stability. However, my schoolwork profile is configured never to crash, because it needs to be reliable. Multi account containers can’t do that.</p>
-<section id="default-applications" class="level2">
-<h2 class="anchored" data-anchor-id="default-applications">Default Applications</h2>
-<p>Because I use multiple profiles, I would like the option to chose what link each firefox profile opens in.</p>
-<p>So far, I’ve tried this command <code>xdg-settings set default-web-browser none.desktop</code>, with the goal of a “choose application” screen appearing that then lets me run <code>firefox -p profilename</code> to open a websit ein a specific profile, but it didn’t work.</p>
-<p>I would like to try some further stuff, but if it doesn’t work out, I can just default to the “play” profile which is my profile for personal use and the like</p>
-</section>
-</section>
-<section id="syncthing" class="level1">
-<h1>Syncthing</h1>
-<p>Because I can’t use the native firefox profiles to sync, I had to find other solutions. Originally, I used the graphical frontend for <a href="https://en.wikipedia.org/wiki/Rsync">rsync</a>, <a href="https://en.wikipedia.org/wiki/Grsync">Grsync</a>, syncing into a usb drive, into the computer, and vice versa, to sync between computers. However, this was extremely slow, because apparently usb flash drive’s suck at transferring many small files.</p>
-<p>I later switched to another solution, syncthing. Syncthing can keep folders of two computers synchronized, from anywhere in the world.</p>
-<p>But it wasn’t perfect at first. In order to get it to work properly, I had to add the proper <a href="https://docs.syncthing.net/users/firewall.html">firewall rules</a>. Onlydid after this did syncing work.</p>
-<p>Another issue I had with it was that it synced the cookies file of firefox. Cookies, are where most sites store the session tokens, a common way of knowing that you are logged in on this device. However, session tokens also present a security risk. All an attacker needs to get access to the login of a site is a session token (stored in the cookies.sqlite file for firefox), which is often stored unencrypted, in areas the currently logged in user can read and write to. (see <a href="https://en.wikipedia.org/wiki/Session_hijacking">session hijacking</a>)</p>
-<p>Because my session tokens were being transfered to another machine, google and some other services thought I was getting hacked, and forced me to do lot’s of confirmations, and “yes it’s me.” Annoying, but a reasonable security measure.</p>
-<p>So I had to configure syncthing to not sync certain files.</p>
-<p><code>*cookies.sqlite*</code>.</p>
-<p>This partical <a href="https://en.wikipedia.org/wiki/Glob_(programming)">glob match</a> will exclude firefox’s cookies.sqlite file, and the cookies.sqlite-wal file, which is a journaling file. In computer filesystems, journals record changes that are going to be made to other files or the filesystem before they are made, in order to make data recovery from an abrupt stop, like a crash possible. If the journal is complete, then the computer can simply finish the changes by reading the journal. If the journal is incomplete, then the computer can simply not make the changes, as having an intact cookies.sqlite file is more important than a cookie or two.</p>
-<p>Finally, you cannot have both firefox instances running at once. This will cause syncthing to get confused, as it is attempting to make the most recent version of the file propogate, but both computers have the most recent version.</p>
-<p>This let to the creation of lots of .sync-conflict files, and firefox giving me a warning: <a href="https://support.mozilla.org/en-US/kb/fix-bookmarks-and-history-will-not-be-functional">The bookmarks and history system will not be functional</a>. I tried deleting the sync conflict files, but nothing changed.</p>
-<p>I ended up having to manually repair that firefox profile, by creating a new one and <a href="https://support.mozilla.org/en-US/kb/recovering-important-data-from-an-old-profile#w_copying-files-between-profile-folders">copying the important data over</a></p>
-<p>One more thing, made later: You can’t quit firefox with cntrl+q, as this will sometimes leave an unsyncable file. You have to close firefox from the desktop UI, I usually just use KDE Plasma to close everything at once.</p>
-
-
-</section>
-
- ]]></description>
-  <category>linux</category>
-  <guid>https://moonpiedumplings.github.io/blog/firefox/</guid>
-  <pubDate>Wed, 09 Aug 2023 07:00:00 GMT</pubDate>
 </item>
 </channel>
 </rss>
