@@ -311,7 +311,7 @@
 <section id="why-the-switch" class="level1">
 <h1>Why the switch?</h1>
 <p>I was working on configuring rootless podman via ansible, but I had trouble because the tooling was incomplete. Ansible is a suboptiomal way to manage containers, and rootless podman can’t manage it’s own services.</p>
-<p>For the whole journey, see the <a href="../../projects/build-server-3/index.html#systemd-integration">previous post</a></p>
+<p>For the whole journey, see the <a href="../build-server-3/#systemd-integration">previous post</a></p>
 <p>So yeah. I’ve decided to switch to Kubernetes, because Kubernetes can manage it’s own services, and be rootless. The configuration-as-code landscape for Kubernetes, is much, much better than podman, and I will get many more options. For example, I can use <a href="">helm</a>, which is somewhat like a package manager for kubernetes, to install apps. Both Caddy and Authentik offer helm packages. Using the offered packages is probably less work than converting a docker compose to a podman container.</p>
 </section>
 <section id="rootless-kubernetes" class="level1">
@@ -336,14 +336,24 @@
 </section>
 <section id="kubernetes-distro" class="level2">
 <h2 class="anchored" data-anchor-id="kubernetes-distro">Kubernetes Distro</h2>
+<p>Here is a <a href="https://landscape.cncf.io/?group=certified-partners-and-providers">list on the CNCF website</a></p>
 <p>I see three main options available to me:</p>
 <ul>
 <li><a href="https://kubespray.io/#/">Kubespray</a> (ansible)</li>
 <li><a href="https://k3s.io/">K3s</a></li>
 <li><a href="https://docs.rke2.io/">RKE2</a></li>
+<li>k0s
+<ul>
+<li><a href="https://docs.k0sproject.io/stable/examples/ansible-playbook/">Has an ansible playbook</a></li>
+</ul></li>
+<li><a href="https://kurl.sh/">kurl</a>
+<ul>
+<li>Custom kubernetes installer, including things like storage</li>
+<li>Supports rook, but I don’t know if it is rook + ceph</li>
+</ul></li>
 </ul>
 <p>I don’t really want to opt for manual installation, or anything that’s too complex for too little gains.</p>
-<p>Kubespray appeals to me since it’s ansible, and it would be cool to manage the kubernetes cluster installation and the services from the same spot — but I got ruled out:</p>
+<p>Kubespray appeals to me since it’s ansible, and it would be cool to manage the kubernetes cluster installation and the services from the same spot — but it got ruled out:</p>
 <p>From <a href="https://github.com/kubernetes-sigs/kubespray?tab=readme-ov-file#container-runtime-notes">the README</a></p>
 <blockquote class="blockquote">
 <p>Supported Docker versions are 18.09, 19.03, 20.10, 23.0 and 24.0. The recommended Docker version is 24.0. Kubelet might break on docker’s non-standard version numbering (it no longer uses semantic versioning). To ensure auto-updates don’t break your cluster look into e.g.&nbsp;the YUM versionlock plugin or apt pin</p>
@@ -354,6 +364,15 @@
 <p>I also found something similer for <a href="https://github.com/k3s-io/k3s-ansible">k3s, an ansible role</a> to deploy a “vanilla” kubernetes cluster. However, at the bottom, they mention <a href="https://github.com/k3s-io/k3s-ansible?tab=readme-ov-file#need-more-features">some other ansible roles</a> to deploy a more than vanilla k3s cluster.</p>
 <p>I found a <a href="https://www.reddit.com/r/kubernetes/comments/1c09jfz/i_opensourced_today_my_fully_automated_k3s/">reddit post</a> where someone open sourced their own <a href="https://github.com/axivo/k3s-cluster">ansible playbook</a> — Only 22 days ago (as of the time of writing this), and it’s quite comprehensive. It comes with Argocd, Cilium, Longhorn, Prometheus, Cloudfare Let’s Encrypt certificates with cert-manager, and more.</p>
 <p>I looks very appealing to me, despite the fact that it seems to be opinionated, and designed for personal use. In addition to that, they are simply using ansible’s helm modules to deploy stuff — what would be different from me doing that, with my own deployment choices?</p>
+</section>
+<section id="distributed-storage" class="level2">
+<h2 class="anchored" data-anchor-id="distributed-storage">Distributed Storage</h2>
+<p>Eventually, I do plan to scale up, and that requires a distributed storage solution. I see two main options:</p>
+<ul>
+<li>Ceph</li>
+<li>Longhorn (SUSE)</li>
+</ul>
+<p>Longhorn appeals to me, because if I choose to use other Suse products like rancher, then they probably integrate.</p>
 </section>
 <section id="gitops-software" class="level2">
 <h2 class="anchored" data-anchor-id="gitops-software">Gitops Software</h2>
@@ -367,8 +386,52 @@
 <li>FluxCD</li>
 <li>Fleet (made by SUSE, just like k3s, RKE2, rancher, and longhorn)</li>
 </ul>
+<p>After thinking about it, I can’t find a way to deploy a cluster and the CI/CD software at once, in such a way that it provisions itself. Many deployment methods simply abstract deploying the CI/CD software afterwards.</p>
+<p>It’s probably best to not rely on abstractions since this is my first time really deploying Kubernetes, instead, I will just have to accept that the Kubernetes deployment will not be stored as code.</p>
+</section>
+</section>
+<section id="services" class="level1">
+<h1>Services</h1>
+<section id="authentik" class="level2">
+<h2 class="anchored" data-anchor-id="authentik">Authentik</h2>
+<p>Authentik provides <a href="https://docs.goauthentik.io/docs/installation/kubernetes">documentation on a Kubernetes deployment</a>, along with a Helm chart.</p>
+</section>
+<section id="forgejo" class="level2">
+<h2 class="anchored" data-anchor-id="forgejo">Forgejo</h2>
+<p>Forgejo has a helm chart: <a href="https://codeberg.org/forgejo-contrib/forgejo-helm" class="uri">https://codeberg.org/forgejo-contrib/forgejo-helm</a></p>
+<p>Unlike authentik, forgejo’s helm chart also seems to have some <a href="https://codeberg.org/forgejo-contrib/forgejo-helm#rootless-defaults">support for rootless/user namespaces</a>.</p>
+</section>
+<section id="nextcloud" class="level2">
+<h2 class="anchored" data-anchor-id="nextcloud">Nextcloud</h2>
+<p>There is an existing <a href="https://nextcloud.github.io/helm/">helm chart for nextcloud</a>: <a href="https://github.com/nextcloud/helm" class="uri">https://github.com/nextcloud/helm</a></p>
+<p>However, it says in the above, that it is community maintained, and not truly official.</p>
+<p>Going to the <a href="https://portal.nextcloud.com/article/Scalability/Deployment-recommendations/Large-Organizations-and-Service-Providers">nextcloud official docs for larger scale deployment recommendations</a>… and it’s paywalled. It’s likely that Nextcloud maintains official helm charts — but only for paying customers.</p>
+</section>
+</section>
+<section id="presearch-and-notes-for-future-pieces" class="level1">
+<h1>Presearch and Notes for Future Pieces</h1>
+<section id="openstack" class="level2">
+<h2 class="anchored" data-anchor-id="openstack">Openstack</h2>
+<p>Since I am using Kubernetes to deploy services, it is worth investing if I can deploy Openstack (or some other self-hosted cloud) on Kubernetes.</p>
+<ul>
+<li><a href="https://yaook.cloud/">Yaook</a></li>
+<li><a href="https://github.com/vexxhost/atmosphere">Atmosphere</a></li>
+</ul>
+<p>These look appealing, but very hard to deploy.</p>
+</section>
+<section id="kuberntes" class="level2">
+<h2 class="anchored" data-anchor-id="kuberntes">Kuberntes</h2>
+<section id="multi-tenancy" class="level3">
+<h3 class="anchored" data-anchor-id="multi-tenancy">Multi-Tenancy</h3>
+<p>In case I can’t obtain multi-tenancy by openstack provisioning kuberntes, there are some alternative solutions I am looking at:</p>
+<ul>
+<li>vcluster</li>
+<li><a href="https://github.com/projectcapsule/capsule">capsule</a></li>
+<li><a href="https://github.com/clastix/kamaji">kamaji</a></li>
+</ul>
 
 
+</section>
 </section>
 </section>
 

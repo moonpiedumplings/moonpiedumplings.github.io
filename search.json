@@ -613,14 +613,56 @@
     "href": "projects/build-server-4/index.html#kubernetes-distro",
     "title": "My server part 4 — Kubernetes",
     "section": "Kubernetes Distro",
-    "text": "Kubernetes Distro\nI see three main options available to me:\n\nKubespray (ansible)\nK3s\nRKE2\n\nI don’t really want to opt for manual installation, or anything that’s too complex for too little gains.\nKubespray appeals to me since it’s ansible, and it would be cool to manage the kubernetes cluster installation and the services from the same spot — but I got ruled out:\nFrom the README\n\nSupported Docker versions are 18.09, 19.03, 20.10, 23.0 and 24.0. The recommended Docker version is 24.0. Kubelet might break on docker’s non-standard version numbering (it no longer uses semantic versioning). To ensure auto-updates don’t break your cluster look into e.g. the YUM versionlock plugin or apt pin\n\nIt seems as kubespray deploys kubernetes by installing docker, and then deploying kubespray in docker. Although this is a neat decision, I cannot use docker at all, becuause I intend to deploy openstack using kolla-ansible, which also uses docker. From my testing, the openstack deployment completely destroys docker’s networking, so I probably can’t use both at once.\nIn addition to that, kubespray completely uninstalls podman, meaning I can’t use podman as a provider for kubespray either.\nI found an ansible role to deploy RKE2, but it seems that it just deploys vanilla RKE2, with none of the goodies that I am searching for like a load balancer or external storage.\nI also found something similer for k3s, an ansible role to deploy a “vanilla” kubernetes cluster. However, at the bottom, they mention some other ansible roles to deploy a more than vanilla k3s cluster.\nI found a reddit post where someone open sourced their own ansible playbook — Only 22 days ago (as of the time of writing this), and it’s quite comprehensive. It comes with Argocd, Cilium, Longhorn, Prometheus, Cloudfare Let’s Encrypt certificates with cert-manager, and more.\nI looks very appealing to me, despite the fact that it seems to be opinionated, and designed for personal use. In addition to that, they are simply using ansible’s helm modules to deploy stuff — what would be different from me doing that, with my own deployment choices?"
+    "text": "Kubernetes Distro\nHere is a list on the CNCF website\nI see three main options available to me:\n\nKubespray (ansible)\nK3s\nRKE2\nk0s\n\nHas an ansible playbook\n\nkurl\n\nCustom kubernetes installer, including things like storage\nSupports rook, but I don’t know if it is rook + ceph\n\n\nI don’t really want to opt for manual installation, or anything that’s too complex for too little gains.\nKubespray appeals to me since it’s ansible, and it would be cool to manage the kubernetes cluster installation and the services from the same spot — but it got ruled out:\nFrom the README\n\nSupported Docker versions are 18.09, 19.03, 20.10, 23.0 and 24.0. The recommended Docker version is 24.0. Kubelet might break on docker’s non-standard version numbering (it no longer uses semantic versioning). To ensure auto-updates don’t break your cluster look into e.g. the YUM versionlock plugin or apt pin\n\nIt seems as kubespray deploys kubernetes by installing docker, and then deploying kubespray in docker. Although this is a neat decision, I cannot use docker at all, becuause I intend to deploy openstack using kolla-ansible, which also uses docker. From my testing, the openstack deployment completely destroys docker’s networking, so I probably can’t use both at once.\nIn addition to that, kubespray completely uninstalls podman, meaning I can’t use podman as a provider for kubespray either.\nI found an ansible role to deploy RKE2, but it seems that it just deploys vanilla RKE2, with none of the goodies that I am searching for like a load balancer or external storage.\nI also found something similer for k3s, an ansible role to deploy a “vanilla” kubernetes cluster. However, at the bottom, they mention some other ansible roles to deploy a more than vanilla k3s cluster.\nI found a reddit post where someone open sourced their own ansible playbook — Only 22 days ago (as of the time of writing this), and it’s quite comprehensive. It comes with Argocd, Cilium, Longhorn, Prometheus, Cloudfare Let’s Encrypt certificates with cert-manager, and more.\nI looks very appealing to me, despite the fact that it seems to be opinionated, and designed for personal use. In addition to that, they are simply using ansible’s helm modules to deploy stuff — what would be different from me doing that, with my own deployment choices?"
+  },
+  {
+    "objectID": "projects/build-server-4/index.html#distributed-storage",
+    "href": "projects/build-server-4/index.html#distributed-storage",
+    "title": "My server part 4 — Kubernetes",
+    "section": "Distributed Storage",
+    "text": "Distributed Storage\nEventually, I do plan to scale up, and that requires a distributed storage solution. I see two main options:\n\nCeph\nLonghorn (SUSE)\n\nLonghorn appeals to me, because if I choose to use other Suse products like rancher, then they probably integrate."
   },
   {
     "objectID": "projects/build-server-4/index.html#gitops-software",
     "href": "projects/build-server-4/index.html#gitops-software",
     "title": "My server part 4 — Kubernetes",
     "section": "Gitops Software",
-    "text": "Gitops Software\nGitops is a principle of software deployment, where the deployment infrastructure, services, and configuration, are stored in git — hence the name, Git Operations.\nThere are several ways to do Gitops on Kubernetes, but the core challenge I am encountering, is that some Gitops software must be deployed to Kubernetes in order to manage the cluster, but you cannot use that sotware to deploy itself.\nWhat likely happens is that after you deploy the software to the cluster, then it records itself and adds itself to the state, but I have to ensure this works properly.\nOr maybe the GitOps software stays outside of the configuration, eternally untracked, but still self updating?\nI still haven’t selected a GitOps software, but I am looking at:\n\nArgoCD\nFluxCD\nFleet (made by SUSE, just like k3s, RKE2, rancher, and longhorn)"
+    "text": "Gitops Software\nGitops is a principle of software deployment, where the deployment infrastructure, services, and configuration, are stored in git — hence the name, Git Operations.\nThere are several ways to do Gitops on Kubernetes, but the core challenge I am encountering, is that some Gitops software must be deployed to Kubernetes in order to manage the cluster, but you cannot use that sotware to deploy itself.\nWhat likely happens is that after you deploy the software to the cluster, then it records itself and adds itself to the state, but I have to ensure this works properly.\nOr maybe the GitOps software stays outside of the configuration, eternally untracked, but still self updating?\nI still haven’t selected a GitOps software, but I am looking at:\n\nArgoCD\nFluxCD\nFleet (made by SUSE, just like k3s, RKE2, rancher, and longhorn)\n\nAfter thinking about it, I can’t find a way to deploy a cluster and the CI/CD software at once, in such a way that it provisions itself. Many deployment methods simply abstract deploying the CI/CD software afterwards.\nIt’s probably best to not rely on abstractions since this is my first time really deploying Kubernetes, instead, I will just have to accept that the Kubernetes deployment will not be stored as code."
+  },
+  {
+    "objectID": "projects/build-server-4/index.html#authentik",
+    "href": "projects/build-server-4/index.html#authentik",
+    "title": "My server part 4 — Kubernetes",
+    "section": "Authentik",
+    "text": "Authentik\nAuthentik provides documentation on a Kubernetes deployment, along with a Helm chart."
+  },
+  {
+    "objectID": "projects/build-server-4/index.html#forgejo",
+    "href": "projects/build-server-4/index.html#forgejo",
+    "title": "My server part 4 — Kubernetes",
+    "section": "Forgejo",
+    "text": "Forgejo\nForgejo has a helm chart: https://codeberg.org/forgejo-contrib/forgejo-helm\nUnlike authentik, forgejo’s helm chart also seems to have some support for rootless/user namespaces."
+  },
+  {
+    "objectID": "projects/build-server-4/index.html#nextcloud",
+    "href": "projects/build-server-4/index.html#nextcloud",
+    "title": "My server part 4 — Kubernetes",
+    "section": "Nextcloud",
+    "text": "Nextcloud\nThere is an existing helm chart for nextcloud: https://github.com/nextcloud/helm\nHowever, it says in the above, that it is community maintained, and not truly official.\nGoing to the nextcloud official docs for larger scale deployment recommendations… and it’s paywalled. It’s likely that Nextcloud maintains official helm charts — but only for paying customers."
+  },
+  {
+    "objectID": "projects/build-server-4/index.html#openstack",
+    "href": "projects/build-server-4/index.html#openstack",
+    "title": "My server part 4 — Kubernetes",
+    "section": "Openstack",
+    "text": "Openstack\nSince I am using Kubernetes to deploy services, it is worth investing if I can deploy Openstack (or some other self-hosted cloud) on Kubernetes.\n\nYaook\nAtmosphere\n\nThese look appealing, but very hard to deploy."
+  },
+  {
+    "objectID": "projects/build-server-4/index.html#kuberntes",
+    "href": "projects/build-server-4/index.html#kuberntes",
+    "title": "My server part 4 — Kubernetes",
+    "section": "Kuberntes",
+    "text": "Kuberntes\n\nMulti-Tenancy\nIn case I can’t obtain multi-tenancy by openstack provisioning kuberntes, there are some alternative solutions I am looking at:\n\nvcluster\ncapsule\nkamaji"
   },
   {
     "objectID": "talks/self-site/revealjs.html#about-me..-and-my-site",
