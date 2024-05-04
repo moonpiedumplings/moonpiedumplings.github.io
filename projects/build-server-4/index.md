@@ -16,7 +16,7 @@ execute:
 
 I was working on configuring rootless podman via ansible, but I had trouble because the tooling was incomplete. Ansible is a suboptiomal way to manage containers, and rootless podman can't manage it's own services. 
 
-For the whole journey, see the [previous post](../build-server-3/index.qmd#systemd-integration)
+For the whole journey, see the [previous post](../build-server-3/#systemd-integration)
 
 So yeah. I've decided to switch to Kubernetes, because Kubernetes can manage it's own services, and be rootless. The configuration-as-code landscape for Kubernetes, is much, much better than podman, and I will get many more options. For example, I can use [helm](), which is somewhat like a package manager for kubernetes, to install apps. Both Caddy and Authentik offer helm packages. Using the offered packages is probably less work than converting a docker compose to a podman container.
 
@@ -54,11 +54,18 @@ Helm has docs on customizing the chart before installing.
 
 ## Kubernetes Distro
 
+Here is a [list on the CNCF website](https://landscape.cncf.io/?group=certified-partners-and-providers)
+
 I see three main options available to me:
 
 * [Kubespray](https://kubespray.io/#/) (ansible)
 * [K3s](https://k3s.io/)
 * [RKE2](https://docs.rke2.io/)
+* k0s
+  - [Has an ansible playbook](https://docs.k0sproject.io/stable/examples/ansible-playbook/)
+* [kurl](https://kurl.sh/)
+  - Custom kubernetes installer, including things like storage
+  - Supports rook, but I don't know if it is rook + ceph
 
 
 I don't really want to opt for manual installation, or anything that's too complex for too little gains.
@@ -81,7 +88,14 @@ I found a [reddit post](https://www.reddit.com/r/kubernetes/comments/1c09jfz/i_o
 
 I looks very appealing to me, despite the fact that it seems to be opinionated, and designed for personal use. In addition to that, they are simply using ansible's helm modules to deploy stuff — what would be different from me doing that, with my own deployment choices?
 
+## Distributed Storage
 
+Eventually, I do plan to scale up, and that requires a distributed storage solution. I see two main options:
+
+* Ceph
+* Longhorn (SUSE)
+
+Longhorn appeals to me, because if I choose to use other Suse products like rancher, then they probably integrate. 
 
 ## Gitops Software
 
@@ -98,4 +112,52 @@ I still haven't selected a GitOps software, but I am looking at:
 * ArgoCD
 * FluxCD
 * Fleet (made by SUSE, just like k3s, RKE2, rancher, and longhorn)
+
+After thinking about it, I can't find a way to deploy a cluster and the CI/CD software at once, in such a way that it provisions itself. Many deployment methods simply abstract deploying the CI/CD software afterwards.
+
+It's probably best to not rely on abstractions since this is my first time really deploying Kubernetes, instead, I will just have to accept that the Kubernetes deployment will not be stored as code. 
+
+# Services
+
+## Authentik
+
+Authentik provides [documentation on a Kubernetes deployment](https://docs.goauthentik.io/docs/installation/kubernetes), along with a Helm chart.
+
+## Forgejo
+
+Forgejo has a helm chart: <https://codeberg.org/forgejo-contrib/forgejo-helm>
+
+Unlike authentik, forgejo's helm chart also seems to have some [support for rootless/user namespaces](https://codeberg.org/forgejo-contrib/forgejo-helm#rootless-defaults).
+
+## Nextcloud
+
+There is an existing [helm chart for nextcloud](https://nextcloud.github.io/helm/): <https://github.com/nextcloud/helm>
+
+However, it says in the above, that it is community maintained, and not truly official. 
+
+Going to the [nextcloud official docs for larger scale deployment recommendations](https://portal.nextcloud.com/article/Scalability/Deployment-recommendations/Large-Organizations-and-Service-Providers)... and it's paywalled. It's likely that Nextcloud maintains official helm charts — but only for paying customers. 
+
+
+# Presearch and Notes for Future Pieces
+
+## Openstack
+
+Since I am using Kubernetes to deploy services, it is worth investing if I can deploy Openstack (or some other self-hosted cloud) on Kubernetes.
+
+* [Yaook](https://yaook.cloud/)
+* [Atmosphere](https://github.com/vexxhost/atmosphere)
+
+These look appealing, but very hard to deploy.
+
+## Kuberntes
+
+### Multi-Tenancy
+
+In case I can't obtain multi-tenancy by openstack provisioning kuberntes, there are some alternative solutions I am looking at:
+
+* vcluster
+* [capsule](https://github.com/projectcapsule/capsule)
+* [kamaji](https://github.com/clastix/kamaji)
+
+
 
