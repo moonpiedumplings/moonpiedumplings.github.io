@@ -66,6 +66,11 @@ I see three main options available to me:
 * [kurl](https://kurl.sh/)
   - Custom kubernetes installer, including things like storage
   - Supports rook, but I don't know if it is rook + ceph
+  - doesn't seem to have anywhere near as much activity as I expect it to have... no CI/CD, Longhorn is deprecated
+* [Kubernetes the Easier Way](https://github.com/darxkies/k8s-tew)
+  - Comes with a [plethora of features](https://darxkies.github.io/k8s-tew/_build/html/features.html)
+    - including nginx + letsencrypt, helm, ceph, metallb, prometheus/grafana
+    - Very appealing, many features
 
 
 I don't really want to opt for manual installation, or anything that's too complex for too little gains.
@@ -116,6 +121,13 @@ I still haven't selected a GitOps software, but I am looking at:
 After thinking about it, I can't find a way to deploy a cluster and the CI/CD software at once, in such a way that it provisions itself. Many deployment methods simply abstract deploying the CI/CD software afterwards.
 
 It's probably best to not rely on abstractions since this is my first time really deploying Kubernetes, instead, I will just have to accept that the Kubernetes deployment will not be stored as code. 
+
+I found something interesting:
+
+* <https://github.com/farcaller/nixhelm>
+* <https://github.com/farcaller/nixdockertag>
+
+Mentioned in a Lemmy comment, it takes helm charts, and is able to convert them to a format that can be consumed by ArgoCD, using Nix. 
 
 # Services
 
