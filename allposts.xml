@@ -328,11 +328,24 @@
 <p>Kubernetes seems to support this natively: <a href="https://kubernetes.io/docs/tasks/configure-pod-container/user-namespaces/" class="uri">https://kubernetes.io/docs/tasks/configure-pod-container/user-namespaces/</a></p>
 <p>To enable user namespaces, all you need to do is set <code>hostUsers: false</code> in your kubernetes yaml… except, how can I override this for an existing helm chart?</p>
 </section>
-<section id="helm" class="level2">
-<h2 class="anchored" data-anchor-id="helm">Helm</h2>
+<section id="package-managerhelm" class="level2">
+<h2 class="anchored" data-anchor-id="package-managerhelm">Package Manager/Helm</h2>
 <p>Helm is very nice. However, from what I’ve heard, it is difficult to modify repackaged charts. This is especially concerning to me, because I intend to run all of my containers within user namespaces, and many helm charts don’t provide this. In order to run prepackaged apps in user namespaces, I need to modify existing helm charts.</p>
 <p><a href="https://helm.sh/docs/intro/using_helm/#customizing-the-chart-before-installing" class="uri">https://helm.sh/docs/intro/using_helm/#customizing-the-chart-before-installing</a></p>
 <p>Helm has docs on customizing the chart before installing.</p>
+<p>There exist some package repositores (similar to dockerhub) for helm:</p>
+<ul>
+<li><a href="https://artifacthub.io/" class="uri">https://artifacthub.io/</a>
+<ul>
+<li>Helm charts, package</li>
+</ul></li>
+<li><a href="https://operatorhub.io/" class="uri">https://operatorhub.io/</a>
+<ul>
+<li>Not helm, rather kubernetes yaml managed by a lifecycle manager</li>
+<li>Packages “operators”, like this <a href="https://operatorhub.io/operator/rook-ceph">rook/ceph</a></li>
+<li>Appeals to me less than artifacthub</li>
+</ul></li>
+</ul>
 </section>
 <section id="kubernetes-distro" class="level2">
 <h2 class="anchored" data-anchor-id="kubernetes-distro">Kubernetes Distro</h2>
@@ -340,7 +353,7 @@
 <p>I see three main options available to me:</p>
 <ul>
 <li><a href="https://kubespray.io/#/">Kubespray</a> (ansible)</li>
-<li><a href="https://k3s.io/">K3s</a></li>
+<li><a href="https://k3s.io/">K3s</a>&gt;</li>
 <li><a href="https://docs.rke2.io/">RKE2</a></li>
 <li>k0s
 <ul>
@@ -350,6 +363,15 @@
 <ul>
 <li>Custom kubernetes installer, including things like storage</li>
 <li>Supports rook, but I don’t know if it is rook + ceph</li>
+<li>doesn’t seem to have anywhere near as much activity as I expect it to have… no CI/CD, Longhorn is deprecated</li>
+</ul></li>
+<li><a href="https://github.com/darxkies/k8s-tew">Kubernetes the Easier Way</a>
+<ul>
+<li>Comes with a <a href="https://darxkies.github.io/k8s-tew/_build/html/features.html">plethora of features</a>
+<ul>
+<li>including nginx + letsencrypt, helm, ceph, metallb, prometheus/grafana</li>
+<li>Very appealing, many features</li>
+</ul></li>
 </ul></li>
 </ul>
 <p>I don’t really want to opt for manual installation, or anything that’s too complex for too little gains.</p>
@@ -366,13 +388,39 @@
 <p>I looks very appealing to me, despite the fact that it seems to be opinionated, and designed for personal use. In addition to that, they are simply using ansible’s helm modules to deploy stuff — what would be different from me doing that, with my own deployment choices?</p>
 </section>
 <section id="distributed-storage" class="level2">
-<h2 class="anchored" data-anchor-id="distributed-storage">Distributed Storage</h2>
+<h2 class="anchored" data-anchor-id="distributed-storage">Distributed (?) Storage</h2>
 <p>Eventually, I do plan to scale up, and that requires a distributed storage solution. I see two main options:</p>
 <ul>
 <li>Ceph</li>
-<li>Longhorn (SUSE)</li>
+<li>Longhorn (SUSE)
+<ul>
+<li><a href="https://artifacthub.io/packages/helm/longhorn/longhorn">Artifacthub</a></li>
+</ul></li>
+<li><a href="https://artifacthub.io/packages/helm/seaweedfs-csi-driver/seaweedfs-csi-driver">SeaweedFS</a></li>
+<li><a href="https://github.com/kadalu/kadalu">Kadalu (GlusterFS)</a>
+<ul>
+<li>Helm chart?</li>
+</ul></li>
+<li><a href="https://github.com/rancher/local-path-provisioner">local-path-provisioner</a> (SUSE)
+<ul>
+<li>An enhancement to Kubernete’s builtin ability to handle local storage paths, by SUSE</li>
+<li>maybe this is optimal, since I have just a one node cluster?</li>
+</ul></li>
 </ul>
 <p>Longhorn appeals to me, because if I choose to use other Suse products like rancher, then they probably integrate.</p>
+<p>But now, I’ve chosen to opt for FluxCD to manage my cluster rather than Longhorn. Because of this, I will probably opt for Ceph.</p>
+<p>I see a few options to deploy Ceph:</p>
+<ul>
+<li><a href="https://artifacthub.io/packages/helm/rook/rook-ceph" class="uri">https://artifacthub.io/packages/helm/rook/rook-ceph</a>
+<ul>
+<li>Has a <a href="https://artifacthub.io/packages/helm/rook/rook-ceph?modal=security-report&amp;section=vulnerabilities&amp;image=rook%2Fceph%3Av1.14.3&amp;target=Python">severe security vulnerability reported</a>, but is it really that bad?</li>
+</ul></li>
+<li>CSI (link later)</li>
+</ul>
+<p>I don’t understand what a CSI is and how it compares to the Rook ceph operator.</p>
+<p>However, it seems I’m running into another issue: It’s <a href="https://www.reddit.com/r/kubernetes/comments/hyvclw/how_to_run_rookceph_on_one_node/">difficult to run rook-ceph</a> on a single node. There are also other complaints about performance with ceph — the big complaint is that ceph uses up a lot of CPU relative to other distributed storage, but I wasn’t worrying about that. However, I’ve seen multiple claims that ceph requires high end hardware — SSD’s, which I don’t have. (Right now I have just one hard drive).</p>
+<p><a href="https://github.com/longhorn/longhorn/discussions/5737">Longhorn has a similar issue</a> — at least it seems usable on only one node, but the recommendation is to have at least 3 nodes.</p>
+<p>Local-path-provisioner is probably what I’m going to use, because I think it is built into k3s (and by extension, RKE2), by default.</p>
 </section>
 <section id="gitops-software" class="level2">
 <h2 class="anchored" data-anchor-id="gitops-software">Gitops Software</h2>
@@ -383,11 +431,56 @@
 <p>I still haven’t selected a GitOps software, but I am looking at:</p>
 <ul>
 <li>ArgoCD</li>
-<li>FluxCD</li>
+<li>FluxCD
+<ul>
+<li><a href="https://fluxcd.io/flux/get-started/">Simple enough to bootsrap</a></li>
+<li>bootstraps itself from github repo</li>
+</ul></li>
 <li>Fleet (made by SUSE, just like k3s, RKE2, rancher, and longhorn)</li>
 </ul>
 <p>After thinking about it, I can’t find a way to deploy a cluster and the CI/CD software at once, in such a way that it provisions itself. Many deployment methods simply abstract deploying the CI/CD software afterwards.</p>
 <p>It’s probably best to not rely on abstractions since this is my first time really deploying Kubernetes, instead, I will just have to accept that the Kubernetes deployment will not be stored as code.</p>
+<p>I found something interesting:</p>
+<ul>
+<li><a href="https://github.com/farcaller/nixhelm" class="uri">https://github.com/farcaller/nixhelm</a></li>
+<li><a href="https://github.com/farcaller/nixdockertag" class="uri">https://github.com/farcaller/nixdockertag</a></li>
+</ul>
+<p>Mentioned in a Lemmy comment, it takes helm charts, and is able to convert them to a format that can be consumed by ArgoCD, using Nix.</p>
+<p>Okay, but after more research, I’ve settled on Flux. It seems very easy to bootstrap, and to use <a href="https://fluxcd.io/flux/guides/helmreleases/">helm charts</a> with it. I don’t really need a GUI or multitenancy like ArgoCD provides, or the integrations that Fleet (probably) provides.</p>
+<p>Flux seems “lightweight”. It reads from a Git repo, and applies and reconcicles state. In addition to that, it can bootstrap itself. Although, I think I will end up running into a funny catch-22 when I decide to move away from github to a self hosted forgejo, on the kubernetes cluster, everythign will be fine.. probably.</p>
+<p>Maybe I could have a seperate git server, and that stores the Kubernetes state? Flux seems to support <a href="https://fluxcd.io/flux/cmd/flux_bootstrap_git/">bootstrapping from any git repo</a>.</p>
+<p>A few recommendations on the internet seem to suggest that I should have bootstrap flux from something external to the cluster, rather than than from inside the cluster.</p>
+</section>
+<section id="misc-addonsdeployment" class="level2">
+<h2 class="anchored" data-anchor-id="misc-addonsdeployment">Misc Addons/Deployment</h2>
+<ul>
+<li><p>Monitoring: <a href="https://artifacthub.io/packages/helm/prometheus-community/kube-prometheus-stack?modal=install">kube-prometheus-helm-stack</a></p></li>
+<li><p>Secrets:</p>
+<ul>
+<li>: <a href="https://github.com/getsops/sops" class="uri">https://github.com/getsops/sops</a>
+<ul>
+<li>Basically ansible vault, very appealing</li>
+</ul></li>
+<li>: <a href="https://external-secrets.io/latest/" class="uri">https://external-secrets.io/latest/</a>
+<ul>
+<li>Seems catch-22y, I need an existing external service to manage secrets… but I suppose it is called external secrets</li>
+</ul></li>
+</ul></li>
+<li><p>Ingress</p>
+<ul>
+<li>Nginx ingress… but how do I get SSL with this setup?</li>
+<li>Traefik ingress (has <a href="https://www.eff.org/deeplinks/2024/03/should-caddy-and-traefik-replace-certbot">automatic https</a>)</li>
+<li>Caddy: <a href="https://github.com/caddyserver/ingress" class="uri">https://github.com/caddyserver/ingress</a> — WIP software…</li>
+</ul></li>
+</ul>
+<p>I need a simple git ssh for bootstrapping flux from.</p>
+<ul>
+<li><a href="https://github.com/chrisnharvey/simple-git-server" class="uri">https://github.com/chrisnharvey/simple-git-server</a>
+<ul>
+<li>Seems unmaintained</li>
+</ul></li>
+<li>Apparently you can just use ssh as a git server</li>
+</ul>
 </section>
 </section>
 <section id="services" class="level1">
@@ -419,8 +512,8 @@
 </ul>
 <p>These look appealing, but very hard to deploy.</p>
 </section>
-<section id="kuberntes" class="level2">
-<h2 class="anchored" data-anchor-id="kuberntes">Kuberntes</h2>
+<section id="kubernetes" class="level2">
+<h2 class="anchored" data-anchor-id="kubernetes">Kubernetes</h2>
 <section id="multi-tenancy" class="level3">
 <h3 class="anchored" data-anchor-id="multi-tenancy">Multi-Tenancy</h3>
 <p>In case I can’t obtain multi-tenancy by openstack provisioning kuberntes, there are some alternative solutions I am looking at:</p>
