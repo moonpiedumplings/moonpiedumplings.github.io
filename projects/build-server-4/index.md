@@ -44,13 +44,22 @@ Kubernetes seems to support this natively: <https://kubernetes.io/docs/tasks/con
 To enable user namespaces, all you need to do is set `hostUsers: false` in your kubernetes yaml... except, how can I override this for an existing helm chart?
 
 
-## Helm
+## Package Manager/Helm
 
 Helm is very nice. However, from what I've heard, it is difficult to modify repackaged charts. This is especially concerning to me, because I intend to run all of my containers within user namespaces, and many helm charts don't provide this. In order to run prepackaged apps in user namespaces, I need to modify existing helm charts.
 
 <https://helm.sh/docs/intro/using_helm/#customizing-the-chart-before-installing>
 
 Helm has docs on customizing the chart before installing. 
+
+There exist some package repositores (similar to dockerhub) for helm:
+
+* <https://artifacthub.io/>
+  - Helm charts, package
+* <https://operatorhub.io/>
+  - Not helm, rather kubernetes yaml managed by a lifecycle manager
+  - Packages "operators", like this [rook/ceph](https://operatorhub.io/operator/rook-ceph)
+  - Appeals to me less than artifacthub
 
 ## Kubernetes Distro
 
@@ -59,7 +68,7 @@ Here is a [list on the CNCF website](https://landscape.cncf.io/?group=certified-
 I see three main options available to me:
 
 * [Kubespray](https://kubespray.io/#/) (ansible)
-* [K3s](https://k3s.io/)
+* [K3s](https://k3s.io/)>
 * [RKE2](https://docs.rke2.io/)
 * k0s
   - [Has an ansible playbook](https://docs.k0sproject.io/stable/examples/ansible-playbook/)
@@ -93,14 +102,38 @@ I found a [reddit post](https://www.reddit.com/r/kubernetes/comments/1c09jfz/i_o
 
 I looks very appealing to me, despite the fact that it seems to be opinionated, and designed for personal use. In addition to that, they are simply using ansible's helm modules to deploy stuff — what would be different from me doing that, with my own deployment choices?
 
-## Distributed Storage
+## Distributed (?) Storage
 
 Eventually, I do plan to scale up, and that requires a distributed storage solution. I see two main options:
 
 * Ceph
 * Longhorn (SUSE)
+  - [Artifacthub](https://artifacthub.io/packages/helm/longhorn/longhorn)
+* [SeaweedFS](https://artifacthub.io/packages/helm/seaweedfs-csi-driver/seaweedfs-csi-driver)
+* [Kadalu (GlusterFS)](https://github.com/kadalu/kadalu)
+  - Helm chart?
+* [local-path-provisioner](https://github.com/rancher/local-path-provisioner) (SUSE)
+  - An enhancement to Kubernete's builtin ability to handle local storage paths, by SUSE
+  - maybe this is optimal, since I have just a one node cluster?
 
 Longhorn appeals to me, because if I choose to use other Suse products like rancher, then they probably integrate. 
+
+But now, I've chosen to opt for FluxCD to manage my cluster rather than Longhorn. Because of this, I will probably opt for Ceph. 
+
+I see a few options to deploy Ceph: 
+
+* <https://artifacthub.io/packages/helm/rook/rook-ceph>
+  - Has a [severe security vulnerability reported](https://artifacthub.io/packages/helm/rook/rook-ceph?modal=security-report&section=vulnerabilities&image=rook%2Fceph%3Av1.14.3&target=Python), but is it really that bad?
+* CSI (link later)
+
+I don't understand what a CSI is and how it compares to the Rook ceph operator.
+
+However, it seems I'm running into another issue: It's [difficult to run rook-ceph](https://www.reddit.com/r/kubernetes/comments/hyvclw/how_to_run_rookceph_on_one_node/) on a single node. There are also other complaints about performance with ceph — the big complaint is that ceph uses up a lot of CPU relative to other distributed storage, but I wasn't worrying about that. However, I've seen multiple claims that ceph requires high end hardware — SSD's, which I don't have. (Right now I have just one hard drive). 
+
+[Longhorn has a similar issue](https://github.com/longhorn/longhorn/discussions/5737) — at least it seems usable on only one node, but the recommendation is to have at least 3 nodes. 
+
+Local-path-provisioner is probably what I'm going to use, because I think it is built into k3s (and by extension, RKE2), by default. 
+
 
 ## Gitops Software
 
@@ -116,6 +149,8 @@ I still haven't selected a GitOps software, but I am looking at:
 
 * ArgoCD
 * FluxCD
+  - [Simple enough to bootsrap](https://fluxcd.io/flux/get-started/)
+  - bootstraps itself from github repo
 * Fleet (made by SUSE, just like k3s, RKE2, rancher, and longhorn)
 
 After thinking about it, I can't find a way to deploy a cluster and the CI/CD software at once, in such a way that it provisions itself. Many deployment methods simply abstract deploying the CI/CD software afterwards.
@@ -128,6 +163,39 @@ I found something interesting:
 * <https://github.com/farcaller/nixdockertag>
 
 Mentioned in a Lemmy comment, it takes helm charts, and is able to convert them to a format that can be consumed by ArgoCD, using Nix. 
+
+Okay, but after more research, I've settled on Flux. It seems very easy to bootstrap, and to use [helm charts](https://fluxcd.io/flux/guides/helmreleases/) with it. I don't really need a GUI or multitenancy like ArgoCD provides, or the integrations that Fleet (probably) provides. 
+
+Flux seems "lightweight". It reads from a Git repo, and applies and reconcicles state. In addition to that, it can bootstrap itself. Although, I think I will end up running into a funny catch-22 when I decide to move away from github to a self hosted forgejo, on the kubernetes cluster, everythign will be fine.. probably.
+
+Maybe I could have a seperate git server, and that stores the Kubernetes state? Flux seems to support [bootstrapping from any git repo](https://fluxcd.io/flux/cmd/flux_bootstrap_git/).
+
+A few recommendations on the internet seem to suggest that I should have bootstrap flux from something external to the cluster, rather than than from inside the cluster. 
+
+
+
+## Misc Addons/Deployment
+
+* Monitoring: [kube-prometheus-helm-stack](https://artifacthub.io/packages/helm/prometheus-community/kube-prometheus-stack?modal=install)
+
+* Secrets:
+  - : <https://github.com/getsops/sops>
+    - Basically ansible vault, very appealing
+  - : <https://external-secrets.io/latest/>
+    - Seems catch-22y, I need an existing external service to manage secrets... but I suppose it is called external secrets
+
+* Ingress
+  - Nginx ingress... but how do I get SSL with this setup?
+  - Traefik ingress (has [automatic https](https://www.eff.org/deeplinks/2024/03/should-caddy-and-traefik-replace-certbot))
+  - Caddy: <https://github.com/caddyserver/ingress> — WIP software...
+
+
+
+I need a simple git ssh for bootstrapping flux from.
+
+* <https://github.com/chrisnharvey/simple-git-server>
+  - Seems unmaintained
+* Apparently you can just use ssh as a git server
 
 # Services
 
@@ -161,7 +229,7 @@ Since I am using Kubernetes to deploy services, it is worth investing if I can d
 
 These look appealing, but very hard to deploy.
 
-## Kuberntes
+## Kubernetes
 
 ### Multi-Tenancy
 
