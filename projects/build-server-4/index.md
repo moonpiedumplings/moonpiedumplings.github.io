@@ -14,7 +14,7 @@ execute:
 
 # Why the switch?
 
-I was working on configuring rootless podman via ansible, but I had trouble because the tooling was incomplete. Ansible is a suboptiomal way to manage containers, and rootless podman can't manage it's own services. 
+I was working on configuring rootless podman via ansible, but I had trouble because the tooling was incomplete. Ansible is a suboptiomal way to manage containers, and rootless podman can't manage its own services. 
 
 For the whole journey, see the [previous post](../build-server-3/#systemd-integration)
 
@@ -24,9 +24,9 @@ So yeah. I've decided to switch to Kubernetes, because Kubernetes can manage it'
 
 ## User Namespaces
 
-Just like how Linux has "distributions", or bundles of software that build ontop of the Linxu kernels, Kubernetes has distros. I want rootless Kubernetes, 
+Just like how Linux has "distributions", or bundles of software that build on top of the Linux kernels, Kubernetes has distros. I want rootless Kubernetes, 
 
-I started by looking at [k3s](), the version of kubernetes I have experience with. However, there appear to be some [caveats with rootless mode](https://docs.k3s.io/advanced#known-issues-with-rootless-mode)... including not being able to run a multi node cluster. 
+I started by looking at [k3s](https://k3s.io/), the version of kubernetes I have experience with. However, there appear to be some [caveats with rootless mode](https://docs.k3s.io/advanced#known-issues-with-rootless-mode)... including not being able to run a multi node cluster. 
 
 
 There is an article related to Kubernetes rootless containers: <https://rootlesscontaine.rs/getting-started/kubernetes/>
@@ -35,9 +35,9 @@ And what I see is... not promising. I don't really desire to do run `kind` or `m
 
 Minikube, from that list above, is promising, but it is designed for development/testing, and [doesn't support a multi-machine multi node setup](https://github.com/kubernetes/minikube/issues/94)
 
-Kind has a similar usecasde, and limitation. Despite how easy it is to do rootless on them, that makes them unsuitable for me. 
+Kind has a similar usecase, and limitation. Despite how easy it is to do rootless on them, that makes them unsuitable for me. 
 
-Okay, I seem to have misunderstood what <rootlesscontaine.rs> want, as compared to what I want. That site documentes how to run all of the kubernetes components, as rootless using a user namespace. What I want, is using user namespaces to isolate pods. 
+Okay, I seem to have misunderstood what <rootlesscontaine.rs> want, as compared to what I want. That site documents how to run all the kubernetes components, as rootless using a user namespace. What I want, is using user namespaces to isolate pods. 
 
 Kubernetes seems to support this natively: <https://kubernetes.io/docs/tasks/configure-pod-container/user-namespaces/>
 
@@ -139,18 +139,18 @@ Local-path-provisioner is probably what I'm going to use, because I think it is 
 
 [Gitops](https://en.wikipedia.org/wiki/DevOps#GitOps) is a principle of software deployment, where the deployment infrastructure, services, and configuration, are stored in git — hence the name, Git Operations. 
 
-There are several ways to do Gitops on Kubernetes, but the core challenge I am encountering, is that some Gitops software must be deployed to Kubernetes in order to manage the cluster, but you cannot use that sotware to deploy itself. 
+There are several ways to do Gitops on Kubernetes, but the core challenge I am encountering, is that some Gitops software must be deployed to Kubernetes in order to manage the cluster, but you cannot use that software to deploy itself. 
 
 What likely happens is that after you deploy the software to the cluster, then it records itself and adds itself to the state, but I have to ensure this works properly.
 
-Or maybe the GitOps software stays outside of the configuration, eternally untracked, but still self updating?
+Or maybe the GitOps software stays outside the configuration, eternally untracked, but still self updating?
 
 I still haven't selected a GitOps software, but I am looking at:
 
 * ArgoCD
 * FluxCD
   - [Simple enough to bootsrap](https://fluxcd.io/flux/get-started/)
-  - bootstraps itself from github repo
+  - bootstraps itself from Github repo
 * Fleet (made by SUSE, just like k3s, RKE2, rancher, and longhorn)
 
 After thinking about it, I can't find a way to deploy a cluster and the CI/CD software at once, in such a way that it provisions itself. Many deployment methods simply abstract deploying the CI/CD software afterwards.
@@ -166,11 +166,11 @@ Mentioned in a Lemmy comment, it takes helm charts, and is able to convert them 
 
 Okay, but after more research, I've settled on Flux. It seems very easy to bootstrap, and to use [helm charts](https://fluxcd.io/flux/guides/helmreleases/) with it. I don't really need a GUI or multitenancy like ArgoCD provides, or the integrations that Fleet (probably) provides. 
 
-Flux seems "lightweight". It reads from a Git repo, and applies and reconcicles state. In addition to that, it can bootstrap itself. Although, I think I will end up running into a funny catch-22 when I decide to move away from github to a self hosted forgejo, on the kubernetes cluster, everythign will be fine.. probably.
+Flux seems "lightweight". It reads from a Git repo, and applies and reconciles state. In addition to that, it can bootstrap itself. Although, I think I will end up running into a funny catch-22 when I decide to move away from github to a self hosted forgejo, on the kubernetes cluster, everything will be fine... probably.
 
 Maybe I could have a seperate git server, and that stores the Kubernetes state? Flux seems to support [bootstrapping from any git repo](https://fluxcd.io/flux/cmd/flux_bootstrap_git/).
 
-A few recommendations on the internet seem to suggest that I should have bootstrap flux from something external to the cluster, rather than than from inside the cluster. 
+A few recommendations on the internet seem to suggest that I should have bootstrap flux from something external to the cluster, rather than from inside the cluster. 
 
 
 
@@ -217,6 +217,36 @@ However, it says in the above, that it is community maintained, and not truly of
 
 Going to the [nextcloud official docs for larger scale deployment recommendations](https://portal.nextcloud.com/article/Scalability/Deployment-recommendations/Large-Organizations-and-Service-Providers)... and it's paywalled. It's likely that Nextcloud maintains official helm charts — but only for paying customers. 
 
+
+# Networking
+
+Yup. After spending the majority of my time setting up networking on my previous iteration of this plan, it's time to do exactly that, *again*. 
+
+My original plan was to host some components of openstack on a VPS, allowing my server to give any virtual machines public ipv6 addresses despite being firewalled and behind the NAT of Cal State Northridge's internet... except there is no NAT. Or firewall. In fact, if I set up bridging, I can give virtual machines more than one public ipv4 address without going through any of that hassle. So my plans have changed.
+
+However, some questions come in to play that need to be answered, that I need to think about:
+
+* Multi node kubernetes: The dream is to have some form of high availability, where any two machines can fail, and my setup stays up (high availability usually requires 3 machines). 
+* Can I deploy openstack parallel to kubernetes?
+* Should my router go in front of, or behind my server?
+
+I would like to forgo the router entirely, as it reduces complexity. However, the router is useful because it can provide ethernet to my laptop, which is faster than the CSUN wifi, especially when it gets congested.
+
+I am thinking of putting the router in front of my server, and configuring bridged networking, to allow my server to access the CSUN network directly, through both it's ethernet ports. However, I do fear a speed bottleneck — when attempting to test CSUN's ethernet speeds, I discovered that my laptop's ethernet port only supported 100 mbps, meaning even though the cable supported higher speeds, and the ethernet port potentially supported higher speeds, there was a cap. I need to research 
+
+Another potential setup is for the server to be in front, with the router connected to it's secondary NIC/ethernet port. I could use the special bridging setup I have discovered where the primary ethernet port is both a bridge and a normal network interface, and then I could add the secondary ethernet port as a virtual port to the bridge. I would then create a second bridge, and add it to the first bridge, and openstack would use that bridge as it's bridge for virtual machines.
+
+I've decided on the second. Although, there is another bottleneck in place, the NIC on my server itself. Although my router has all 1000 Mb/s ports, both NIC of my servers are capped at 100mb/s. I need to buy a PCI ethernet card (preferably with two ethernet ports). 
+
+Options:
+
+* https://www.amazon.com/Dual-Port-Gigabit-Network-Express-Ethernet/dp/B09D3JL14S
+
+The other thing I need to get working with is dynamic dns. Since CSUN's ethernet works via DHCP, I'm not guaranteed the same ip address between reboots or other network configuration changes. I am using porkbun as my DNS provider, and I am searching for some options for that. 
+
+* https://hub.docker.com/r/qmcgaw/ddns-updater/
+  - Comes with kubernetes manifests, but look too complex for now
+  - minor issue with root domain of subdomains [something needs to be "@"](https://www.reddit.com/r/homelab/comments/137y1v9/dynamic_dns_with_porkbun/kegh2xy/)
 
 # Presearch and Notes for Future Pieces
 
