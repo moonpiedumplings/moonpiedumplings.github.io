@@ -403,7 +403,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h2 class="anchored" data-anchor-id="podman">Podman</h2>
 <section id="rootless" class="level3">
 <h3 class="anchored" data-anchor-id="rootless">Rootless</h3>
-<p>I was actually doing really good, but I encountered a roadblock:</p>
+<p>Things were going smoothly, until I encountered a roadblock:</p>
 <div class="sourceCode" id="cb3"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>TASK [Create caddy directory] ************************************************************************************************************</span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>fatal: [moonstack]: FAILED! =&gt; {"msg": "Failed to set permissions on the temporary files Ansible needs to create when becoming an unprivileged user (rc: 1, err: chmod: invalid mode: ‘A+user:podmaner:rx:allow’\nTry 'chmod --help' for more information.\n}). For information on working around this, see https://docs.ansible.com/ansible-core/2.16/playbook_guide/playbooks_privilege_escalation.html#risks-of-becoming-an-unprivileged-user"}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>The relevant ansible code uses <a href="">become</a> to run as the <code>podmaner</code> user, and then runs the <a href="https://docs.ansible.com/ansible/latest/collections/containers/podman/podman_container_module.html#ansible-collections-containers-podman-podman-container-module">ansible podman container</a> module.</p>

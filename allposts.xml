@@ -310,7 +310,7 @@
 
 <section id="why-the-switch" class="level1">
 <h1>Why the switch?</h1>
-<p>I was working on configuring rootless podman via ansible, but I had trouble because the tooling was incomplete. Ansible is a suboptiomal way to manage containers, and rootless podman can’t manage it’s own services.</p>
+<p>I was working on configuring rootless podman via ansible, but I had trouble because the tooling was incomplete. Ansible is a suboptiomal way to manage containers, and rootless podman can’t manage its own services.</p>
 <p>For the whole journey, see the <a href="../build-server-3/#systemd-integration">previous post</a></p>
 <p>So yeah. I’ve decided to switch to Kubernetes, because Kubernetes can manage it’s own services, and be rootless. The configuration-as-code landscape for Kubernetes, is much, much better than podman, and I will get many more options. For example, I can use <a href="">helm</a>, which is somewhat like a package manager for kubernetes, to install apps. Both Caddy and Authentik offer helm packages. Using the offered packages is probably less work than converting a docker compose to a podman container.</p>
 </section>
@@ -318,13 +318,13 @@
 <h1>Rootless (?) Kubernetes</h1>
 <section id="user-namespaces" class="level2">
 <h2 class="anchored" data-anchor-id="user-namespaces">User Namespaces</h2>
-<p>Just like how Linux has “distributions”, or bundles of software that build ontop of the Linxu kernels, Kubernetes has distros. I want rootless Kubernetes,</p>
-<p>I started by looking at <a href="">k3s</a>, the version of kubernetes I have experience with. However, there appear to be some <a href="https://docs.k3s.io/advanced#known-issues-with-rootless-mode">caveats with rootless mode</a>… including not being able to run a multi node cluster.</p>
+<p>Just like how Linux has “distributions”, or bundles of software that build on top of the Linux kernels, Kubernetes has distros. I want rootless Kubernetes,</p>
+<p>I started by looking at <a href="https://k3s.io/">k3s</a>, the version of kubernetes I have experience with. However, there appear to be some <a href="https://docs.k3s.io/advanced#known-issues-with-rootless-mode">caveats with rootless mode</a>… including not being able to run a multi node cluster.</p>
 <p>There is an article related to Kubernetes rootless containers: <a href="https://rootlesscontaine.rs/getting-started/kubernetes/" class="uri">https://rootlesscontaine.rs/getting-started/kubernetes/</a></p>
 <p>And what I see is… not promising. I don’t really desire to do run <code>kind</code> or <code>minikube</code>, because they are stripped down compared to more feature-full Kubernetes distros like <code>k3s</code></p>
 <p>Minikube, from that list above, is promising, but it is designed for development/testing, and <a href="https://github.com/kubernetes/minikube/issues/94">doesn’t support a multi-machine multi node setup</a></p>
-<p>Kind has a similar usecasde, and limitation. Despite how easy it is to do rootless on them, that makes them unsuitable for me.</p>
-<p>Okay, I seem to have misunderstood what &lt;rootlesscontaine.rs&gt; want, as compared to what I want. That site documentes how to run all of the kubernetes components, as rootless using a user namespace. What I want, is using user namespaces to isolate pods.</p>
+<p>Kind has a similar usecase, and limitation. Despite how easy it is to do rootless on them, that makes them unsuitable for me.</p>
+<p>Okay, I seem to have misunderstood what &lt;rootlesscontaine.rs&gt; want, as compared to what I want. That site documents how to run all the kubernetes components, as rootless using a user namespace. What I want, is using user namespaces to isolate pods.</p>
 <p>Kubernetes seems to support this natively: <a href="https://kubernetes.io/docs/tasks/configure-pod-container/user-namespaces/" class="uri">https://kubernetes.io/docs/tasks/configure-pod-container/user-namespaces/</a></p>
 <p>To enable user namespaces, all you need to do is set <code>hostUsers: false</code> in your kubernetes yaml… except, how can I override this for an existing helm chart?</p>
 </section>
@@ -425,16 +425,16 @@
 <section id="gitops-software" class="level2">
 <h2 class="anchored" data-anchor-id="gitops-software">Gitops Software</h2>
 <p><a href="https://en.wikipedia.org/wiki/DevOps#GitOps">Gitops</a> is a principle of software deployment, where the deployment infrastructure, services, and configuration, are stored in git — hence the name, Git Operations.</p>
-<p>There are several ways to do Gitops on Kubernetes, but the core challenge I am encountering, is that some Gitops software must be deployed to Kubernetes in order to manage the cluster, but you cannot use that sotware to deploy itself.</p>
+<p>There are several ways to do Gitops on Kubernetes, but the core challenge I am encountering, is that some Gitops software must be deployed to Kubernetes in order to manage the cluster, but you cannot use that software to deploy itself.</p>
 <p>What likely happens is that after you deploy the software to the cluster, then it records itself and adds itself to the state, but I have to ensure this works properly.</p>
-<p>Or maybe the GitOps software stays outside of the configuration, eternally untracked, but still self updating?</p>
+<p>Or maybe the GitOps software stays outside the configuration, eternally untracked, but still self updating?</p>
 <p>I still haven’t selected a GitOps software, but I am looking at:</p>
 <ul>
 <li>ArgoCD</li>
 <li>FluxCD
 <ul>
 <li><a href="https://fluxcd.io/flux/get-started/">Simple enough to bootsrap</a></li>
-<li>bootstraps itself from github repo</li>
+<li>bootstraps itself from Github repo</li>
 </ul></li>
 <li>Fleet (made by SUSE, just like k3s, RKE2, rancher, and longhorn)</li>
 </ul>
@@ -447,9 +447,9 @@
 </ul>
 <p>Mentioned in a Lemmy comment, it takes helm charts, and is able to convert them to a format that can be consumed by ArgoCD, using Nix.</p>
 <p>Okay, but after more research, I’ve settled on Flux. It seems very easy to bootstrap, and to use <a href="https://fluxcd.io/flux/guides/helmreleases/">helm charts</a> with it. I don’t really need a GUI or multitenancy like ArgoCD provides, or the integrations that Fleet (probably) provides.</p>
-<p>Flux seems “lightweight”. It reads from a Git repo, and applies and reconcicles state. In addition to that, it can bootstrap itself. Although, I think I will end up running into a funny catch-22 when I decide to move away from github to a self hosted forgejo, on the kubernetes cluster, everythign will be fine.. probably.</p>
+<p>Flux seems “lightweight”. It reads from a Git repo, and applies and reconciles state. In addition to that, it can bootstrap itself. Although, I think I will end up running into a funny catch-22 when I decide to move away from github to a self hosted forgejo, on the kubernetes cluster, everything will be fine… probably.</p>
 <p>Maybe I could have a seperate git server, and that stores the Kubernetes state? Flux seems to support <a href="https://fluxcd.io/flux/cmd/flux_bootstrap_git/">bootstrapping from any git repo</a>.</p>
-<p>A few recommendations on the internet seem to suggest that I should have bootstrap flux from something external to the cluster, rather than than from inside the cluster.</p>
+<p>A few recommendations on the internet seem to suggest that I should have bootstrap flux from something external to the cluster, rather than from inside the cluster.</p>
 </section>
 <section id="misc-addonsdeployment" class="level2">
 <h2 class="anchored" data-anchor-id="misc-addonsdeployment">Misc Addons/Deployment</h2>
@@ -500,6 +500,33 @@
 <p>However, it says in the above, that it is community maintained, and not truly official.</p>
 <p>Going to the <a href="https://portal.nextcloud.com/article/Scalability/Deployment-recommendations/Large-Organizations-and-Service-Providers">nextcloud official docs for larger scale deployment recommendations</a>… and it’s paywalled. It’s likely that Nextcloud maintains official helm charts — but only for paying customers.</p>
 </section>
+</section>
+<section id="networking" class="level1">
+<h1>Networking</h1>
+<p>Yup. After spending the majority of my time setting up networking on my previous iteration of this plan, it’s time to do exactly that, <em>again</em>.</p>
+<p>My original plan was to host some components of openstack on a VPS, allowing my server to give any virtual machines public ipv6 addresses despite being firewalled and behind the NAT of Cal State Northridge’s internet… except there is no NAT. Or firewall. In fact, if I set up bridging, I can give virtual machines more than one public ipv4 address without going through any of that hassle. So my plans have changed.</p>
+<p>However, some questions come in to play that need to be answered, that I need to think about:</p>
+<ul>
+<li>Multi node kubernetes: The dream is to have some form of high availability, where any two machines can fail, and my setup stays up (high availability usually requires 3 machines).</li>
+<li>Can I deploy openstack parallel to kubernetes?</li>
+<li>Should my router go in front of, or behind my server?</li>
+</ul>
+<p>I would like to forgo the router entirely, as it reduces complexity. However, the router is useful because it can provide ethernet to my laptop, which is faster than the CSUN wifi, especially when it gets congested.</p>
+<p>I am thinking of putting the router in front of my server, and configuring bridged networking, to allow my server to access the CSUN network directly, through both it’s ethernet ports. However, I do fear a speed bottleneck — when attempting to test CSUN’s ethernet speeds, I discovered that my laptop’s ethernet port only supported 100 mbps, meaning even though the cable supported higher speeds, and the ethernet port potentially supported higher speeds, there was a cap. I need to research</p>
+<p>Another potential setup is for the server to be in front, with the router connected to it’s secondary NIC/ethernet port. I could use the special bridging setup I have discovered where the primary ethernet port is both a bridge and a normal network interface, and then I could add the secondary ethernet port as a virtual port to the bridge. I would then create a second bridge, and add it to the first bridge, and openstack would use that bridge as it’s bridge for virtual machines.</p>
+<p>I’ve decided on the second. Although, there is another bottleneck in place, the NIC on my server itself. Although my router has all 1000 Mb/s ports, both NIC of my servers are capped at 100mb/s. I need to buy a PCI ethernet card (preferably with two ethernet ports).</p>
+<p>Options:</p>
+<ul>
+<li>https://www.amazon.com/Dual-Port-Gigabit-Network-Express-Ethernet/dp/B09D3JL14S</li>
+</ul>
+<p>The other thing I need to get working with is dynamic dns. Since CSUN’s ethernet works via DHCP, I’m not guaranteed the same ip address between reboots or other network configuration changes. I am using porkbun as my DNS provider, and I am searching for some options for that.</p>
+<ul>
+<li>https://hub.docker.com/r/qmcgaw/ddns-updater/
+<ul>
+<li>Comes with kubernetes manifests, but look too complex for now</li>
+<li>minor issue with root domain of subdomains <a href="https://www.reddit.com/r/homelab/comments/137y1v9/dynamic_dns_with_porkbun/kegh2xy/">something needs to be “@”</a></li>
+</ul></li>
+</ul>
 </section>
 <section id="presearch-and-notes-for-future-pieces" class="level1">
 <h1>Presearch and Notes for Future Pieces</h1>
@@ -1189,7 +1216,7 @@ font-style: inherit;">"/bin/rathole"</span>]</span></code></pre></div>
 <h2 class="anchored" data-anchor-id="podman">Podman</h2>
 <section id="rootless" class="level3">
 <h3 class="anchored" data-anchor-id="rootless">Rootless</h3>
-<p>I was actually doing really good, but I encountered a roadblock:</p>
+<p>Things were going smoothly, until I encountered a roadblock:</p>
 <div class="sourceCode" id="cb3" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb3-1">TASK [Create caddy directory] ************************************************************************************************************</span>
 <span id="cb3-2">fatal: [moonstack]: FAILED! =&gt; {"msg": "Failed to set permissions on the temporary files Ansible needs to create when becoming an unprivileged user (rc: 1, err: chmod: invalid mode: ‘A+user:podmaner:rx:allow’\nTry 'chmod --help' for more information.\n}). For information on working around this, see https://docs.ansible.com/ansible-core/2.16/playbook_guide/playbooks_privilege_escalation.html#risks-of-becoming-an-unprivileged-user"}</span></code></pre></div>
 <p>The relevant ansible code uses <a href="">become</a> to run as the <code>podmaner</code> user, and then runs the <a href="https://docs.ansible.com/ansible/latest/collections/containers/podman/podman_container_module.html#ansible-collections-containers-podman-podman-container-module">ansible podman container</a> module.</p>
