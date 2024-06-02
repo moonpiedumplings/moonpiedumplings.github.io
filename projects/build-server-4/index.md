@@ -248,6 +248,8 @@ The other thing I need to get working with is dynamic dns. Since CSUN's ethernet
   - Comes with kubernetes manifests, but look too complex for now
   - minor issue with root domain of subdomains [something needs to be "@"](https://www.reddit.com/r/homelab/comments/137y1v9/dynamic_dns_with_porkbun/kegh2xy/)
 
+It works great, althoguh I had trouble testing it up because I was on my phone's hotspot, which only gives me an ipv6 address.
+
 # Presearch and Notes for Future Pieces
 
 ## Openstack
