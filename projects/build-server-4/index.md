@@ -262,9 +262,30 @@ The first thing is to [configure NetworkManager to ignore CNI managed interfaces
 
 I followed the [quick start](https://docs.rke2.io/install/quickstart) install guide. I started with the server, however, that only installs the server components, and not the agent components of rke2. 
 
-I also followed the agent guide, in an attempt to get a single node install. 
+I also followed the agent guide, in an attempt to get a single node install. That was a bad idea — I think the server also is capable of acting as an agent in a single node install?
 
-However, nothing starts properly. The RKE2 server service crashes, and I need to investigate why.
+However, nothing starts properly. The RKE2 server service crashes, and I need to investigate why. I suspect it is because kubernete's virtual networking is unable to properly interact with my special bridged networking setup, and this results in crashes... but the logs don't seem to say anything relevant. 
+
+After a reinstall, it seems to work? (I think I figured out what caused it: I forgot to edit the NetworkManager.conf file). And looking at [this guide](https://blog.alphabravo.io/posts/2021/single-node-rke2-pt1/), it seems that the server components also come with the agent components, as shown by how they deploy rancher (a workload) on just the server. 
+
+I mostly ignored the steps, except copying `/etc/rancher/rke2/rke2.yaml`  to `~/.kube/config`, and I also chowned the config file as my user. This way I could manage kubernetes as a regular user, rather than only as root.
+
+I tried installing kubectl to my user using nix at first, but kubectl complained that if the version was two major releases away, it could cause issues. So insetad, I installing kubectl from a specific nixpkgs revision:
+
+```{.default}
+moonpie@thoth:~$ nix profile install nixpkgs/10b813040df67c4039086db0f6eaf65c536886c6#kubectl
+moonpie@thoth:~$ kubectl version
+Client Version: v1.28.4
+Kustomize Version: v5.0.4-0.20230601165947-6ce0bf390ce3
+Server Version: v1.28.10+rke2r1
+```
+
+Now... Fluxcd deployment is next. 
+
+I installed fluxcd using nix. 
+
+`nix profile install nixpkgs#fluxcd`
+
 
 # Presearch and Notes for Future Pieces
 
