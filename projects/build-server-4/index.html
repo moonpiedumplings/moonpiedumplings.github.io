@@ -21,6 +21,40 @@ ul.task-list li input[type="checkbox"] {
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
 }
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
 </style>
 
 
@@ -435,8 +469,19 @@ ul.task-list li input[type="checkbox"] {
 <h1>Kubernetes Installation and Setup</h1>
 <p>The first thing is to <a href="https://docs.rke2.io/known_issues#networkmanager">configure NetworkManager to ignore CNI managed interfaces</a>, otherwise issues will occur.</p>
 <p>I followed the <a href="https://docs.rke2.io/install/quickstart">quick start</a> install guide. I started with the server, however, that only installs the server components, and not the agent components of rke2.</p>
-<p>I also followed the agent guide, in an attempt to get a single node install.</p>
-<p>However, nothing starts properly. The RKE2 server service crashes, and I need to investigate why.</p>
+<p>I also followed the agent guide, in an attempt to get a single node install. That was a bad idea — I think the server also is capable of acting as an agent in a single node install?</p>
+<p>However, nothing starts properly. The RKE2 server service crashes, and I need to investigate why. I suspect it is because kubernete’s virtual networking is unable to properly interact with my special bridged networking setup, and this results in crashes… but the logs don’t seem to say anything relevant.</p>
+<p>After a reinstall, it seems to work? (I think I figured out what caused it: I forgot to edit the NetworkManager.conf file). And looking at <a href="https://blog.alphabravo.io/posts/2021/single-node-rke2-pt1/">this guide</a>, it seems that the server components also come with the agent components, as shown by how they deploy rancher (a workload) on just the server.</p>
+<p>I mostly ignored the steps, except copying <code>/etc/rancher/rke2/rke2.yaml</code> to <code>~/.kube/config</code>, and I also chowned the config file as my user. This way I could manage kubernetes as a regular user, rather than only as root.</p>
+<p>I tried installing kubectl to my user using nix at first, but kubectl complained that if the version was two major releases away, it could cause issues. So insetad, I installing kubectl from a specific nixpkgs revision:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>moonpie@thoth:~$ nix profile install nixpkgs/10b813040df67c4039086db0f6eaf65c536886c6#kubectl</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>moonpie@thoth:~$ kubectl version</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>Client Version: v1.28.4</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>Kustomize Version: v5.0.4-0.20230601165947-6ce0bf390ce3</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>Server Version: v1.28.10+rke2r1</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Now… Fluxcd deployment is next.</p>
+<p>I installed fluxcd using nix.</p>
+<p><code>nix profile install nixpkgs#fluxcd</code></p>
 </section>
 <section id="presearch-and-notes-for-future-pieces" class="level1">
 <h1>Presearch and Notes for Future Pieces</h1>
