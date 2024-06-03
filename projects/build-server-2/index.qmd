@@ -1128,6 +1128,29 @@ managed=true
 ....
 ```
 
+EDIT 6/2/24:
+
+It seems that this isn't enough for this to properly work. On debian, I needed to run `apt purge ifupdown` in order for things to work properly, otherwise the ethernet interface will get two ip addresses, as it is configured twice by ifupdown and networkmanager. Although I doubt ifupdown will cause interference beyond simply two ip addresses, I want to remove variables. 
+
+And this still isn't enough. I have to edit `/etc/network/interfaces` and comment out the things related to the default ethernet interface. 
+
+```{.ini filename="/etc/network/interfaces"}
+# This file describes the network interfaces available on your system
+# and how to activate them. For more information, see interfaces(5).
+
+source /etc/network/interfaces.d/*
+
+# The loopback network interface
+auto lo
+iface lo inet loopback
+
+# The primary network interface
+#allow-hotplug enp0s25
+#iface enp0s25 inet dhcp
+```
+
+And it works. 
+
 And it works now:
 
 ```{.default}

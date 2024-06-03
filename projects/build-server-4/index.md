@@ -248,7 +248,23 @@ The other thing I need to get working with is dynamic dns. Since CSUN's ethernet
   - Comes with kubernetes manifests, but look too complex for now
   - minor issue with root domain of subdomains [something needs to be "@"](https://www.reddit.com/r/homelab/comments/137y1v9/dynamic_dns_with_porkbun/kegh2xy/)
 
-It works great, althoguh I had trouble testing it up because I was on my phone's hotspot, which only gives me an ipv6 address.
+It works great, although I had trouble testing it up because I was on my phone's hotspot, which only gives me an ipv6 address.
+
+After I get Dynamic dns working, I decided to set up bridging, since my server will sit in front of my router, or my computer having an ethernet port. 
+
+I followed my documented steps on [build server part 2](../build-server-2/) (the section about bridging and veth). 
+
+Except, I did not set up a veth just yet. I don't need it. 
+
+# Kubernetes Installation and Setup
+
+The first thing is to [configure NetworkManager to ignore CNI managed interfaces](https://docs.rke2.io/known_issues#networkmanager), otherwise issues will occur. 
+
+I followed the [quick start](https://docs.rke2.io/install/quickstart) install guide. I started with the server, however, that only installs the server components, and not the agent components of rke2. 
+
+I also followed the agent guide, in an attempt to get a single node install. 
+
+However, nothing starts properly. The RKE2 server service crashes, and I need to investigate why.
 
 # Presearch and Notes for Future Pieces
 
