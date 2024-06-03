@@ -164,6 +164,7 @@ ul.task-list li input[type="checkbox"] {
   <li><a href="#nextcloud" id="toc-nextcloud" class="nav-link" data-scroll-target="#nextcloud">Nextcloud</a></li>
   </ul></li>
   <li><a href="#networking" id="toc-networking" class="nav-link" data-scroll-target="#networking">Networking</a></li>
+  <li><a href="#kubernetes-installation-and-setup" id="toc-kubernetes-installation-and-setup" class="nav-link" data-scroll-target="#kubernetes-installation-and-setup">Kubernetes Installation and Setup</a></li>
   <li><a href="#presearch-and-notes-for-future-pieces" id="toc-presearch-and-notes-for-future-pieces" class="nav-link" data-scroll-target="#presearch-and-notes-for-future-pieces">Presearch and Notes for Future Pieces</a>
   <ul class="collapse">
   <li><a href="#openstack" id="toc-openstack" class="nav-link" data-scroll-target="#openstack">Openstack</a></li>
@@ -425,7 +426,17 @@ ul.task-list li input[type="checkbox"] {
 <li>minor issue with root domain of subdomains <a href="https://www.reddit.com/r/homelab/comments/137y1v9/dynamic_dns_with_porkbun/kegh2xy/">something needs to be “@”</a></li>
 </ul></li>
 </ul>
-<p>It works great, althoguh I had trouble testing it up because I was on my phone’s hotspot, which only gives me an ipv6 address.</p>
+<p>It works great, although I had trouble testing it up because I was on my phone’s hotspot, which only gives me an ipv6 address.</p>
+<p>After I get Dynamic dns working, I decided to set up bridging, since my server will sit in front of my router, or my computer having an ethernet port.</p>
+<p>I followed my documented steps on <a href="../build-server-2/">build server part 2</a> (the section about bridging and veth).</p>
+<p>Except, I did not set up a veth just yet. I don’t need it.</p>
+</section>
+<section id="kubernetes-installation-and-setup" class="level1">
+<h1>Kubernetes Installation and Setup</h1>
+<p>The first thing is to <a href="https://docs.rke2.io/known_issues#networkmanager">configure NetworkManager to ignore CNI managed interfaces</a>, otherwise issues will occur.</p>
+<p>I followed the <a href="https://docs.rke2.io/install/quickstart">quick start</a> install guide. I started with the server, however, that only installs the server components, and not the agent components of rke2.</p>
+<p>I also followed the agent guide, in an attempt to get a single node install.</p>
+<p>However, nothing starts properly. The RKE2 server service crashes, and I need to investigate why.</p>
 </section>
 <section id="presearch-and-notes-for-future-pieces" class="level1">
 <h1>Presearch and Notes for Future Pieces</h1>
