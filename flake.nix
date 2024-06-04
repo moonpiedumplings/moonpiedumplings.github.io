@@ -71,5 +71,5 @@
             texlive.combined.scheme-full
             ];
     }
-  };
+  }
 }
