@@ -286,6 +286,21 @@ I installed fluxcd using nix.
 
 `nix profile install nixpkgs#fluxcd`
 
+Before I installed fluxcd however, I decided to [disable the nginx ingress controller](https://docs.rke2.io/networking/networking_services?_highlight=nginx/networking/networking_services#nginx-ingress-controller). I did this because I intend to deploy traefik or something else as my ingress controller with flux. 
+
+It seems the RKE2 [configuration file](https://docs.rke2.io/install/configuration) needs to be created manually. After creating that file, adding `disable: rke2-ingress-nginx` to it, and restarting the server service, the nginx controller is disabled. 
+
+Now, for the flux install. Since I don't want to use github, I decided to just use ssh as a git server. 
+
+Following the guide for flux [bootstrapping with git](https://fluxcd.io/flux/installation/bootstrap/generic-git-server/#ssh-private-key):
+
+```{.default}
+flux bootstrap git --url ssh://moonpie@moonpiedumpl.ing/home/moonpie/fleet-charts --private-key-file=/home/moonpie/.ssh/moonstack --path=cluster/my-cluster
+```
+
+And it starts working immediately... except when I clone the git repo from the server, it's empty‽ At least it has a branch, "master", but this branch has no commits or anything to start from. I'm attempting to follow the rest of the [bootstrapping guide](https://fluxcd.io/flux/get-started), so I create a directory, "cluster/my-cluster" in the git repo and put the first chart in it. Nothing happens. I think I screwed up somewhere, so I decide to uninstall flux and start over again. 
+
+
 
 # Presearch and Notes for Future Pieces
 
