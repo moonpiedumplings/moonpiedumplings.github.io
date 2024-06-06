@@ -482,6 +482,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>Now… Fluxcd deployment is next.</p>
 <p>I installed fluxcd using nix.</p>
 <p><code>nix profile install nixpkgs#fluxcd</code></p>
+<p>Before I installed fluxcd however, I decided to <a href="https://docs.rke2.io/networking/networking_services?_highlight=nginx/networking/networking_services#nginx-ingress-controller">disable the nginx ingress controller</a>. I did this because I intend to deploy traefik or something else as my ingress controller with flux.</p>
+<p>It seems the RKE2 <a href="https://docs.rke2.io/install/configuration">configuration file</a> needs to be created manually. After creating that file, adding <code>disable: rke2-ingress-nginx</code> to it, and restarting the server service, the nginx controller is disabled.</p>
+<p>Now, for the flux install. Since I don’t want to use github, I decided to just use ssh as a git server.</p>
+<p>Following the guide for flux <a href="https://fluxcd.io/flux/installation/bootstrap/generic-git-server/#ssh-private-key">bootstrapping with git</a>:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>flux bootstrap git --url ssh://moonpie@moonpiedumpl.ing/home/moonpie/fleet-charts --private-key-file=/home/moonpie/.ssh/moonstack --path=cluster/my-cluster</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>And it starts working immediately… except when I clone the git repo from the server, it’s empty‽ At least it has a branch, “master”, but this branch has no commits or anything to start from. I’m attempting to follow the rest of the <a href="https://fluxcd.io/flux/get-started">bootstrapping guide</a>, so I create a directory, “cluster/my-cluster” in the git repo and put the first chart in it. Nothing happens. I think I screwed up somewhere, so I decide to uninstall flux and start over again.</p>
 </section>
 <section id="presearch-and-notes-for-future-pieces" class="level1">
 <h1>Presearch and Notes for Future Pieces</h1>

@@ -10,7 +10,178 @@
 <atom:link href="https://moonpiedumplings.github.io/allposts.xml" rel="self" type="application/rss+xml"/>
 <description>All posts, intended to be used in an RSS feed. </description>
 <generator>quarto-1.5.24</generator>
-<lastBuildDate>Thu, 02 May 2024 07:00:00 GMT</lastBuildDate>
+<lastBuildDate>Tue, 04 Jun 2024 07:00:00 GMT</lastBuildDate>
+<item>
+  <title>Creating a nix flake, the “proper” way</title>
+  <link>https://moonpiedumplings.github.io/playground/flake-shell/</link>
+  <description><![CDATA[ 
+
+
+
+
+<p>So, I think it’s time for me to move from the older channels way of doing things in nix, to the newer flakes. However, the nix docs are very poor, so I am going to document my process of converting my development environment here.</p>
+<p>The first thing, is that despite the fact that there is a lot of the existing flakes use a utility called <a href="">flake-utils</a>. However, this tool was ultimately started as an experiment, and has issues. A <a href="https://ayats.org/blog/no-flake-utils/">blog post</a> (<a href="https://web.archive.org/web/20240229094244/https://ayats.org/blog/no-flake-utils/">archive</a>) goes over some of the issues it has, and recommends against it… except I can’t figure out at all how to apply it.</p>
+<p>The other recommendation is another pattern, recommended by Reddit user Tomberek:</p>
+<div class="sourceCode" id="cb1" style="background: #f1f3f5;"><pre class="sourceCode nix code-with-copy"><code class="sourceCode nix"><span id="cb1-1"><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">{</span></span>
+<span id="cb1-2">  <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">inputs</span>.<span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">nixpkgs</span>.<span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">url</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"github:NixOS/nixpkgs/22.05"</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">;</span></span>
+<span id="cb1-3">  <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">outputs</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">{</span><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">self</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">,</span><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">nixpkgs</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">}</span>: <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">{</span></span>
+<span id="cb1-4">    <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">devShells</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">builtins</span>.mapAttrs <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">(</span><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">system</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">:</span> <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">pkgs</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">:</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">{</span></span>
+<span id="cb1-5">      <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">default</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> pkgs.mkShell <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">{</span></span>
+<span id="cb1-6">        <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">shellHook</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">''</span></span>
+<span id="cb1-7"><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">          echo 'WARNING: gotcha during nix develop shellHooks'</span></span>
+<span id="cb1-8"><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">          function _direnv_hook(){</span></span>
+<span id="cb1-9"><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">              echo 'WARNING, "_direnv_hook" has been overwritten"'</span></span>
+<span id="cb1-10"><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">          }</span></span>
+<span id="cb1-11"><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">        ''</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">;</span></span>
+<span id="cb1-12">        <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">packages</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">[</span></span>
+<span id="cb1-13">          <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">(</span>pkgs.writeShellApplication <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">{</span></span>
+<span id="cb1-14">            <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">name</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"ls"</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">;</span></span>
+<span id="cb1-15">            <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">text</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">''</span></span>
+<span id="cb1-16"><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">              echo 'WARNING, "ls" has been overwritten"'</span></span>
+<span id="cb1-17"><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">            ''</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">;</span></span>
+<span id="cb1-18">          <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">}</span></span>
+<span id="cb1-19">            <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">)</span></span>
+<span id="cb1-20">        <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">];</span></span>
+<span id="cb1-21">      <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">};</span></span>
+<span id="cb1-22">    <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">})</span> nixpkgs.legacyPackages<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">;</span></span>
+<span id="cb1-23">  <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">};</span></span>
+<span id="cb1-24"><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">}</span></span></code></pre></div>
+<p>There are multiple different ways of creating an output for multiple systems at once, it seems.</p>
+<p>So far:</p>
+<ul>
+<li>ForEachSystem</li>
+<li>Flake-parts</li>
+<li>Flake-utils</li>
+<li>Tombereks’ method</li>
+</ul>
+<p>I suspect there are other methods, potentially better one’s, that aren’t documented.</p>
+<p>My ultimate goal is to convert the shell.nix I am using, into a flake.</p>
+
+
+
+ ]]></description>
+  <category>nix</category>
+  <guid>https://moonpiedumplings.github.io/playground/flake-shell/</guid>
+  <pubDate>Tue, 04 Jun 2024 07:00:00 GMT</pubDate>
+</item>
 <item>
   <title>Container images and setuid binaries</title>
   <link>https://moonpiedumplings.github.io/playground/setuid-containers/</link>
@@ -549,6 +720,12 @@
 <p>Now… Fluxcd deployment is next.</p>
 <p>I installed fluxcd using nix.</p>
 <p><code>nix profile install nixpkgs#fluxcd</code></p>
+<p>Before I installed fluxcd however, I decided to <a href="https://docs.rke2.io/networking/networking_services?_highlight=nginx/networking/networking_services#nginx-ingress-controller">disable the nginx ingress controller</a>. I did this because I intend to deploy traefik or something else as my ingress controller with flux.</p>
+<p>It seems the RKE2 <a href="https://docs.rke2.io/install/configuration">configuration file</a> needs to be created manually. After creating that file, adding <code>disable: rke2-ingress-nginx</code> to it, and restarting the server service, the nginx controller is disabled.</p>
+<p>Now, for the flux install. Since I don’t want to use github, I decided to just use ssh as a git server.</p>
+<p>Following the guide for flux <a href="https://fluxcd.io/flux/installation/bootstrap/generic-git-server/#ssh-private-key">bootstrapping with git</a>:</p>
+<div class="sourceCode" id="cb2" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb2-1">flux bootstrap git --url ssh://moonpie@moonpiedumpl.ing/home/moonpie/fleet-charts --private-key-file=/home/moonpie/.ssh/moonstack --path=cluster/my-cluster</span></code></pre></div>
+<p>And it starts working immediately… except when I clone the git repo from the server, it’s empty‽ At least it has a branch, “master”, but this branch has no commits or anything to start from. I’m attempting to follow the rest of the <a href="https://fluxcd.io/flux/get-started">bootstrapping guide</a>, so I create a directory, “cluster/my-cluster” in the git repo and put the first chart in it. Nothing happens. I think I screwed up somewhere, so I decide to uninstall flux and start over again.</p>
 </section>
 <section id="presearch-and-notes-for-future-pieces" class="level1">
 <h1>Presearch and Notes for Future Pieces</h1>
@@ -10927,52 +11104,6 @@ sed -i 's/boot/efi/EFI/cachyos/' grubx64.efi</code></pre>
   <category>cybersecurity</category>
   <guid>https://moonpiedumplings.github.io/playground/arch-secureboot/</guid>
   <pubDate>Tue, 29 Aug 2023 07:00:00 GMT</pubDate>
-</item>
-<item>
-  <title>The CSUN game room has pretty locked down computers…</title>
-  <link>https://moonpiedumplings.github.io/playground/csun-computers/</link>
-  <description><![CDATA[ 
-
-
-
-
-<p>My first class at Cal State Northridge (CSUN) happened today.</p>
-<p>It was pretty exciting, but after class, I wandered around to stave off boredom. I ended up finding the <a href="https://www.csun.edu/src/games-room">CSUN game room</a>, which was a pretty sick setup. Although one side was a game room with a few pool tables and other table games, and beyond that, couches and game consoles, the other side was setup similar to the <a href="https://en.wikipedia.org/wiki/PC_bang">computer cafe’s</a> which are still popular in South Korea.</p>
-<p>Obviously I needed to asses their security. Because of my <a href="../cruise-ship-computers/">experience with the cruise ship computers</a>, I somewhat knew what I needed to do. The windows UI on the machines in the CSUN game room, is locked down.</p>
-<p>Rather than the normal window’s interface, it was a proprietary interface specially dedicated to games. I could not even open a browser.</p>
-<p>In addition to that, none of the keyboard shortcuts worked. Windows + R (run dialog). Or Windows + E (explorer).</p>
-<p>So similar to the cruise ships, my initial goal was to restart the windows UI. For some strange reason, the windows UI is located under the program explorer.exe, which is the same program as the filebrowser. On the cruise ship, finding and launching this program is how I restarted the windows UI.</p>
-<p>However, I quickly discovered something interesting. When launching discord through the locked down UI, the edge browser would launch for half a second, and then disappear, the tab closing itself. I launched a new tab before it closed, and edge stayed open…</p>
-<p>Once edge was open, the first thing I tried was chromium’s Control + O open file dialog.</p>
-<p>However, I couldn’t open things, and more interestingly, the right click, and any other methods of accessing the context menu I tried, were blocked.</p>
-<p><img src="https://media.discordapp.net/attachments/1145897518270517291/1145898301032501358/AIL4fc_t_UdiZErKWvs9V5pkh38GP9rMPKZJBQzB5IpeA4UQVR6Z95iY2rHtGl8YSu7HEEZZt9b8QqIRVY7eEKAnf6VWHHIeu07hCVfE1754XbNmZxzvHMXtc6udDudz5cmfwN08MI45gWd7_mVi9a6SonX4nUYGjF9wE8edCBkT8R9z73vjZC9SZIRgCaHMe1WgKMe4Zybsu3YO0Nx5WTN4ucjQTVEfGSkWkt1utbVhTrI2yto6uBkFMKL42nqjJYSAIYR4hROEtefRTo_6M3q9Dihfh1KKIaRHfXnVWaYwwqpV3tITMNDccFO7GO_qAoSAvCEDeizkUS1N82sfN9qhODzPoVrKKO_DUAoU1I9VNaBK0g9dgGzggLFuwx7PGGpIVBoSSxVZpgXOcBsEiOFUYC5nwFD90WLFin8Bhcni-Qh9RrpUt_AthR4zOrgoL1eiDY-uU30VO0cyyBmroNOKbO9ca45N9SoiZWX09H3MKp89tZN4I5vh78JY..png" class="img-fluid"></p>
-<p>So I tried to download another file browser. Blocked:</p>
-<p><img src="https://media.discordapp.net/attachments/1145897518270517291/1145898644642484284/AIL4fc_O5NomLeCXnydmTtLdmezKLzP75FuMdYnHSuD31jjZcnYb-DqOOD5apK7FdJhWY36cZm7H1nmIP8UalRPjKOoP8hHULeWlJnVL3Hw_XjpewJnT1RDpE7t5Ytu1RoPuj3tAQi5ULoYOg9DGeU52hUYpX7RSHj5GRzK9oLftc7DUYYJKYWjQ12M5ccFTjcH41DOBMgH_oDOoWkxj2nvdIkKooNfnvI-unpIKTEIGED-KCDtEr8EkGFmPuZy4Cod0OsgJdrSAMJTjOguYqznoP10dRBcTnZpYeeXGai6PfiRzzzkaZFCVDe0Rx9LX6PzBjpgAEaNjMsFbcMafVp_ShGwVEeosrsMgNbJBjA426q_6UWAflJdSohLQV28oypsnaHQngst4pwayaPR6oRMVAdYhqlo8Tx2qAEPUk4ZMqeog5yEVX1NTfwLTR_6Zy5qlBzaMF5JVNkUFCO7tKtHifBqFyBQc8s5QYjxgl4txGhDbyP3lJ6HvS79b..png" class="img-fluid"></p>
-<p>But interesting, I could click the “open downloads folder” and get the proper windows file browser open. In this file browser, I could simply single click on applications to open them.</p>
-<p>I located explorer.exe, the program which launched the windows UI on the cruise ship computers, and…</p>
-<p><img src="https://media.discordapp.net/attachments/1145897518270517291/1145904889935962304/AIL4fc9ofWb0xdlHoF1s2IjUWf95XdaFI6k3TBqNgbySg-w0coa1eqFnADRrR0d-9m9NPruhi1CLplD2rSyBfIoVFcuM_NEdzmJ9_TZ7SbnUqCUfDjiEA6ut5MER7x4Pa2PzdadRhSs-1gDRvUXmDae347OfPFavXATHIZMyvObc16wvoEX2cPXL0wz5sA6nptI3I8pbDIPxP0hifIKzU3LMUvu9rsRMnPHRJspyrEGiKrG-FMU9za4JYJ2yQvGSWt9mNzTtxh8gXDcNKqKjj2zADnJDB-nFij3NAhhsUF-HjoTAvRPoBigKhjypkjaH8Id7NgbmTV4UHMMCm8ANOIXmi6a30IZOVhZQnHvwZmy9yOUhlJKyQTnBKkiszGZVZ1C23u8x-9bfPcfrCNm929S8_PHtmIKpb7F0lVk8F9TpKy4RLFRYGSMCHQzxcP8xBgHCNVUkluryZIubG75a9_jVbS6PisinkMl80iargQOsNhHDgsmNqGe2oSWv..png" class="img-fluid"></p>
-<p>For whatever reason, launching the explorer.exe program simply results in another instance of the filebrowser launching, rather than the windows UI launching. So I decided to try some other stuff.</p>
-<p><img src="https://media.discordapp.net/attachments/1145897518270517291/1145899637899808798/AIL4fc98jpQGgHr4PP0h4xyHlIpMUhFTqbFKr3-hiek0hMcgCGC763GgqUM7g3mI0EVquELg6fP7Gt9dlZc_XGQ5SdOWo1NDt9iio5jMu92lx3Ss1IKI47JBKWG9jhVLqumIyhBB4lOpYE0eq7fLpT9GZLsyP4whc8ZOnPgL40CnthFdhHqgHzlnknJ7iUB8aGIpJZu3CAHFQO4IqMKZw7n9BE4-wBmHdGKZ1gJWoQ5qqSt26vKfeFb6Ts7yljShZ66V_silB5fCV-c3gns7B-I8oV9Gv14nhQA146jHaq4JGsCNAq5TmcMd84GSdYjYFBN8gK0YHJZfvFFCF-2wUkapbiYxOzFn_W59bPqM6wz1tn3IT_E-ZBJwO_-t5mJzMPdw_oIc16DMs9LfpkEYIA1Ixh-uiYb15c4Q5PiuJwJbzqoo1hXFyu4la9bgTAXWQlB6GUhUtbs9M3835ZhN_BSHmU8X3k4zw5JBf44lDVuLN_ZjKS9-jDFw4pwH..png" class="img-fluid"></p>
-<p><img src="https://media.discordapp.net/attachments/1145897518270517291/1145900260837822525/AIL4fc-RJj9KtnYLIHmBdE8xVpPPd8oDBTO-oUXgnMcVpuukkMcJmWeEtQqg0rytLC_VC0wdO8Q0VhwXtg5QxKX9F53zEETn7U4VKefN0_yuOjzwT01tZ9FHJUes5gpnVPJtWa5iPDduQK82qMbaiduAIbrM0uy9XJd7czRszFGOKlJbVJyaIa83CIINV436BRfY7EQux5UGdRv8HhwzD-8bbWJE01fGh5dErEPf2IK4EswYq1SjadiZjK4-Wc6fmDyqkwRKO9FFwD-YAp0BEe7N9Cqa8E_cddFuA-57BYVVRQP3JReDk1aaMqRpyBp1whZcypxPd8HEX4LDTF1lKv8rsK24BWjAkYJHrmJA3A2TWRO4qTTzfi84ZLNxVij93M72o5LfAnT2yw_ZMLoMsJnzhBY0bxqpmysRl8jH4e0DF8HazP3CzyMN92YhndibUY2O-LmuW1vEBzRRZq8v1OOntxrb-Myjm-35XUEc2lXgV1onUHd_MgI7nZvz..png" class="img-fluid"></p>
-<p>I tried a few things. Powershell, command prompt, registry editor, no dice.</p>
-<p>I went down the list of apps in <code>C:\Windows</code>, checking things out, when I found something interesting unblocked:</p>
-<p><img src="https://media.discordapp.net/attachments/1145897518270517291/1145900496746451024/AIL4fc9MTmcuuc7a0BIO1_mnefpdZEXsGl23HkEUX2nS3eWkWaQ7ZBL09OlI8KeA6x0KFvPpMB31tN7OrkhSPbp84gUX-1RHUIY2soxA0dIhuM3DwZFVkeMhOc77ZoLFr6zYPQgbFeTPykSYoGFhLuuZtIww7Dyx_rEfzEAVRcpbwx0DkRnECbd-qV5pHzjpRIUQ2Ov_twyLcOzzKu7uWeye2Ie3GeKk2-Rn9X2-rddfvaAKSBNUFK5513XmUx7adbFpdw8pulwlsB-C8mvJXk0P6lC6w0ZyOu8y_d7eCxk3TaX18f2wnku98V71rvnzNCccdvy79ctVvvCnpCXCaHJKuOEUw2qtxskRjcW-LNM92G00SWA6mLdebjTNmWz8ys4Kh1ULrIFVSuFd8Qhy97VyhfxpY_1S4JdI-7nQutGG6pAtp1cSpkD0y86Jc9ogCnpmCmAFeyoev20tevGFWTfF6Mi4ckcSmLVototyjN08l5LJ95HXHaJC-19i..png" class="img-fluid"></p>
-<p>The strangest thing about being able to launch this application, window’s “Computer Management” app, located at compmgmt.msc is that it requies administrative privileges to simply launch.</p>
-<p>When first bootup, the computer autologins to a default user called “User”. Apparently, the default user was an administrator.</p>
-<p>From here, I can get to “task scheduler”. Because I am already an administrator for some reason, I am able to schedule tasks, which can be any abitrary thing.</p>
-<p>However, this isn’t really a big deal when it comes to access of this machine itself. All these computers at this pc cafe use image based deployments, and I am presuming these images are immutable so any system changes I make would be reset the moment I log out.</p>
-<p>However, with administrative access within the network, I could do things like a Denial-of-Service attack, by eating up bandwidth, or I could seek lateral movement through the network, if the machines aren’t isolated properly.</p>
-<p>There were multiple ways this kind of access could have been prevented. Why do the users logged in need administrative access? All they are doing is using discord and playing games, they don’t need administrative access.</p>
-<p>Another thing that could have been done is simply preventing me from launching compmgmt.msc, the same way powershell or cmd are prevented.</p>
-<p>And finally, they could have used a browser other than edge. The browser on that system is not intended for normal browsing, but rather it’s intended for logging into your online accounts, like Discord or the video game providers. Since that’s the case, why use a fully featured browser that lets you open a file browser? There exist browsers that are far more locked down, and cannot do things like browse files, only open a single webpage — perfect for this usecase.</p>
-
-
-
- ]]></description>
-  <category>windows</category>
-  <category>cybersecurity</category>
-  <guid>https://moonpiedumplings.github.io/playground/csun-computers/</guid>
-  <pubDate>Mon, 28 Aug 2023 07:00:00 GMT</pubDate>
 </item>
 </channel>
 </rss>
