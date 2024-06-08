@@ -793,28 +793,28 @@
   {
     "objectID": "writeups/nice-challenge-5/index.html",
     "href": "writeups/nice-challenge-5/index.html",
-    "title": "Nice Challenge 4",
+    "title": "Nice Challenge 5",
     "section": "",
     "text": "This is for the NICE challenge, and this would be my fifth one (not counting repeats).\nAs usual, it started out with a simulated chatroom:\nAnd, there were also some empty checks.\nBased on this, it seems like I will be working on the “Production Web Server”, primarily."
   },
   {
     "objectID": "writeups/nice-challenge-5/index.html#users",
     "href": "writeups/nice-challenge-5/index.html#users",
-    "title": "Nice Challenge 4",
+    "title": "Nice Challenge 5",
     "section": "Users",
     "text": "Users\nFirst, I created user accounts for the relevant users.\nuseradd gthatcher\n\nuseradd rob\nSince gthatcher is going to be an admin, I added them to the wheel user group, since that is often used as an administrator group on Linux systems.\nusermod -aG wheel gthatcher\nThen, I used the visudo command to edit the sudoer’s file and add wheel as a group that could use all commands with sudo:\n\n\n/etc/sudoers\n\n## Allows people in group wheel to run all commands\n%wheel  ALL=(ALL)   ALL\n\nThe other thing I added was for user rob to be able to run certain commands as sudo, without a password, but only those commands.\n\n\n/etc/sudoers'\n\nrob ALL=NOPASSWD : /bin/sudoedit /var/www/html/*, /bin/systemctl status httpd, /bin/systemctl stop httpd, /bin/systemctl start httpd, /bin/systemctl restart httpd, /bin/systemctl enable httpd, /bin/systemctl disable httpd"
   },
   {
     "objectID": "writeups/nice-challenge-5/index.html#update-apache",
     "href": "writeups/nice-challenge-5/index.html#update-apache",
-    "title": "Nice Challenge 4",
+    "title": "Nice Challenge 5",
     "section": "Update Apache",
     "text": "Update Apache\nAlso, I needed to update apache. However, the repos completely broken on this machine, so I deleted them, and made way for new repos.\nmv /etc/yum.repos.d /etc/yum.repos.bac\n\ncurl http://mirror.centos.org/centos/7/atomic/x86_64/repo/CentOS-Base.repo -o /etc/yum.repos.d/CentOS-Base.repo\n\nyum update\nAnd with this, Apache is updated."
   },
   {
     "objectID": "writeups/nice-challenge-5/index.html#ssh-config",
     "href": "writeups/nice-challenge-5/index.html#ssh-config",
-    "title": "Nice Challenge 4",
+    "title": "Nice Challenge 5",
     "section": "Ssh Config",
     "text": "Ssh Config\nSsh needs to be configured to use key based authentication, instead of password based authentication.\nOn the Prod-Web server:\nssh-keygen # this generates an ssh key in the default location. I did not set a passphrase.\n\nscp .ssh/id_rsa.pub playerone@172.16.20.11:/home/playerone/.ssh/authorized_keys # use password to authenticate the connection\nThis creates a key and authorizes it for use on the Dev-Web server.\nAnd with this, all checks are green:"
   },
@@ -1292,7 +1292,7 @@
     "href": "writeups/index.html",
     "title": "Writeups",
     "section": "",
-    "text": "Date\n\n\nTitle\n\n\nAuthor\n\n\n\n\n\n\nJun 7, 2024\n\n\nNice Challenge 4\n\n\nJeffrey Fonseca\n\n\n\n\nApr 20, 2024\n\n\nNice Challenge 4\n\n\nJeffrey Fonseca\n\n\n\n\nFeb 13, 2024\n\n\nNice Challenge 3\n\n\nJeffrey Fonseca\n\n\n\n\nFeb 6, 2024\n\n\nNice Challenge 2\n\n\nJeffrey Fonseca\n\n\n\n\nJan 30, 2024\n\n\nNice Challenge 1\n\n\nJeffrey Fonseca\n\n\n\n\n\nNo matching items"
+    "text": "Date\n\n\nTitle\n\n\nAuthor\n\n\n\n\n\n\nJun 7, 2024\n\n\nNice Challenge 5\n\n\nJeffrey Fonseca\n\n\n\n\nApr 20, 2024\n\n\nNice Challenge 4\n\n\nJeffrey Fonseca\n\n\n\n\nFeb 13, 2024\n\n\nNice Challenge 3\n\n\nJeffrey Fonseca\n\n\n\n\nFeb 6, 2024\n\n\nNice Challenge 2\n\n\nJeffrey Fonseca\n\n\n\n\nJan 30, 2024\n\n\nNice Challenge 1\n\n\nJeffrey Fonseca\n\n\n\n\n\nNo matching items"
   },
   {
     "objectID": "writeups/nice-challenge/index.html",
