@@ -315,6 +315,12 @@ These look appealing, but very hard to deploy.
 
 ## Kubernetes
 
+## Misc
+
+[Graphical network policy editor](https://editor.networkpolicy.io/)
+
+[Semi graphical yaml editor](https://k8syaml.com/)
+
 ### Multi-Tenancy
 
 In case I can't obtain multi-tenancy by openstack provisioning kuberntes, there are some alternative solutions I am looking at:
