@@ -12,6 +12,83 @@
 <generator>quarto-1.5.24</generator>
 <lastBuildDate>Tue, 04 Jun 2024 07:00:00 GMT</lastBuildDate>
 <item>
+  <title>Reinstalling Cachyos</title>
+  <link>https://moonpiedumplings.github.io/playground/cachyos-install/</link>
+  <description><![CDATA[ 
+
+
+
+
+<p>I’ve decided to reinstall <a href="https://cachyos.org/">cachyos</a>, the Arch Linux fork I use on my laptop’s, because the config of my smaller laptop is getting crusty. In addition to not having any swap setup, <code>/nix</code> is part of the main btrfs subvolume, meaning it is included in snapshots, and my snapshots are far, far larger than they should be.</p>
+<section id="installation" class="level1">
+<h1>Installation</h1>
+<p>I downloaded the latest, ISO, but I had some troubles installing. I first attempted to set up an LVM2 Partition, but that crashed, and I don’t know why. The error log of the installer doesn’t have any relevant information.</p>
+<p>I tried again, but with a simpler partitioning setup, but it errored on another step, ranking the mirrors.</p>
+<p>An excerpt from the logs of the failed install:</p>
+<div class="sourceCode" id="cb1" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb1-1">--&gt; name 'arch'; mirrorlist_path '/etc/pacman.d/mirrorlist'; special_arch ''</span>
+<span id="cb1-2">/usr/bin/cachyos-rate-mirrors: line 97: /usr/bin/rate-mirrors: Input/output error</span></code></pre></div>
+<p>I tested the command independently, and found that it was broken. It seemed to be a bugged shell script.</p>
+<p>In order to fix this, I decided to update just the relevant packages: <code>pacman -Sy cachyos-rate-mirrors rate-mirrors</code>. Normally, you <a href="https://wiki.archlinux.org/title/System_maintenance#Partial_upgrades_are_unsupported">never want to do this</a>, as it is a partial upgrade, and can cause many issues down the road. However, I don’t really have a choice because the system is loaded in ram right now, and I can’t do a full upgrade as I don’t have enough ram to store all of those downloaded packages — especially since CachyOS comes with a full GUI.</p>
+<p>Once the install is done, I have to set up swap, and a separate subvolume for <code>/nix</code>.</p>
+<p>I use <code>arch-chroot</code> to chroot into the newly installed arch system, which is thankfully still mounted at <code>/tmp/calamares-root-ncjj4sta</code>.</p>
+<p>I start by following the instructions on the arch wiki for a <a href="https://wiki.archlinux.org/title/Btrfs#Swap_file">btrfs swap file</a>.</p>
+<p>I also attempted to create a subvolume for nix, but this failed. When I removed the relevant lines for the nix subvolume <code>/etc/fstab</code>, my system booted properly.</p>
+<p>However, since hibernate wasn’t working properly, I decided to set that up first.</p>
+<p>I still had more issues.</p>
+<p>I attempted to install using the Calamares installer, with a LVM setup, and a seperate swap “partition” on a logical volume… and calamares crashed. Apparently, <a href="https://github.com/calamares/calamares/issues/1564">Calameres + LVM is basically completely broken</a></p>
+<blockquote class="blockquote">
+<p>LVM support is broken, in fact, I have no idea why is there right now.</p>
+</blockquote>
+<p>So yeah.</p>
+<p>I also attempted to play around with a systemd based initramfs. According to <a href="https://wiki.archlinux.org/title/Power_management/Suspend_and_hibernate#Configure_the_initramfs">the archwiki</a></p>
+<blockquote class="blockquote">
+<p>When an initramfs with the systemd hook is used, a resume mechanism is already provided, and no further hooks need to be added</p>
+</blockquote>
+<p>Compared to a normal hibernate setup, you have to locate the swap partition/swapfile, and then pass it as a kernel parameter. However, systemd automatically detects a swap partition/swapfile to hibernate it. But this took me some time to get a systemd based initramfs set up properly.</p>
+<p>The hooks are in /etc/mkinitcpio.conf must be modified as follows:</p>
+<div class="code-with-filename">
+<div class="code-with-filename-file">
+<pre><strong>/etc/mkinitcpio.conf</strong></pre>
+</div>
+<div class="sourceCode" id="cb2" data-filename="/etc/mkinitcpio.conf" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb2-1">HOOKS=(base systemd autodetect microcode modconf kms keyboard sd-vconsole block sd-encrypt filesystems fsck)</span></code></pre></div>
+</div>
+<p>(No resume hook is needed).</p>
+<p>However, this still wouldn’t boot, and I couldn’t figure out why.</p>
+<p>Figured it out: https://wiki.archlinux.org/title/Dm-crypt/System_configuration#Using_systemd-cryptsetup-generator</p>
+<p>By copying <code>/etc/crypttab</code> to <code>/etc/crypttab.initramfs</code>, it will be copied over the the initramfs, enabling the systemd based initramfs to read a version of the <code>crypttab</code> configuration file stored in the initramfs.</p>
+<p>Although, I am left with some questions, like why the non-systemd based initramfs doesn’t need this, it seems to work fine. Systemd automatically detects the swap file, even if it is stored in the encrypted btrfs partition.</p>
+<p>Another plus: A <a href="https://cachyos.org/blog/2406-june-release/">new cachyos iso</a> was released. This iso release, fixes the issues with the mirror software being broken.</p>
+<p>Now that Cachyos is installed, I need to figure out how to make a top level subvolume. According to the <a href="https://wiki.archlinux.org/title/Btrfs#Swap_file">arch wiki article on btrfs subvolumes</a></p>
+<blockquote class="blockquote">
+<p>Tip: Consider creating the subvolume directly below the top-level subvolume, e.g. <span class="citation" data-cites="swap">@swap</span>. Then, make sure the subvolume is mounted to /swap (or any other accessible location).</p>
+</blockquote>
+<p>Why is this setup better? And how do I create a subvoolume directly below the top level?</p>
+<p>When I run <code>btrfs su create /mnt/@nix</code> it doesn’t properly create a subvolume. Instead, it says <code>top level 256 path @nix</code>, meaning that this subvolume is nested in the subvolume with ID 256, the @ subvolume. However, <span class="citation" data-cites="home">@home</span>, <span class="citation" data-cites="var">@var</span>, and <span class="citation" data-cites="tmp">@tmp</span> aren’t like that, instead they have the top level 5, meaning they are directly on the top level subvolume, which is equivalent to the filesystem itself.</p>
+<p>Okay, I think I figured it out. In the chroot I make, I mount the btrfs filesystem with <code>@</code> as the root subvolume, meaning any subvolumes I create are nested below that. In order to properly create a subvolume under the top, I have to mount it first.</p>
+<p>I still don’t understand the benefit of having a subvolume under the top level subvolume, rather than another nested subvolume layout. Maybe because snapshots happen to nested subvolumes as well, and this avoids the swapfile accidentally getting snapshotted?</p>
+<p>I encountered another issue, after testing hibernate:</p>
+<p><img src="https://moonpiedumplings.github.io/playground/cachyos-install/images/noswap.jpg" class="img-fluid"></p>
+<p>Except… that UUID doesn’t exist. There is no mention of it in /etc/fstab. Then I remembered, according to the arch wiki article for hibernation, systemd stores the location where to resume from a hibernation in <code>/sys/firmware/vars/efivars/HibernateLocation</code>.</p>
+<div class="sourceCode" id="cb3" data-file="/sys/firmware/vars/efivars/HibernateLocation" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb3-1">{"uuid":"74fd980d-396b-46be-8123-ed41bcaa2713","offset":2269039,"kernelVersion":"6.9.3-4-cachyos","osReleaseId":"cachyos"}</span></code></pre></div>
+<p>Now this looks good… except whatever hibernate resume was trying to happen, failed. This is probably because I reinstalled linux, after I had just hibernated it, leaving that efivar in place.</p>
+<div class="sourceCode" id="cb4" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb4-1">[root@cachyos-x8664 efivars]# btrfs inspect-internal map-swapfile -r /swap/swapfile</span>
+<span id="cb4-2">2168766</span></code></pre></div>
+<p>The offset was wrong. To fix it? I just had to hibernate the system normally. Then this issue went away.</p>
+<p>With this, my setup is complete. But I still don’t understand the benefits of non-nested subvolumes. I ended up making a <a href="https://programming.dev/post/15458752">lemmy post</a> about it, but I haven’t gotten any conclusive answers yet.</p>
+</section>
+<section id="user-data" class="level1">
+<h1>User data</h1>
+<p>I backed up my entire home directory to a tar archive using ark, the archiver tool on KDE. However, since I was backing it up to a usb thumb drive, I used <a href="https://wiki.archlinux.org/title/Gocryptfs">gocryptfs</a> to encrypt the folder where the archive was stored. I encrypt sensitive data I put on my usb drives, that way, even if I lose the drive, nothing gets compromised.</p>
+
+
+</section>
+
+ ]]></description>
+  <category>nix</category>
+  <guid>https://moonpiedumplings.github.io/playground/cachyos-install/</guid>
+  <pubDate>Tue, 04 Jun 2024 07:00:00 GMT</pubDate>
+</item>
+<item>
   <title>Creating a nix flake, the “proper” way</title>
   <link>https://moonpiedumplings.github.io/playground/flake-shell/</link>
   <description><![CDATA[ 
@@ -740,6 +817,11 @@ font-style: inherit;">}</span></span></code></pre></div>
 </section>
 <section id="kubernetes" class="level2">
 <h2 class="anchored" data-anchor-id="kubernetes">Kubernetes</h2>
+</section>
+<section id="misc" class="level2">
+<h2 class="anchored" data-anchor-id="misc">Misc</h2>
+<p><a href="https://editor.networkpolicy.io/">Graphical network policy editor</a></p>
+<p><a href="https://k8syaml.com/">Semi graphical yaml editor</a></p>
 <section id="multi-tenancy" class="level3">
 <h3 class="anchored" data-anchor-id="multi-tenancy">Multi-Tenancy</h3>
 <p>In case I can’t obtain multi-tenancy by openstack provisioning kuberntes, there are some alternative solutions I am looking at:</p>
@@ -11043,67 +11125,6 @@ PING podman-docker_alpine_container_2_1 (10.89.1.5): 56 data bytes
   <category>docker</category>
   <guid>https://moonpiedumplings.github.io/playground/podman-docker/</guid>
   <pubDate>Sun, 03 Sep 2023 07:00:00 GMT</pubDate>
-</item>
-<item>
-  <title>Attempting to get secure boot and bootable BTRFS snapshots</title>
-  <link>https://moonpiedumplings.github.io/playground/arch-secureboot/</link>
-  <description><![CDATA[ 
-
-
-
-
-<div class="callout callout-style-default callout-important callout-titled">
-<div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-1-contents" aria-controls="callout-1" aria-expanded="true" aria-label="Toggle callout">
-<div class="callout-icon-container">
-<i class="callout-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-If these steps are followed blindly, you risk compromising your security
-</div>
-<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
-</div>
-<div id="callout-1" class="callout-1-contents callout-collapse collapse show">
-<div class="callout-body-container callout-body">
-<p>Do not do what I did unless you have a similar setup to what I have, which is full disk encryption, with /boot/efi being the efi system partition, and the only unencrypted part of the system. This means that everything in /boot, including things like kernels, or grub configurations and supportive files.</p>
-</div>
-</div>
-</div>
-<p>I’ve been at this for some time now, so I will document what I have done, and further steps. Essentially, I am trying to do what <a href="https://wejn.org/2021/09/fixing-grub-verification-requested-nobody-cares/">this person</a> <a href="https://web.archive.org/web/20230609152526/https://wejn.org/2021/09/fixing-grub-verification-requested-nobody-cares/">archive</a> has done.</p>
-<p>They go more into depth on the setup that we are both using, but essentially, I the only unencrypted part of my system is the grub efi binary. Normally, the kernels and kernel modules are also left unencrypted, and because of that, they must be signed in order to prevent an attacker from modifying them on the hard drive, either by removing the hard drive, or booting another operating system, like by a USB drive. Signing is a process that uses complex math to ensure that the computer can verify the authenticity of a file.</p>
-<p>Normally, since the kernels are left unencrypted (and to cut off another avenue of attack on running systems), the kernels are signed in order to ensure that they haven’t been modified. However, in my setup, since only grub is left unencrypted, it’s the only thing that can be signed.</p>
-<p>But for some reason, grub still attempts to verify the kernels even when it doesn’t need to. This is my struggle of getting it to <em>not</em> do that.</p>
-<p>The first thing I did sign grub. I followed the insturctions on the <a href="https://wiki.archlinux.org/title/Unified_Extensible_Firmware_Interface/Secure_Boot#Assisted_process_with_sbctl">Arch Wiki</a>. Except, rather than signing the kernels, I only signed grub.</p>
-<p>I enabled secure boot, and reboted. Grub loaded up, and asked me for my password, but then gave me an error and put me into a rescue shell.</p>
-<pre><code>error: prohibited by secure boot policy</code></pre>
-<p>So I did some searching around. I found someone with the same issue on the <a href="https://bbs.archlinux.org/viewtopic.php?id=282076">Arch Linux BBS</a>. On that page, someone (reply #4) said that an update of grub (grub version 2.06, to be specific) had a change in policy where grub would refuse to load unsigned font files when in secure mode. This is good. There have been CVE’s (security vulnerabilities/issues) in the past where grub loading a malicious grub.cfg or font file can be exploited to make grub do things it’s not supposed to.</p>
-<p>Except one tiny problem: Grub stores all configuration and font files in /boot/grub, which is encrypted in my setup. An attacker would not be able to modify it, so therefore I have no need to verify it. It’s actually a hassle to verify all this stuff, because they are tracked by BTRFS, and will be restored.</p>
-<p>After some more research, I decided to install grub with the shim-lock option.</p>
-<p>But I got another error:</p>
-<pre><code>error: verification requested, but nobody cares: (cryptouid:uidhere/boot/grub/x86_64-efi/normal.mod)</code></pre>
-<p>Normal mod was not signed.</p>
-<p>Apparently, as long as secure boot it enabled, grub still attempts to verify the files. I did some searching around, before finding <a href="https://wejn.org/2021/09/fixing-grub-verification-requested-nobody-cares/">this article</a>, which I also linked above. They used sed (text finder and replacer) to replace some things in the grub <em>binary</em>.</p>
-<pre><code>sed 's/SecureBoot/SecureB00t' grubx64.efi</code></pre>
-<p>Except, after I ran this command:</p>
-<pre><code>[root@lizard boot]# sbctl verify
-Verifying file database and EFI images in /boot/efi...
-✓ /boot/efi/EFI/cachyos/grubx64.efi is signed</code></pre>
-<p>The grub binary <em>stayed</em> signed. Even after modification. What? Shouldn’t the grub binary being modified, break the signatures? Unless it does (I haven’t rebooted yet), and it’s just that the the sbctl tool doesn’t check whether or not the signatures are valid.</p>
-<p>Regardless, I can’t know until I test, and I didn’t bother. I simmply resigned the the grub binary, but it still didn’t work.</p>
-<p>I forgot to install grub with the <code>--disable-shim-lock</code> option.</p>
-<p>Before this, I nuked the /boot/efi directory to ensure that nothing extraneous was left. For some reason, cachyos (arch based distro I am using), installs grub twice, once at /boot/efi/EFI/boot and another at /boot/efi/EFI/cachyos. Having only one grub binary further simplifies this process.</p>
-<p>So my full steps would be (requires root):</p>
-<pre><code>grub-install --target=x86_64-efi --efi-directory=/boot/efi --disable-shim-lock
-sed -i 's/boot/efi/EFI/cachyos/' grubx64.efi</code></pre>
-<p>An unorthodox grub hack, but it works.</p>
-<p>If a grub update ever breaks this, or maybe just to futureproof this, then I’ll probably just use Arch’s PKGBUILD, makepkg, and patch tools to patch the <a href="https://github.com/rhboot/grub2/blob/205b7b44bb2a7911f1e8c1ce22d66c111a4b429e/grub-core/kern/efi/sb.c#L42">grub_efi_get_secureboot function of sb.c</a> so that grub always thinks it’s not in secure boot. I think I would only need to change one line, <code>return secureboot</code>, or maybe reset the variable to what I want at the end of the function, but I’m not too familier with C code at the moment. I can read it, given context, but I’ve not written it yet.</p>
-
-
-
- ]]></description>
-  <category>linux</category>
-  <category>cybersecurity</category>
-  <guid>https://moonpiedumplings.github.io/playground/arch-secureboot/</guid>
-  <pubDate>Tue, 29 Aug 2023 07:00:00 GMT</pubDate>
 </item>
 </channel>
 </rss>
