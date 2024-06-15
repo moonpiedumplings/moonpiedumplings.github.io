@@ -247,10 +247,568 @@ font-style: inherit;">}</span></span></code></pre></div>
 <li>ForEachSystem</li>
 <li>Flake-parts</li>
 <li>Flake-utils</li>
-<li>Tombereks’ method</li>
+<li>Tomberek’s method</li>
 </ul>
-<p>I suspect there are other methods, potentially better one’s, that aren’t documented.</p>
+<p>I suspect there are other methods, potentially better one’s, that aren’t documented. However, because of the <a href="https://ayats.org/blog/no-flake-utils/">no-flake-utils</a> blogpost, where the author suggests to use pure nix and no libraries, I have decided to opt for that approach.</p>
 <p>My ultimate goal is to convert the shell.nix I am using, into a flake.</p>
+<p>I have a simple outline:</p>
+<div class="code-with-filename">
+<div class="code-with-filename-file">
+<pre><strong>flake.nix</strong></pre>
+</div>
+<div class="sourceCode" id="cb2" data-filename="flake.nix" style="background: #f1f3f5;"><pre class="sourceCode nix code-with-copy"><code class="sourceCode nix"><span id="cb2-1"><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">{</span></span>
+<span id="cb2-2">  <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">inputs</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">{</span></span>
+<span id="cb2-3">    <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">nixpkgs</span>.<span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">url</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"nixpkgs"</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">;</span></span>
+<span id="cb2-4">  <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">};</span></span>
+<span id="cb2-5">  <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">outputs</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> inputs @ <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">{</span><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">nixpkgs</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">,</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">...}</span>: <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">let</span></span>
+<span id="cb2-6"></span>
+<span id="cb2-7">    <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">pkgs</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">import</span> nixpkgs <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">{};</span></span>
+<span id="cb2-8"></span>
+<span id="cb2-9">    <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">forAllSystems</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">function</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">:</span></span>
+<span id="cb2-10">      nixpkgs.lib.genAttrs <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">[</span></span>
+<span id="cb2-11">        <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"x86_64-linux"</span></span>
+<span id="cb2-12">        <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"aarch64-linux"</span></span>
+<span id="cb2-13">      <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">]</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">(</span><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">system</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">:</span></span>
+<span id="cb2-14">        function <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">(</span><span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">import</span> nixpkgs <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">{</span></span>
+<span id="cb2-15">          <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">inherit</span> system<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">;</span></span>
+<span id="cb2-16">          <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">config</span>.<span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">allowUnfree</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="cn" style="color: #8f5902;
+background-color: null;
+font-style: inherit;">true</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">;</span></span>
+<span id="cb2-17">          <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">overlays</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">[</span></span>
+<span id="cb2-18">            inputs.something.overlays.default</span>
+<span id="cb2-19">          <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">];</span></span>
+<span id="cb2-20">        <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">}));</span></span>
+<span id="cb2-21"></span>
+<span id="cb2-22">  <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">in</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">{</span></span>
+<span id="cb2-23">    <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">devShells</span>.<span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">x86_64-linux</span>.<span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">default</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> pkgs.mkShell <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">{</span></span>
+<span id="cb2-24">        <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">packages</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">with</span> pkgs<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">;</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">[</span> </span>
+<span id="cb2-25">            nodePackages_latest.npm</span>
+<span id="cb2-26">            quarto</span>
+<span id="cb2-27">            <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">];</span></span>
+<span id="cb2-28">  <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">};</span></span>
+<span id="cb2-29">  <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">};</span></span>
+<span id="cb2-30"><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">}</span></span></code></pre></div>
+</div>
+<p>After some tinkering, I get this to at least load, and not give me a syntax error. Instead, it gives me a different error:</p>
+<p><code>error: flake 'git+file:///home/moonpie/vscode/test/flake-test' does not provide attribute 'packages.x86_64-linux.default' or 'defaultPackage.x86_64-linux'</code></p>
+<p>I find this odd, since I provide a devshell. However, I realized that the other command to get a reproducible shell environment, <code>nix develop</code>, might be what is used instead to call upon the <code>devShells</code> attribute.</p>
+<div class="sourceCode" id="cb3" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb3-1">[moonpie@lizard flake-test]$ nix develop</span>
+<span id="cb3-2">error:</span>
+<span id="cb3-3">       … while evaluating a branch condition</span>
+<span id="cb3-4">         at /nix/store/2yb39wmx10a5lsm4d2jj7c6h94h36spi-source/pkgs/stdenv/booter.nix:64:9:</span>
+<span id="cb3-5">           63|       go = pred: n:</span>
+<span id="cb3-6">           64|         if n == len</span>
+<span id="cb3-7">             |         ^</span>
+<span id="cb3-8">           65|         then rnul pred</span>
+<span id="cb3-9"></span>
+<span id="cb3-10">       … while calling the 'length' builtin</span>
+<span id="cb3-11">         at /nix/store/2yb39wmx10a5lsm4d2jj7c6h94h36spi-source/pkgs/stdenv/booter.nix:62:13:</span>
+<span id="cb3-12">           61|     let</span>
+<span id="cb3-13">           62|       len = builtins.length list;</span>
+<span id="cb3-14">             |             ^</span>
+<span id="cb3-15">           63|       go = pred: n:</span>
+<span id="cb3-16"></span>
+<span id="cb3-17">       (stack trace truncated; use '--show-trace' to show the full trace)</span>
+<span id="cb3-18"></span>
+<span id="cb3-19">       error: attribute 'currentSystem' missing</span>
+<span id="cb3-20">       at /nix/store/2yb39wmx10a5lsm4d2jj7c6h94h36spi-source/pkgs/top-level/impure.nix:17:43:</span>
+<span id="cb3-21">           16|   # (build, in GNU Autotools parlance) platform.</span>
+<span id="cb3-22">           17|   localSystem ? { system = args.system or builtins.currentSystem; }</span>
+<span id="cb3-23">             |                                           ^</span>
+<span id="cb3-24">           18|</span></code></pre></div>
+<p>What’s the difference between nix shell and nix develop? From my understanding, <code>nix develop</code> is designed for developing packages, as it brings in build dependencies, rather than only runtime dependencies. It’s because of this, that I want <code>nix shell</code> to work instead, because that command seems to be focused more on simply getting the tools I want.</p>
+<p>Except, according to some comparisons I found online, <a href="https://discourse.nixos.org/t/difference-between-nix-shell-nix-shell-nix-develop/32469/4">nix shell can’t even adjust environment variables</a>. Now of course, a single forum reply is <em>not</em> documentation… but nix’s documentation is very poor, and this is a common frustration, being forced to rely on forum posts rather than official documentation for information.</p>
+<p>The <a href="https://nix.dev/manual/nix/2.18/command-ref/new-cli/nix3-shell">official docs</a> talk about using <code>nix shell</code> as a command line program, but not at all how it interacts with flakes and .nix files.</p>
+<p>I got something that works for <code>nix develop</code></p>
+<div class="code-with-filename">
+<div class="code-with-filename-file">
+<pre><strong>flake.nix</strong></pre>
+</div>
+<div class="sourceCode" id="cb4" data-filename="flake.nix" style="background: #f1f3f5;"><pre class="sourceCode nix code-with-copy"><code class="sourceCode nix"><span id="cb4-1"><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">{</span></span>
+<span id="cb4-2">  <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">inputs</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">{</span></span>
+<span id="cb4-3">    <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">nixpkgs</span>.<span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">url</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"nixpkgs"</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">;</span></span>
+<span id="cb4-4">  <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">};</span></span>
+<span id="cb4-5">  <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">outputs</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> inputs @ <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">{</span><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">nixpkgs</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">,</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">...}</span>: <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">let</span></span>
+<span id="cb4-6"></span>
+<span id="cb4-7">    <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">pkgs</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">import</span> nixpkgs <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">{};</span></span>
+<span id="cb4-8"></span>
+<span id="cb4-9">    <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">forAllSystems</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">function</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">:</span></span>
+<span id="cb4-10">      nixpkgs.lib.genAttrs <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">[</span></span>
+<span id="cb4-11">        <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"x86_64-linux"</span></span>
+<span id="cb4-12">        <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"aarch64-linux"</span></span>
+<span id="cb4-13">      <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">]</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">(</span><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">system</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">:</span></span>
+<span id="cb4-14">        function <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">(</span><span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">import</span> nixpkgs <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">{</span></span>
+<span id="cb4-15">          <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">inherit</span> system<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">;</span></span>
+<span id="cb4-16">          <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">config</span>.<span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">allowUnfree</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="cn" style="color: #8f5902;
+background-color: null;
+font-style: inherit;">true</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">;</span></span>
+<span id="cb4-17">        <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">}));</span></span>
+<span id="cb4-18"></span>
+<span id="cb4-19">  <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">in</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">{</span></span>
+<span id="cb4-20"></span>
+<span id="cb4-21">    <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">devShells</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> forAllSystems <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">(</span><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">pkgs</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">:</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">{</span></span>
+<span id="cb4-22">      <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">default</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> pkgs.mkShell <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">{</span></span>
+<span id="cb4-23">        <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">packages</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">with</span> pkgs<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">;</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">[</span> </span>
+<span id="cb4-24">            nodePackages_latest.npm</span>
+<span id="cb4-25">            quarto</span>
+<span id="cb4-26">            <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">];</span></span>
+<span id="cb4-27">      <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">};</span></span>
+<span id="cb4-28">    <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">});</span></span>
+<span id="cb4-29">    <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">packages</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> forAllSystems <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">(</span><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">pkgs</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">:</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">{</span></span>
+<span id="cb4-30">      <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">default</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> pkgs.mkShell <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">{</span></span>
+<span id="cb4-31">        <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">packages</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">with</span> pkgs<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">;</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">[</span></span>
+<span id="cb4-32">            nodePackages_latest.npm</span>
+<span id="cb4-33">            quarto</span>
+<span id="cb4-34">            <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">];</span></span>
+<span id="cb4-35">      <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">};</span></span>
+<span id="cb4-36">    <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">});</span></span>
+<span id="cb4-37">  <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">};</span></span>
+<span id="cb4-38"><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">}</span></span></code></pre></div>
+</div>
+<p><code>nix develop</code> works fine, except it takes a long time to setup on the first run, compared to <code>nix-shell -p quarto nodePackages_latest.npm</code>. I wonder if this is because, since <code>nix develop</code> is designed for development purposes, it pulls in more dependencies than <code>nix-shell</code> does.</p>
+<p><code>nix shell</code> doesn’t work at all. It gives me a different shell, and adds things to the path, but it doesn’t actually add any of the programs I specify to the path.</p>
+<p>(Also, I still have another unanswered question. What does the <code>@</code> symbol mean in a nix expression).</p>
+<p>I managed to get <code>nix shell</code> working… somewhat.</p>
+<div class="code-with-filename">
+<div class="code-with-filename-file">
+<pre><strong>flake.nix</strong></pre>
+</div>
+<div class="sourceCode" id="cb5" data-filename="flake.nix" style="background: #f1f3f5;"><pre class="sourceCode nix code-with-copy"><code class="sourceCode nix"><span id="cb5-1"><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">{</span></span>
+<span id="cb5-2">  <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">inputs</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">{</span></span>
+<span id="cb5-3">    <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">nixpkgs</span>.<span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">url</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"nixpkgs"</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">;</span></span>
+<span id="cb5-4">  <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">};</span></span>
+<span id="cb5-5">  <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">outputs</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> inputs @ <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">{</span><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">nixpkgs</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">,</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">...}</span>: <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">let</span></span>
+<span id="cb5-6"></span>
+<span id="cb5-7">    <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">pkgs</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">import</span> nixpkgs <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">{};</span></span>
+<span id="cb5-8"></span>
+<span id="cb5-9">    <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">forAllSystems</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">function</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">:</span></span>
+<span id="cb5-10">      nixpkgs.lib.genAttrs <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">[</span></span>
+<span id="cb5-11">        <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"x86_64-linux"</span></span>
+<span id="cb5-12">        <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"aarch64-linux"</span></span>
+<span id="cb5-13">      <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">]</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">(</span><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">system</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">:</span></span>
+<span id="cb5-14">        function <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">(</span><span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">import</span> nixpkgs <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">{</span></span>
+<span id="cb5-15">          <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">inherit</span> system<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">;</span></span>
+<span id="cb5-16">          <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">config</span>.<span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">allowUnfree</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="cn" style="color: #8f5902;
+background-color: null;
+font-style: inherit;">true</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">;</span></span>
+<span id="cb5-17">        <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">}));</span></span>
+<span id="cb5-18"></span>
+<span id="cb5-19">  <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">in</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">{</span></span>
+<span id="cb5-20"><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">packages</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> forAllSystems <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">(</span><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">pkgs</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">:</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">{</span></span>
+<span id="cb5-21">      <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">default</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> pkgs.<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">;</span></span>
+<span id="cb5-22">    <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">});</span></span>
+<span id="cb5-23">  <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">};</span></span>
+<span id="cb5-24"><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">}</span></span></code></pre></div>
+</div>
+<p>And this makes the <code>python</code> command available to me in my shell, and the library I called upon. But, this doesn’t seem scalable. How do I get this to do more packages? How do I get this to do environment variables? And is this really better than <code>nix develop</code>?</p>
 
 
 
