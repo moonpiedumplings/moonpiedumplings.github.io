@@ -180,7 +180,7 @@ I got something that works for `nix develop`
 
 `nix shell` doesn't work at all. It gives me a different shell, and adds things to the path, but it doesn't actually add any of the programs I specify to the path. 
 
-(Also, I still have another unanswered question. What does the `@` symbol mean in a nix expression).
+(Also, I still have another unanswered question: What does the `@` symbol mean in a nix expression).
 
 
 I managed to get `nix shell` working... somewhat.
@@ -206,10 +206,148 @@ I managed to get `nix shell` working... somewhat.
 
   in {
 packages = forAllSystems (pkgs: {
-      default = pkgs.;
+      default = pkgs.jupyter;
     });
   };
 }
 ```
 
-And this makes the `python` command available to me in my shell, and the library I called upon. But, this doesn't seem scalable. How do I get this to do more packages? How do I get this to do environment variables? And is this really better than `nix develop`?
+And this makes the `jupyter` command available to me in my shell, and the library I called upon. But, this doesn't seem scalable. How do I get this to do more packages? How do I get this to do environment variables? And is this really better than `nix develop`?
+
+I started to do some testing. The big problem, I've found with nix develop, is that since it is designed for development, it brings in development dependencies, regardless of the fact that I am *not* doing development, and am instead just aiming for a reproducible shell environment. 
+
+```{.nix}
+devShells = forAllSystems (pkgs: {
+      default = pkgs.mkShell {
+#         packages = with pkgs; [
+#             jupyter
+#            ];
+        buildInputs = with pkgs; [ jupyter ];
+      };
+```
+
+Results in:
+
+<details><summary>Show path</summary>
+
+```{.default}
+[moonpie@lizard flake-test]$ nix develop
+warning: Git tree '/home/moonpie/vscode/test/flake-test' is dirty
+evaluating derivation 'git+file:///home/moonpie/vscode/test/flake-test#devShells.x86_64-linux.default'
+(nix:nix-shell-env) [moonpie@lizard flake-test]$ echo $PATH
+/nix/store/pdqndw2kgjv8l3kd5ii0c833jqmxdanq-patchelf-0.15.0/bin:/nix/store/mpm3i0sbqc9svfch6a17179fs64dz2kv-gcc-wrapper-13.3.0/bin:/nix/store/zc0nsv23pakbafngjy32kvhfzb16as43-gcc-13.3.0/bin:/nix/store/082x03cmpnsqkfp4ljrhsadz68rh3q1h-glibc-2.39-52-bin/bin:/nix/store/i7qhgc0bs725qw3wdanznfkdna4z2ns2-coreutils-9.5/bin:/nix/store/l46fjkzva0bhvy9p2r7p4vi68kr7a1db-binutils-wrapper-2.41/bin:/nix/store/wwfrj9kvfi14xclc38qfwm71ah6aawdh-binutils-2.41/bin:/nix/store/hn4bklvwvjjhkqy8d5npgb0aq8hba27s-python3-3.11.9-env/bin:/nix/store/i7qhgc0bs725qw3wdanznfkdna4z2ns2-coreutils-9.5/bin:/nix/store/rr1yixvn0z63mgq9s04ig9j9qlz23s2g-findutils-4.9.0/bin:/nix/store/j4gkc44c1pwl5ccgxm83s4r746bsdcw9-diffutils-3.10/bin:/nix/store/ks6c62g0m3gqrs5i7m0cv6d6aqhdvirn-gnused-4.9/bin:/nix/store/md9apn3290h7kv0x198ihaaa3k6icg4b-gnugrep-3.11/bin:/nix/store/hkx0wcm23i9ihqlysri8n41kl232kawb-gawk-5.2.2/bin:/nix/store/95ljdxg4drk1iq8jkjfq2c0z5vbwv8vm-gnutar-1.35/bin:/nix/store/nc9lq1lra01932rfyclq3gsh82cxbmii-gzip-1.13/bin:/nix/store/cyc3v8qfkhn4r38a8s5d7f2c33q624mz-bzip2-1.0.8-bin/bin:/nix/store/18z454gyz0wpb641rw6gpqk0vi4wbxy6-gnumake-4.4.1/bin:/nix/store/agkxax48k35wdmkhmmija2i2sxg8i7ny-bash-5.2p26/bin:/nix/store/r05c0lpbnjc8dg3rrr3ck7s07pjy86j3-patch-2.7.6/bin:/nix/store/qqhrymypl970jc6npvi9a6sikhr84mdf-xz-5.4.6-bin/bin:/nix/store/qcqmiq1mb3pkk2bxbj6d6gb2fk9knk8l-file-5.45/bin:/home/moonpie/.nix-profile/bin:/nix/var/nix/profiles/default/bin:/home/moonpie/.nix-profile/bin:/nix/var/nix/profiles/default/bin:/home/moonpie/.nix-profile/bin:/nix/var/nix/profiles/default/bin:/usr/local/sbin:/usr/local/bin:/usr/bin:/usr/lib/jvm/default/bin:/usr/bin/site_perl:/usr/bin/vendor_perl:/usr/bin/core_perl
+```
+
+</details>
+
+Compared to the same thing for nix shell:
+
+```{.nix}
+packages = forAllSystems (pkgs: {
+      default = pkgs.mkShell {
+        #packages = with pkgs; [ jupyter ];
+        buildInputs = with pkgs; [ jupyter ];
+        TEST_ENV = "test environment variable";
+      };
+```
+
+<details><summary>Show path</summary>
+
+```{.default}
+[moonpie@lizard flake-test]$ nix shell
+warning: Git tree '/home/moonpie/vscode/test/flake-test' is dirty
+evaluating derivation 'git+file:///home/moonpie/vscode/test/flake-test#packages.x86_64-linux.default'
+[moonpie@lizard flake-test]$ echo $PATH
+/home/moonpie/.nix-profile/bin:/nix/var/nix/profiles/default/bin:/nix/store/i4zy8833s3dxrk3dmzb29k3y6rik15a4-nix-shell/bin:/home/moonpie/.nix-profile/bin:/nix/var/nix/profiles/default/bin:/home/moonpie/.nix-profile/bin:/nix/var/nix/profiles/default/bin:/usr/local/sbin:/usr/local/bin:/usr/bin:/usr/lib/jvm/default/bin:/usr/bin/site_perl:/usr/bin/vendor_perl:/usr/bin/core_perl
+```
+
+</details>
+
+However...
+
+```{.default}
+[moonpie@lizard flake-test]$ echo $TEST_ENV
+
+```
+
+And nothing. (no reply to that command means the environment variable is unset). `nix shell` does not seem to set environment variables at all, even if I set them in the `pkgs.mkShell`, compared to `nix develop`, which does that. 
+
+However, I don't want to bring *every* single build dependency as just for my shell environments. 
+
+I did more testing with the various [types of dependencies](http://ryantm.github.io/nixpkgs/stdenv/stdenv/#ssec-stdenv-dependencies-reference) that a `pkgs.mkShell` (or more accurately, what it abstracts, `stdenv.mkDerivation`), and every single type of them brings build dependencies. This is a feature of nix develop, but it is becoming a hindrance. 
+
+Nevermind. Apparently, `nix-shell` also brings in build dependencies, and behaves identically to `nix develop`, and completely unlike `nix shell`. Some part of me wonders if there is some way to get this working. Another part of me doesn't care. 
+
+Since I have something working, I modified the [super fast nix shell](https://nixos.wiki/wiki/flakes#Super_fast_nix-shell) example to not use flakes. 
+
+```{.nix}
+{
+  inputs = {
+    nixpkgs.url = "nixpkgs";
+  };
+  outputs = inputs @ {nixpkgs, ...}: let
+
+    pkgs = import nixpkgs {};
+
+    forAllSystems = function:
+      nixpkgs.lib.genAttrs [
+        "x86_64-linux"
+        "aarch64-linux"
+      ] (system:
+        function (import nixpkgs {
+          inherit system;
+          config.allowUnfree = true;
+        }));
+
+  in {
+
+    devShells = forAllSystems (pkgs: {
+      default = import ./shell.nix { inherit pkgs; };
+    });
+  };
+}
+```
+
+This errors:
+
+<details><summary>Show errors</summary>
+
+```{.default}
+[moonpie@lizard moonpiedumplings.github.io]$ nix develop
+warning: Git tree '/home/moonpie/vscode/moonpiedumplings.github.io' is dirty
+warning: creating lock file '/home/moonpie/vscode/moonpiedumplings.github.io/flake.lock':
+• Added input 'nixpkgs':
+    'github:NixOS/nixpkgs/3f84a279f1a6290ce154c5531378acc827836fbb?narHash=sha256-u1fA0DYQYdeG%2B5kDm1bOoGcHtX0rtC7qs2YA2N1X%2B%2BI%3D' (2024-06-13)
+warning: Git tree '/home/moonpie/vscode/moonpiedumplings.github.io' is dirty
+error:
+       … while calling the 'import' builtin
+         at /nix/store/jd6fy6iw7fsj0135phhd7awmq5s00sgj-source/flake.nix:22:17:
+           21|     devShells = forAllSystems (pkgs: {
+           22|       default = import ./shell.nix { inherit pkgs; };
+             |                 ^
+           23|     });
+
+       … while evaluating the file '/nix/store/jd6fy6iw7fsj0135phhd7awmq5s00sgj-source/shell.nix':
+
+       … while calling the 'import' builtin
+         at /nix/store/jd6fy6iw7fsj0135phhd7awmq5s00sgj-source/shell.nix:2:12:
+            1| let
+            2|     pkgs = import <nixpkgs> {};
+             |            ^
+            3|
+
+       (stack trace truncated; use '--show-trace' to show the full trace)
+
+       error: cannot look up '<nixpkgs>' in pure evaluation mode (use '--impure' to override)
+[moonpie@lizard moonpiedumplings.github.io]$ nix develop --impure
+warning: Git tree '/home/moonpie/vscode/moonpiedumplings.github.io' is dirty
+error: attempt to call something which is not a function but a set: { type = "derivation"; PYTHONPATH = «thunk»; QUARTO_PANDOC = «thunk»; QUARTO_PYTHON = «thunk»; __ignoreNulls = true; __structuredAttrs = «thunk»; all = «thunk»; args = «thunk»; buildInputs = «thunk»; buildPhase = "{ echo \"------------------------------------------------------------\";\n  echo \" WARNING: the existence of this path is not guaranteed.\";\n  echo \" It is an internal implementation detail for pkgs.mkShell.\";\n  echo \"------------------------------------------------------------\";\n  echo;\n  # Record all build inputs as runtime dependencies\n  export;\n} >> \"$out\"\n"; «36 attributes elided» }
+       at /nix/store/0symal17vrawjkdmbp0afyrz45ax5fay-source/flake.nix:22:17:
+           21|     devShells = forAllSystems (pkgs: {
+           22|       default = import ./shell.nix { inherit pkgs; };
+             |                 ^
+           23|     });
+```
+
+</details>
+
