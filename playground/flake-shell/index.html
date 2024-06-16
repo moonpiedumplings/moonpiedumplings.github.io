@@ -359,7 +359,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 <p><code>nix develop</code> works fine, except it takes a long time to setup on the first run, compared to <code>nix-shell -p quarto nodePackages_latest.npm</code>. I wonder if this is because, since <code>nix develop</code> is designed for development purposes, it pulls in more dependencies than <code>nix-shell</code> does.</p>
 <p><code>nix shell</code> doesn’t work at all. It gives me a different shell, and adds things to the path, but it doesn’t actually add any of the programs I specify to the path.</p>
-<p>(Also, I still have another unanswered question. What does the <code>@</code> symbol mean in a nix expression).</p>
+<p>(Also, I still have another unanswered question: What does the <code>@</code> symbol mean in a nix expression).</p>
 <p>I managed to get <code>nix shell</code> working… somewhat.</p>
 <div class="code-with-filename">
 <div class="code-with-filename-file">
@@ -385,12 +385,120 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>  <span class="kw">in</span> <span class="op">{</span></span>
 <span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a><span class="va">packages</span> <span class="op">=</span> forAllSystems <span class="op">(</span><span class="va">pkgs</span><span class="op">:</span> <span class="op">{</span></span>
-<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a>      <span class="va">default</span> <span class="op">=</span> pkgs.<span class="op">;</span></span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a>      <span class="va">default</span> <span class="op">=</span> pkgs.jupyter<span class="op">;</span></span>
 <span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a>    <span class="op">});</span></span>
 <span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a>  <span class="op">};</span></span>
 <span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>And this makes the <code>python</code> command available to me in my shell, and the library I called upon. But, this doesn’t seem scalable. How do I get this to do more packages? How do I get this to do environment variables? And is this really better than <code>nix develop</code>?</p>
+<p>And this makes the <code>jupyter</code> command available to me in my shell, and the library I called upon. But, this doesn’t seem scalable. How do I get this to do more packages? How do I get this to do environment variables? And is this really better than <code>nix develop</code>?</p>
+<p>I started to do some testing. The big problem, I’ve found with nix develop, is that since it is designed for development, it brings in development dependencies, regardless of the fact that I am <em>not</em> doing development, and am instead just aiming for a reproducible shell environment.</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode nix code-with-copy"><code class="sourceCode nix"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>devShells = forAllSystems <span class="op">(</span><span class="va">pkgs</span><span class="op">:</span> <span class="op">{</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>      <span class="va">default</span> <span class="op">=</span> pkgs.mkShell <span class="op">{</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="co">#         packages = with pkgs; [</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="co">#             jupyter</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="co">#            ];</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>        <span class="va">buildInputs</span> <span class="op">=</span> <span class="kw">with</span> pkgs<span class="op">;</span> <span class="op">[</span> jupyter <span class="op">];</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>      <span class="op">};</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Results in:</p>
+<details>
+<summary>
+Show path
+</summary>
+<div class="sourceCode" id="cb7"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>[moonpie@lizard flake-test]$ nix develop</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>warning: Git tree '/home/moonpie/vscode/test/flake-test' is dirty</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>evaluating derivation 'git+file:///home/moonpie/vscode/test/flake-test#devShells.x86_64-linux.default'</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>(nix:nix-shell-env) [moonpie@lizard flake-test]$ echo $PATH</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>/nix/store/pdqndw2kgjv8l3kd5ii0c833jqmxdanq-patchelf-0.15.0/bin:/nix/store/mpm3i0sbqc9svfch6a17179fs64dz2kv-gcc-wrapper-13.3.0/bin:/nix/store/zc0nsv23pakbafngjy32kvhfzb16as43-gcc-13.3.0/bin:/nix/store/082x03cmpnsqkfp4ljrhsadz68rh3q1h-glibc-2.39-52-bin/bin:/nix/store/i7qhgc0bs725qw3wdanznfkdna4z2ns2-coreutils-9.5/bin:/nix/store/l46fjkzva0bhvy9p2r7p4vi68kr7a1db-binutils-wrapper-2.41/bin:/nix/store/wwfrj9kvfi14xclc38qfwm71ah6aawdh-binutils-2.41/bin:/nix/store/hn4bklvwvjjhkqy8d5npgb0aq8hba27s-python3-3.11.9-env/bin:/nix/store/i7qhgc0bs725qw3wdanznfkdna4z2ns2-coreutils-9.5/bin:/nix/store/rr1yixvn0z63mgq9s04ig9j9qlz23s2g-findutils-4.9.0/bin:/nix/store/j4gkc44c1pwl5ccgxm83s4r746bsdcw9-diffutils-3.10/bin:/nix/store/ks6c62g0m3gqrs5i7m0cv6d6aqhdvirn-gnused-4.9/bin:/nix/store/md9apn3290h7kv0x198ihaaa3k6icg4b-gnugrep-3.11/bin:/nix/store/hkx0wcm23i9ihqlysri8n41kl232kawb-gawk-5.2.2/bin:/nix/store/95ljdxg4drk1iq8jkjfq2c0z5vbwv8vm-gnutar-1.35/bin:/nix/store/nc9lq1lra01932rfyclq3gsh82cxbmii-gzip-1.13/bin:/nix/store/cyc3v8qfkhn4r38a8s5d7f2c33q624mz-bzip2-1.0.8-bin/bin:/nix/store/18z454gyz0wpb641rw6gpqk0vi4wbxy6-gnumake-4.4.1/bin:/nix/store/agkxax48k35wdmkhmmija2i2sxg8i7ny-bash-5.2p26/bin:/nix/store/r05c0lpbnjc8dg3rrr3ck7s07pjy86j3-patch-2.7.6/bin:/nix/store/qqhrymypl970jc6npvi9a6sikhr84mdf-xz-5.4.6-bin/bin:/nix/store/qcqmiq1mb3pkk2bxbj6d6gb2fk9knk8l-file-5.45/bin:/home/moonpie/.nix-profile/bin:/nix/var/nix/profiles/default/bin:/home/moonpie/.nix-profile/bin:/nix/var/nix/profiles/default/bin:/home/moonpie/.nix-profile/bin:/nix/var/nix/profiles/default/bin:/usr/local/sbin:/usr/local/bin:/usr/bin:/usr/lib/jvm/default/bin:/usr/bin/site_perl:/usr/bin/vendor_perl:/usr/bin/core_perl</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<p>Compared to the same thing for nix shell:</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode nix code-with-copy"><code class="sourceCode nix"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>packages = forAllSystems <span class="op">(</span><span class="va">pkgs</span><span class="op">:</span> <span class="op">{</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>      <span class="va">default</span> <span class="op">=</span> pkgs.mkShell <span class="op">{</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>        <span class="co">#packages = with pkgs; [ jupyter ];</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>        <span class="va">buildInputs</span> <span class="op">=</span> <span class="kw">with</span> pkgs<span class="op">;</span> <span class="op">[</span> jupyter <span class="op">];</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>        <span class="va">TEST_ENV</span> <span class="op">=</span> <span class="st">"test environment variable"</span><span class="op">;</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>      <span class="op">};</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<details>
+<summary>
+Show path
+</summary>
+<div class="sourceCode" id="cb9"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>[moonpie@lizard flake-test]$ nix shell</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>warning: Git tree '/home/moonpie/vscode/test/flake-test' is dirty</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>evaluating derivation 'git+file:///home/moonpie/vscode/test/flake-test#packages.x86_64-linux.default'</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>[moonpie@lizard flake-test]$ echo $PATH</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>/home/moonpie/.nix-profile/bin:/nix/var/nix/profiles/default/bin:/nix/store/i4zy8833s3dxrk3dmzb29k3y6rik15a4-nix-shell/bin:/home/moonpie/.nix-profile/bin:/nix/var/nix/profiles/default/bin:/home/moonpie/.nix-profile/bin:/nix/var/nix/profiles/default/bin:/usr/local/sbin:/usr/local/bin:/usr/bin:/usr/lib/jvm/default/bin:/usr/bin/site_perl:/usr/bin/vendor_perl:/usr/bin/core_perl</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<p>However…</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>[moonpie@lizard flake-test]$ echo $TEST_ENV</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>And nothing. (no reply to that command means the environment variable is unset). <code>nix shell</code> does not seem to set environment variables at all, even if I set them in the <code>pkgs.mkShell</code>, compared to <code>nix develop</code>, which does that.</p>
+<p>However, I don’t want to bring <em>every</em> single build dependency as just for my shell environments.</p>
+<p>I did more testing with the various <a href="http://ryantm.github.io/nixpkgs/stdenv/stdenv/#ssec-stdenv-dependencies-reference">types of dependencies</a> that a <code>pkgs.mkShell</code> (or more accurately, what it abstracts, <code>stdenv.mkDerivation</code>), and every single type of them brings build dependencies. This is a feature of nix develop, but it is becoming a hindrance.</p>
+<p>Nevermind. Apparently, <code>nix-shell</code> also brings in build dependencies, and behaves identically to <code>nix develop</code>, and completely unlike <code>nix shell</code>. Some part of me wonders if there is some way to get this working. Another part of me doesn’t care.</p>
+<p>Since I have something working, I modified the <a href="https://nixos.wiki/wiki/flakes#Super_fast_nix-shell">super fast nix shell</a> example to not use flakes.</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode nix code-with-copy"><code class="sourceCode nix"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="op">{</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>  <span class="va">inputs</span> <span class="op">=</span> <span class="op">{</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>    <span class="va">nixpkgs</span>.<span class="va">url</span> <span class="op">=</span> <span class="st">"nixpkgs"</span><span class="op">;</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>  <span class="op">};</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>  <span class="va">outputs</span> <span class="op">=</span> inputs @ <span class="op">{</span><span class="va">nixpkgs</span><span class="op">,</span> <span class="op">...}</span>: <span class="kw">let</span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>    <span class="va">pkgs</span> <span class="op">=</span> <span class="bu">import</span> nixpkgs <span class="op">{};</span></span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>    <span class="va">forAllSystems</span> <span class="op">=</span> <span class="va">function</span><span class="op">:</span></span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a>      nixpkgs.lib.genAttrs <span class="op">[</span></span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a>        <span class="st">"x86_64-linux"</span></span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a>        <span class="st">"aarch64-linux"</span></span>
+<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a>      <span class="op">]</span> <span class="op">(</span><span class="va">system</span><span class="op">:</span></span>
+<span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a>        function <span class="op">(</span><span class="bu">import</span> nixpkgs <span class="op">{</span></span>
+<span id="cb11-15"><a href="#cb11-15" aria-hidden="true" tabindex="-1"></a>          <span class="kw">inherit</span> system<span class="op">;</span></span>
+<span id="cb11-16"><a href="#cb11-16" aria-hidden="true" tabindex="-1"></a>          <span class="va">config</span>.<span class="va">allowUnfree</span> <span class="op">=</span> <span class="cn">true</span><span class="op">;</span></span>
+<span id="cb11-17"><a href="#cb11-17" aria-hidden="true" tabindex="-1"></a>        <span class="op">}));</span></span>
+<span id="cb11-18"><a href="#cb11-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-19"><a href="#cb11-19" aria-hidden="true" tabindex="-1"></a>  <span class="kw">in</span> <span class="op">{</span></span>
+<span id="cb11-20"><a href="#cb11-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-21"><a href="#cb11-21" aria-hidden="true" tabindex="-1"></a>    <span class="va">devShells</span> <span class="op">=</span> forAllSystems <span class="op">(</span><span class="va">pkgs</span><span class="op">:</span> <span class="op">{</span></span>
+<span id="cb11-22"><a href="#cb11-22" aria-hidden="true" tabindex="-1"></a>      <span class="va">default</span> <span class="op">=</span> <span class="bu">import</span> <span class="ss">./shell.nix</span> <span class="op">{</span> <span class="kw">inherit</span> pkgs<span class="op">;</span> <span class="op">};</span></span>
+<span id="cb11-23"><a href="#cb11-23" aria-hidden="true" tabindex="-1"></a>    <span class="op">});</span></span>
+<span id="cb11-24"><a href="#cb11-24" aria-hidden="true" tabindex="-1"></a>  <span class="op">};</span></span>
+<span id="cb11-25"><a href="#cb11-25" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>This errors:</p>
+<details>
+<summary>
+Show errors
+</summary>
+<div class="sourceCode" id="cb12"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>[moonpie@lizard moonpiedumplings.github.io]$ nix develop</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>warning: Git tree '/home/moonpie/vscode/moonpiedumplings.github.io' is dirty</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>warning: creating lock file '/home/moonpie/vscode/moonpiedumplings.github.io/flake.lock':</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>• Added input 'nixpkgs':</span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>    'github:NixOS/nixpkgs/3f84a279f1a6290ce154c5531378acc827836fbb?narHash=sha256-u1fA0DYQYdeG%2B5kDm1bOoGcHtX0rtC7qs2YA2N1X%2B%2BI%3D' (2024-06-13)</span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>warning: Git tree '/home/moonpie/vscode/moonpiedumplings.github.io' is dirty</span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>error:</span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>       … while calling the 'import' builtin</span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>         at /nix/store/jd6fy6iw7fsj0135phhd7awmq5s00sgj-source/flake.nix:22:17:</span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>           21|     devShells = forAllSystems (pkgs: {</span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a>           22|       default = import ./shell.nix { inherit pkgs; };</span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a>             |                 ^</span>
+<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a>           23|     });</span>
+<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-15"><a href="#cb12-15" aria-hidden="true" tabindex="-1"></a>       … while evaluating the file '/nix/store/jd6fy6iw7fsj0135phhd7awmq5s00sgj-source/shell.nix':</span>
+<span id="cb12-16"><a href="#cb12-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-17"><a href="#cb12-17" aria-hidden="true" tabindex="-1"></a>       … while calling the 'import' builtin</span>
+<span id="cb12-18"><a href="#cb12-18" aria-hidden="true" tabindex="-1"></a>         at /nix/store/jd6fy6iw7fsj0135phhd7awmq5s00sgj-source/shell.nix:2:12:</span>
+<span id="cb12-19"><a href="#cb12-19" aria-hidden="true" tabindex="-1"></a>            1| let</span>
+<span id="cb12-20"><a href="#cb12-20" aria-hidden="true" tabindex="-1"></a>            2|     pkgs = import &lt;nixpkgs&gt; {};</span>
+<span id="cb12-21"><a href="#cb12-21" aria-hidden="true" tabindex="-1"></a>             |            ^</span>
+<span id="cb12-22"><a href="#cb12-22" aria-hidden="true" tabindex="-1"></a>            3|</span>
+<span id="cb12-23"><a href="#cb12-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-24"><a href="#cb12-24" aria-hidden="true" tabindex="-1"></a>       (stack trace truncated; use '--show-trace' to show the full trace)</span>
+<span id="cb12-25"><a href="#cb12-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-26"><a href="#cb12-26" aria-hidden="true" tabindex="-1"></a>       error: cannot look up '&lt;nixpkgs&gt;' in pure evaluation mode (use '--impure' to override)</span>
+<span id="cb12-27"><a href="#cb12-27" aria-hidden="true" tabindex="-1"></a>[moonpie@lizard moonpiedumplings.github.io]$ nix develop --impure</span>
+<span id="cb12-28"><a href="#cb12-28" aria-hidden="true" tabindex="-1"></a>warning: Git tree '/home/moonpie/vscode/moonpiedumplings.github.io' is dirty</span>
+<span id="cb12-29"><a href="#cb12-29" aria-hidden="true" tabindex="-1"></a>error: attempt to call something which is not a function but a set: { type = "derivation"; PYTHONPATH = «thunk»; QUARTO_PANDOC = «thunk»; QUARTO_PYTHON = «thunk»; __ignoreNulls = true; __structuredAttrs = «thunk»; all = «thunk»; args = «thunk»; buildInputs = «thunk»; buildPhase = "{ echo \"------------------------------------------------------------\";\n  echo \" WARNING: the existence of this path is not guaranteed.\";\n  echo \" It is an internal implementation detail for pkgs.mkShell.\";\n  echo \"------------------------------------------------------------\";\n  echo;\n  # Record all build inputs as runtime dependencies\n  export;\n} &gt;&gt; \"$out\"\n"; «36 attributes elided» }</span>
+<span id="cb12-30"><a href="#cb12-30" aria-hidden="true" tabindex="-1"></a>       at /nix/store/0symal17vrawjkdmbp0afyrz45ax5fay-source/flake.nix:22:17:</span>
+<span id="cb12-31"><a href="#cb12-31" aria-hidden="true" tabindex="-1"></a>           21|     devShells = forAllSystems (pkgs: {</span>
+<span id="cb12-32"><a href="#cb12-32" aria-hidden="true" tabindex="-1"></a>           22|       default = import ./shell.nix { inherit pkgs; };</span>
+<span id="cb12-33"><a href="#cb12-33" aria-hidden="true" tabindex="-1"></a>             |                 ^</span>
+<span id="cb12-34"><a href="#cb12-34" aria-hidden="true" tabindex="-1"></a>           23|     });</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
 
 
 
