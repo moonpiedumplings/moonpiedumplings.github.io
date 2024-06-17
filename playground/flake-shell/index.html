@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.5.24">
+<meta name="generator" content="quarto-1.5.25">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -210,7 +210,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </header>
 
 
-<p>So, I think it’s time for me to move from the older channels way of doing things in nix, to the newer flakes. However, the nix docs are very poor, so I am going to document my process of converting my development environment here.</p>
+<p>So, I think it’s time for me to move from the older channels way of doing things in nix, to the newer flakes. I am using the <a href="https://github.com/DeterminateSystems/nix-installer">determinate system nix installer</a>, which only comes with flakes. However, the nix docs are very poor, so I am going to document my process of converting my development environment here.</p>
 <p>The first thing, is that despite the fact that there is a lot of the existing flakes use a utility called <a href="">flake-utils</a>. However, this tool was ultimately started as an experiment, and has issues. A <a href="https://ayats.org/blog/no-flake-utils/">blog post</a> (<a href="https://web.archive.org/web/20240229094244/https://ayats.org/blog/no-flake-utils/">archive</a>) goes over some of the issues it has, and recommends against it… except I can’t figure out at all how to apply it.</p>
 <p>The other recommendation is another pattern, recommended by Reddit user Tomberek:</p>
 <div class="sourceCode" id="cb1"><pre class="sourceCode nix code-with-copy"><code class="sourceCode nix"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="op">{</span></span>
@@ -499,6 +499,45 @@ Show errors
 <span id="cb12-33"><a href="#cb12-33" aria-hidden="true" tabindex="-1"></a>             |                 ^</span>
 <span id="cb12-34"><a href="#cb12-34" aria-hidden="true" tabindex="-1"></a>           23|     });</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
+<p>Okay, I got it. There was one change I needed to make.</p>
+<div class="code-with-filename">
+<div class="code-with-filename-file">
+<pre><strong>shell.nix</strong></pre>
+</div>
+<div class="sourceCode" id="cb13" data-filename="shell.nix"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>let</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>    pkgs = import &lt;nixpkgs&gt; {};</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>    python3 = pkgs.python311;</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>In my shell.nix, I should have:</p>
+<div class="code-with-filename">
+<div class="code-with-filename-file">
+<pre><strong>shell.nix</strong></pre>
+</div>
+<div class="sourceCode" id="cb14" data-filename="shell.nix"><pre class="sourceCode nix code-with-copy"><code class="sourceCode nix"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="op">{</span> <span class="va">pkgs</span> <span class="op">?</span> <span class="bu">import</span> &lt;nixpkgs&gt; <span class="op">{}</span> <span class="op">}</span>:</span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>    <span class="va">python3</span> <span class="op">=</span> pkgs.python311<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>One last thing. What does the <code>@</code> symbol do? I suspect nothing. Kate (my IDE for nix testing), complains about the <code>input</code> binding being unused, so I am gussing it doesn’t do anything.</p>
+<p>When I remove it, and replace that line with:</p>
+<p><code>outputs = {nixpkgs, ...}: let</code></p>
+<p>It works fine.</p>
+<p>After all of this, I did realize something.</p>
+<p>The configuration file for nix has an option called “extra-nix-path”</p>
+<div class="code-with-filename">
+<div class="code-with-filename-file">
+<pre><strong>/etc/nix/nix.conf</strong></pre>
+</div>
+<div class="sourceCode" id="cb15" data-filename="/etc/nix/nix.conf"><pre class="sourceCode nix code-with-copy"><code class="sourceCode nix"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>build<span class="op">-</span>users<span class="op">-</span>group = nixbld</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>experimental<span class="op">-</span>features = nix<span class="op">-</span>command flakes repl<span class="op">-</span>flake</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>auto<span class="op">-</span>optimise<span class="op">-</span>store = <span class="cn">true</span></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>bash<span class="op">-</span>prompt<span class="op">-</span>prefix = <span class="op">(</span><span class="va">nix</span><span class="op">:</span>$name<span class="op">)</span>\<span class="dv">040</span></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>max<span class="op">-</span>jobs = auto</span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>extra<span class="op">-</span>nix<span class="op">-</span>path = nixpkgs=<span class="va">flake</span><span class="op">:</span>nixpkgs</span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>upgrade<span class="op">-</span>nix<span class="op">-</span>store<span class="op">-</span>path<span class="op">-</span>url = <span class="va">https</span><span class="op">://</span><span class="ss">install.determinate.systems/nix-upgrade/stable/universal</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>This option makes channel commands available and working, even though no nix channels are actually installed. Meaning, I could have continued to use <code>nix-shell</code>, and it would have worked…</p>
+<p>Well, flakes still have their own benefits. The version of <code>nixpkgs</code> used is tracked in a <code>flake.lock</code> file in the git repo. This ensures reproducibility, as I would be able to update the version of <code>nixpkgs</code> for everyone using the repo, rather than having to rely on people updating their channels manually (<code>running nix-channel --update</code>). With the latter, channels will result in a different version of <code>nixpkgs</code> being used, but with flakes, everybody uses the same version of <code>nixpkgs</code>.</p>
 
 
 
@@ -682,18 +721,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
     }
     return false;
   }
-  const clipboard = new window.ClipboardJS('.code-copy-button', {
-    text: function(trigger) {
-      const codeEl = trigger.previousElementSibling.cloneNode(true);
-      for (const childEl of codeEl.children) {
-        if (isCodeAnnotation(childEl)) {
-          childEl.remove();
-        }
-      }
-      return codeEl.innerText;
-    }
-  });
-  clipboard.on('success', function(e) {
+  const onCopySuccess = function(e) {
     // button target
     const button = e.trigger;
     // don't keep focus
@@ -725,7 +753,29 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
     }, 1000);
     // clear code selection
     e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
   });
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    // For code content inside modals, clipBoardJS needs to be initialized with a container option
+    // TODO: Check when it could be a function (https://github.com/zenorocha/clipboard.js/issues/860)
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
     var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
     var mailtoRegex = new RegExp(/^mailto:/);
       var filterRegex = new RegExp("https:\/\/moonpiedumplings\.github\.io");

@@ -9,7 +9,7 @@
 <link>https://moonpiedumplings.github.io/allposts.html</link>
 <atom:link href="https://moonpiedumplings.github.io/allposts.xml" rel="self" type="application/rss+xml"/>
 <description>All posts, intended to be used in an RSS feed. </description>
-<generator>quarto-1.5.24</generator>
+<generator>quarto-1.5.25</generator>
 <lastBuildDate>Tue, 04 Jun 2024 07:00:00 GMT</lastBuildDate>
 <item>
   <title>Reinstalling Cachyos</title>
@@ -79,6 +79,10 @@
 <section id="user-data" class="level1">
 <h1>User data</h1>
 <p>I backed up my entire home directory to a tar archive using ark, the archiver tool on KDE. However, since I was backing it up to a usb thumb drive, I used <a href="https://wiki.archlinux.org/title/Gocryptfs">gocryptfs</a> to encrypt the folder where the archive was stored. I encrypt sensitive data I put on my usb drives, that way, even if I lose the drive, nothing gets compromised.</p>
+</section>
+<section id="misc-config-changes" class="level1">
+<h1>Misc config changes</h1>
+<p>I also enabled the <a href="https://wiki.archlinux.org/title/Keyboard_shortcuts#Kernel_(SysRq)">Magic sysrq key</a> via a kernel parameter in my grub config file.</p>
 
 
 </section>
@@ -96,7 +100,7 @@
 
 
 
-<p>So, I think it’s time for me to move from the older channels way of doing things in nix, to the newer flakes. However, the nix docs are very poor, so I am going to document my process of converting my development environment here.</p>
+<p>So, I think it’s time for me to move from the older channels way of doing things in nix, to the newer flakes. I am using the <a href="https://github.com/DeterminateSystems/nix-installer">determinate system nix installer</a>, which only comes with flakes. However, the nix docs are very poor, so I am going to document my process of converting my development environment here.</p>
 <p>The first thing, is that despite the fact that there is a lot of the existing flakes use a utility called <a href="">flake-utils</a>. However, this tool was ultimately started as an experiment, and has issues. A <a href="https://ayats.org/blog/no-flake-utils/">blog post</a> (<a href="https://web.archive.org/web/20240229094244/https://ayats.org/blog/no-flake-utils/">archive</a>) goes over some of the issues it has, and recommends against it… except I can’t figure out at all how to apply it.</p>
 <p>The other recommendation is another pattern, recommended by Reddit user Tomberek:</p>
 <div class="sourceCode" id="cb1" style="background: #f1f3f5;"><pre class="sourceCode nix code-with-copy"><code class="sourceCode nix"><span id="cb1-1"><span class="op" style="color: #5E5E5E;
@@ -1119,6 +1123,120 @@ Show errors
 <span id="cb12-33">             |                 ^</span>
 <span id="cb12-34">           23|     });</span></code></pre></div>
 </details>
+<p>Okay, I got it. There was one change I needed to make.</p>
+<div class="code-with-filename">
+<div class="code-with-filename-file">
+<pre><strong>shell.nix</strong></pre>
+</div>
+<div class="sourceCode" id="cb13" data-filename="shell.nix" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb13-1">let</span>
+<span id="cb13-2">    pkgs = import &lt;nixpkgs&gt; {};</span>
+<span id="cb13-3">    python3 = pkgs.python311;</span></code></pre></div>
+</div>
+<p>In my shell.nix, I should have:</p>
+<div class="code-with-filename">
+<div class="code-with-filename-file">
+<pre><strong>shell.nix</strong></pre>
+</div>
+<div class="sourceCode" id="cb14" data-filename="shell.nix" style="background: #f1f3f5;"><pre class="sourceCode nix code-with-copy"><code class="sourceCode nix"><span id="cb14-1"><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">{</span> <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">pkgs</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">?</span> <span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">import</span> &lt;nixpkgs&gt; <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">{}</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">}</span>:</span>
+<span id="cb14-2"></span>
+<span id="cb14-3"><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">let</span></span>
+<span id="cb14-4">    <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">python3</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> pkgs.python311<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">;</span></span></code></pre></div>
+</div>
+<p>One last thing. What does the <code>@</code> symbol do? I suspect nothing. Kate (my IDE for nix testing), complains about the <code>input</code> binding being unused, so I am gussing it doesn’t do anything.</p>
+<p>When I remove it, and replace that line with:</p>
+<p><code>outputs = {nixpkgs, ...}: let</code></p>
+<p>It works fine.</p>
+<p>After all of this, I did realize something.</p>
+<p>The configuration file for nix has an option called “extra-nix-path”</p>
+<div class="code-with-filename">
+<div class="code-with-filename-file">
+<pre><strong>/etc/nix/nix.conf</strong></pre>
+</div>
+<div class="sourceCode" id="cb15" data-filename="/etc/nix/nix.conf" style="background: #f1f3f5;"><pre class="sourceCode nix code-with-copy"><code class="sourceCode nix"><span id="cb15-1">build<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">-</span>users<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">-</span>group = nixbld</span>
+<span id="cb15-2">experimental<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">-</span>features = nix<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">-</span>command flakes repl<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">-</span>flake</span>
+<span id="cb15-3">auto<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">-</span>optimise<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">-</span>store = <span class="cn" style="color: #8f5902;
+background-color: null;
+font-style: inherit;">true</span></span>
+<span id="cb15-4">bash<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">-</span>prompt<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">-</span>prefix = <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">(</span><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">nix</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">:</span>$name<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">)</span>\<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">040</span></span>
+<span id="cb15-5">max<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">-</span>jobs = auto</span>
+<span id="cb15-6">extra<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">-</span>nix<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">-</span>path = nixpkgs=<span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">flake</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">:</span>nixpkgs</span>
+<span id="cb15-7">upgrade<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">-</span>nix<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">-</span>store<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">-</span>path<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">-</span>url = <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">https</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">://</span><span class="ss" style="color: #20794D;
+background-color: null;
+font-style: inherit;">install.determinate.systems/nix-upgrade/stable/universal</span></span></code></pre></div>
+</div>
+<p>This option makes channel commands available and working, even though no nix channels are actually installed. Meaning, I could have continued to use <code>nix-shell</code>, and it would have worked…</p>
+<p>Well, flakes still have their own benefits. The version of <code>nixpkgs</code> used is tracked in a <code>flake.lock</code> file in the git repo. This ensures reproducibility, as I would be able to update the version of <code>nixpkgs</code> for everyone using the repo, rather than having to rely on people updating their channels manually (<code>running nix-channel --update</code>). With the latter, channels will result in a different version of <code>nixpkgs</code> being used, but with flakes, everybody uses the same version of <code>nixpkgs</code>.</p>
 
 
 
