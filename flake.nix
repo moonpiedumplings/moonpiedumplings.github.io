@@ -2,14 +2,15 @@
   inputs = {
     nixpkgs.url = "nixpkgs";
   };
-  outputs = inputs @ {nixpkgs, ...}: let
-
-    #pkgs = import nixpkgs {};
+  outputs = {nixpkgs, ...}: let
 
     forAllSystems = function:
       nixpkgs.lib.genAttrs [
         "x86_64-linux"
         "aarch64-linux"
+        "i686-linux"
+        "aarch64-darwin"
+        "x86_64-darwin"
       ] (system:
         function (import nixpkgs {
           inherit system;
@@ -19,7 +20,7 @@
   in {
 
     devShells = forAllSystems (pkgs: {
-      default = import ./shell.nix { inherit nixpkgs; };
+      default = import ./shell.nix { inherit pkgs; };
     });
   };
 }

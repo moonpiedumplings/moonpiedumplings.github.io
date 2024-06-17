@@ -113,5 +113,9 @@ With this, my setup is complete. But I still don't understand the benefits of no
 I backed up my entire home directory to a tar archive using ark, the archiver tool on KDE. However, since I was backing it up to a usb thumb drive, I used [gocryptfs](https://wiki.archlinux.org/title/Gocryptfs) to encrypt the folder where the archive was stored. I encrypt sensitive data I put on my usb drives, that way, even if I lose the drive, nothing gets compromised. 
 
 
+# Misc config changes
+
+I also enabled the [Magic sysrq key](https://wiki.archlinux.org/title/Keyboard_shortcuts#Kernel_(SysRq)) via a kernel parameter in my grub config file. 
+
 
 

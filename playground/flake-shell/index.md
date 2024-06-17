@@ -12,7 +12,7 @@ execute:
   freeze: auto
 ---
 
-So, I think it's time for me to move from the older channels way of doing things in nix, to the newer flakes. However, the nix docs are very poor, so I am going to document my process of converting my development environment here. 
+So, I think it's time for me to move from the older channels way of doing things in nix, to the newer flakes. I am using the [determinate system nix installer](https://github.com/DeterminateSystems/nix-installer), which only comes with flakes. However, the nix docs are very poor, so I am going to document my process of converting my development environment here. 
 
 The first thing, is that despite the fact that there is a lot of the existing flakes use a utility called [flake-utils](). However, this tool was ultimately started as an experiment, and has issues. A [blog post](https://ayats.org/blog/no-flake-utils/) ([archive](https://web.archive.org/web/20240229094244/https://ayats.org/blog/no-flake-utils/)) goes over some of the issues it has, and recommends against it... except I can't figure out at all how to apply it. 
 
@@ -350,4 +350,49 @@ error: attempt to call something which is not a function but a set: { type = "de
 ```
 
 </details>
+
+
+Okay, I got it. There was one change I needed to make. 
+
+```{.default filename='shell.nix'}
+let
+    pkgs = import <nixpkgs> {};
+    python3 = pkgs.python311;
+```
+
+In my shell.nix, I should have:
+
+```{.nix filename='shell.nix'}
+{ pkgs ? import <nixpkgs> {} }:
+
+let
+    python3 = pkgs.python311;
+```
+
+One last thing. What does the `@` symbol do? I suspect nothing. Kate (my IDE for nix testing), complains about the `input` binding being unused, so I am gussing it doesn't do anything. 
+
+When I remove it, and replace that line with:
+
+`outputs = {nixpkgs, ...}: let`
+
+It works fine. 
+
+After all of this, I did realize something. 
+
+The configuration file for nix has an option called "extra-nix-path"
+
+```{.nix filename='/etc/nix/nix.conf'}
+build-users-group = nixbld
+experimental-features = nix-command flakes repl-flake
+auto-optimise-store = true
+bash-prompt-prefix = (nix:$name)\040
+max-jobs = auto
+extra-nix-path = nixpkgs=flake:nixpkgs
+upgrade-nix-store-path-url = https://install.determinate.systems/nix-upgrade/stable/universal
+```
+
+This option makes channel commands available and working, even though no nix channels are actually installed. Meaning, I could have continued to use `nix-shell`, and it would have worked...
+
+Well, flakes still have their own benefits. The version of `nixpkgs` used is tracked in a `flake.lock` file in the git repo. This ensures reproducibility, as I would be able to update the version of `nixpkgs` for everyone using the repo, rather than having to rely on people updating their channels manually (`running nix-channel --update`). With the latter, channels will result in a different version of `nixpkgs` being used, but with flakes, everybody uses the same version of `nixpkgs`. 
+
 
