@@ -1,10 +1,9 @@
-
-{
-    stdenv,
-    lib,
-    fetchurl,
-    makeWrapper,
-} :
+{ stdenv
+, lib
+, fetchurl
+, makeWrapper
+,
+}:
 
 stdenv.mkDerivation rec {
   pname = "kasmvnc";
@@ -29,27 +28,27 @@ stdenv.mkDerivation rec {
   '';
 
   installPhase = ''
-      runHook preInstall
+    runHook preInstall
 
-      mkdir -p $out/bin $out/share $out/man $out/etc $out/lib
+    mkdir -p $out/bin $out/share $out/man $out/etc $out/lib
 
-      echo here
-      ls
-      ls local/bin
+    echo here
+    ls
+    ls local/bin
 
-      mv local/etc/* $out/etc
-      mv local/share/* $out/share
-      mv local/man/* $out/man
-      mv local/lib/* $out/lib
-      mv local/bin/* $out/bin
+    mv local/etc/* $out/etc
+    mv local/share/* $out/share
+    mv local/man/* $out/man
+    mv local/lib/* $out/lib
+    mv local/bin/* $out/bin
 
-      runHook preInstall
+    runHook preInstall
   '';
 
   meta = with lib; {
     description = "Kasmvnc";
     longDescription = ''
-        Long description here
+      Long description here
     '';
     homepage = "";
     changelog = "https://github.com/kasmtech/KasmVNC/releases/tag/v${version}";

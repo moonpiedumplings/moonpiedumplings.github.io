@@ -1,4 +1,4 @@
-{ nixpkgs ? import <nixpkgs> {}
+{ nixpkgs ? import <nixpkgs> { }
 , haskellPackages ? import nixpkgs {
     overlays = [ (import (builtins.fetchTarball "https://github.com/input-output-hk/haskell.nix/archive/master.tar.gz")) ];
   }

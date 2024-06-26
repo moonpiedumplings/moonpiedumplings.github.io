@@ -1,6 +1,6 @@
 ---
-title: "Creating a nix flake, the \"proper\" way"
-date: "2024-6-4"
+title: "Creating a nix flake shell, the \"proper\" way"
+date: "2024-6-21"
 categories: [nix]
 # draft: true
 format:
@@ -181,6 +181,8 @@ I got something that works for `nix develop`
 `nix shell` doesn't work at all. It gives me a different shell, and adds things to the path, but it doesn't actually add any of the programs I specify to the path. 
 
 (Also, I still have another unanswered question: What does the `@` symbol mean in a nix expression).
+
+I later went and [found an answer](https://nix.dev/tutorials/nix-language.html#named-attribute-set-argument). `@` *names* the attribute set 
 
 
 I managed to get `nix shell` working... somewhat.
@@ -393,6 +395,119 @@ upgrade-nix-store-path-url = https://install.determinate.systems/nix-upgrade/sta
 
 This option makes channel commands available and working, even though no nix channels are actually installed. Meaning, I could have continued to use `nix-shell`, and it would have worked...
 
-Well, flakes still have their own benefits. The version of `nixpkgs` used is tracked in a `flake.lock` file in the git repo. This ensures reproducibility, as I would be able to update the version of `nixpkgs` for everyone using the repo, rather than having to rely on people updating their channels manually (`running nix-channel --update`). With the latter, channels will result in a different version of `nixpkgs` being used, but with flakes, everybody uses the same version of `nixpkgs`. 
+Well, flakes still have their own benefits. The version of `nixpkgs` used is tracked in a `flake.lock` file in the git repo. This ensures reproducibility, as I would be able to update the version of `nixpkgs` for everyone using the repo, rather than having to rely on people updating their channels manually (running `nix-channel --update`). With the latter, channels will result in a different version of `nixpkgs` being used, but with flakes, everybody uses the same version of `nixpkgs`. 
+
+However, I still would like to know if there is a way to not bring along every development dependency. 
+
+Okay, I asked on the Nixos Discord about not bringing along every development dependency, and I was told that wasn't how `nix develop` worked. Rather, they claimed, the default `pkgs.mkShell` brings upon a "standard environment" of some build tools like gcc. Alternatively, you can use `pkgs.mkShellNoCC`. 
+
+This actually, works, to an extent. Using [nix-tree](https://github.com/utdemir/nix-tree), I can analyze the disk space used by the various things downloaded by nix.
+
+
+With the standard environment:
+
+```{.default}
+┌───────────────────────────────────────────┬───────────────────────────────────────────┬───────────────────────────────────────────┐
+│nix-shell               7.49 GiB (7.49 GiB)│texlive-combined-full-2 6.24 GiB (5.62 GiB)│fonts.conf               3.64 GiB (3.1 KiB)│
+│                                           │quarto-1.5.25          1.5 GiB (620.99 MiB)│texlive-combined-full-2 3.64 GiB (2.38 MiB)│
+│                                           │python3-3.11.9-env  916.46 MiB (282.95 MiB)│texlive-combined-full-2 3.64 GiB (3.52 KiB)│
+│                                           │stdenv-linux        332.93 MiB (166.29 KiB)│texlive-combined-full-2 3.64 GiB (3.45 GiB)│
+│                                           │gcc-wrapper-13.3.0   312.31 MiB (60.92 KiB)│asymptote-2.88        1.24 GiB (660.91 MiB)│
+│                                           │npm-10.8.1           310.91 MiB (97.35 MiB)│tlcockpit-1.2        1022.89 MiB (1.12 KiB)│
+│                                           │gcc-13.3.0          274.27 MiB (223.02 MiB)│arara-7.1.3           966.03 MiB (1.14 KiB)│
+│                                           │binutils-wrapper-2.41  86.52 MiB (50.1 KiB)│latex2nemeth-1.1.3       957.76 MiB (768.0)│
+│                                           │binutils-2.41         71.24 MiB (31.32 MiB)│albatross-0.5.1       955.15 MiB (1.16 KiB)│
+│                                           │diffutils-3.10         43.66 MiB (1.53 MiB)│texplate-1.0.4         953.4 MiB (1.14 KiB)│
+│                                           │findutils-4.9.0        43.46 MiB (1.32 MiB)│bib2gls-3.9           952.17 MiB (1.99 KiB)│
+│                                           │coreutils-9.5          42.13 MiB (2.12 MiB)│texosquery-1.7        950.24 MiB (2.35 KiB)│
+│                                           │patchelf-0.15.0      40.02 MiB (234.31 KiB)│memoize-1.1.2        231.84 MiB (65.53 KiB)│
+│                                           │file-5.45              39.42 MiB (8.33 MiB)│texlive-scripts-705 218.42 MiB (168.54 KiB)│
+│                                           │gnutar-1.35            33.85 MiB (2.67 MiB)│texlive.infra-69740- 210.01 MiB (22.95 MiB)│
+│                                           │gnugrep-3.11         33.68 MiB (922.61 KiB)│pygmentex-0.11       188.14 MiB (18.76 KiB)│
+│                                           │glibc-2.39-52-bin       33.57 MiB (2.6 MiB)│pythontex-0.18      185.94 MiB (300.51 KiB)│
+│                                           │gawk-5.2.2             33.54 MiB (2.57 MiB)│dvisvgm-3.2.2        184.64 MiB (50.79 MiB)│
+│                                           │gzip-1.13             32.66 MiB (152.8 KiB)│lilyglyphs-0.2.4     175.43 MiB (24.97 KiB)│
+│                                           │bash-5.2p26            32.51 MiB (1.54 MiB)│webquiz-5.2          173.81 MiB (44.94 KiB)│
+│                                           │gnumake-4.4.1           32.47 MiB (1.5 MiB)│dviasm-68043         173.61 MiB (44.14 KiB)│
+└───────────────────────────────────────────┴───────────────────────────────────────────┴───────────────────────────────────────────┘
+/nix/store/r7zsi6cdib2yrhp7cpx4qn9d1b70jll5-texlive-combined-full-2023-final
+NAR Size: 342.99 MiB | Closure Size: 6.24 GiB | Added Size: 5.62 GiB
+Immediate Parents (1): nix-shell
+```
+
+Without the standard environment:
+
+```{.default}
+┌───────────────────────────────────────────┬───────────────────────────────────────────┬───────────────────────────────────────────┐
+│nix-shell               7.23 GiB (7.23 GiB)│texlive-combined-full-2 6.24 GiB (5.62 GiB)│fonts.conf               3.64 GiB (3.1 KiB)│
+│                                           │quarto-1.5.25          1.5 GiB (620.99 MiB)│texlive-combined-full-2 3.64 GiB (2.38 MiB)│
+│                                           │python3-3.11.9-env  916.46 MiB (282.95 MiB)│texlive-combined-full-2 3.64 GiB (3.52 KiB)│
+│                                           │npm-10.8.1           310.91 MiB (97.35 MiB)│texlive-combined-full-2 3.64 GiB (3.45 GiB)│
+│                                           │stdenv-linux         67.13 MiB (166.23 KiB)│asymptote-2.88        1.24 GiB (660.91 MiB)│
+│                                           │diffutils-3.10         43.66 MiB (1.53 MiB)│tlcockpit-1.2        1022.89 MiB (1.12 KiB)│
+│                                           │findutils-4.9.0        43.46 MiB (1.32 MiB)│arara-7.1.3           966.03 MiB (1.14 KiB)│
+│                                           │coreutils-9.5          42.13 MiB (2.12 MiB)│latex2nemeth-1.1.3       957.76 MiB (768.0)│
+│                                           │patchelf-0.15.0      40.02 MiB (234.31 KiB)│albatross-0.5.1       955.15 MiB (1.16 KiB)│
+│                                           │file-5.45              39.42 MiB (8.33 MiB)│texplate-1.0.4         953.4 MiB (1.14 KiB)│
+│                                           │gnutar-1.35            33.85 MiB (2.67 MiB)│bib2gls-3.9           952.17 MiB (1.99 KiB)│
+│                                           │gnugrep-3.11         33.68 MiB (922.61 KiB)│texosquery-1.7        950.24 MiB (2.35 KiB)│
+│                                           │gawk-5.2.2             33.54 MiB (2.57 MiB)│memoize-1.1.2        231.84 MiB (65.53 KiB)│
+│                                           │gzip-1.13             32.66 MiB (152.8 KiB)│texlive-scripts-705 218.42 MiB (168.54 KiB)│
+│                                           │bash-5.2p26            32.51 MiB (1.54 MiB)│texlive.infra-69740- 210.01 MiB (22.95 MiB)│
+│                                           │gnumake-4.4.1           32.47 MiB (1.5 MiB)│pygmentex-0.11       188.14 MiB (18.76 KiB)│
+│                                           │xz-5.4.6-bin         31.91 MiB (172.22 KiB)│pythontex-0.18      185.94 MiB (300.51 KiB)│
+│                                           │gnused-4.9           31.67 MiB (714.07 KiB)│dvisvgm-3.2.2        184.64 MiB (50.79 MiB)│
+│                                           │patch-2.7.6          31.32 MiB (359.24 KiB)│lilyglyphs-0.2.4     175.43 MiB (24.97 KiB)│
+│                                           │bzip2-1.0.8-bin       31.11 MiB (67.24 KiB)│webquiz-5.2          173.81 MiB (44.94 KiB)│
+│                                           │                                           │dviasm-68043         173.61 MiB (44.14 KiB)│
+└───────────────────────────────────────────┴───────────────────────────────────────────┴───────────────────────────────────────────┘
+/nix/store/r7zsi6cdib2yrhp7cpx4qn9d1b70jll5-texlive-combined-full-2023-final
+NAR Size: 342.99 MiB | Closure Size: 6.24 GiB | Added Size: 5.62 GiB
+Immediate Parents (1): nix-shell
+```
+
+This is a decent difference (26 megabytes) — and indeed, it was as I thought, the latex bundle package uses up the most disk space out of everything.
+
+I did some research, continuing to find an even more minimal shell. However, it doesn't seem to be worth it. One [solution](https://discourse.nixos.org/t/with-default-nix-empty-nix-installs-packages-why/20284/3) mentions to use [devshell](https://github.com/numtide/devshell), however, after browsing the source code, it doesn't seem to be that much more minimal thank mkShellNoCC, and the documentation is sparse... it suggestst TOML, rather than nix for configuring the shell environment. And finally, the entire point of this endeavor was to *avoid* using external dependencies for my shell environments...
+
+There is also [another blogpost](https://fzakaria.com/2021/08/02/a-minimal-nix-shell.html) where they attempt to strip down the nix shell environment of dependencies, including GNU coreutils, but it eventually fails because the basic nix shell environment requires `mkdir`. 
+
+Now... which latex distribution should I switch to? I probably don't need the every single latex package in nixpkgs, especially if all I want is to render a pdf. 
+
+Currently, I am using `texlive.combined.scheme-full`, which is exactly that. According to the [quarto pdf docs](https://quarto.org/docs/output-formats/pdf-engine.html#overview), quarto recommends, and also is able to install `tinytex`. WHen quarto manages a texlive or tinytex distribution, it is also able to automatically install missing packages. 
+
+
+```{.default}
+────────────────────────────────────────┬────────────────────────────────────────┬───────────────────────────────────────┐
+│nix-shell            1.84 GiB (1.84 GiB)│quarto-1.5.25       1.5 GiB (620.99 MiB)│python3-3.11.9- 916.46 MiB (729.13 MiB)│
+│                                        │python3-3.11.9-e 916.46 MiB (729.13 MiB)│deno-1.43.6     239.73 MiB (199.93 MiB)│
+│                                        │texlive-2023-env 527.99 MiB (340.17 MiB)│dart-sass-1.77.4  49.52 MiB (18.54 MiB)│
+│                                        │stdenv-linux      67.13 MiB (166.23 KiB)│esbuild-0.21.5     43.2 MiB (10.09 MiB)│
+│                                        │diffutils-3.10      43.66 MiB (1.53 MiB)│bash-5.2p26        32.51 MiB (1.54 MiB)│
+│                                        │findutils-4.9.0     43.46 MiB (1.32 MiB)│                                       │
+│                                        │coreutils-9.5       42.13 MiB (2.12 MiB)│                                       │
+│                                        │patchelf-0.15.0   40.02 MiB (234.31 KiB)│                                       │
+│                                        │file-5.45           39.42 MiB (8.33 MiB)│                                       │
+│                                        │gnutar-1.35         33.85 MiB (2.67 MiB)│                                       │
+│                                        │gnugrep-3.11      33.68 MiB (922.61 KiB)│                                       │
+│                                        │gawk-5.2.2          33.54 MiB (2.57 MiB)│                                       │
+│                                        │gzip-1.13          32.66 MiB (152.8 KiB)│                                       │
+│                                        │bash-5.2p26         32.51 MiB (1.54 MiB)│                                       │
+│                                        │gnumake-4.4.1        32.47 MiB (1.5 MiB)│                                       │
+│                                        │xz-5.4.6-bin      31.91 MiB (172.22 KiB)│                                       │
+│                                        │gnused-4.9        31.67 MiB (714.07 KiB)│                                       │
+│                                        │patch-2.7.6       31.32 MiB (359.24 KiB)│                                       │
+│                                        │bzip2-1.0.8-bin    31.11 MiB (67.24 KiB)│                                       │
+│                                        │                                        │                                       │
+│                                        │                                        │                                       │
+│                                        │                                        │                                       │
+└────────────────────────────────────────┴────────────────────────────────────────┴───────────────────────────────────────┘
+/nix/store/gc3phrmibx7zp5q16n5vy3h1ra6wjckr-quarto-1.5.25
+NAR Size: 392.41 MiB | Closure Size: 1.5 GiB | Added Size: 620.99 MiB
+Immediate Parents (1): nix-shell
+```
+
+After a lot of tinkering with latex packages, I manage to get it down to just under 2 GB of disk space used. Can I make it smaller? What about bzip, tar, or other coreutils that are taking up space?
+
 
 

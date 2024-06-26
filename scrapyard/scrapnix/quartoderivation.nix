@@ -6,10 +6,10 @@
 , nodePackages
 , rWrapper
 , rPackages
-, extraRPackages ? []
+, extraRPackages ? [ ]
 , makeWrapper
 , python3
-, extraPythonPackages ? ps: with ps; []
+, extraPythonPackages ? ps: with ps; [ ]
 }:
 
 stdenv.mkDerivation rec {
@@ -48,21 +48,21 @@ stdenv.mkDerivation rec {
   '';
 
   installPhase = ''
-      runHook preInstall
+    runHook preInstall
 
-      mkdir -p $out/bin $out/share
+    mkdir -p $out/bin $out/share
 
-      mv bin/* $out/bin
-      mv share/* $out/share
+    mv bin/* $out/bin
+    mv share/* $out/share
 
-      runHook preInstall
+    runHook preInstall
   '';
 
   meta = with lib; {
     description = "Open-source scientific and technical publishing system built on Pandoc";
     longDescription = ''
-        Quarto is an open-source scientific and technical publishing system built on Pandoc.
-        Quarto documents are authored using markdown, an easy to write plain text format.
+      Quarto is an open-source scientific and technical publishing system built on Pandoc.
+      Quarto documents are authored using markdown, an easy to write plain text format.
     '';
     homepage = "https://quarto.org/";
     changelog = "https://github.com/quarto-dev/quarto-cli/releases/tag/v${version}";

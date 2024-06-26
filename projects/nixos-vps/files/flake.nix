@@ -8,7 +8,7 @@
       system = "x86_64-linux";
       specialArgs = attrs;
       modules = [
-        ({modulesPath, ... }: {
+        ({ modulesPath, ... }: {
           imports = [
             (modulesPath + "/installer/scan/not-detected.nix")
             #(modulesPath + "/profiles/qemu-guest.nix") #not a qemu vm
@@ -34,22 +34,22 @@
               };
             };
             defaultGateway = {
-                interface = "eth0";
-                address = "93.92.112.1";
+              interface = "eth0";
+              address = "93.92.112.1";
             };
           };
           services = {
             openssh = {
-                enable = true;
-                settings = {
-                    PasswordAuthentication = false;
-                    #PermitRootLogin = "prohibit-password"; # this is the default
-                };
-                openFirewall = true;
+              enable = true;
+              settings = {
+                PasswordAuthentication = false;
+                #PermitRootLogin = "prohibit-password"; # this is the default
+              };
+              openFirewall = true;
             };
             cockpit = {
-                enable = true;
-                openFirewall = true;
+              enable = true;
+              openFirewall = true;
             };
           };
 

@@ -46,6 +46,6 @@ let
   pkgs = import nixpkgs-src { overlays = [ my-overlay ]; };
 
 in
-	pkgs.mkShell {
-		packages = [ pkgs.quarto_1_3 ];
-		}
+pkgs.mkShell {
+  packages = [ pkgs.quarto_1_3 ];
+}

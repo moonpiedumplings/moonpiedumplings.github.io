@@ -1,10 +1,9 @@
-{
-    pkgs ? import <nixpkgs> {},
-    
-} :
-let 
-    okeystone = pkgs.callPackage ./keystone.nix {};
+{ pkgs ? import <nixpkgs> { }
+,
+}:
+let
+  okeystone = pkgs.callPackage ./keystone.nix { };
 in
-    pkgs.mkShell {
-        packages = with pkgs; [ okeystone ];
-    }
+pkgs.mkShell {
+  packages = with pkgs; [ okeystone ];
+}
