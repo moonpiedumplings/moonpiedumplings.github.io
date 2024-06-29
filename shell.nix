@@ -3,13 +3,7 @@
 let
   python3 = pkgs.python311;
   pythonDeps = ps: with ps; [
-    # qtconsole
-    # jupyter-console
-    # ipykernel
     jupyter-core
-    # nbconvert
-    # ipython
-    # notebook ipywidgets
     pyyaml
   ];
 
@@ -28,20 +22,16 @@ let
     };
     preFixup = ''
       wrapProgram $out/bin/quarto \
-          --prefix PATH : ${pkgs.lib.makeBinPath [ pkgs.deno ]} \
-          --prefix QUARTO_ESBUILD : ${pkgs.esbuild}/bin/esbuild \
-          --prefix QUARTO_DART_SASS : ${pkgs.dart-sass}/bin/dart-sass \
-          --prefix QUARTO_DENO : ${pkgs.lib.makeBinPath [ pkgs.deno ]}/deno \
-          --prefix QUARTO_TYPST : ${pkgs.lib.makeBinPath [ pkgs.typst ]}/typst \
+        --prefix QUARTO_TYPST : ${pkgs.lib.makeBinPath [ pkgs.typst ]}/typst \
+        --prefix QUARTO_ESBUILD ${pkgs.lib.makeBinPath [ pkgs.esbuild ]}/esbuild
     '';
     installPhase = ''
       runHook preInstall
 
       mkdir -p $out/bin $out/share
 
-      rm -rf bin/tools/*/dart*
-      rm -rf bin/tools/*/deno*
       rm -rf bin/tools/*/typst
+      rm -rf bin/tools/*/esbuild
 
       mv bin/* $out/bin
       mv share/* $out/share
@@ -50,13 +40,9 @@ let
     '';
   });
 in
-# pkgs.mkShell {
 pkgs.mkShellNoCC {
   PYTHONPATH = "${pkgs.python3.withPackages pythonDeps}/bin/python3";
   QUARTO_PYTHON = "${pkgs.python3.withPackages pythonDeps}/bin/python3";
-
-  #LANGUAGE = "en_US.UTF-8";
-  #LC_ALL = "en_US.UTF-8";
 
   packages = with pkgs; [
     (python3.withPackages pythonDeps)

@@ -509,5 +509,188 @@ Immediate Parents (1): nix-shell
 
 After a lot of tinkering with latex packages, I manage to get it down to just under 2 GB of disk space used. Can I make it smaller? What about bzip, tar, or other coreutils that are taking up space?
 
+I decided to tinker with python and jupyter notebooks next. I was previously using the `juptyer` package, which is a metapackage containing all the jupyter components. I managed to cut it down quite a bit, to just `jupyter-core` and `pyaml`. This reduced the size further: 
 
+```{.default}
+┌──────────────────────────────────────────────────────┬──────────────────────────────────────────────────────┬─────────────────────────────────────────────────────┐
+│nix-shell                          1.11 GiB (1.11 GiB)│quarto-1.5.47                  529.43 MiB (479.77 MiB)│deno-1.43.6                   239.73 MiB (199.93 MiB)│
+│                                                      │texlive-2023-env               527.99 MiB (462.84 MiB)│typst-0.11.1                    76.53 MiB (30.55 MiB)│
+│                                                      │python3-3.11.9-env              176.66 MiB (120.1 MiB)│dart-sass-1.77.4                49.52 MiB (18.54 MiB)│
+│                                                      │stdenv-linux                    67.13 MiB (166.23 KiB)│esbuild-0.21.5                   43.2 MiB (10.09 MiB)│
+│                                                      │diffutils-3.10                    43.66 MiB (1.53 MiB)│bash-5.2p26                      32.51 MiB (1.54 MiB)│
+│                                                      │findutils-4.9.0                   43.46 MiB (1.32 MiB)│                                                     │
+│                                                      │coreutils-9.5                     42.13 MiB (2.12 MiB)│                                                     │
+│                                                      │patchelf-0.15.0                 40.02 MiB (234.31 KiB)│                                                     │
+│                                                      │file-5.45                         39.42 MiB (8.33 MiB)│                                                     │
+│                                                      │gnutar-1.35                       33.85 MiB (2.67 MiB)│                                                     │
+│                                                      │gnugrep-3.11                    33.68 MiB (922.61 KiB)│                                                     │
+│                                                      │gawk-5.2.2                        33.54 MiB (2.57 MiB)│                                                     │
+│                                                      │gzip-1.13                        32.66 MiB (152.8 KiB)│                                                     │
+│                                                      │bash-5.2p26                       32.51 MiB (1.54 MiB)│                                                     │
+│                                                      │gnumake-4.4.1                      32.47 MiB (1.5 MiB)│                                                     │
+│                                                      │xz-5.4.6-bin                    31.91 MiB (172.22 KiB)│                                                     │
+│                                                      │gnused-4.9                      31.67 MiB (714.07 KiB)│                                                     │
+│                                                      │patch-2.7.6                     31.32 MiB (359.24 KiB)│                                                     │
+│                                                      │bzip2-1.0.8-bin                  31.11 MiB (67.24 KiB)│                                                     │
+│                                                      │                                                      │                                                     │
+└──────────────────────────────────────────────────────┴──────────────────────────────────────────────────────┴─────────────────────────────────────────────────────┘
+/nix/store/5phsvm3n78djp6gbmmda3jvm912h3gwg-quarto-1.5.47
+NAR Size: 220.63 MiB | Closure Size: 529.43 MiB | Added Size: 479.77 MiB
+Immediate Parents (1): nix-shell
+```
+
+However, can I reduce it further? I remove the size of quarto's installation, by deleting the vendored versions of deno, typst, dart-sass, and esbuild, and using the nix versions instead. But what if that's what's using up more space?
+
+```{.default}
+┌──────────────────────────────────────────────────────┬──────────────────────────────────────────────────────┬─────────────────────────────────────────────────────┐
+│nix-shell                          1.04 GiB (1.04 GiB)│texlive-2023-env               527.99 MiB (462.84 MiB)│bash-5.2p26                      32.51 MiB (1.54 MiB)│
+│                                                      │quarto-1.5.47                  434.33 MiB (401.81 MiB)│                                                     │
+│                                                      │python3-3.11.9-env             176.66 MiB (120.21 MiB)│                                                     │
+│                                                      │stdenv-linux                    67.13 MiB (166.23 KiB)│                                                     │
+│                                                      │diffutils-3.10                    43.66 MiB (1.53 MiB)│                                                     │
+│                                                      │findutils-4.9.0                   43.46 MiB (1.32 MiB)│                                                     │
+│                                                      │coreutils-9.5                     42.13 MiB (2.12 MiB)│                                                     │
+│                                                      │patchelf-0.15.0                 40.02 MiB (234.31 KiB)│                                                     │
+│                                                      │file-5.45                         39.42 MiB (8.33 MiB)│                                                     │
+│                                                      │gnutar-1.35                       33.85 MiB (2.67 MiB)│                                                     │
+│                                                      │gnugrep-3.11                    33.68 MiB (922.61 KiB)│                                                     │
+│                                                      │gawk-5.2.2                        33.54 MiB (2.57 MiB)│                                                     │
+│                                                      │gzip-1.13                        32.66 MiB (152.8 KiB)│                                                     │
+│                                                      │bash-5.2p26                       32.51 MiB (1.54 MiB)│                                                     │
+│                                                      │gnumake-4.4.1                      32.47 MiB (1.5 MiB)│                                                     │
+│                                                      │xz-5.4.6-bin                    31.91 MiB (172.22 KiB)│                                                     │
+│                                                      │gnused-4.9                      31.67 MiB (714.07 KiB)│                                                     │
+│                                                      │patch-2.7.6                     31.32 MiB (359.24 KiB)│                                                     │
+│                                                      │bzip2-1.0.8-bin                  31.11 MiB (67.24 KiB)│                                                     │
+│                                                      │                                                      │                                                     │
+└──────────────────────────────────────────────────────┴──────────────────────────────────────────────────────┴─────────────────────────────────────────────────────┘
+/nix/store/a6v1glf1w6jfm949jlydb6imlbyimddw-quarto-1.5.47
+NAR Size: 401.81 MiB | Closure Size: 434.33 MiB | Added Size: 401.81 MiB
+Immediate Parents (1): nix-shell
+```
+
+Removing nix dependencies gets it down to 1.04 GB... but I don't really like this setup. Vendoring is kinda problematic for a variety of reasons. I'm already vendoring pandoc, for example, and if pandoc is used again outside of the nix store, then it would take up twice as much disk space. 
+
+Another thing is versioning. Although the pandoc version quarto provides is newer than the one in nixpkgs, the version of typst is the same, and the versions of dart-sass and deno is *older* by 4 minor versions.
+
+But, when comparing nix-tree and looking at the ark, most of the packages outside quarto are bigger... or are they?
+
+```{.default}
+┌──────────────────────────────────────────────────────┬──────────────────────────────────────────────────────┬─────────────────────────────────────────────────────┐
+│                                                      │nix-shell                          1.03 GiB (1.03 GiB)│texlive-2023-env              527.99 MiB (462.84 MiB)│
+│                                                      │                                                      │quarto-1.5.47                 443.91 MiB (396.38 MiB)│
+│                                                      │                                                      │python3-3.11.9-env            176.66 MiB (120.21 MiB)│
+│                                                      │                                                      │stdenv-linux                   67.13 MiB (166.23 KiB)│
+│                                                      │                                                      │diffutils-3.10                   43.66 MiB (1.53 MiB)│
+│                                                      │                                                      │findutils-4.9.0                  43.46 MiB (1.32 MiB)│
+│                                                      │                                                      │coreutils-9.5                    42.13 MiB (2.12 MiB)│
+│                                                      │                                                      │patchelf-0.15.0                40.02 MiB (234.31 KiB)│
+│                                                      │                                                      │file-5.45                        39.42 MiB (8.33 MiB)│
+│                                                      │                                                      │gnutar-1.35                      33.85 MiB (2.67 MiB)│
+│                                                      │                                                      │gnugrep-3.11                   33.68 MiB (922.61 KiB)│
+│                                                      │                                                      │gawk-5.2.2                       33.54 MiB (2.57 MiB)│
+│                                                      │                                                      │gzip-1.13                       32.66 MiB (152.8 KiB)│
+│                                                      │                                                      │bash-5.2p26                      32.51 MiB (1.54 MiB)│
+│                                                      │                                                      │gnumake-4.4.1                     32.47 MiB (1.5 MiB)│
+│                                                      │                                                      │xz-5.4.6-bin                   31.91 MiB (172.22 KiB)│
+│                                                      │                                                      │gnused-4.9                     31.67 MiB (714.07 KiB)│
+│                                                      │                                                      │patch-2.7.6                    31.32 MiB (359.24 KiB)│
+│                                                      │                                                      │bzip2-1.0.8-bin                 31.11 MiB (67.24 KiB)│
+│                                                      │                                                      │                                                     │
+└──────────────────────────────────────────────────────┴──────────────────────────────────────────────────────┴─────────────────────────────────────────────────────┘
+/nix/store/67sndag759yw2wvfrfgfszpgzvbyg3gk-nix-shell
+NAR Size: 5.35 KiB | Closure Size: 1.03 GiB | Added Size: 1.03 GiB
+Immediate Parents: -
+```
+
+Changing to the typst in nixpkgs decreases the size just a little bit. Not a lot, but just a little bit. It's a pity that changing deno and dart-sass for the nixpkgs versions increases the size by quite a bit, as the nixpkgs versions are newer. Changing pandoc also increases size, but the pandoc version provided by quarto is newer. 
+
+I also changed esbuild, and got it down to 1.02 GB. 
+
+```{.default}
+┌──────────────────────────────────────────────────────┬──────────────────────────────────────────────────────┬─────────────────────────────────────────────────────┐
+│nix-shell                          1.02 GiB (1.02 GiB)│texlive-2023-env               527.99 MiB (462.84 MiB)│typst-0.11.1                    76.53 MiB (30.55 MiB)│
+│                                                      │quarto-1.5.47                  434.75 MiB (387.22 MiB)│bash-5.2p26                      32.51 MiB (1.54 MiB)│
+│                                                      │python3-3.11.9-env             176.66 MiB (120.21 MiB)│                                                     │
+│                                                      │stdenv-linux                    67.13 MiB (166.23 KiB)│                                                     │
+│                                                      │diffutils-3.10                    43.66 MiB (1.53 MiB)│                                                     │
+│                                                      │findutils-4.9.0                   43.46 MiB (1.32 MiB)│                                                     │
+│                                                      │coreutils-9.5                     42.13 MiB (2.12 MiB)│                                                     │
+│                                                      │patchelf-0.15.0                 40.02 MiB (234.31 KiB)│                                                     │
+│                                                      │file-5.45                         39.42 MiB (8.33 MiB)│                                                     │
+│                                                      │gnutar-1.35                       33.85 MiB (2.67 MiB)│                                                     │
+│                                                      │gnugrep-3.11                    33.68 MiB (922.61 KiB)│                                                     │
+│                                                      │gawk-5.2.2                        33.54 MiB (2.57 MiB)│                                                     │
+│                                                      │gzip-1.13                        32.66 MiB (152.8 KiB)│                                                     │
+│                                                      │bash-5.2p26                       32.51 MiB (1.54 MiB)│                                                     │
+│                                                      │gnumake-4.4.1                      32.47 MiB (1.5 MiB)│                                                     │
+│                                                      │xz-5.4.6-bin                    31.91 MiB (172.22 KiB)│                                                     │
+│                                                      │gnused-4.9                      31.67 MiB (714.07 KiB)│                                                     │
+│                                                      │patch-2.7.6                     31.32 MiB (359.24 KiB)│                                                     │
+│                                                      │bzip2-1.0.8-bin                  31.11 MiB (67.24 KiB)│                                                     │
+│                                                      │                                                      │                                                     │
+└──────────────────────────────────────────────────────┴──────────────────────────────────────────────────────┴─────────────────────────────────────────────────────┘
+/nix/store/zv70xxgak45jl997c53lwh91b7v3qz6s-quarto-1.5.47
+NAR Size: 356.66 MiB | Closure Size: 434.75 MiB | Added Size: 387.22 MiB
+Immediate Parents (1): nix-shell
+```
+
+I think this is the final iteration. Down to 1 GB is already a lot, and I think this will be the final iteration. 
+
+Here is the final shell.nix:
+
+```{.nix filename='shell.nix'}
+{ pkgs ? import <nixpkgs> { } }:
+
+let
+  python3 = pkgs.python311;
+  pythonDeps = ps: with ps; [
+    jupyter-core
+    pyyaml
+  ];
+
+  texDeps = ps: with ps; [
+    collection-latex
+    collection-latexrecommended
+    xetex
+  ];
+
+  quarto = pkgs.quarto.overrideAttrs (oldAttrs: rec {
+    # 1.3 + newer (I think) has a weird bug with the text boxes where they are white on a black background. Readable, but ugly
+    version = "1.5.47";
+    src = pkgs.fetchurl {
+      url = "https://github.com/quarto-dev/quarto-cli/releases/download/v${version}/quarto-${version}-linux-amd64.tar.gz";
+      sha256 = "sha256-Zfx3it7vhP+9vN8foveQ0xLcjPn5A7J/n+zupeFNwEk=";
+    };
+    preFixup = ''
+      wrapProgram $out/bin/quarto \
+        --prefix QUARTO_TYPST : ${pkgs.lib.makeBinPath [ pkgs.typst ]}/typst \
+        --prefix QUARTO_ESBUILD ${pkgs.lib.makeBinPath [ pkgs.esbuild ]}/esbuild
+    '';
+    installPhase = ''
+      runHook preInstall
+
+      mkdir -p $out/bin $out/share
+
+      rm -rf bin/tools/*/typst
+      rm -rf bin/tools/*/esbuild
+
+      mv bin/* $out/bin
+      mv share/* $out/share
+
+      runHook postInstall
+    '';
+  });
+in
+pkgs.mkShellNoCC {
+  PYTHONPATH = "${pkgs.python3.withPackages pythonDeps}/bin/python3";
+  QUARTO_PYTHON = "${pkgs.python3.withPackages pythonDeps}/bin/python3";
+
+  packages = with pkgs; [
+    (python3.withPackages pythonDeps)
+    quarto
+    (texlive.withPackages texDeps)
+  ];
+}
+```
 
