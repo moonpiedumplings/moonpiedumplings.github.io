@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.5.47">
+<meta name="generator" content="quarto-1.5.52">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -176,8 +176,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
 <!-- sidebar -->
 <!-- margin-sidebar -->
-    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar zindex-bottom">
-        
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#more-issues-no-tab-autocomplete" id="toc-more-issues-no-tab-autocomplete" class="nav-link active" data-scroll-target="#more-issues-no-tab-autocomplete">More issues, no tab autocomplete</a></li>
+  </ul>
+</nav>
     </div>
 <!-- main -->
 <main class="content" id="quarto-document-content">
@@ -211,7 +217,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 
 <p>So, I think it’s time for me to move from the older channels way of doing things in nix, to the newer flakes. I am using the <a href="https://github.com/DeterminateSystems/nix-installer">determinate system nix installer</a>, which only comes with flakes. However, the nix docs are very poor, so I am going to document my process of converting my development environment here.</p>
-<p>The first thing, is that despite the fact that there is a lot of the existing flakes use a utility called <a href="">flake-utils</a>. However, this tool was ultimately started as an experiment, and has issues. A <a href="https://ayats.org/blog/no-flake-utils/">blog post</a> (<a href="https://web.archive.org/web/20240229094244/https://ayats.org/blog/no-flake-utils/">archive</a>) goes over some of the issues it has, and recommends against it… except I can’t figure out at all how to apply it.</p>
+<p>The first thing, is that despite the fact that there is a lot of the existing flakes use a utility called <a href="https://github.com/numtide/flake-utils">flake-utils</a>. However, this tool was ultimately started as an experiment, and has issues. A <a href="https://ayats.org/blog/no-flake-utils/">blog post</a> (<a href="https://web.archive.org/web/20240229094244/https://ayats.org/blog/no-flake-utils/">archive</a>) goes over some of the issues it has, and recommends against it… except I can’t figure out at all how to apply it.</p>
 <p>The other recommendation is another pattern, recommended by Reddit user Tomberek:</p>
 <div class="sourceCode" id="cb1"><pre class="sourceCode nix code-with-copy"><code class="sourceCode nix"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="op">{</span></span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="va">inputs</span>.<span class="va">nixpkgs</span>.<span class="va">url</span> <span class="op">=</span> <span class="st">"github:NixOS/nixpkgs/22.05"</span><span class="op">;</span></span>
@@ -795,8 +801,51 @@ Show errors
 <span id="cb23-51"><a href="#cb23-51" aria-hidden="true" tabindex="-1"></a>  <span class="op">];</span></span>
 <span id="cb23-52"><a href="#cb23-52" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
+<section id="more-issues-no-tab-autocomplete" class="level1">
+<h1>More issues, no tab autocomplete</h1>
+<p>Nope, it’s not the final shell. For whatever reason, if I open Vscode, or zellij using the <code>nix develop</code> shell, I cannot use tab autocomplete. In addition to that, the Vscode shell seems to be broken in others ways.</p>
+<p>Here is the shell prompt:</p>
+<div class="sourceCode" id="cb24"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>\[\][moonpie@lizard moonpiedumplings.github.io]$ \[\]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Yeah. Not what it’s supposed to be. I don’t know what the backslashes signify. However, <code>nix-shell</code> continues to work fine for zellij.</p>
+<p>There are some relevant issues for this:</p>
+<ul>
+<li>https://github.com/NixOS/nix/issues/6091</li>
+<li>https://github.com/NixOS/nix/issues/6982</li>
+<li>https://github.com/NixOS/nix/issues/8764</li>
+</ul>
+<p>In a related <a href="https://discourse.nixos.org/t/general-nix-office-hours/15019/37">discourse post</a>, Nobbz suggests to use <code>eval</code>, but that also does not work, not do related solutions with <code>. &lt;()</code>.</p>
+<p>The big problem is that <code>nix develop</code> is designed for emulation of the nix build environment, which is non-interactive. <code>nix shell</code>, as I noted above, does not properly replace <code>nix-shell</code>, as it does not allow for any configuration of environment variables. Or can it?</p>
+<p>I also investigated <code>pkgs.buildEnv</code>, which is <a href="https://github.com/NixOS/nixpkgs/issues/251039">literally undocumented</a>, in classic Nix fashion. I read the <a href="https://github.com/NixOS/nixpkgs/blob/master/pkgs%2Fbuild-support%2Fbuildenv%2Fdefault.nix">source code</a>, but it doesn’t seem to be able to set environment variables outside of wrapping programs. It mainly seems to be ableto add programs to the path.</p>
+<p>Another solution is <a href="https://github.com/edolstra/flake-compat">flake-compat</a>. It’s a bit of nix code by Eelco Dostra that has creates a <code>shell.nix</code> that enables <code>nix-shell</code> to be used with flakes. I find it deeply ironic that despite all this effort to use flakey commands, I still end up finding that the non-flake commands work perfectly.</p>
+<p>Another suggestion was to use direnv, but I don’t want to use that.</p>
+<p>Anyway, I noticed something different about the <code>nix-shell</code> vs <code>nix develop</code>:</p>
+<div class="sourceCode" id="cb25"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>[nix-shell:~/vscode/moonpiedumplings.github.io]$ echo $SHELL</span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>/nix/store/bh6w9sbfz2m5w1bd4cg2ndw1s66agkfd-bash-interactive-5.2p26/bin/bash</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb26"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a>[moonpie@lizard moonpiedumplings.github.io]$ nix develop</span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>warning: Git tree '/home/moonpie/vscode/moonpiedumplings.github.io' is dirty</span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>evaluating derivation 'git+file:///home/moonpie/vscode/moonpiedumplings.github.io#devShells.x86_64-linux.default'</span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a>(nix:nix-shell-env) [moonpie@lizard moonpiedumplings.github.io]$ echo $SHELL</span>
+<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a>/nix/store/m101dg80ngyjdb02g6jwy80sr7kzj26g-bash-5.2p26/bin/bash</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p><code>nix-shell</code> defaults to an bash-interactive, whereas <code>nix develop</code> seems to use a stripped down, noninteractive version of bash. This is probably because <code>nix develop</code></p>
+<p>The first thing I tried was to have <code>SHELL = "${pkgs.bashInteractive}/bin/bash";</code> in <code>pkgs.mkShell</code>, but this didn’t work. <code>nix develop</code> seems to set it’s own environment variables, <em>after</em> the other variables are set.</p>
+<p>The first thing I did was to set a post shellHook, which <code>nix develop</code> would run, and would <code>export</code> the variable.</p>
+<div class="sourceCode" id="cb27"><pre class="sourceCode nix code-with-copy"><code class="sourceCode nix"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>pkgs.mkShellNoCC <span class="op">{</span></span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>   <span class="va">shellHook</span> <span class="op">=</span> <span class="st">''</span></span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a><span class="st">    export SHELL='</span><span class="sc">${</span>pkgs.bashInteractive<span class="sc">}</span><span class="st">/bin/bash'</span></span>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a><span class="st">  ''</span><span class="op">;</span></span>
+<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>This worked for zellij, but vscode’s terminal was still broken. To get vscode’s terminal working, I had to add <code>bashInterative</code> to packages:</p>
+<div class="sourceCode" id="cb28"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a>pkgs.mkShellNoCC {</span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>  packages = with pkgs; [ bashInteractive ];</span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a>   shellHook = ''</span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a>    export SHELL='${pkgs.bashInteractive}/bin/bash'</span>
+<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a>  '';</span>
+<span id="cb28-6"><a href="#cb28-6" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>I actually encountered a similar issue with python. Vscode seems to ignore things not added to path, even if they are specified in other ways, like <code>$PYTHONPATH</code> pointing to the correct version of python.</p>
+<p>But now, this finally works.</p>
 
 
+</section>
 
 </main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">

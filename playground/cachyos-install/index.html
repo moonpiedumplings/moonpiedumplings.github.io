@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.5.47">
+<meta name="generator" content="quarto-1.5.52">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -184,6 +184,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#installation" id="toc-installation" class="nav-link active" data-scroll-target="#installation">Installation</a></li>
   <li><a href="#user-data" id="toc-user-data" class="nav-link" data-scroll-target="#user-data">User data</a></li>
   <li><a href="#misc-config-changes" id="toc-misc-config-changes" class="nav-link" data-scroll-target="#misc-config-changes">Misc config changes</a></li>
+  <li><a href="#nix-not-starting-on-boot." id="toc-nix-not-starting-on-boot." class="nav-link" data-scroll-target="#nix-not-starting-on-boot.">Nix not starting on boot.</a></li>
   </ul>
 </nav>
     </div>
@@ -282,6 +283,35 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="misc-config-changes" class="level1">
 <h1>Misc config changes</h1>
 <p>I also enabled the <a href="https://wiki.archlinux.org/title/Keyboard_shortcuts#Kernel_(SysRq)">Magic sysrq key</a> via a kernel parameter in my grub config file.</p>
+</section>
+<section id="nix-not-starting-on-boot." class="level1">
+<h1>Nix not starting on boot.</h1>
+<p>I encountered another issue where nix does not start on boot. The problem is probably that, because /nix is a seperate btrfs subvolume, and the systemd service is a symlink to the nix service on /nix, systemd cannot locate the proper service. I need to either move the nix service so it is located on the root subvolume, or adjust the nix daemon service so it requires /nix to be mounted.</p>
+<p>Thankfully, systemd unit files have an option for this: <a href="https://www.freedesktop.org/software/systemd/man/latest/systemd.unit.html#RequiresMountsFor=">RequiresMountsFor=</a>.</p>
+<p>And to adjust the nix daemon service, I can use override, as <a href="https://askubuntu.com/questions/659267/how-do-i-override-or-configure-systemd-services">mentioned on stackoverflow</a>. Although, I don’t like this solution. Since the original service is still a symlink, would systemd really be able to find it?</p>
+<p>I found a <a href="https://github.com/DeterminateSystems/nix-installer/issues/416">relevant GitHub issue</a> on the on the page for the Determinate Systems Nix installer, which is what I use. Just like me, another user wants to have /nix on a seperate btrfs subvolume. Although they first did a workaround of removing the symlink, and copying the service files to /etc instead. However, one of the developers chimed in, mentioning the solution for the Steam Deck (a Linux handheld which uses btrfs), which was a systemd oneshot service that runs after nix is mounted, and then reloads all systemd services, and then restarts the nix socket. This was a lot easier to implement on my system.</p>
+<p>The systemd service was stored in the source code of the installer.</p>
+<p>https://github.com/DeterminateSystems/nix-installer/blob/main/src/planner/steam_deck.rs#L270</p>
+<div class="code-with-filename">
+<div class="code-with-filename-file">
+<pre><strong>/etc/systemd/system/ensure-symlinked-units-resolve.service</strong></pre>
+</div>
+<div class="sourceCode" id="cb5" data-filename="/etc/systemd/system/ensure-symlinked-units-resolve.service"><pre class="sourceCode ini code-with-copy"><code class="sourceCode ini"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">[Unit]</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="dt">Description</span><span class="ot">=</span><span class="st">Ensure Nix related units which are symlinked resolve</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="dt">After</span><span class="ot">=</span><span class="st">nix.mount</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="dt">Requires</span><span class="ot">=</span><span class="st">nix.mount</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="dt">DefaultDependencies</span><span class="ot">=</span><span class="kw">no</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="kw">[Service]</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a><span class="dt">Type</span><span class="ot">=</span><span class="st">oneshot</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a><span class="dt">RemainAfterExit</span><span class="ot">=</span><span class="kw">yes</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a><span class="dt">ExecStart</span><span class="ot">=</span><span class="st">/usr/bin/systemctl daemon-reload</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a><span class="dt">ExecStart</span><span class="ot">=</span><span class="st">/usr/bin/systemctl restart --no-block nix-daemon.socket</span></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a><span class="kw">[Install]</span></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a><span class="dt">WantedBy</span><span class="ot">=</span><span class="st">sysinit.target</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>And with this, the nix socket starts properly on boot.</p>
 
 
 </section>
