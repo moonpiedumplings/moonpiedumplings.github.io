@@ -6,9 +6,9 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
-<meta name="description" content="This is I blog my progress on my projects. I often use this as a reference sheet when I come back to incomplete projects.">
+<meta name="dcterms.date" content="2024-08-06">
 
-<title>Projects – Jeffrey Fonseca</title>
+<title>Portable executable experiments for CCDC – Jeffrey Fonseca</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -21,29 +21,61 @@ ul.task-list li input[type="checkbox"] {
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
 }
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
 </style>
 
 
-<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
-<script src="../site_libs/quarto-nav/headroom.min.js"></script>
-<script src="../site_libs/clipboard/clipboard.min.js"></script>
-<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
-<script src="../site_libs/quarto-search/fuse.min.js"></script>
-<script src="../site_libs/quarto-search/quarto-search.js"></script>
-<meta name="quarto:offset" content="../">
-<script src="../site_libs/quarto-listing/list.min.js"></script>
-<script src="../site_libs/quarto-listing/quarto-listing.js"></script>
-<script src="../site_libs/quarto-html/quarto.js"></script>
-<script src="../site_libs/quarto-html/popper.min.js"></script>
-<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
-<script src="../site_libs/quarto-html/anchor.min.js"></script>
-<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="../site_libs/quarto-html/quarto-syntax-highlighting-dark.css" rel="prefetch" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
-<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../site_libs/bootstrap/bootstrap-dark.min.css" rel="prefetch" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<script src="../../site_libs/quarto-html/quarto.js"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark.css" rel="prefetch" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark.min.css" rel="prefetch" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -71,76 +103,18 @@ ul.task-list li input[type="checkbox"] {
     "search-label": "Search"
   }
 }</script>
-<script>
 
-  window.document.addEventListener("DOMContentLoaded", function (_event) {
-    const listingTargetEl = window.document.querySelector('#listing-listing .list');
-    if (!listingTargetEl) {
-      // No listing discovered, do not attach.
-      return; 
-    }
-
-    const options = {
-      valueNames: ['listing-date','listing-title','listing-author',{ data: ['index'] },{ data: ['categories'] },{ data: ['listing-date-sort'] },{ data: ['listing-title-sort'] }],
-      
-      searchColumns: ["listing-date","listing-title","listing-author"],
-    };
-
-    window['quarto-listings'] = window['quarto-listings'] || {};
-    window['quarto-listings']['listing-listing'] = new List('listing-listing', options);
-
-    if (window['quarto-listing-loaded']) {
-      window['quarto-listing-loaded']();
-    }
-  });
-
-  window.addEventListener('hashchange',() => {
-    if (window['quarto-listing-loaded']) {
-      window['quarto-listing-loaded']();
-    }
-  })
-  </script>
-
-  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
-  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
-
-<script type="text/javascript">
-const typesetMath = (el) => {
-  if (window.MathJax) {
-    // MathJax Typeset
-    window.MathJax.typeset([el]);
-  } else if (window.katex) {
-    // KaTeX Render
-    var mathElements = el.getElementsByClassName("math");
-    var macros = [];
-    for (var i = 0; i < mathElements.length; i++) {
-      var texText = mathElements[i].firstChild;
-      if (mathElements[i].tagName == "SPAN") {
-        window.katex.render(texText.data, mathElements[i], {
-          displayMode: mathElements[i].classList.contains('display'),
-          throwOnError: false,
-          macros: macros,
-          fleqn: false
-        });
-      }
-    }
-  }
-}
-window.Quarto = {
-  typesetMath
-};
-</script>
 
 </head>
 
 <body class="nav-fixed">
 
 <div id="quarto-search-results"></div>
-  <header id="quarto-header" class="headroom fixed-top quarto-banner">
+  <header id="quarto-header" class="headroom fixed-top">
     <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
       <div class="navbar-container container-fluid">
       <div class="navbar-brand-container mx-auto">
-    <a class="navbar-brand" href="../index.html">
+    <a class="navbar-brand" href="../../index.html">
     <span class="navbar-title">Jeffrey Fonseca</span>
     </a>
   </div>
@@ -151,31 +125,31 @@ window.Quarto = {
           <div class="collapse navbar-collapse" id="navbarCollapse">
             <ul class="navbar-nav navbar-nav-scroll me-auto">
   <li class="nav-item">
-    <a class="nav-link active" href="../projects/index.html" aria-current="page"> 
+    <a class="nav-link" href="../../projects/index.html"> 
 <span class="menu-text">Projects</span></a>
   </li>  
   <li class="nav-item">
-    <a class="nav-link" href="../blog/index.html"> 
+    <a class="nav-link" href="../../blog/index.html"> 
 <span class="menu-text">Blog</span></a>
   </li>  
   <li class="nav-item">
-    <a class="nav-link" href="../playground/index.html"> 
+    <a class="nav-link" href="../../playground/index.html"> 
 <span class="menu-text">Playground</span></a>
   </li>  
   <li class="nav-item">
-    <a class="nav-link" href="../guides/index.html"> 
+    <a class="nav-link" href="../../guides/index.html"> 
 <span class="menu-text">Guides</span></a>
   </li>  
   <li class="nav-item">
-    <a class="nav-link" href="../talks/index.html"> 
+    <a class="nav-link" href="../../talks/index.html"> 
 <span class="menu-text">Talks</span></a>
   </li>  
   <li class="nav-item">
-    <a class="nav-link" href="../writeups/index.html"> 
+    <a class="nav-link" href="../../writeups/index.html"> 
 <span class="menu-text">Writeups</span></a>
   </li>  
   <li class="nav-item">
-    <a class="nav-link" href="../resume/index.html"> 
+    <a class="nav-link" href="../../resume/index.html"> 
 <span class="menu-text">Resume</span></a>
   </li>  
 </ul>
@@ -199,165 +173,126 @@ window.Quarto = {
     </nav>
 </header>
 <!-- content -->
-<header id="title-block-header" class="quarto-title-block default page-columns page-full">
-  <div class="quarto-title-banner page-columns page-full">
-    <div class="quarto-title column-page-left">
-      <h1 class="title">Projects</h1>
-                  <div>
-        <div class="description">
-          This is I blog my progress on my projects. I often use this as a reference sheet when I come back to incomplete projects.
-        </div>
-      </div>
-                </div>
-  </div>
-    
-  
-  <div class="quarto-title-meta column-page-left">
-
-      
-    
-      
-    </div>
-    
-  
-  </header><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-full page-navbar">
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
 <!-- sidebar -->
 <!-- margin-sidebar -->
     <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
-        
-    <h5 class="quarto-listing-category-title">Categories</h5><div class="quarto-listing-category category-default"><div class="category" data-category="">All <span class="quarto-category-count">(9)</span></div><div class="category" data-category="ansible">ansible <span class="quarto-category-count">(1)</span></div><div class="category" data-category="devops">devops <span class="quarto-category-count">(2)</span></div><div class="category" data-category="hci">hci <span class="quarto-category-count">(1)</span></div><div class="category" data-category="kasm">kasm <span class="quarto-category-count">(2)</span></div><div class="category" data-category="linux">linux <span class="quarto-category-count">(7)</span></div><div class="category" data-category="nix">nix <span class="quarto-category-count">(5)</span></div><div class="category" data-category="quarto">quarto <span class="quarto-category-count">(1)</span></div><div class="category" data-category="ubuntu">ubuntu <span class="quarto-category-count">(1)</span></div></div></div>
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#apecosmo" id="toc-apecosmo" class="nav-link active" data-scroll-target="#apecosmo">Ape/Cosmo</a></li>
+  <li><a href="#nix-bundle" id="toc-nix-bundle" class="nav-link" data-scroll-target="#nix-bundle">Nix bundle</a></li>
+  </ul>
+</nav>
+    </div>
 <!-- main -->
-<main class="content quarto-banner-title-block column-page-left" id="quarto-document-content">
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Portable executable experiments for CCDC</h1>
+  <div class="quarto-categories">
+    <div class="quarto-category">linux</div>
+  </div>
+  </div>
 
 
 
+<div class="quarto-title-meta">
+
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">August 6, 2024</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
 
 
+</header>
 
 
+<p>One of the big problems encountered in <a href="https://en.wikipedia.org/wiki/National_Collegiate_Cyber_Defense_Competition">CCDC</a> is the portability of tools. Competitors will be asked to work across a vareity of Linux distros, of various types and various package versions, and even across the BSD versions. Of course, sometimes the solution is simple: install your tools, like python or tmux, from the package manager on every Linux/BSD OS.</p>
+<p>The second problem is that the organizers of the competittion like to break our package managers. Deleting repos, or giving us a distro without a package manager.</p>
+<p>I was looking into portable executables, to get around this.</p>
+<section id="apecosmo" class="level1">
+<h1>Ape/Cosmo</h1>
+<p><a href="https://justine.lol/cosmopolitan/index.html">Cosmopolitan</a> is a project that turns C into build once, run anywhere language. It works by creating a fat binary that contains code for all other operating systems, including UEFI, and then dynamically figuring out where it is being run.</p>
+<p>There are some precompiled binaries for ape as well:</p>
+<ul>
+<li><a href="https://github.com/ahgamut/superconfigure/releases" class="uri">https://github.com/ahgamut/superconfigure/releases</a></li>
+<li><a href="https://cosmo.zip/pub/cosmos/bin/" class="uri">https://cosmo.zip/pub/cosmos/bin/</a></li>
+</ul>
+<p>Some of these tools are very interesting, in particular <code>tmux</code> and <code>python</code>. Ansible requires python to be on the machines, but it can be difficult to get python on a machine, especially if the package manager is broken. I can easily imagine something like:</p>
+<p><code>cat staticpython | ssh hostname "cat &gt; remotestaticssh"</code></p>
+<p>The above would enable us to get a version of staticly compiled python on anything with ssh, and only ssh needed. There are also some <a href="https://superuser.com/questions/291423/how-to-copy-a-file-without-using-scp-inside-an-ssh-session">other ways to do it</a>.</p>
+<p>I download an actually portable version of tmux and python, and attempt to run them (the test is to see if they still work without glibc, which is often a limitation of portability for many other portable binaries).</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>[moonpie@lizard apeb]$ ./python</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>0088:err:sync:RtlpWaitForCriticalSection section 00006FFFFFFAC440 "../wine-staging/dlls/ntdll/loader.c: loader_section" wait timed out in thread 0088, blocked by 007c, retrying (60 sec)</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>0120:fixme:file:server_get_file_info Unsupported info class 1c</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>0120:fixme:file:NtFsControlFile FSCTL_GET_REPARSE_POINT semi-stub</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>0120:fixme:file:server_get_file_info Unsupported info class 1c</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>0120:fixme:file:server_get_file_info Unsupported info class 1c</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>Python 3.12.3 (main, Aug  3 2024, 10:18:33) [GCC 14.1.0] on linux</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>Type "help", "copyright", "credits" or "license" for more information.</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>0120:fixme:file:server_get_file_info Unsupported info class 1c</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>&gt;&gt;&gt; exit(_</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>^C0124:err:virtual:virtual_setup_exception stack overflow 1280 bytes addr 0x952cd2 stack 0x1300b00 (0x1300000-0x1301000-0x1400000)</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>^C012c:err:virtual:virtual_setup_exception stack overflow 1280 bytes addr 0x952cd2 stack 0x1400b00 (0x1400000-0x1401000-0x1500000)</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>^C0134:err:virtual:virtual_setup_exception stack overflow 1280 bytes addr 0x952cd2 stack 0x1500b00 (0x1500000-0x1501000-0x1600000)</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>^C013c:err:virtual:virtual_setup_exception stack overflow 1280 bytes addr 0x952cd2 stack 0x1600b00 (0x1600000-0x1601000-0x1700000)</span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>^C0144:err:virtual:virtual_setup_exception stack overflow 1280 bytes addr 0x952cd2 stack 0x1700b00 (0x1700000-0x1701000-0x1800000)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>uhhhh…. my Arch Linux install attempts to use wine to load up the python program. There are also issues quitting, and I end up having to use pkill to kill python.</p>
+<p>The way to avoid this is to use the <a href="https://justine.lol/apeloader/">ape loader</a>.</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>[moonpie@lizard apeb]$ ./ape-x86_64.elf ./python</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>Python 3.12.3 (main, Aug  3 2024, 10:18:33) [GCC 14.1.0] on linux</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>Type "help", "copyright", "credits" or "license" for more information.</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>&gt;&gt;&gt;</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>``</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>And this works. But, although there is also a version of python distributed with many python libraries included, called `pypack1`, it doesn't contain some crucial python packages that I may need for ansible administration of systems, like sql manipulation tools. </span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>```{.default}</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>[moonpie@lizard apeb]$ ./ape-x86_64.elf ./python -m venv venv</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>Error: Command '['/home/moonpie/vscode/test/apeb/venv/bin/python', '-m', 'ensurepip', '--upgrade', '--default-pip']' returned non-zero exit status 1.</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Yeah. I’m not too worried, because I wrote my roles so that the databse manipulation can also be done remotely, from a playbook running on localhost, but it would be simpler if everything can be run on the remote systems.</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>[moonpie@lizard apeb]$ ./ape-x86_64.elf ./tmux</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>[moonpie@lizard apeb]$ ./ape-x86_64.elf ./tmux -h</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>tmux: unknown option -- h</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>usage: tmux [-2CDlNuvV] [-c shell-command] [-f file] [-L socket-name]</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>            [-S socket-path] [-T features] [command [flags]]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>And tmux just won’t load, although it will print the help output. I find this very weird, as I could get tmux to load earlier, but not now. It doesn’t load on my host system, or in an Debian or Alpine container.</p>
+<p>This only seems to apply to the ape tmux, as tmux installed by apt in a debian container doesn’t have this issue, and then after that, tmux is able to start sessions normally, but then it can’t again after I kill all sessions. At least this isolates it to an issue with ape.</p>
+<p>It could just be a bug of some sort, but the package version only updated 3 days ago from now (August 6th), so those haven’t changed.</p>
+<p>The weirdest thing is that the ape tmux is actually able to work normally… but only after I launch a session via non-ape tmux. And then, one I kill all tmux sessions, then it stops working again.</p>
+<p>It seems like the ape tmux is having trouble starting the server:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>/stuff # ape ./tmux start-server</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>/stuff #</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>/stuff # ape ./tmux ls</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>no server running on /tmp/tmux-0/default</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>I found a <a href="https://github.com/tmux/tmux/issues/736">half relevant issue</a>, but the failed solution gives me more answers:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>/stuff # ape ./tmux new-session -t testing -d</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>create window failed: fork failed: Operation not permitted</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>I eventually made a post on the redbean discord server, and uploaded my <a href="https://gist.github.com/moonpiedumplings/809dcc89cfe289f8341aae85069a57e1">strace to a github gist</a>. I’ll wait to see if anyone replies.</p>
+</section>
+<section id="nix-bundle" class="level1">
+<h1>Nix bundle</h1>
+<p><code>nix bundle nixpkgs#programname</code> is a command that bundles a program into a self extracting archive that uses proot to run itself. A big problem with nix bundle is that it mostly only works on Linux, and relying on proot makes it less portable compared to ape. <a href="https://nix.dev/manual/nix/2.13/command-ref/new-cli/nix3-bundle">Here is the official manual</a>… on an unofficial site.</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>[moonpie@lizard apeb]$ nix bundle nixpkgs#zellij</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>[moonpie@lizard apeb]$ ls -la zellij</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>lrwxrwxrwx 1 moonpie moonpie 47 Aug  6 22:28 zellij -&gt; /nix/store/5d5fi0x4g7v33m7jscxwjijaxi3lg2kp-arx</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>One thing that is mildly annoying is that nix builds stuff in the nix store, and then symlinks to it from the outside, meaning you have to copy out the binary first.</p>
+<p>The first thing I tried to do was bundle zellij and tmux, and funnily enough, they run into the exact same issue as ape. If I launch a zellij or tmux session using a non-ape, non nix-bundled session, first, then I can use the nix bundled zellij or tmux normally.</p>
 
 
-<div class="quarto-listing quarto-listing-container-table" id="listing-listing">
-<table class="quarto-listing-table table">
-<thead>
-<tr>
-<th>
-Date
-</th>
-<th>
-Title
-</th>
-<th>
-Author
-</th>
-</tr>
-</thead>
-<tbody class="list">
-<tr data-index="0" data-categories="linux" data-listing-date-sort="1710918000000" data-listing-file-modified-sort="1722809459351" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="15" data-listing-word-count-sort="2861" data-listing-title-sort="My server part 4 — Kubernetes" data-listing-filename-sort="index.md">
-<td>
-<span class="listing-date">Mar 20, 2024</span>
-</td>
-<td>
-<a href="../projects/build-server-4/index.html" class="title listing-title">My server part 4 — Kubernetes</a>
-</td>
-<td>
-<span class="listing-author">&nbsp;</span>
-</td>
-</tr>
-<tr data-index="1" data-categories="linux" data-listing-date-sort="1705478400000" data-listing-file-modified-sort="1717285361000" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="40" data-listing-word-count-sort="7878" data-listing-title-sort="Building my server part 3 — The switch to debian" data-listing-filename-sort="index.qmd">
-<td>
-<span class="listing-date">Jan 17, 2024</span>
-</td>
-<td>
-<a href="../projects/build-server-3/index.html" class="title listing-title">Building my server part 3 — The switch to debian</a>
-</td>
-<td>
-<span class="listing-author">&nbsp;</span>
-</td>
-</tr>
-<tr data-index="2" data-categories="nix,quarto" data-listing-date-sort="1705305600000" data-listing-file-modified-sort="1705786332000" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="42" data-listing-word-count-sort="8247" data-listing-title-sort="Packaging quarto using nix" data-listing-filename-sort="index.qmd">
-<td>
-<span class="listing-date">Jan 15, 2024</span>
-</td>
-<td>
-<a href="../projects/quarto-via-nix/index.html" class="title listing-title">Packaging quarto using nix</a>
-</td>
-<td>
-<span class="listing-author">&nbsp;</span>
-</td>
-</tr>
-<tr data-index="3" data-categories="linux" data-listing-date-sort="1690959600000" data-listing-file-modified-sort="1717446011000" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="102" data-listing-word-count-sort="20259" data-listing-title-sort="Building my own Server Part 2 — Software" data-listing-filename-sort="index.qmd">
-<td>
-<span class="listing-date">Aug 2, 2023</span>
-</td>
-<td>
-<a href="../projects/build-server-2/index.html" class="title listing-title">Building my own Server Part 2 — Software</a>
-</td>
-<td>
-<span class="listing-author">&nbsp;</span>
-</td>
-</tr>
-<tr data-index="4" data-categories="linux" data-listing-date-sort="1690873200000" data-listing-file-modified-sort="1699495047000" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="12" data-listing-word-count-sort="2348" data-listing-title-sort="Building my own Server Part 1 — Hardware" data-listing-filename-sort="index.qmd">
-<td>
-<span class="listing-date">Aug 1, 2023</span>
-</td>
-<td>
-<a href="../projects/build-server/index.html" class="title listing-title">Building my own Server Part 1 — Hardware</a>
-</td>
-<td>
-<span class="listing-author">&nbsp;</span>
-</td>
-</tr>
-<tr data-index="5" data-categories="nix,linux,ansible" data-listing-date-sort="1689318000000" data-listing-file-modified-sort="1699495047000" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="18" data-listing-word-count-sort="3473" data-listing-title-sort="Automating my server config, first nix, then ansible" data-listing-filename-sort="index.qmd">
-<td>
-<span class="listing-date">Jul 14, 2023</span>
-</td>
-<td>
-<a href="../projects/nixos-vps/index.html" class="title listing-title">Automating my server config, first nix, then ansible</a>
-</td>
-<td>
-<span class="listing-author">&nbsp;</span>
-</td>
-</tr>
-<tr data-index="6" data-categories="nix,hci" data-listing-date-sort="1686466800000" data-listing-file-modified-sort="1699495047000" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="34" data-listing-word-count-sort="6636" data-listing-title-sort="Packaging Openstack on Nixos" data-listing-filename-sort="index.qmd">
-<td>
-<span class="listing-date">Jun 11, 2023</span>
-</td>
-<td>
-<a href="../projects/openstack-on-nixos/index.html" class="title listing-title">Packaging Openstack on Nixos</a>
-</td>
-<td>
-<span class="listing-author">&nbsp;</span>
-</td>
-</tr>
-<tr data-index="7" data-categories="linux,devops,nix,kasm" data-listing-date-sort="1683010800000" data-listing-file-modified-sort="1699495047000" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="11" data-listing-word-count-sort="2178" data-listing-title-sort="Compiling KasmVNC on NixOS" data-listing-filename-sort="index.qmd">
-<td>
-<span class="listing-date">May 2, 2023</span>
-</td>
-<td>
-<a href="../projects/compiling-kasmvnc-on-nixos/index.html" class="title listing-title">Compiling KasmVNC on NixOS</a>
-</td>
-<td>
-<span class="listing-author">&nbsp;</span>
-</td>
-</tr>
-<tr data-index="8" data-categories="nix,linux,devops,ubuntu,kasm" data-listing-date-sort="1674720000000" data-listing-file-modified-sort="1699495047000" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="10" data-listing-word-count-sort="1895" data-listing-title-sort="Kasmweb setup" data-listing-filename-sort="index.qmd">
-<td>
-<span class="listing-date">Jan 26, 2023</span>
-</td>
-<td>
-<a href="../projects/setting-up-kasm/index.html" class="title listing-title">Kasmweb setup</a>
-</td>
-<td>
-<span class="listing-author">&nbsp;</span>
-</td>
-</tr>
-</tbody>
-</table>
-<div class="listing-no-matching d-none">
-No matching items
-</div>
-</div></main> <!-- /main -->
+</section>
+
+</main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">
 window.document.addEventListener("DOMContentLoaded", function (event) {
   const toggleBodyColorMode = (bsSheetEl) => {

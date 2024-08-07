@@ -182,6 +182,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
    
   <ul>
   <li><a href="#more-issues-no-tab-autocomplete" id="toc-more-issues-no-tab-autocomplete" class="nav-link active" data-scroll-target="#more-issues-no-tab-autocomplete">More issues, no tab autocomplete</a></li>
+  <li><a href="#home-manager" id="toc-home-manager" class="nav-link" data-scroll-target="#home-manager">Home-Manager</a></li>
   </ul>
 </nav>
     </div>
@@ -843,6 +844,61 @@ Show errors
 <span id="cb28-6"><a href="#cb28-6" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>I actually encountered a similar issue with python. Vscode seems to ignore things not added to path, even if they are specified in other ways, like <code>$PYTHONPATH</code> pointing to the correct version of python.</p>
 <p>But now, this finally works.</p>
+</section>
+<section id="home-manager" class="level1">
+<h1>Home-Manager</h1>
+<p>Next thing is to convert home manager to flakes. I need a slightly older version of kubectl, and flakes allow me to use packages from multiple versions of nixpkgs.</p>
+<p>I followed the <a href="https://nix-community.github.io/home-manager/index.xhtml#sec-flakes-standalone">standalone flakes installation instructions</a></p>
+<p><code>nix run home-manager/master -- init --switch</code></p>
+<p>And with this, I get a basic flake.nix, flake.lock, and home.nix in <code>.config/home-manager/</code>.</p>
+<p>For older versions of packages, there are two sites I like, nixhub and lazamar’s site:</p>
+<ul>
+<li>https://www.nixhub.io/</li>
+<li>https://lazamar.co.uk/nix-versions/</li>
+</ul>
+<p>I found the correct nixpkgs revision for what I want: <code>7a339d87931bba829f68e94621536cad9132971a</code>.</p>
+<p>However, using packages from multiple versions of nipkgs isn’t as easy as I thought it would be. The <a href="https://wiki.nixos.org/wiki/Flakes#Importing_packages_from_multiple_nixpkgs_branches">officail docs</a> suggest to use an overlay, which feels unecessary. Why can’t I just replicate what it does for <code>nixpkgs</code>, but for <code>nixpkgs</code> again?</p>
+<p>I tried that, and it didn’t work. The error’s aren’t very clear, but I think it’s because the home manager configuration is a function with explicit arguments, and it errors when I try to feed it more than what it wants.</p>
+<p>Thankfully, I found another simple solution:</p>
+<div class="code-with-filename">
+<div class="code-with-filename-file">
+<pre><strong>flake.nix</strong></pre>
+</div>
+<div class="sourceCode" id="cb29" data-filename="flake.nix"><pre class="sourceCode nix code-with-copy"><code class="sourceCode nix"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="op">{</span></span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>  <span class="va">description</span> <span class="op">=</span> <span class="st">"Home Manager configuration of moonpie"</span><span class="op">;</span></span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a>  <span class="va">inputs</span> <span class="op">=</span> <span class="op">{</span></span>
+<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a>    <span class="va">nixpkgs</span>.<span class="va">url</span> <span class="op">=</span> <span class="st">"github:nixos/nixpkgs/nixos-unstable"</span><span class="op">;</span></span>
+<span id="cb29-6"><a href="#cb29-6" aria-hidden="true" tabindex="-1"></a>    <span class="va">pkgs-kubectl</span>.<span class="va">url</span> <span class="op">=</span> <span class="st">"github:nixos/nixpkgs/7a339d87931bba829f68e94621536cad9132971a"</span><span class="op">;</span></span>
+<span id="cb29-7"><a href="#cb29-7" aria-hidden="true" tabindex="-1"></a>    <span class="va">home-manager</span> <span class="op">=</span> <span class="op">{</span></span>
+<span id="cb29-8"><a href="#cb29-8" aria-hidden="true" tabindex="-1"></a>      <span class="va">url</span> <span class="op">=</span> <span class="st">"github:nix-community/home-manager"</span><span class="op">;</span></span>
+<span id="cb29-9"><a href="#cb29-9" aria-hidden="true" tabindex="-1"></a>      <span class="va">inputs</span>.<span class="va">nixpkgs</span>.<span class="va">follows</span> <span class="op">=</span> <span class="st">"nixpkgs"</span><span class="op">;</span></span>
+<span id="cb29-10"><a href="#cb29-10" aria-hidden="true" tabindex="-1"></a>    <span class="op">};</span></span>
+<span id="cb29-11"><a href="#cb29-11" aria-hidden="true" tabindex="-1"></a>  <span class="op">};</span></span>
+<span id="cb29-12"><a href="#cb29-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-13"><a href="#cb29-13" aria-hidden="true" tabindex="-1"></a>  <span class="va">outputs</span> <span class="op">=</span> <span class="op">{</span> <span class="va">nixpkgs</span><span class="op">,</span> <span class="va">pkgs-kubectl</span><span class="op">,</span> <span class="va">home-manager</span><span class="op">,</span> <span class="op">...</span> <span class="op">}</span>:</span>
+<span id="cb29-14"><a href="#cb29-14" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span></span>
+<span id="cb29-15"><a href="#cb29-15" aria-hidden="true" tabindex="-1"></a>      <span class="va">system</span> <span class="op">=</span> <span class="st">"x86_64-linux"</span><span class="op">;</span></span>
+<span id="cb29-16"><a href="#cb29-16" aria-hidden="true" tabindex="-1"></a>      <span class="va">pkgs</span> <span class="op">=</span> nixpkgs.legacyPackages.$<span class="op">{</span><span class="va">system</span><span class="op">};</span></span>
+<span id="cb29-17"><a href="#cb29-17" aria-hidden="true" tabindex="-1"></a>    <span class="kw">in</span> <span class="op">{</span></span>
+<span id="cb29-18"><a href="#cb29-18" aria-hidden="true" tabindex="-1"></a>      <span class="va">homeConfigurations</span>.<span class="st">"</span>moonpie<span class="st">"</span> <span class="op">=</span> home<span class="op">-</span>manager.lib.homeManagerConfiguration <span class="op">{</span></span>
+<span id="cb29-19"><a href="#cb29-19" aria-hidden="true" tabindex="-1"></a>        <span class="kw">inherit</span> pkgs<span class="op">;</span></span>
+<span id="cb29-20"><a href="#cb29-20" aria-hidden="true" tabindex="-1"></a>        <span class="va">extraSpecialArgs</span> <span class="op">=</span> <span class="op">{</span></span>
+<span id="cb29-21"><a href="#cb29-21" aria-hidden="true" tabindex="-1"></a>          <span class="va">pkgs-kbctl</span> <span class="op">=</span> <span class="bu">import</span> pkgs<span class="op">-</span>kubectl <span class="op">{</span><span class="kw">inherit</span> system<span class="op">;};</span></span>
+<span id="cb29-22"><a href="#cb29-22" aria-hidden="true" tabindex="-1"></a>        <span class="op">};</span></span>
+<span id="cb29-23"><a href="#cb29-23" aria-hidden="true" tabindex="-1"></a>        <span class="va">modules</span> <span class="op">=</span> <span class="op">[</span> <span class="ss">./home.nix</span> <span class="op">];</span></span>
+<span id="cb29-24"><a href="#cb29-24" aria-hidden="true" tabindex="-1"></a>      <span class="op">};</span></span>
+<span id="cb29-25"><a href="#cb29-25" aria-hidden="true" tabindex="-1"></a>    <span class="op">};</span></span>
+<span id="cb29-26"><a href="#cb29-26" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>And then in the beginning of home.nix:</p>
+<div class="code-with-filename">
+<div class="code-with-filename-file">
+<pre><strong>home.nix</strong></pre>
+</div>
+<div class="sourceCode" id="cb30" data-filename="home.nix"><pre class="sourceCode nix code-with-copy"><code class="sourceCode nix"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="op">{</span> <span class="va">config</span><span class="op">,</span> <span class="va">pkgs</span><span class="op">,</span> <span class="va">pkgs-kbctl</span><span class="op">,</span> <span class="op">...</span> <span class="op">}</span>:</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>And this works. I can use <code>pkgs-kbctl.kubectl</code> to reference kubectl version 1.28.4, which is what’s on my server.</p>
 
 
 </section>

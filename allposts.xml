@@ -10,7 +10,95 @@
 <atom:link href="https://moonpiedumplings.github.io/allposts.xml" rel="self" type="application/rss+xml"/>
 <description>All posts, intended to be used in an RSS feed. </description>
 <generator>quarto-1.5.52</generator>
-<lastBuildDate>Fri, 21 Jun 2024 07:00:00 GMT</lastBuildDate>
+<lastBuildDate>Tue, 06 Aug 2024 07:00:00 GMT</lastBuildDate>
+<item>
+  <title>Portable executable experiments for CCDC</title>
+  <link>https://moonpiedumplings.github.io/playground/ape-experiments/</link>
+  <description><![CDATA[ 
+
+
+
+
+<p>One of the big problems encountered in <a href="https://en.wikipedia.org/wiki/National_Collegiate_Cyber_Defense_Competition">CCDC</a> is the portability of tools. Competitors will be asked to work across a vareity of Linux distros, of various types and various package versions, and even across the BSD versions. Of course, sometimes the solution is simple: install your tools, like python or tmux, from the package manager on every Linux/BSD OS.</p>
+<p>The second problem is that the organizers of the competittion like to break our package managers. Deleting repos, or giving us a distro without a package manager.</p>
+<p>I was looking into portable executables, to get around this.</p>
+<section id="apecosmo" class="level1">
+<h1>Ape/Cosmo</h1>
+<p><a href="https://justine.lol/cosmopolitan/index.html">Cosmopolitan</a> is a project that turns C into build once, run anywhere language. It works by creating a fat binary that contains code for all other operating systems, including UEFI, and then dynamically figuring out where it is being run.</p>
+<p>There are some precompiled binaries for ape as well:</p>
+<ul>
+<li><a href="https://github.com/ahgamut/superconfigure/releases" class="uri">https://github.com/ahgamut/superconfigure/releases</a></li>
+<li><a href="https://cosmo.zip/pub/cosmos/bin/" class="uri">https://cosmo.zip/pub/cosmos/bin/</a></li>
+</ul>
+<p>Some of these tools are very interesting, in particular <code>tmux</code> and <code>python</code>. Ansible requires python to be on the machines, but it can be difficult to get python on a machine, especially if the package manager is broken. I can easily imagine something like:</p>
+<p><code>cat staticpython | ssh hostname "cat &gt; remotestaticssh"</code></p>
+<p>The above would enable us to get a version of staticly compiled python on anything with ssh, and only ssh needed. There are also some <a href="https://superuser.com/questions/291423/how-to-copy-a-file-without-using-scp-inside-an-ssh-session">other ways to do it</a>.</p>
+<p>I download an actually portable version of tmux and python, and attempt to run them (the test is to see if they still work without glibc, which is often a limitation of portability for many other portable binaries).</p>
+<div class="sourceCode" id="cb1" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb1-1">[moonpie@lizard apeb]$ ./python</span>
+<span id="cb1-2">0088:err:sync:RtlpWaitForCriticalSection section 00006FFFFFFAC440 "../wine-staging/dlls/ntdll/loader.c: loader_section" wait timed out in thread 0088, blocked by 007c, retrying (60 sec)</span>
+<span id="cb1-3">0120:fixme:file:server_get_file_info Unsupported info class 1c</span>
+<span id="cb1-4">0120:fixme:file:NtFsControlFile FSCTL_GET_REPARSE_POINT semi-stub</span>
+<span id="cb1-5">0120:fixme:file:server_get_file_info Unsupported info class 1c</span>
+<span id="cb1-6">0120:fixme:file:server_get_file_info Unsupported info class 1c</span>
+<span id="cb1-7">Python 3.12.3 (main, Aug  3 2024, 10:18:33) [GCC 14.1.0] on linux</span>
+<span id="cb1-8">Type "help", "copyright", "credits" or "license" for more information.</span>
+<span id="cb1-9">0120:fixme:file:server_get_file_info Unsupported info class 1c</span>
+<span id="cb1-10">&gt;&gt;&gt; exit(_</span>
+<span id="cb1-11">^C0124:err:virtual:virtual_setup_exception stack overflow 1280 bytes addr 0x952cd2 stack 0x1300b00 (0x1300000-0x1301000-0x1400000)</span>
+<span id="cb1-12">^C012c:err:virtual:virtual_setup_exception stack overflow 1280 bytes addr 0x952cd2 stack 0x1400b00 (0x1400000-0x1401000-0x1500000)</span>
+<span id="cb1-13">^C0134:err:virtual:virtual_setup_exception stack overflow 1280 bytes addr 0x952cd2 stack 0x1500b00 (0x1500000-0x1501000-0x1600000)</span>
+<span id="cb1-14">^C013c:err:virtual:virtual_setup_exception stack overflow 1280 bytes addr 0x952cd2 stack 0x1600b00 (0x1600000-0x1601000-0x1700000)</span>
+<span id="cb1-15">^C0144:err:virtual:virtual_setup_exception stack overflow 1280 bytes addr 0x952cd2 stack 0x1700b00 (0x1700000-0x1701000-0x1800000)</span></code></pre></div>
+<p>uhhhh…. my Arch Linux install attempts to use wine to load up the python program. There are also issues quitting, and I end up having to use pkill to kill python.</p>
+<p>The way to avoid this is to use the <a href="https://justine.lol/apeloader/">ape loader</a>.</p>
+<div class="sourceCode" id="cb2" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb2-1">[moonpie@lizard apeb]$ ./ape-x86_64.elf ./python</span>
+<span id="cb2-2">Python 3.12.3 (main, Aug  3 2024, 10:18:33) [GCC 14.1.0] on linux</span>
+<span id="cb2-3">Type "help", "copyright", "credits" or "license" for more information.</span>
+<span id="cb2-4">&gt;&gt;&gt;</span>
+<span id="cb2-5">``</span>
+<span id="cb2-6"></span>
+<span id="cb2-7">And this works. But, although there is also a version of python distributed with many python libraries included, called `pypack1`, it doesn't contain some crucial python packages that I may need for ansible administration of systems, like sql manipulation tools. </span>
+<span id="cb2-8"></span>
+<span id="cb2-9">```{.default}</span>
+<span id="cb2-10">[moonpie@lizard apeb]$ ./ape-x86_64.elf ./python -m venv venv</span>
+<span id="cb2-11">Error: Command '['/home/moonpie/vscode/test/apeb/venv/bin/python', '-m', 'ensurepip', '--upgrade', '--default-pip']' returned non-zero exit status 1.</span></code></pre></div>
+<p>Yeah. I’m not too worried, because I wrote my roles so that the databse manipulation can also be done remotely, from a playbook running on localhost, but it would be simpler if everything can be run on the remote systems.</p>
+<div class="sourceCode" id="cb3" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb3-1">[moonpie@lizard apeb]$ ./ape-x86_64.elf ./tmux</span>
+<span id="cb3-2">[moonpie@lizard apeb]$ ./ape-x86_64.elf ./tmux -h</span>
+<span id="cb3-3">tmux: unknown option -- h</span>
+<span id="cb3-4">usage: tmux [-2CDlNuvV] [-c shell-command] [-f file] [-L socket-name]</span>
+<span id="cb3-5">            [-S socket-path] [-T features] [command [flags]]</span></code></pre></div>
+<p>And tmux just won’t load, although it will print the help output. I find this very weird, as I could get tmux to load earlier, but not now. It doesn’t load on my host system, or in an Debian or Alpine container.</p>
+<p>This only seems to apply to the ape tmux, as tmux installed by apt in a debian container doesn’t have this issue, and then after that, tmux is able to start sessions normally, but then it can’t again after I kill all sessions. At least this isolates it to an issue with ape.</p>
+<p>It could just be a bug of some sort, but the package version only updated 3 days ago from now (August 6th), so those haven’t changed.</p>
+<p>The weirdest thing is that the ape tmux is actually able to work normally… but only after I launch a session via non-ape tmux. And then, one I kill all tmux sessions, then it stops working again.</p>
+<p>It seems like the ape tmux is having trouble starting the server:</p>
+<div class="sourceCode" id="cb4" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb4-1">/stuff # ape ./tmux start-server</span>
+<span id="cb4-2">/stuff #</span>
+<span id="cb4-3">/stuff # ape ./tmux ls</span>
+<span id="cb4-4">no server running on /tmp/tmux-0/default</span></code></pre></div>
+<p>I found a <a href="https://github.com/tmux/tmux/issues/736">half relevant issue</a>, but the failed solution gives me more answers:</p>
+<div class="sourceCode" id="cb5" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb5-1">/stuff # ape ./tmux new-session -t testing -d</span>
+<span id="cb5-2">create window failed: fork failed: Operation not permitted</span></code></pre></div>
+<p>I eventually made a post on the redbean discord server, and uploaded my <a href="https://gist.github.com/moonpiedumplings/809dcc89cfe289f8341aae85069a57e1">strace to a github gist</a>. I’ll wait to see if anyone replies.</p>
+</section>
+<section id="nix-bundle" class="level1">
+<h1>Nix bundle</h1>
+<p><code>nix bundle nixpkgs#programname</code> is a command that bundles a program into a self extracting archive that uses proot to run itself. A big problem with nix bundle is that it mostly only works on Linux, and relying on proot makes it less portable compared to ape. <a href="https://nix.dev/manual/nix/2.13/command-ref/new-cli/nix3-bundle">Here is the official manual</a>… on an unofficial site.</p>
+<div class="sourceCode" id="cb6" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb6-1">[moonpie@lizard apeb]$ nix bundle nixpkgs#zellij</span>
+<span id="cb6-2">[moonpie@lizard apeb]$ ls -la zellij</span>
+<span id="cb6-3">lrwxrwxrwx 1 moonpie moonpie 47 Aug  6 22:28 zellij -&gt; /nix/store/5d5fi0x4g7v33m7jscxwjijaxi3lg2kp-arx</span></code></pre></div>
+<p>One thing that is mildly annoying is that nix builds stuff in the nix store, and then symlinks to it from the outside, meaning you have to copy out the binary first.</p>
+<p>The first thing I tried to do was bundle zellij and tmux, and funnily enough, they run into the exact same issue as ape. If I launch a zellij or tmux session using a non-ape, non nix-bundled session, first, then I can use the nix bundled zellij or tmux normally.</p>
+
+
+</section>
+
+ ]]></description>
+  <category>linux</category>
+  <guid>https://moonpiedumplings.github.io/playground/ape-experiments/</guid>
+  <pubDate>Tue, 06 Aug 2024 07:00:00 GMT</pubDate>
+</item>
 <item>
   <title>Creating a nix flake shell, the “proper” way</title>
   <link>https://moonpiedumplings.github.io/playground/flake-shell/</link>
@@ -1713,6 +1801,249 @@ font-style: inherit;">}</span></span></code></pre></div>
 <span id="cb28-6">}</span></code></pre></div>
 <p>I actually encountered a similar issue with python. Vscode seems to ignore things not added to path, even if they are specified in other ways, like <code>$PYTHONPATH</code> pointing to the correct version of python.</p>
 <p>But now, this finally works.</p>
+</section>
+<section id="home-manager" class="level1">
+<h1>Home-Manager</h1>
+<p>Next thing is to convert home manager to flakes. I need a slightly older version of kubectl, and flakes allow me to use packages from multiple versions of nixpkgs.</p>
+<p>I followed the <a href="https://nix-community.github.io/home-manager/index.xhtml#sec-flakes-standalone">standalone flakes installation instructions</a></p>
+<p><code>nix run home-manager/master -- init --switch</code></p>
+<p>And with this, I get a basic flake.nix, flake.lock, and home.nix in <code>.config/home-manager/</code>.</p>
+<p>For older versions of packages, there are two sites I like, nixhub and lazamar’s site:</p>
+<ul>
+<li>https://www.nixhub.io/</li>
+<li>https://lazamar.co.uk/nix-versions/</li>
+</ul>
+<p>I found the correct nixpkgs revision for what I want: <code>7a339d87931bba829f68e94621536cad9132971a</code>.</p>
+<p>However, using packages from multiple versions of nipkgs isn’t as easy as I thought it would be. The <a href="https://wiki.nixos.org/wiki/Flakes#Importing_packages_from_multiple_nixpkgs_branches">officail docs</a> suggest to use an overlay, which feels unecessary. Why can’t I just replicate what it does for <code>nixpkgs</code>, but for <code>nixpkgs</code> again?</p>
+<p>I tried that, and it didn’t work. The error’s aren’t very clear, but I think it’s because the home manager configuration is a function with explicit arguments, and it errors when I try to feed it more than what it wants.</p>
+<p>Thankfully, I found another simple solution:</p>
+<div class="code-with-filename">
+<div class="code-with-filename-file">
+<pre><strong>flake.nix</strong></pre>
+</div>
+<div class="sourceCode" id="cb29" data-filename="flake.nix" style="background: #f1f3f5;"><pre class="sourceCode nix code-with-copy"><code class="sourceCode nix"><span id="cb29-1"><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">{</span></span>
+<span id="cb29-2">  <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">description</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"Home Manager configuration of moonpie"</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">;</span></span>
+<span id="cb29-3"></span>
+<span id="cb29-4">  <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">inputs</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">{</span></span>
+<span id="cb29-5">    <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">nixpkgs</span>.<span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">url</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"github:nixos/nixpkgs/nixos-unstable"</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">;</span></span>
+<span id="cb29-6">    <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">pkgs-kubectl</span>.<span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">url</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"github:nixos/nixpkgs/7a339d87931bba829f68e94621536cad9132971a"</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">;</span></span>
+<span id="cb29-7">    <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">home-manager</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">{</span></span>
+<span id="cb29-8">      <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">url</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"github:nix-community/home-manager"</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">;</span></span>
+<span id="cb29-9">      <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">inputs</span>.<span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">nixpkgs</span>.<span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">follows</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"nixpkgs"</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">;</span></span>
+<span id="cb29-10">    <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">};</span></span>
+<span id="cb29-11">  <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">};</span></span>
+<span id="cb29-12"></span>
+<span id="cb29-13">  <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">outputs</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">{</span> <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">nixpkgs</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">,</span> <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">pkgs-kubectl</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">,</span> <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">home-manager</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">,</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">...</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">}</span>:</span>
+<span id="cb29-14">    <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">let</span></span>
+<span id="cb29-15">      <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">system</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"x86_64-linux"</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">;</span></span>
+<span id="cb29-16">      <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">pkgs</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> nixpkgs.legacyPackages.$<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">{</span><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">system</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">};</span></span>
+<span id="cb29-17">    <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">in</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">{</span></span>
+<span id="cb29-18">      <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">homeConfigurations</span>.<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"</span>moonpie<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> home<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">-</span>manager.lib.homeManagerConfiguration <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">{</span></span>
+<span id="cb29-19">        <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">inherit</span> pkgs<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">;</span></span>
+<span id="cb29-20">        <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">extraSpecialArgs</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">{</span></span>
+<span id="cb29-21">          <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">pkgs-kbctl</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">import</span> pkgs<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">-</span>kubectl <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">{</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">inherit</span> system<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">;};</span></span>
+<span id="cb29-22">        <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">};</span></span>
+<span id="cb29-23">        <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">modules</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">[</span> <span class="ss" style="color: #20794D;
+background-color: null;
+font-style: inherit;">./home.nix</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">];</span></span>
+<span id="cb29-24">      <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">};</span></span>
+<span id="cb29-25">    <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">};</span></span>
+<span id="cb29-26"><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">}</span></span></code></pre></div>
+</div>
+<p>And then in the beginning of home.nix:</p>
+<div class="code-with-filename">
+<div class="code-with-filename-file">
+<pre><strong>home.nix</strong></pre>
+</div>
+<div class="sourceCode" id="cb30" data-filename="home.nix" style="background: #f1f3f5;"><pre class="sourceCode nix code-with-copy"><code class="sourceCode nix"><span id="cb30-1"><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">{</span> <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">config</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">,</span> <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">pkgs</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">,</span> <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">pkgs-kbctl</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">,</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">...</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">}</span>:</span></code></pre></div>
+</div>
+<p>And this works. I can use <code>pkgs-kbctl.kubectl</code> to reference kubectl version 1.28.4, which is what’s on my server.</p>
 
 
 </section>
@@ -2379,12 +2710,18 @@ font-style: inherit;">sysinit.target</span></span></code></pre></div>
 <h2 class="anchored" data-anchor-id="forgejo">Forgejo</h2>
 <p>Forgejo has a helm chart: <a href="https://codeberg.org/forgejo-contrib/forgejo-helm" class="uri">https://codeberg.org/forgejo-contrib/forgejo-helm</a></p>
 <p>Unlike authentik, forgejo’s helm chart also seems to have some <a href="https://codeberg.org/forgejo-contrib/forgejo-helm#rootless-defaults">support for rootless/user namespaces</a>.</p>
+<p>I also want static sites, and here are some of the options I’ve found:</p>
+<ul>
+<li><a href="https://git.gay/gitgay/pages-server" class="uri">https://git.gay/gitgay/pages-server</a></li>
+<li><a href="https://forgejo.org/docs/latest/developer/static-pages/" class="uri">https://forgejo.org/docs/latest/developer/static-pages/</a></li>
+</ul>
 </section>
 <section id="nextcloud" class="level2">
 <h2 class="anchored" data-anchor-id="nextcloud">Nextcloud</h2>
 <p>There is an existing <a href="https://nextcloud.github.io/helm/">helm chart for nextcloud</a>: <a href="https://github.com/nextcloud/helm" class="uri">https://github.com/nextcloud/helm</a></p>
 <p>However, it says in the above, that it is community maintained, and not truly official.</p>
 <p>Going to the <a href="https://portal.nextcloud.com/article/Scalability/Deployment-recommendations/Large-Organizations-and-Service-Providers">nextcloud official docs for larger scale deployment recommendations</a>… and it’s paywalled. It’s likely that Nextcloud maintains official helm charts — but only for paying customers.</p>
+<p>Someone had an issue with nextcloud configurations on helm, and I asked them for the problem and solution, and they <a href="https://programming.dev/comment/9714618">replied to my post</a>.</p>
 </section>
 </section>
 <section id="networking" class="level1">
@@ -12154,615 +12491,6 @@ font-style: inherit;">## card front</span></span>
  ]]></description>
   <guid>https://moonpiedumplings.github.io/playground/flashcards/</guid>
   <pubDate>Wed, 04 Oct 2023 07:00:00 GMT</pubDate>
-</item>
-<item>
-  <title>Podman vs Docker</title>
-  <link>https://moonpiedumplings.github.io/playground/podman-docker/</link>
-  <description><![CDATA[ 
-
-
-
-
-<p>So I’ve been having some trouble, not with docker itself, but the way it interacts with the rest of the system. The big thing is that docker overwrites iptables rules, meaning any other bridges won’t work properly unless you set up iptables rules with the -I DOCKER-USER, which specifically sits in front of docker.</p>
-<p>I encountered <a href="https://discuss.linuxcontainers.org/t/lxd-4-12-container-networking-failure-with-docker/10487/9">this issue</a> with linux containers, where the lxc containers did not have networking when docker was installed.</p>
-<p>I also encoutered a similar issue when trying to setup NAT, the instructions on the <a href="https://wiki.archlinux.org/title/Internet_sharing#Enable_NAT">arch wiki</a> stated that the steps for machines that had docker installed were different but I did not realize this in my previous research.</p>
-<p>The hope is that podman will have no such issue. But does podman have every feature of docker?</p>
-<p>The first thing to consider is that podman has a docker-compat setup, where it gives you a compatibility command:</p>
-<div class="sourceCode" id="cb1" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb1-1">[moonpie@cachyos-x8664 containers]$ docker ps</span>
-<span id="cb1-2">Emulate Docker CLI using podman. Create /etc/containers/nodocker to quiet msg.</span>
-<span id="cb1-3">CONTAINER ID  IMAGE       COMMAND     CREATED     STATUS      PORTS       NAMES</span></code></pre></div>
-<p>It’s pretty good. Except:</p>
-<div class="sourceCode" id="cb2" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb2-1">[moonpie@cachyos-x8664 registries.conf.d]$ docker pull jc21/nginx-proxy-manager:latest</span>
-<span id="cb2-2">Emulate Docker CLI using podman. Create /etc/containers/nodocker to quiet msg.</span>
-<span id="cb2-3">Error: short-name "jc21/nginx-proxy-manager:latest" did not resolve to an alias and no unqualified-search registries are defined in "/etc/containers/registries.conf"</span></code></pre></div>
-<p>Unlike docker, podman does not have the &lt;docker.io&gt; as a default registry. You can still pull with <code>docker.io/jc21/nginx-proxy-manager</code>, but it’s inconvinient to change every script and whatnot to be like that.</p>
-<p>The Red Hat Enable Sysadmin has a <a href="https://www.redhat.com/sysadmin/manage-container-registries">blog on this</a>. In the “pulling by shortnames” section they changed some podman settings:</p>
-<div class="code-with-filename">
-<div class="code-with-filename-file">
-<pre><strong>/etc/containers/registries.conf</strong></pre>
-</div>
-<pre class="init" data-filename="/etc/containers/registries.conf"><code>...
-...
-unqualified-search-registries = ['registry.fedoraproject.org', 'registry.access.redhat.com', 'registry.centos.org', 'docker.io']
-...
-...</code></pre>
-</div>
-<p>This makes it so that podman will search for these images when not specificially told a registry.</p>
-<div class="sourceCode" id="cb4" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb4-1">[moonpie@cachyos-x8664 containers]$ docker pull jc21/nginx-proxy-manager</span>
-<span id="cb4-2">Emulate Docker CLI using podman. Create /etc/containers/nodocker to quiet msg.</span>
-<span id="cb4-3">? Please select an image: </span>
-<span id="cb4-4">  ▸ registry.fedoraproject.org/jc21/nginx-proxy-manager:latest</span>
-<span id="cb4-5">    registry.access.redhat.com/jc21/nginx-proxy-manager:latest</span>
-<span id="cb4-6">    registry.centos.org/jc21/nginx-proxy-manager:latest</span>
-<span id="cb4-7">    docker.io/jc21/nginx-proxy-manager:latest</span></code></pre></div>
-<p>Wow, this is pretty cool. It gives you an option to select when you have multiple default registries. If you only have one, then it just immediately defaults to that.</p>
-<p>Podman also has <a href="https://www.redhat.com/sysadmin/podman-docker-compose">support for docker-compose</a></p>
-<p>Once you have the docker compatibility package installed, simply start the podman service/socket, and docker-compose will work.</p>
-<p>Except, I am wondering, will docker networks work? Podman seems to do something different, with podman pods, which don’t behave the same way as docker networks.</p>
-<p>To test, I have created a simple docker-compose.yml, which has two contianers on the same network:</p>
-<div class="sourceCode" id="cb5" style="background: #f1f3f5;"><pre class="sourceCode yml code-with-copy"><code class="sourceCode yaml"><span id="cb5-1"><span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">version</span><span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">:</span><span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;"> </span><span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">'3'</span></span>
-<span id="cb5-2"><span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">services</span><span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">:</span></span>
-<span id="cb5-3"><span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">alpine_container_1</span><span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">:</span></span>
-<span id="cb5-4"><span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">image</span><span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">:</span><span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;"> alpine:latest</span></span>
-<span id="cb5-5"><span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">command</span><span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">:</span><span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;"> </span><span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">[</span><span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">"tail"</span><span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">,</span><span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;"> </span><span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">"-f"</span><span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">,</span><span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;"> </span><span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">"/dev/null"</span><span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">]</span><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">  # Keeps the container running</span></span>
-<span id="cb5-6"><span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">networks</span><span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">:</span></span>
-<span id="cb5-7"><span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">      </span><span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">-</span><span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;"> my_network</span></span>
-<span id="cb5-8"></span>
-<span id="cb5-9"><span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">alpine_container_2</span><span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">:</span></span>
-<span id="cb5-10"><span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">image</span><span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">:</span><span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;"> alpine:latest</span></span>
-<span id="cb5-11"><span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">command</span><span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">:</span><span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;"> </span><span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">[</span><span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">"tail"</span><span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">,</span><span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;"> </span><span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">"-f"</span><span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">,</span><span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;"> </span><span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">"/dev/null"</span><span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">]</span><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">  # Keeps the container running</span></span>
-<span id="cb5-12"><span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">networks</span><span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">:</span></span>
-<span id="cb5-13"><span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">      </span><span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">-</span><span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;"> my_network</span></span>
-<span id="cb5-14"></span>
-<span id="cb5-15"><span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">networks</span><span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">:</span></span>
-<span id="cb5-16"><span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">my_network</span><span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">:</span></span></code></pre></div>
-<p>It seems to work, but….</p>
-<div class="sourceCode" id="cb6" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb6-1">[moonpie@cachyos-x8664 podman-docker]$ sudo podman network inspect podman-docker_my_network</span>
-<span id="cb6-2">[</span>
-<span id="cb6-3">     {</span>
-<span id="cb6-4">          "name": "podman-docker_my_network",</span>
-<span id="cb6-5">          "id": "0b11ee2d93ccd3427374b667b55dd7c42f12d68d296f6dca2ccad12a491b7e7d",</span>
-<span id="cb6-6">          "driver": "bridge",</span>
-<span id="cb6-7">          "network_interface": "podman1",</span>
-<span id="cb6-8">          "created": "2023-09-03T06:21:14.350164238-07:00",</span>
-<span id="cb6-9">          "subnets": [</span>
-<span id="cb6-10">               {</span>
-<span id="cb6-11">                    "subnet": "10.89.0.0/24",</span>
-<span id="cb6-12">                    "gateway": "10.89.0.1"</span>
-<span id="cb6-13">               }</span>
-<span id="cb6-14">          ],</span>
-<span id="cb6-15">          "ipv6_enabled": false,</span>
-<span id="cb6-16">          "internal": false,</span>
-<span id="cb6-17">          "dns_enabled": true,</span>
-<span id="cb6-18">          "labels": {</span>
-<span id="cb6-19">               "com.docker.compose.network": "my_network",</span>
-<span id="cb6-20">               "com.docker.compose.project": "podman-docker",</span>
-<span id="cb6-21">               "com.docker.compose.version": "2.20.3"</span>
-<span id="cb6-22">          },</span>
-<span id="cb6-23">          "options": {</span>
-<span id="cb6-24">               "isolate": "true"</span>
-<span id="cb6-25">          },</span>
-<span id="cb6-26">          "ipam_options": {</span>
-<span id="cb6-27">               "driver": "host-local"</span>
-<span id="cb6-28">          }</span>
-<span id="cb6-29">     }</span>
-<span id="cb6-30">]</span>
-<span id="cb6-31">[moonpie@cachyos-x8664 podman-docker]$ </span></code></pre></div>
-<p>Whereas, when using <code>docker network inspect</code>:</p>
-<div class="sourceCode" id="cb7" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb7-1">moonpie@office:~$ docker network inspect mine</span>
-<span id="cb7-2">[</span>
-<span id="cb7-3">    {</span>
-<span id="cb7-4">        "Name": "mine",</span>
-<span id="cb7-5">        "Id": "73125f7a201062e8561f6d34110c2fdca2a3e21c423998e58da9ded56222a954",</span>
-<span id="cb7-6">        "Created": "2023-02-23T03:57:12.249530356Z",</span>
-<span id="cb7-7">        "Scope": "local",</span>
-<span id="cb7-8">        "Driver": "bridge",</span>
-<span id="cb7-9">        "EnableIPv6": false,</span>
-<span id="cb7-10">        "IPAM": {</span>
-<span id="cb7-11">            "Driver": "default",</span>
-<span id="cb7-12">            "Options": {},</span>
-<span id="cb7-13">            "Config": [</span>
-<span id="cb7-14">                {</span>
-<span id="cb7-15">                    "Subnet": "172.18.0.0/16",</span>
-<span id="cb7-16">                    "Gateway": "172.18.0.1"</span>
-<span id="cb7-17">                }</span>
-<span id="cb7-18">            ]</span>
-<span id="cb7-19">        },</span>
-<span id="cb7-20">        "Internal": false,</span>
-<span id="cb7-21">        "Attachable": false,</span>
-<span id="cb7-22">        "Ingress": false,</span>
-<span id="cb7-23">        "ConfigFrom": {</span>
-<span id="cb7-24">            "Network": ""</span>
-<span id="cb7-25">        },</span>
-<span id="cb7-26">        "ConfigOnly": false,</span>
-<span id="cb7-27">        "Containers": {</span>
-<span id="cb7-28">            "01af5e2990ba9c4cee41de65500f72bd2a3c8e373bce373be251cf5a7a4549dd": {</span>
-<span id="cb7-29">                "Name": "meshcentral",</span>
-<span id="cb7-30">                "EndpointID": "c8b101d499a88d7c9ed0d476fa09915018e58fea0e83b24093b2d8768c12c464",</span>
-<span id="cb7-31">                "MacAddress": "02:42:ac:12:00:07",</span>
-<span id="cb7-32">                "IPv4Address": "172.18.0.7/16",</span>
-<span id="cb7-33">                "IPv6Address": ""</span>
-<span id="cb7-34">            },</span>
-<span id="cb7-35">            "329b7fd59807573522a92c0e006f9cf92d44133a1f4e197d25f666a66bc5241e": {</span>
-<span id="cb7-36">                "Name": "v2ray_proxy_1",</span>
-<span id="cb7-37">                "EndpointID": "01ff85e55d6f1c9dee40ec09dbc258a1a5d5ad2728d35e3020d52211c076ebb1",</span>
-<span id="cb7-38">                "MacAddress": "02:42:ac:12:00:03",</span>
-<span id="cb7-39">                "IPv4Address": "172.18.0.3/16",</span>
-<span id="cb7-40">                "IPv6Address": ""</span>
-<span id="cb7-41">            },</span>
-<span id="cb7-42">        },</span>
-<span id="cb7-43">        "Options": {},</span>
-<span id="cb7-44">        "Labels": {}</span>
-<span id="cb7-45">    }</span>
-<span id="cb7-46">]</span></code></pre></div>
-<p>When using docker to to create networks, it tells you the ip addressed fo the containers in a network. Podman doesn’t do this.</p>
-<p>But can the containers interact with eachother?</p>
-<p>Yes, they can. While in one container, I could ping the other container. However, I had to get the container ip addresses by creating a shell in the containers, and then running <code>ip a</code> to view the ip addresses first.</p>
-<p>Is there any way to view the container ip addresses from outside the container? Not all containers come with a shell builtin, some don’t have it for size purposes, and solely contain what is needed to run whatever application the container is packaging.</p>
-<details>
-<summary>
-Podman inspect
-</summary>
-<div class="sourceCode" id="cb8" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb8-1">[root@cachyos-x8664 podman-docker]# podman inspect podman-docker-alpine_container_1-1 </span>
-<span id="cb8-2">[</span>
-<span id="cb8-3">     {</span>
-<span id="cb8-4">          "Id": "eae4cc793f5f86b69e81a785cc32df36718250436d67e1b62037414b1d8e53e7",</span>
-<span id="cb8-5">          "Created": "2023-09-03T06:21:14.357752403-07:00",</span>
-<span id="cb8-6">          "Path": "tail",</span>
-<span id="cb8-7">          "Args": [</span>
-<span id="cb8-8">               "-f",</span>
-<span id="cb8-9">               "/dev/null"</span>
-<span id="cb8-10">          ],</span>
-<span id="cb8-11">          "State": {</span>
-<span id="cb8-12">               "OciVersion": "1.1.0-rc.3",</span>
-<span id="cb8-13">               "Status": "running",</span>
-<span id="cb8-14">               "Running": true,</span>
-<span id="cb8-15">               "Paused": false,</span>
-<span id="cb8-16">               "Restarting": false,</span>
-<span id="cb8-17">               "OOMKilled": false,</span>
-<span id="cb8-18">               "Dead": false,</span>
-<span id="cb8-19">               "Pid": 37035,</span>
-<span id="cb8-20">               "ConmonPid": 37033,</span>
-<span id="cb8-21">               "ExitCode": 0,</span>
-<span id="cb8-22">               "Error": "",</span>
-<span id="cb8-23">               "StartedAt": "2023-09-03T06:21:14.742250101-07:00",</span>
-<span id="cb8-24">               "FinishedAt": "0001-01-01T00:00:00Z",</span>
-<span id="cb8-25">               "Health": {</span>
-<span id="cb8-26">                    "Status": "",</span>
-<span id="cb8-27">                    "FailingStreak": 0,</span>
-<span id="cb8-28">                    "Log": null</span>
-<span id="cb8-29">               },</span>
-<span id="cb8-30">               "CgroupPath": "/machine.slice/libpod-eae4cc793f5f86b69e81a785cc32df36718250436d67e1b62037414b1d8e53e7.scope",</span>
-<span id="cb8-31">               "CheckpointedAt": "0001-01-01T00:00:00Z",</span>
-<span id="cb8-32">               "RestoredAt": "0001-01-01T00:00:00Z"</span>
-<span id="cb8-33">          },</span>
-<span id="cb8-34">          "Image": "7e01a0d0a1dcd9e539f8e9bbd80106d59efbdf97293b3d38f5d7a34501526cdb",</span>
-<span id="cb8-35">          "ImageDigest": "sha256:7144f7bab3d4c2648d7e59409f15ec52a18006a128c733fcff20d3a4a54ba44a",</span>
-<span id="cb8-36">          "ImageName": "docker.io/library/alpine:latest",</span>
-<span id="cb8-37">          "Rootfs": "",</span>
-<span id="cb8-38">          "Pod": "",</span>
-<span id="cb8-39">          "ResolvConfPath": "/run/containers/storage/overlay-containers/eae4cc793f5f86b69e81a785cc32df36718250436d67e1b62037414b1d8e53e7/userdata/resolv.conf",</span>
-<span id="cb8-40">          "HostnamePath": "/run/containers/storage/overlay-containers/eae4cc793f5f86b69e81a785cc32df36718250436d67e1b62037414b1d8e53e7/userdata/hostname",</span>
-<span id="cb8-41">          "HostsPath": "/run/containers/storage/overlay-containers/eae4cc793f5f86b69e81a785cc32df36718250436d67e1b62037414b1d8e53e7/userdata/hosts",</span>
-<span id="cb8-42">          "StaticDir": "/var/lib/containers/storage/overlay-containers/eae4cc793f5f86b69e81a785cc32df36718250436d67e1b62037414b1d8e53e7/userdata",</span>
-<span id="cb8-43">          "OCIConfigPath": "/var/lib/containers/storage/overlay-containers/eae4cc793f5f86b69e81a785cc32df36718250436d67e1b62037414b1d8e53e7/userdata/config.json",</span>
-<span id="cb8-44">          "OCIRuntime": "crun",</span>
-<span id="cb8-45">          "ConmonPidFile": "/run/containers/storage/overlay-containers/eae4cc793f5f86b69e81a785cc32df36718250436d67e1b62037414b1d8e53e7/userdata/conmon.pid",</span>
-<span id="cb8-46">          "PidFile": "/run/containers/storage/overlay-containers/eae4cc793f5f86b69e81a785cc32df36718250436d67e1b62037414b1d8e53e7/userdata/pidfile",</span>
-<span id="cb8-47">          "Name": "podman-docker-alpine_container_1-1",</span>
-<span id="cb8-48">          "RestartCount": 0,</span>
-<span id="cb8-49">          "Driver": "overlay",</span>
-<span id="cb8-50">          "MountLabel": "",</span>
-<span id="cb8-51">          "ProcessLabel": "",</span>
-<span id="cb8-52">          "AppArmorProfile": "",</span>
-<span id="cb8-53">          "EffectiveCaps": [</span>
-<span id="cb8-54">               "CAP_CHOWN",</span>
-<span id="cb8-55">               "CAP_DAC_OVERRIDE",</span>
-<span id="cb8-56">               "CAP_FOWNER",</span>
-<span id="cb8-57">               "CAP_FSETID",</span>
-<span id="cb8-58">               "CAP_KILL",</span>
-<span id="cb8-59">               "CAP_NET_BIND_SERVICE",</span>
-<span id="cb8-60">               "CAP_SETFCAP",</span>
-<span id="cb8-61">               "CAP_SETGID",</span>
-<span id="cb8-62">               "CAP_SETPCAP",</span>
-<span id="cb8-63">               "CAP_SETUID",</span>
-<span id="cb8-64">               "CAP_SYS_CHROOT"</span>
-<span id="cb8-65">          ],</span>
-<span id="cb8-66">          "BoundingCaps": [</span>
-<span id="cb8-67">               "CAP_CHOWN",</span>
-<span id="cb8-68">               "CAP_DAC_OVERRIDE",</span>
-<span id="cb8-69">               "CAP_FOWNER",</span>
-<span id="cb8-70">               "CAP_FSETID",</span>
-<span id="cb8-71">               "CAP_KILL",</span>
-<span id="cb8-72">               "CAP_NET_BIND_SERVICE",</span>
-<span id="cb8-73">               "CAP_SETFCAP",</span>
-<span id="cb8-74">               "CAP_SETGID",</span>
-<span id="cb8-75">               "CAP_SETPCAP",</span>
-<span id="cb8-76">               "CAP_SETUID",</span>
-<span id="cb8-77">               "CAP_SYS_CHROOT"</span>
-<span id="cb8-78">          ],</span>
-<span id="cb8-79">          "ExecIDs": [</span>
-<span id="cb8-80">               "8354949b4e0bf728dafa7b3e7b857ccce18e953b0f20473dbb06fe6442bf1d12"</span>
-<span id="cb8-81">          ],</span>
-<span id="cb8-82">          "GraphDriver": {</span>
-<span id="cb8-83">               "Name": "overlay",</span>
-<span id="cb8-84">               "Data": {</span>
-<span id="cb8-85">                    "LowerDir": "/var/lib/containers/storage/overlay/4693057ce2364720d39e57e85a5b8e0bd9ac3573716237736d6470ec5b7b7230/diff",</span>
-<span id="cb8-86">                    "MergedDir": "/var/lib/containers/storage/overlay/bbadcba900462960315aa406866164bd58a12573e76140093563525f595b1732/merged",</span>
-<span id="cb8-87">                    "UpperDir": "/var/lib/containers/storage/overlay/bbadcba900462960315aa406866164bd58a12573e76140093563525f595b1732/diff",</span>
-<span id="cb8-88">                    "WorkDir": "/var/lib/containers/storage/overlay/bbadcba900462960315aa406866164bd58a12573e76140093563525f595b1732/work"</span>
-<span id="cb8-89">               }</span>
-<span id="cb8-90">          },</span>
-<span id="cb8-91">          "Mounts": [],</span>
-<span id="cb8-92">          "Dependencies": [],</span>
-<span id="cb8-93">          "NetworkSettings": {</span>
-<span id="cb8-94">               "EndpointID": "",</span>
-<span id="cb8-95">               "Gateway": "",</span>
-<span id="cb8-96">               "IPAddress": "",</span>
-<span id="cb8-97">               "IPPrefixLen": 0,</span>
-<span id="cb8-98">               "IPv6Gateway": "",</span>
-<span id="cb8-99">               "GlobalIPv6Address": "",</span>
-<span id="cb8-100">               "GlobalIPv6PrefixLen": 0,</span>
-<span id="cb8-101">               "MacAddress": "",</span>
-<span id="cb8-102">               "Bridge": "",</span>
-<span id="cb8-103">               "SandboxID": "",</span>
-<span id="cb8-104">               "HairpinMode": false,</span>
-<span id="cb8-105">               "LinkLocalIPv6Address": "",</span>
-<span id="cb8-106">               "LinkLocalIPv6PrefixLen": 0,</span>
-<span id="cb8-107">               "Ports": {},</span>
-<span id="cb8-108">               "SandboxKey": "/run/netns/netns-4a204211-d01a-6d0f-bfd3-bfc34e73885e",</span>
-<span id="cb8-109">               "Networks": {</span>
-<span id="cb8-110">                    "podman-docker_my_network": {</span>
-<span id="cb8-111">                         "EndpointID": "",</span>
-<span id="cb8-112">                         "Gateway": "10.89.0.1",</span>
-<span id="cb8-113">                         "IPAddress": "10.89.0.2",</span>
-<span id="cb8-114">                         "IPPrefixLen": 24,</span>
-<span id="cb8-115">                         "IPv6Gateway": "",</span>
-<span id="cb8-116">                         "GlobalIPv6Address": "",</span>
-<span id="cb8-117">                         "GlobalIPv6PrefixLen": 0,</span>
-<span id="cb8-118">                         "MacAddress": "b2:af:b4:78:28:1b",</span>
-<span id="cb8-119">                         "NetworkID": "podman-docker_my_network",</span>
-<span id="cb8-120">                         "DriverOpts": null,</span>
-<span id="cb8-121">                         "IPAMConfig": null,</span>
-<span id="cb8-122">                         "Links": null,</span>
-<span id="cb8-123">                         "Aliases": [</span>
-<span id="cb8-124">                              "podman-docker-alpine_container_1-1",</span>
-<span id="cb8-125">                              "alpine_container_1",</span>
-<span id="cb8-126">                              "eae4cc793f5f"</span>
-<span id="cb8-127">                         ]</span>
-<span id="cb8-128">                    }</span>
-<span id="cb8-129">               }</span>
-<span id="cb8-130">          },</span>
-<span id="cb8-131">          "Namespace": "",</span>
-<span id="cb8-132">          "IsInfra": false,</span>
-<span id="cb8-133">          "IsService": false,</span>
-<span id="cb8-134">          "KubeExitCodePropagation": "invalid",</span>
-<span id="cb8-135">          "lockNumber": 0,</span>
-<span id="cb8-136">          "Config": {</span>
-<span id="cb8-137">               "Hostname": "eae4cc793f5f",</span>
-<span id="cb8-138">               "Domainname": "",</span>
-<span id="cb8-139">               "User": "",</span>
-<span id="cb8-140">               "AttachStdin": false,</span>
-<span id="cb8-141">               "AttachStdout": false,</span>
-<span id="cb8-142">               "AttachStderr": false,</span>
-<span id="cb8-143">               "Tty": false,</span>
-<span id="cb8-144">               "OpenStdin": false,</span>
-<span id="cb8-145">               "StdinOnce": false,</span>
-<span id="cb8-146">               "Env": [</span>
-<span id="cb8-147">                    "TERM=xterm",</span>
-<span id="cb8-148">                    "container=podman",</span>
-<span id="cb8-149">                    "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",</span>
-<span id="cb8-150">                    "HOME=/root",</span>
-<span id="cb8-151">                    "HOSTNAME=eae4cc793f5f"</span>
-<span id="cb8-152">               ],</span>
-<span id="cb8-153">               "Cmd": [</span>
-<span id="cb8-154">                    "tail",</span>
-<span id="cb8-155">                    "-f",</span>
-<span id="cb8-156">                    "/dev/null"</span>
-<span id="cb8-157">               ],</span>
-<span id="cb8-158">               "Image": "docker.io/library/alpine:latest",</span>
-<span id="cb8-159">               "Volumes": null,</span>
-<span id="cb8-160">               "WorkingDir": "/",</span>
-<span id="cb8-161">               "Entrypoint": "",</span>
-<span id="cb8-162">               "OnBuild": null,</span>
-<span id="cb8-163">               "Labels": {</span>
-<span id="cb8-164">                    "com.docker.compose.config-hash": "6418caee2d42d6859badadf595f62af5fc514baebd949edbc3b925c9dd53ecc3",</span>
-<span id="cb8-165">                    "com.docker.compose.container-number": "1",</span>
-<span id="cb8-166">                    "com.docker.compose.depends_on": "",</span>
-<span id="cb8-167">                    "com.docker.compose.image": "sha256:7e01a0d0a1dcd9e539f8e9bbd80106d59efbdf97293b3d38f5d7a34501526cdb",</span>
-<span id="cb8-168">                    "com.docker.compose.oneoff": "False",</span>
-<span id="cb8-169">                    "com.docker.compose.project": "podman-docker",</span>
-<span id="cb8-170">                    "com.docker.compose.project.config_files": "/home/moonpie/vscode/moonpiedumplings.github.io/playground/podman-docker/docker-compose.yml",</span>
-<span id="cb8-171">                    "com.docker.compose.project.working_dir": "/home/moonpie/vscode/moonpiedumplings.github.io/playground/podman-docker",</span>
-<span id="cb8-172">                    "com.docker.compose.service": "alpine_container_1",</span>
-<span id="cb8-173">                    "com.docker.compose.version": "2.20.3"</span>
-<span id="cb8-174">               },</span>
-<span id="cb8-175">               "Annotations": {</span>
-<span id="cb8-176">                    "io.container.manager": "libpod",</span>
-<span id="cb8-177">                    "org.opencontainers.image.stopSignal": "15"</span>
-<span id="cb8-178">               },</span>
-<span id="cb8-179">               "StopSignal": 15,</span>
-<span id="cb8-180">               "HealthcheckOnFailureAction": "none",</span>
-<span id="cb8-181">               "CreateCommand": [</span>
-<span id="cb8-182">                    "/usr/bin/podman",</span>
-<span id="cb8-183">                    "--log-level=info",</span>
-<span id="cb8-184">                    "system",</span>
-<span id="cb8-185">                    "service"</span>
-<span id="cb8-186">               ],</span>
-<span id="cb8-187">               "Umask": "0000",</span>
-<span id="cb8-188">               "Timeout": 0,</span>
-<span id="cb8-189">               "StopTimeout": 0,</span>
-<span id="cb8-190">               "Passwd": true</span>
-<span id="cb8-191">          },</span>
-<span id="cb8-192">          "HostConfig": {</span>
-<span id="cb8-193">               "Binds": [],</span>
-<span id="cb8-194">               "CgroupManager": "systemd",</span>
-<span id="cb8-195">               "CgroupMode": "private",</span>
-<span id="cb8-196">               "ContainerIDFile": "",</span>
-<span id="cb8-197">               "LogConfig": {</span>
-<span id="cb8-198">                    "Type": "journald",</span>
-<span id="cb8-199">                    "Config": null,</span>
-<span id="cb8-200">                    "Path": "",</span>
-<span id="cb8-201">                    "Tag": "",</span>
-<span id="cb8-202">                    "Size": "0B"</span>
-<span id="cb8-203">               },</span>
-<span id="cb8-204">               "NetworkMode": "bridge",</span>
-<span id="cb8-205">               "PortBindings": {},</span>
-<span id="cb8-206">               "RestartPolicy": {</span>
-<span id="cb8-207">                    "Name": "",</span>
-<span id="cb8-208">                    "MaximumRetryCount": 0</span>
-<span id="cb8-209">               },</span>
-<span id="cb8-210">               "AutoRemove": false,</span>
-<span id="cb8-211">               "VolumeDriver": "",</span>
-<span id="cb8-212">               "VolumesFrom": null,</span>
-<span id="cb8-213">               "CapAdd": [],</span>
-<span id="cb8-214">               "CapDrop": [],</span>
-<span id="cb8-215">               "Dns": [],</span>
-<span id="cb8-216">               "DnsOptions": [],</span>
-<span id="cb8-217">               "DnsSearch": [],</span>
-<span id="cb8-218">               "ExtraHosts": [],</span>
-<span id="cb8-219">               "GroupAdd": [],</span>
-<span id="cb8-220">               "IpcMode": "shareable",</span>
-<span id="cb8-221">               "Cgroup": "",</span>
-<span id="cb8-222">               "Cgroups": "default",</span>
-<span id="cb8-223">               "Links": null,</span>
-<span id="cb8-224">               "OomScoreAdj": 0,</span>
-<span id="cb8-225">               "PidMode": "private",</span>
-<span id="cb8-226">               "Privileged": false,</span>
-<span id="cb8-227">               "PublishAllPorts": false,</span>
-<span id="cb8-228">               "ReadonlyRootfs": false,</span>
-<span id="cb8-229">               "SecurityOpt": [],</span>
-<span id="cb8-230">               "Tmpfs": {},</span>
-<span id="cb8-231">               "UTSMode": "private",</span>
-<span id="cb8-232">               "UsernsMode": "",</span>
-<span id="cb8-233">               "ShmSize": 65536000,</span>
-<span id="cb8-234">               "Runtime": "oci",</span>
-<span id="cb8-235">               "ConsoleSize": [</span>
-<span id="cb8-236">                    0,</span>
-<span id="cb8-237">                    0</span>
-<span id="cb8-238">               ],</span>
-<span id="cb8-239">               "Isolation": "",</span>
-<span id="cb8-240">               "CpuShares": 0,</span>
-<span id="cb8-241">               "Memory": 0,</span>
-<span id="cb8-242">               "NanoCpus": 0,</span>
-<span id="cb8-243">               "CgroupParent": "",</span>
-<span id="cb8-244">               "BlkioWeight": 0,</span>
-<span id="cb8-245">               "BlkioWeightDevice": null,</span>
-<span id="cb8-246">               "BlkioDeviceReadBps": null,</span>
-<span id="cb8-247">               "BlkioDeviceWriteBps": null,</span>
-<span id="cb8-248">               "BlkioDeviceReadIOps": null,</span>
-<span id="cb8-249">               "BlkioDeviceWriteIOps": null,</span>
-<span id="cb8-250">               "CpuPeriod": 0,</span>
-<span id="cb8-251">               "CpuQuota": 0,</span>
-<span id="cb8-252">               "CpuRealtimePeriod": 0,</span>
-<span id="cb8-253">               "CpuRealtimeRuntime": 0,</span>
-<span id="cb8-254">               "CpusetCpus": "",</span>
-<span id="cb8-255">               "CpusetMems": "",</span>
-<span id="cb8-256">               "Devices": [],</span>
-<span id="cb8-257">               "DiskQuota": 0,</span>
-<span id="cb8-258">               "KernelMemory": 0,</span>
-<span id="cb8-259">               "MemoryReservation": 0,</span>
-<span id="cb8-260">               "MemorySwap": 0,</span>
-<span id="cb8-261">               "MemorySwappiness": 0,</span>
-<span id="cb8-262">               "OomKillDisable": false,</span>
-<span id="cb8-263">               "PidsLimit": 2048,</span>
-<span id="cb8-264">               "Ulimits": [</span>
-<span id="cb8-265">                    {</span>
-<span id="cb8-266">                         "Name": "RLIMIT_NPROC",</span>
-<span id="cb8-267">                         "Soft": 4194304,</span>
-<span id="cb8-268">                         "Hard": 4194304</span>
-<span id="cb8-269">                    }</span>
-<span id="cb8-270">               ],</span>
-<span id="cb8-271">               "CpuCount": 0,</span>
-<span id="cb8-272">               "CpuPercent": 0,</span>
-<span id="cb8-273">               "IOMaximumIOps": 0,</span>
-<span id="cb8-274">               "IOMaximumBandwidth": 0,</span>
-<span id="cb8-275">               "CgroupConf": null</span>
-<span id="cb8-276">          }</span>
-<span id="cb8-277">     }</span>
-<span id="cb8-278">]</span></code></pre></div>
-</details>
-<p>I found something, but the output is massive and not easy to read.</p>
-<p>The relevant part:</p>
-<div class="sourceCode" id="cb9" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb9-1">"Networks": {</span>
-<span id="cb9-2">                    "podman-docker_my_network": {</span>
-<span id="cb9-3">                         "EndpointID": "",</span>
-<span id="cb9-4">                         "Gateway": "10.89.0.1",</span>
-<span id="cb9-5">                         "IPAddress": "10.89.0.2",</span></code></pre></div>
-<p>What about rootless? Using the podman-compose I can launch rootless containers. However, according to the <a href="https://wiki.archlinux.org/title/Podman#Additional_dependencies">arch wiki</a> some extra dependencies are required for dns to work.</p>
-<p>After installaling:</p>
-<p>Rootless test (podman-compose):</p>
-<pre class="defualt"><code>/ # ping podman-docker_alpine_container_2_1
-PING podman-docker_alpine_container_2_1 (10.89.1.5): 56 data bytes
-64 bytes from 10.89.1.5: seq=0 ttl=42 time=0.039 ms</code></pre>
-<p>Rootfull test (docker-compose with podman backend):</p>
-<div class="sourceCode" id="cb11" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb11-1">/ # ping podman-docker-alpine_container_1-1</span>
-<span id="cb11-2">PING podman-docker-alpine_container_1-1 (10.89.0.2): 56 data bytes</span>
-<span id="cb11-3">64 bytes from 10.89.0.2: seq=0 ttl=42 time=0.044 ms</span></code></pre></div>
-<p>So I can’t get the ip, but because dns in the container works, they can find eachother that way. Nice.</p>
-<p>Since rootful podman containers using docker-compose work nicely, podman seems more and more appealing to me.</p>
-<p>Another feature of podman that appeals to me is the <a href="https://www.howtogeek.com/devops/how-to-enable-podmans-automatic-container-updates/">auto updates</a></p>
-<p>And another feature that makes podman appeal to me is the integration podman has with the cockpit web ui for managing linux systems. Because cockpit is made by Red Hat, who also develops podman, they deprecated docker support and now it only supports podman.</p>
-
-
-
- ]]></description>
-  <category>linux</category>
-  <category>docker</category>
-  <guid>https://moonpiedumplings.github.io/playground/podman-docker/</guid>
-  <pubDate>Sun, 03 Sep 2023 07:00:00 GMT</pubDate>
 </item>
 </channel>
 </rss>
