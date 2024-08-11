@@ -209,6 +209,13 @@ Forgejo has a helm chart: <https://codeberg.org/forgejo-contrib/forgejo-helm>
 
 Unlike authentik, forgejo's helm chart also seems to have some [support for rootless/user namespaces](https://codeberg.org/forgejo-contrib/forgejo-helm#rootless-defaults).
 
+I also want static sites, and here are some of the options I've found:
+
+* <https://git.gay/gitgay/pages-server>
+* <https://forgejo.org/docs/latest/developer/static-pages/>
+
+
+
 ## Nextcloud
 
 There is an existing [helm chart for nextcloud](https://nextcloud.github.io/helm/): <https://github.com/nextcloud/helm>
@@ -216,6 +223,8 @@ There is an existing [helm chart for nextcloud](https://nextcloud.github.io/helm
 However, it says in the above, that it is community maintained, and not truly official. 
 
 Going to the [nextcloud official docs for larger scale deployment recommendations](https://portal.nextcloud.com/article/Scalability/Deployment-recommendations/Large-Organizations-and-Service-Providers)... and it's paywalled. It's likely that Nextcloud maintains official helm charts — but only for paying customers. 
+
+Someone had an issue with nextcloud configurations on helm, and I asked them for the problem and solution, and they [replied to my post](https://programming.dev/comment/9714618). 
 
 
 # Networking
@@ -298,8 +307,7 @@ Following the guide for flux [bootstrapping with git](https://fluxcd.io/flux/ins
 flux bootstrap git --url ssh://moonpie@moonpiedumpl.ing/home/moonpie/fleet-charts --private-key-file=/home/moonpie/.ssh/moonstack --path=cluster/my-cluster
 ```
 
-And it starts working immediately... except when I clone the git repo from the server, it's empty‽ At least it has a branch, "master", but this branch has no commits or anything to start from. I'm attempting to follow the rest of the [bootstrapping guide](https://fluxcd.io/flux/get-started), so I create a directory, "cluster/my-cluster" in the git repo and put the first chart in it. Nothing happens. I think I screwed up somewhere, so I decide to uninstall flux and start over again. 
-
+And it starts working immediately... except when I clone the git repo from the server, it's empty‽ At least it has a branch, "master", but this branch has no commits or anything to start from. I'm attempting to follow the rest of the [bootstrapping guide](https://fluxcd.io/flux/get-started), so I create a directory, "cluster/my-cluster" in the git repo and put the first chart in it. Nothing happens. I think I screwed up somewhere, so I decide to uninstall flux and start over again.
 
 
 # Presearch and Notes for Future Pieces

@@ -14,8 +14,8 @@ execute:
 
 So, I think it's time for me to move from the older channels way of doing things in nix, to the newer flakes. I am using the [determinate system nix installer](https://github.com/DeterminateSystems/nix-installer), which only comes with flakes. However, the nix docs are very poor, so I am going to document my process of converting my development environment here. 
 
-The first thing, is that despite the fact that there is a lot of the existing flakes use a utility called [flake-utils](). However, this tool was ultimately started as an experiment, and has issues. A [blog post](https://ayats.org/blog/no-flake-utils/) ([archive](https://web.archive.org/web/20240229094244/https://ayats.org/blog/no-flake-utils/)) goes over some of the issues it has, and recommends against it... except I can't figure out at all how to apply it. 
-
+The first thing, is that despite the fact that there is a lot of the existing flakes use a utility called [flake-utils](https://github.com/numtide/flake-utils). However, this tool was ultimately started as an experiment, and has issues. A [blog post](https://ayats.org/blog/no-flake-utils/) ([archive](https://web.archive.org/web/20240229094244/https://ayats.org/blog/no-flake-utils/)) goes over some of the issues it has, and recommends against it... except I can't figure out at all how to apply it. 
+          
 The other recommendation is another pattern, recommended by Reddit user Tomberek:
 
 ```{.nix}
@@ -694,3 +694,139 @@ pkgs.mkShellNoCC {
 }
 ```
 
+# More issues, no tab autocomplete
+
+Nope, it's not the final shell. For whatever reason, if I open Vscode, or zellij using the `nix develop` shell, I cannot use tab autocomplete. In addition to that, the Vscode shell seems to be broken in others ways. 
+
+Here is the shell prompt:
+
+```{.default}
+\[\][moonpie@lizard moonpiedumplings.github.io]$ \[\]
+```
+
+Yeah. Not what it's supposed to be. I don't know what the backslashes signify. However, `nix-shell` continues to work fine for zellij. 
+
+There are some relevant issues for this:
+
+* https://github.com/NixOS/nix/issues/6091
+* https://github.com/NixOS/nix/issues/6982
+* https://github.com/NixOS/nix/issues/8764
+
+
+In a related [discourse post](https://discourse.nixos.org/t/general-nix-office-hours/15019/37), Nobbz suggests to use `eval`, but that also does not work, not do related solutions with `. <()`. 
+
+The big problem is that `nix develop` is designed for emulation of the nix build environment, which is non-interactive. `nix shell`, as I noted above, does not properly replace `nix-shell`, as it does not allow for any configuration of environment variables. Or can it?
+
+I also investigated `pkgs.buildEnv`, which is [literally undocumented](https://github.com/NixOS/nixpkgs/issues/251039), in classic Nix fashion. I read the [source code](https://github.com/NixOS/nixpkgs/blob/master/pkgs%2Fbuild-support%2Fbuildenv%2Fdefault.nix), but it doesn't seem to be able to set environment variables outside of wrapping programs. It mainly seems to be ableto add programs to the path. 
+
+Another solution is [flake-compat](https://github.com/edolstra/flake-compat). It's a bit of nix code by Eelco Dostra that has creates a `shell.nix` that enables `nix-shell` to be used with flakes. I find it deeply ironic that despite all this effort to use flakey commands, I still end up finding that the non-flake commands work perfectly. 
+
+Another suggestion was to use direnv, but I don't want to use that. 
+
+Anyway, I noticed something different about the `nix-shell` vs `nix develop`: 
+
+```{.default}
+[nix-shell:~/vscode/moonpiedumplings.github.io]$ echo $SHELL
+/nix/store/bh6w9sbfz2m5w1bd4cg2ndw1s66agkfd-bash-interactive-5.2p26/bin/bash
+```
+
+```{.default}
+[moonpie@lizard moonpiedumplings.github.io]$ nix develop
+warning: Git tree '/home/moonpie/vscode/moonpiedumplings.github.io' is dirty
+evaluating derivation 'git+file:///home/moonpie/vscode/moonpiedumplings.github.io#devShells.x86_64-linux.default'
+(nix:nix-shell-env) [moonpie@lizard moonpiedumplings.github.io]$ echo $SHELL
+/nix/store/m101dg80ngyjdb02g6jwy80sr7kzj26g-bash-5.2p26/bin/bash
+```
+
+
+`nix-shell` defaults to an bash-interactive, whereas `nix develop` seems to use a stripped down, noninteractive version of bash. This is probably because `nix develop` 
+
+The first thing I tried was to have `SHELL = "${pkgs.bashInteractive}/bin/bash";` in `pkgs.mkShell`, but this didn't work. `nix develop` seems to set it's own environment variables, *after* the other variables are set. 
+
+The first thing I did was to set a post shellHook, which `nix develop` would run, and would `export` the variable. 
+
+```{.nix}
+pkgs.mkShellNoCC {
+   shellHook = ''
+    export SHELL='${pkgs.bashInteractive}/bin/bash'
+  '';
+}
+```
+
+This worked for zellij, but vscode's terminal was still broken. To get vscode's terminal working, I had to add `bashInterative` to packages:
+
+```{.default}
+pkgs.mkShellNoCC {
+  packages = with pkgs; [ bashInteractive ];
+   shellHook = ''
+    export SHELL='${pkgs.bashInteractive}/bin/bash'
+  '';
+}
+```
+
+I actually encountered a similar issue with python. Vscode seems to ignore things not added to path, even if they are specified in other ways, like `$PYTHONPATH` pointing to the correct version of python.
+
+But now, this finally works.
+
+
+# Home-Manager
+
+Next thing is to convert home manager to flakes. I need a slightly older version of kubectl, and flakes allow me to use packages from multiple versions of nixpkgs. 
+
+I followed the [standalone flakes installation instructions](https://nix-community.github.io/home-manager/index.xhtml#sec-flakes-standalone)
+
+`nix run home-manager/master -- init --switch`
+
+And with this, I get a basic flake.nix, flake.lock, and home.nix in `.config/home-manager/`. 
+
+
+For older versions of packages, there are two sites I like, nixhub and lazamar's site:
+
+* https://www.nixhub.io/
+* https://lazamar.co.uk/nix-versions/
+
+I found the correct nixpkgs revision for what I want: `7a339d87931bba829f68e94621536cad9132971a`.
+
+However, using packages from multiple versions of nipkgs isn't as easy as I thought it would be. The [officail docs](https://wiki.nixos.org/wiki/Flakes#Importing_packages_from_multiple_nixpkgs_branches) suggest to use an overlay, which feels unecessary. Why can't I just replicate what it does for `nixpkgs`, but for `nixpkgs` again? 
+
+I tried that, and it didn't work. The error's aren't very clear, but I think it's because the home manager configuration is a function with explicit arguments, and it errors when I try to feed it more than what it wants. 
+
+Thankfully, I found another simple solution:
+
+```{.nix filename='flake.nix'}
+{
+  description = "Home Manager configuration of moonpie";
+
+  inputs = {
+    nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
+    pkgs-kubectl.url = "github:nixos/nixpkgs/7a339d87931bba829f68e94621536cad9132971a";
+    home-manager = {
+      url = "github:nix-community/home-manager";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+  };
+
+  outputs = { nixpkgs, pkgs-kubectl, home-manager, ... }:
+    let
+      system = "x86_64-linux";
+      pkgs = nixpkgs.legacyPackages.${system};
+    in {
+      homeConfigurations."moonpie" = home-manager.lib.homeManagerConfiguration {
+        inherit pkgs;
+        extraSpecialArgs = {
+          pkgs-kbctl = import pkgs-kubectl {inherit system;};
+        };
+        modules = [ ./home.nix ];
+      };
+    };
+}
+```
+
+And then in the beginning of home.nix:
+
+```{.nix filename='home.nix'}
+{ config, pkgs, pkgs-kbctl, ... }:
+
+```
+
+And this works. I can use `pkgs-kbctl.kubectl` to reference kubectl version 1.28.4, which is what's on my server. 

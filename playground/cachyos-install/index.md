@@ -118,4 +118,37 @@ I backed up my entire home directory to a tar archive using ark, the archiver to
 I also enabled the [Magic sysrq key](https://wiki.archlinux.org/title/Keyboard_shortcuts#Kernel_(SysRq)) via a kernel parameter in my grub config file. 
 
 
+# Nix not starting on boot.
 
+I encountered another issue where nix does not start on boot. The problem is probably that, because /nix is a seperate btrfs subvolume, and the systemd service is a symlink to the nix service on /nix, systemd cannot locate the proper service. I need to either move the nix service so it is located on the root subvolume, or adjust the nix daemon service so it requires /nix to be mounted.
+
+Thankfully, systemd unit files have an option for this: [RequiresMountsFor=](https://www.freedesktop.org/software/systemd/man/latest/systemd.unit.html#RequiresMountsFor=).
+
+And to adjust the nix daemon service, I can use override, as [mentioned on stackoverflow](https://askubuntu.com/questions/659267/how-do-i-override-or-configure-systemd-services). Although, I don't like this solution. Since the original service is still a symlink, would systemd really be able to find it? 
+
+I found a [relevant GitHub issue](https://github.com/DeterminateSystems/nix-installer/issues/416) on the on the page for the Determinate Systems Nix installer, which is what I use. Just like me, another user wants to have /nix on a seperate btrfs subvolume. Although they first did a workaround of removing the symlink, and copying the service files to /etc instead. However, one of the developers chimed in, mentioning the solution for the Steam Deck (a Linux handheld which uses btrfs), which was a systemd oneshot service that runs after nix is mounted, and then reloads all systemd services, and then restarts the nix socket. This was a lot easier to implement on my system. 
+
+The systemd service was stored in the source code of the installer.
+
+
+https://github.com/DeterminateSystems/nix-installer/blob/main/src/planner/steam_deck.rs#L270
+
+
+```{.ini filename='/etc/systemd/system/ensure-symlinked-units-resolve.service'}
+[Unit]
+Description=Ensure Nix related units which are symlinked resolve
+After=nix.mount
+Requires=nix.mount
+DefaultDependencies=no
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/bin/systemctl daemon-reload
+ExecStart=/usr/bin/systemctl restart --no-block nix-daemon.socket
+
+[Install]
+WantedBy=sysinit.target
+```
+
+And with this, the nix socket starts properly on boot. 

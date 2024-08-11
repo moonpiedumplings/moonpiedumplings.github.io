@@ -5,6 +5,10 @@ let
   pythonDeps = ps: with ps; [
     jupyter-core
     pyyaml
+    nbformat
+    nbclient
+    ipykernel
+    requests
   ];
 
   texDeps = ps: with ps; [
@@ -58,9 +62,8 @@ pkgs.mkShellNoCC {
   # LOCALE_ARCHIVE_2_39 = "/usr/lib/locale/locale-archive";
   # LOCALE_ARCHIVE = "/usr/lib/locale/locale-archive";
 
-  # nativeBuildInputs = with pkgs; [ bashInteractive ];
-
   packages = with pkgs; [
+    bashInteractive
     (python3.withPackages pythonDeps)
     quarto
     # (texlive.withPackages texDeps)
@@ -68,7 +71,7 @@ pkgs.mkShellNoCC {
     font-awesome
   ];
 
-#    shellHook = ''
-#     export SHELL='bash'
-#   '';
+   shellHook = ''
+    export SHELL='${pkgs.bashInteractive}/bin/bash'
+  '';
 }
