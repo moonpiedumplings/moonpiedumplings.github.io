@@ -348,7 +348,7 @@ No freebsd or other non-linux support.
 * <https://busybox.net/FAQ.html> — looks like busybox releases are already staticly linked, but they mostly focus on Linux releases
 * <https://github.com/ahgamut/superconfigure/releases/> — this is cosmo. I would prefer a single binary though, for simplicity, rather than seperate staticly compiled coreutils which is what this is. 
 
-
+            
 ## Screen (from a friend)
 
 A friend compiled screen staticly and gave it to me. 

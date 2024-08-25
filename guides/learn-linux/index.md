@@ -146,3 +146,10 @@ https://wellarchitectedlabs.com/security/
 
 * Data structure oriented guide to git. It starts at explaining what an object is, rather than how the command line works. I like this guide of git more than many other guides I've seen, although it's still missing things (yes, git does a snapshot of the repo's state at every point, as seperate objects, but it deduplicates data between those objects).
 
+
+
+# College Courses or Equivalent:
+
+* https://github.com/ossu/computer-science
+* https://github.com/ForrestKnight/open-source-cs
+* 
