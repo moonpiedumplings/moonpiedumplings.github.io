@@ -6,9 +6,11 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
-<meta name="dcterms.date" content="2023-02-28">
+<meta name="author" content="Jeffrey Fonseca">
+<meta name="dcterms.date" content="2024-08-25">
+<meta name="description" content="CCDC Training 1 - Firewall Updates at Pretty Safe Electronics Corp">
 
-<title>Nginx proxy manager – Jeffrey Fonseca</title>
+<title>Nice Challenge 6 – Jeffrey Fonseca</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -181,9 +183,17 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#what-is-npm-and-why-do-i-want-to-use-it" id="toc-what-is-npm-and-why-do-i-want-to-use-it" class="nav-link active" data-scroll-target="#what-is-npm-and-why-do-i-want-to-use-it">What is NPM and why do I want to use it?</a></li>
-  <li><a href="#installation-and-setup" id="toc-installation-and-setup" class="nav-link" data-scroll-target="#installation-and-setup">Installation and Setup</a></li>
-  <li><a href="#usage" id="toc-usage" class="nav-link" data-scroll-target="#usage">Usage</a></li>
+  <li><a href="#fileshare" id="toc-fileshare" class="nav-link active" data-scroll-target="#fileshare">Fileshare</a>
+  <ul class="collapse">
+  <li><a href="#nftables-migration" id="toc-nftables-migration" class="nav-link" data-scroll-target="#nftables-migration">Nftables Migration</a></li>
+  <li><a href="#firewall-logging" id="toc-firewall-logging" class="nav-link" data-scroll-target="#firewall-logging">Firewall Logging</a></li>
+  </ul></li>
+  <li><a href="#prod-joomia" id="toc-prod-joomia" class="nav-link" data-scroll-target="#prod-joomia">Prod-Joomia</a>
+  <ul class="collapse">
+  <li><a href="#nftables-migration-1" id="toc-nftables-migration-1" class="nav-link" data-scroll-target="#nftables-migration-1">Nftables migration</a></li>
+  <li><a href="#firewall-logging-1" id="toc-firewall-logging-1" class="nav-link" data-scroll-target="#firewall-logging-1">Firewall logging</a></li>
+  </ul></li>
+  <li><a href="#domain-controller" id="toc-domain-controller" class="nav-link" data-scroll-target="#domain-controller">Domain-Controller</a></li>
   </ul>
 </nav>
     </div>
@@ -192,23 +202,32 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">Nginx proxy manager</h1>
+<h1 class="title">Nice Challenge 6</h1>
   <div class="quarto-categories">
     <div class="quarto-category">linux</div>
-    <div class="quarto-category">devops</div>
-    <div class="quarto-category">nginx</div>
   </div>
   </div>
 
+<div>
+  <div class="description">
+    CCDC Training 1 - Firewall Updates at Pretty Safe Electronics Corp
+  </div>
+</div>
 
 
 <div class="quarto-title-meta">
 
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>Jeffrey Fonseca </p>
+          </div>
+  </div>
     
     <div>
     <div class="quarto-title-meta-heading">Published</div>
     <div class="quarto-title-meta-contents">
-      <p class="date">February 28, 2023</p>
+      <p class="date">August 25, 2024</p>
     </div>
   </div>
   
@@ -220,69 +239,160 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </header>
 
 
-<section id="what-is-npm-and-why-do-i-want-to-use-it" class="level1">
-<h1>What is NPM and why do I want to use it?</h1>
-<p>Nginx proxy manager (npm, but not the node one) is a web based frontend for nginx that automatically also configures letsencrypt, similar to how certbot does it. It makes nginx much easier to use. Rather than writing config files, you can just click around, which is much easier. For a high school computer science class, I think NPM is better, because it doesn’t have the complexity of npm (less potential for accidental failurs), but still teaches people about ports mapping, encryption, and other necessary skills.</p>
-<p>In addition to that, with npm, even if someone does create a bad config, only their server goes down. With npm, a bad nginx config leads to the whole server going down. That is… not optimal.</p>
+<p>This is for the <a href="https://nice-challenge.com/">NICE</a> challenge. It’s a blue team challenge where you are tasked with hardening machines. Perhaps there is more, but all I was asked to do for this challenge was some simple hardening.</p>
+<p>The name of this specific challenge was “CCDC Training 1 - Firewall Updates at Pretty Safe Electronics Corp.”. The point of this challenge was to convert multiple older Linux machines from iptables to nftables.</p>
+<p>Like previous Nice challenges, this challenge also began with a simulated chatroom, where we the situation was explained.</p>
+<p><img src="images/chatroom.png" class="img-fluid"></p>
+<p>Here are the empty checks:</p>
+<p><img src="images/emptychecks.jpeg" class="img-fluid"></p>
+<section id="fileshare" class="level1">
+<h1>Fileshare</h1>
+<section id="nftables-migration" class="level2">
+<h2 class="anchored" data-anchor-id="nftables-migration">Nftables Migration</h2>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Tip
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Use the <code>pastebinit</code> command, provided by the <code>pastebinit</code> package to easily upload files to pastebins, online sites dedicated to sharing short bits of text.</p>
+<p><code>command | pastebin -b paste.debian.net</code> uploads to &lt;paste.debian.net&gt;, or use the <code>-i</code> argument to upload a specific file.</p>
+</div>
+</div>
+<p>In the home directory, there is a file that contains the iptables rules:</p>
+<div class="code-with-filename">
+<div class="code-with-filename-file">
+<pre><strong>fs_iptables_v4</strong></pre>
+</div>
+<div class="sourceCode" id="cb1" data-filename="fs_iptables_v4"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a># Generated by iptables-save v1.6.0 on Thu Jan 17 04:11:15 2019</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>*filter</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>:INPUT DROP [0:0]</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>:FORWARD ACCEPT [0:0]</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>:OUTPUT ACCEPT [41:8202]</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>-A INPUT -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>-A INPUT -p tcp -m tcp --dport 22 -j ACCEPT</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>-A INPUT -p tcp -m tcp --dport 139 -j ACCEPT</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>-A INPUT -p tcp -m tcp --dport 445 -j ACCEPT</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>COMMIT</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a># Completed on Thu Jan 17 04:11:15 2019</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Except… not quite. When using iptables -L or iptables-save to look at the rules, they give different results than the saved file, a few less:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>Chain INPUT (policy DROP)</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>target     prot opt source               destination         </span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>ACCEPT     all  --  anywhere             anywhere             ctstate RELATED,ESTABLISHED</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>ACCEPT     tcp  --  anywhere             anywhere             tcp dpt:ssh</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>ACCEPT     tcp  --  anywhere             anywhere             tcp dpt:microsoft-ds</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>Chain FORWARD (policy ACCEPT)</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>target     prot opt source               destination         </span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>Chain OUTPUT (policy ACCEPT)</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>target     prot opt source               destination         </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="code-with-filename">
+<div class="code-with-filename-file">
+<pre><strong>iptables-save</strong></pre>
+</div>
+<div class="sourceCode" id="cb3" data-filename="iptables-save"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a># Generated by iptables-save v1.6.0 on Mon Aug 26 01:26:17 2024</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>*filter</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>:INPUT DROP [31:3283]</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>:FORWARD ACCEPT [0:0]</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>:OUTPUT ACCEPT [2070:673014]</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>-A INPUT -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>-A INPUT -p tcp -m tcp --dport 22 -j ACCEPT</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>-A INPUT -p tcp -m tcp --dport 445 -j ACCEPT</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>COMMIT</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a># Completed on Mon Aug 26 01:26:17 2024</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Because the file in the home directory has extra iptables configuration, I will use those configurations instead. Despite being the output of <code>iptable-save</code>, I can use the <code>iptables-nftables-compat</code> package, which provides and <code>iptables</code> and <code>iptables-save</code> command that actually manipulate <code>nftables</code>.</p>
+<p>So, because only the <code>INPUT</code> chain has rules, and none of the other chains have any rules (including <code>mangle</code> or <code>nat</code>), we only need to flush those rules:</p>
+<p><code>iptables -F INPUT</code></p>
+<p>The other thing that needs to be done is to change the iptables <code>INPUT</code> table to from teh default <code>DROP</code> policy to an <code>ACCEPT</code> policy.</p>
+<p><code>iptables -P INPUT ACCEPT</code></p>
+<p>after this, iptables is clear of rules:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>Chain INPUT (policy ACCEPT)</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>target     prot opt source               destination         </span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>Chain FORWARD (policy ACCEPT)</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>target     prot opt source               destination         </span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>Chain OUTPUT (policy ACCEPT)</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>target     prot opt source               destination</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Now, with the iptables chains set to the default, and the ruleset saved, we can comfortable switch to nftables. The <code>iptables-compat</code> set of commands, provided by the <code>iptables-nftables-compat</code> package, lets us restore the ruleset to nft from the firewall:</p>
+<p><code>iptables-compat-restore fs_tables_v4</code> ­— this passes the “Fileshare filtering traffic correctly check.</p>
+<p><code>systemctl enable nftables</code></p>
+<p><code>systemctl start nftables.service</code></p>
+<p>And… no checks passed? It seems that enabling the nftables service resets the nftables rules.</p>
+<div class="code-with-filename">
+<div class="code-with-filename-file">
+<pre><strong>/lib/systemd/system/nftables.service</strong></pre>
+</div>
+<div class="sourceCode" id="cb5" data-filename="/lib/systemd/system/nftables.service"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>[Unit]</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>Description=nftables</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>Documentation=man:nft(8) http://wiki.nftables.org</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>[Service]</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>Type=oneshot</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>RemainAfterExit=yes</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>StandardInput=null</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>ProtectSystem=full</span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>ProtectHome=true</span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>ExecStart=/usr/sbin/nft -f /etc/nftables.conf</span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>ExecReload=/usr/sbin/nft -f /etc/nftables.conf</span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>ExecStop=/usr/sbin/nft flush ruleset</span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>[Install]</span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>WantedBy=multi-user.target</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>The systemd nftables service seems to be a oneshot service that does nothing but flush the nftables rules. After disabling this service and using <code>iptables-compat-restore</code>, again, the “Fileshare filtering” check passes again.</p>
+<p>After <code>apt remove iptables</code>, this removes <code>iptables</code>… and <code>iptables-nftables-compat</code>. But the “Fileshare remove iptables” check passes.</p>
 </section>
-<section id="installation-and-setup" class="level1">
-<h1>Installation and Setup</h1>
-<p>Installation is simpleish.</p>
-<p>First, create a docker network for usage with our docker containers (<a href="https://nginxproxymanager.com/advanced-config/#best-practice-use-a-docker-network">step from here</a>). Because these are our school projects, I will call that network <code>nighthawks</code></p>
-<p><code>docker network create nighthawks</code></p>
-<p>Create a folder called npm, and put a docker-compose.yml in it (<a href="https://nginxproxymanager.com/guide/#quick-setup">basic compose file from here</a>):</p>
-<div class="sourceCode" id="cb1"><pre class="sourceCode yaml code-overflow-wrap code-with-copy"><code class="sourceCode yaml"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">version</span><span class="kw">:</span><span class="at"> </span><span class="st">'3'</span></span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">services</span><span class="kw">:</span></span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">app</span><span class="kw">:</span></span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">image</span><span class="kw">:</span><span class="at"> </span><span class="st">'jc21/nginx-proxy-manager:latest'</span></span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">restart</span><span class="kw">:</span><span class="at"> unless-stopped</span></span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">ports</span><span class="kw">:</span></span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="st">'80:80'</span></span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="st">'81:81'</span></span>
-<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="st">'443:443'</span></span>
-<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">volumes</span><span class="kw">:</span></span>
-<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> ./data:/data</span></span>
-<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> ./letsencrypt:/etc/letsencrypt</span></span>
-<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a><span class="fu">networks</span><span class="kw">:</span></span>
-<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">default</span><span class="kw">:</span></span>
-<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">external</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
-<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">name</span><span class="kw">:</span><span class="at"> nighthawks</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p><code>docker-compose up -d</code> and you’re good to go. It should be noted that you need to have ports 443 and 80 unused by anything else, like Nginx proper. So if you are running nginx, stop it first before you up NPM.</p>
-<p>NPM does need to have port 81 accessible.</p>
-<p>You can either use a reverse proxy, or open up the port to be accessible from the internet.</p>
-<p>If you want the port to be accessible from the internet, you might have a firewall of some kind, so just open that. And if you are using one of the big cloud providers (aws, azure, oracle), then you also might have to configure security control groups, as that acts as an extra firewall for those server types. See my cockpit guide on how to do this with AWS.</p>
-<p>If you want to do a reverse proxy, just use npm to do it: Use proxy post to connect http://npm_app_1:81 to a domain name.</p>
-<p>Now, to configure npm, just access the web interface at https://[domainname/ip]:81</p>
+<section id="firewall-logging" class="level2">
+<h2 class="anchored" data-anchor-id="firewall-logging">Firewall Logging</h2>
+<p>What needs to be logged:</p>
+<ul>
+<li>Log all SSH connection attempts with a prefix of “SSH DETECTED”</li>
+</ul>
+<div class="sourceCode" id="cb6"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>iptables-compat -N SSH # Create new chain for SSH</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>iptables-compat -D INPUT -j ACCEPT -p tcp --dport 22 # delete the existing ssh rule</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>iptables-compat -A INPUT -j SSH -p tcp --dport 22 # Create new ssh rule that targets ssh chain instead</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>iptables-compat -A SSH -m limit --limit 5/min -j LOG --log-prefix "SSH DETECTED " --log-level 4</span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>iptables-compat -A SSH -j ACCEPT</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>This works, and logs are reported in syslog, and forwarded to the domain controller machine. It just does not pass the check.</p>
 </section>
-<section id="usage" class="level1">
-<h1>Usage</h1>
-<p>You may notice above, in the section about using a reverse to expose npm, I use the docker container name, rather than a port. That’s the amazing part of npm. As long as your docker containers are on the same network, all you need is a hostname and the used port. You don’t even need to expose ports in your docker-compose.yml</p>
-<p>So rather than the docker-compose.yml we use in our <a href="https://nighthawkcoders.github.io/APCSP/techtalk/deploy#running-docker-using-docker-composeyml">deployment guide</a></p>
-<p>We can use:</p>
-<div class="sourceCode" id="cb2"><pre class="sourceCode yaml code-overflow-wrap code-with-copy"><code class="sourceCode yaml"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">version</span><span class="kw">:</span><span class="at"> </span><span class="st">'3'</span></span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="fu">services</span><span class="kw">:</span></span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">web</span><span class="kw">:</span></span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="at">              </span><span class="fu">image</span><span class="kw">:</span><span class="at"> flask_port_v1</span></span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="at">              </span><span class="fu">build</span><span class="kw">:</span><span class="at"> .</span></span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="co">              #ports: # ports section not needed</span></span>
-<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="co">                     # - "8086:8080"</span></span>
-<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="at">              </span><span class="fu">volumes</span><span class="kw">:</span></span>
-<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="at">                      </span><span class="kw">-</span><span class="at"> persistent_volume:/app/volumes</span></span>
-<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="fu">volumes</span><span class="kw">:</span></span>
-<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="fu">persistent_volume</span><span class="kw">:</span></span>
-<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">driver</span><span class="kw">:</span><span class="at"> local</span></span>
-<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">driver_opts</span><span class="kw">:</span></span>
-<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">o</span><span class="kw">:</span><span class="at"> bind</span></span>
-<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">type</span><span class="kw">:</span><span class="at"> none</span></span>
-<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">device</span><span class="kw">:</span><span class="at"> /home/ubuntu/flask_portfolio/volumes</span></span>
-<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a><span class="co">    # replace just flask_portfolio</span></span>
-<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a><span class="fu">networks</span><span class="kw">:</span></span>
-<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">default</span><span class="kw">:</span></span>
-<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">external</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
-<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">name</span><span class="kw">:</span><span class="at"> nighthawks</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>And then you can simply expose http://flask_port_v1_web_1:8080 to the world!</p>
+</section>
+<section id="prod-joomia" class="level1">
+<h1>Prod-Joomia</h1>
+<section id="nftables-migration-1" class="level2">
+<h2 class="anchored" data-anchor-id="nftables-migration-1">Nftables migration</h2>
+<p>Follow steps for the machine “Fileshare”.</p>
+</section>
+<section id="firewall-logging-1" class="level2">
+<h2 class="anchored" data-anchor-id="firewall-logging-1">Firewall logging</h2>
+<p>Follow steps for “Fileshare” machine.</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>iptables-compat -N DROPLOG</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>iptables-compat -P INPUT ACCEPT # Accepts all input packets</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>iptables-compat -A INPUT -j DROPLOG # if this is the last rule in the chain, then any packets that don't match previous rules are subject to this one instead.</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>iptables-compats -A DROPLOG --m limit -limit 5/min -j LOG --log-prefix "PACKET DROPPED " --log-level 4</span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>iptables-compat -A DROPLOG -j DROP # If this is the last rule in the "DROPLOG" chain, then packets which don't match this rule will match this instead</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
+</section>
+<section id="domain-controller" class="level1">
+<h1>Domain-Controller</h1>
+<p>On the desktop, there is program to install “Syslog” watcher. Follow the prompts. Install both the service, and the manager. Make sure to select the option to open the firewall port as well.</p>
+<p><img src="images/syslogssh.jpeg" class="img-fluid"></p>
+<p>It seems to be detecting syslog connections with ssh, but I’m not getting the points. It does say “SSH DETECTED” logged from the Fileshare machine.</p>
 
 
 </section>
