@@ -1,7 +1,7 @@
 ---
 title: "Container images and setuid binaries"
 date: "2024-5-2"
-categories: [linux, cybersecurity]
+categories: [linux, cybersecurity, _playground]
 format:
   html:
     code-fold: true

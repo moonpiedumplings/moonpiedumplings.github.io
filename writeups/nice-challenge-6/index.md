@@ -2,7 +2,7 @@
 title: "Nice Challenge 6"
 description: "CCDC Training 1 - Firewall Updates at Pretty Safe Electronics Corp"
 date: "2024-8-25"
-categories: [linux]
+categories: [linux, _writeups]
 author: Jeffrey Fonseca
 execute:
   freeze: auto

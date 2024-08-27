@@ -1,7 +1,7 @@
 ---
 title: "Work on Alpine Linux"
 date: "2024-8-3"
-categories: [linux]
+categories: [_playground, linux]
 draft: true
 author: Jeffrey Fonseca
 format:

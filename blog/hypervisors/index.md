@@ -2,7 +2,7 @@
 title: "A comparision of hypervisors/platforms"
 description: ""
 date: "2024-2-15"
-categories: [linux, virt]
+categories: [linux, virt, _blog]
 format:
   html:
     toc-depth: 4

@@ -1,7 +1,7 @@
 ---
 title: "Portable executable experiments for CCDC"
 date: "2024-8-6"
-categories: [linux]
+categories: [linux, _playground]
 # draft: true
 format:
   html:

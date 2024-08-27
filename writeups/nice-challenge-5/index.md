@@ -2,7 +2,7 @@
 title: "Nice Challenge 5"
 description: "CCDC Tryouts 1 - DASWebs Users, Access & Updates"
 date: "2024-6-7"
-categories: [linux]
+categories: [linux, _writeups]
 author: Jeffrey Fonseca
 execute:
   freeze: auto

@@ -1,7 +1,7 @@
 ---
 title: "Creating a nix flake shell, the \"proper\" way"
 date: "2024-6-21"
-categories: [nix]
+categories: [nix, _playground]
 # draft: true
 format:
   html:

@@ -2,7 +2,7 @@
 title: "Nice Challenge 4"
 description: "eCitadel Training — SysAdmin Crash Course"
 date: "2024-4-20"
-categories: [linux]
+categories: [linux, _writeups]
 author: Jeffrey Fonseca
 execute:
   freeze: auto
