@@ -6,9 +6,9 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
-<meta name="description" content="This is I blog my progress on my projects. I often use this as a reference sheet when I come back to incomplete projects.">
+<meta name="dcterms.date" content="2024-09-01">
 
-<title>Projects – Jeffrey Fonseca</title>
+<title>Server Part 5 — Ovirt is still maintained?! – Jeffrey Fonseca</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -24,26 +24,24 @@ ul.task-list li input[type="checkbox"] {
 </style>
 
 
-<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
-<script src="../site_libs/quarto-nav/headroom.min.js"></script>
-<script src="../site_libs/clipboard/clipboard.min.js"></script>
-<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
-<script src="../site_libs/quarto-search/fuse.min.js"></script>
-<script src="../site_libs/quarto-search/quarto-search.js"></script>
-<meta name="quarto:offset" content="../">
-<script src="../site_libs/quarto-listing/list.min.js"></script>
-<script src="../site_libs/quarto-listing/quarto-listing.js"></script>
-<script src="../site_libs/quarto-html/quarto.js"></script>
-<script src="../site_libs/quarto-html/popper.min.js"></script>
-<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
-<script src="../site_libs/quarto-html/anchor.min.js"></script>
-<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="../site_libs/quarto-html/quarto-syntax-highlighting-dark.css" rel="prefetch" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
-<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../site_libs/bootstrap/bootstrap-dark.min.css" rel="prefetch" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<script src="../../site_libs/quarto-html/quarto.js"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark.css" rel="prefetch" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark.min.css" rel="prefetch" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -71,76 +69,18 @@ ul.task-list li input[type="checkbox"] {
     "search-label": "Search"
   }
 }</script>
-<script>
 
-  window.document.addEventListener("DOMContentLoaded", function (_event) {
-    const listingTargetEl = window.document.querySelector('#listing-listing .list');
-    if (!listingTargetEl) {
-      // No listing discovered, do not attach.
-      return; 
-    }
-
-    const options = {
-      valueNames: ['listing-date','listing-title','listing-author',{ data: ['index'] },{ data: ['categories'] },{ data: ['listing-date-sort'] },{ data: ['listing-title-sort'] }],
-      
-      searchColumns: ["listing-date","listing-title","listing-author"],
-    };
-
-    window['quarto-listings'] = window['quarto-listings'] || {};
-    window['quarto-listings']['listing-listing'] = new List('listing-listing', options);
-
-    if (window['quarto-listing-loaded']) {
-      window['quarto-listing-loaded']();
-    }
-  });
-
-  window.addEventListener('hashchange',() => {
-    if (window['quarto-listing-loaded']) {
-      window['quarto-listing-loaded']();
-    }
-  })
-  </script>
-
-  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
-  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
-
-<script type="text/javascript">
-const typesetMath = (el) => {
-  if (window.MathJax) {
-    // MathJax Typeset
-    window.MathJax.typeset([el]);
-  } else if (window.katex) {
-    // KaTeX Render
-    var mathElements = el.getElementsByClassName("math");
-    var macros = [];
-    for (var i = 0; i < mathElements.length; i++) {
-      var texText = mathElements[i].firstChild;
-      if (mathElements[i].tagName == "SPAN") {
-        window.katex.render(texText.data, mathElements[i], {
-          displayMode: mathElements[i].classList.contains('display'),
-          throwOnError: false,
-          macros: macros,
-          fleqn: false
-        });
-      }
-    }
-  }
-}
-window.Quarto = {
-  typesetMath
-};
-</script>
 
 </head>
 
 <body class="nav-fixed">
 
 <div id="quarto-search-results"></div>
-  <header id="quarto-header" class="headroom fixed-top quarto-banner">
+  <header id="quarto-header" class="headroom fixed-top">
     <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
       <div class="navbar-container container-fluid">
       <div class="navbar-brand-container mx-auto">
-    <a class="navbar-brand" href="../index.html">
+    <a class="navbar-brand" href="../../index.html">
     <span class="navbar-title">Jeffrey Fonseca</span>
     </a>
   </div>
@@ -151,17 +91,17 @@ window.Quarto = {
           <div class="collapse navbar-collapse" id="navbarCollapse">
             <ul class="navbar-nav navbar-nav-scroll me-auto">
   <li class="nav-item">
-    <a class="nav-link" href="../posts/index.html"> 
+    <a class="nav-link" href="../../posts/index.html"> 
 <span class="menu-text">Posts</span></a>
   </li>  
   <li class="nav-item">
-    <a class="nav-link" href="../resume/index.html"> 
+    <a class="nav-link" href="../../resume/index.html"> 
 <span class="menu-text">Resume</span></a>
   </li>  
 </ul>
             <ul class="navbar-nav navbar-nav-scroll ms-auto">
   <li class="nav-item compact">
-    <a class="nav-link" href="../../feed.xml"> <i class="bi bi-rss" role="img">
+    <a class="nav-link" href="../../../feed.xml"> <i class="bi bi-rss" role="img">
 </i> 
 <span class="menu-text"></span></a>
   </li>  
@@ -179,176 +119,83 @@ window.Quarto = {
     </nav>
 </header>
 <!-- content -->
-<header id="title-block-header" class="quarto-title-block default page-columns page-full">
-  <div class="quarto-title-banner page-columns page-full">
-    <div class="quarto-title column-page-left">
-      <h1 class="title">Projects</h1>
-                  <div>
-        <div class="description">
-          This is I blog my progress on my projects. I often use this as a reference sheet when I come back to incomplete projects.
-        </div>
-      </div>
-                </div>
-  </div>
-    
-  
-  <div class="quarto-title-meta column-page-left">
-
-      
-    
-      
-    </div>
-    
-  
-  </header><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-full page-navbar">
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
 <!-- sidebar -->
 <!-- margin-sidebar -->
     <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
-        
-    <h5 class="quarto-listing-category-title">Categories</h5><div class="quarto-listing-category category-default"><div class="category" data-category="">All <span class="quarto-category-count">(10)</span></div><div class="category" data-category="_projects">_projects <span class="quarto-category-count">(10)</span></div><div class="category" data-category="ansible">ansible <span class="quarto-category-count">(1)</span></div><div class="category" data-category="devops">devops <span class="quarto-category-count">(2)</span></div><div class="category" data-category="hci">hci <span class="quarto-category-count">(1)</span></div><div class="category" data-category="kasm">kasm <span class="quarto-category-count">(2)</span></div><div class="category" data-category="linux">linux <span class="quarto-category-count">(8)</span></div><div class="category" data-category="nix">nix <span class="quarto-category-count">(5)</span></div><div class="category" data-category="quarto">quarto <span class="quarto-category-count">(1)</span></div><div class="category" data-category="ubuntu">ubuntu <span class="quarto-category-count">(1)</span></div></div></div>
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#background-goals" id="toc-background-goals" class="nav-link active" data-scroll-target="#background-goals">Background &amp; Goals</a></li>
+  <li><a href="#software-selection" id="toc-software-selection" class="nav-link" data-scroll-target="#software-selection">Software Selection</a>
+  <ul class="collapse">
+  <li><a href="#virtual-machine-manager" id="toc-virtual-machine-manager" class="nav-link" data-scroll-target="#virtual-machine-manager">Virtual Machine Manager</a></li>
+  <li><a href="#authentication" id="toc-authentication" class="nav-link" data-scroll-target="#authentication">Authentication</a></li>
+  </ul></li>
+  </ul>
+</nav>
+    </div>
 <!-- main -->
-<main class="content quarto-banner-title-block column-page-left" id="quarto-document-content">
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Server Part 5 — Ovirt is still maintained?!</h1>
+  <div class="quarto-categories">
+    <div class="quarto-category">linux</div>
+    <div class="quarto-category">_projects</div>
+  </div>
+  </div>
 
 
 
+<div class="quarto-title-meta">
+
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">September 1, 2024</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
 
 
+</header>
 
 
+<section id="background-goals" class="level1">
+<h1>Background &amp; Goals</h1>
+<p>Since I got literally no work done on my server, I think it would be prudent to scale down. Rather than opting for a larger option.</p>
+<p>In the order I want, here are concrete goals:</p>
+<ul>
+<li>Syncthing: (I need this in order to sync files between my two laptops)</li>
+<li>Oauth2/Openid/Ldap (Kanidm or Authentik)
+<ul>
+<li>I might switch to <a href="https://kanidm.com/">Kanidm</a> from authentik as my authentication server, as it seems a lot simpler… but it doesn’t seem to support invites</li>
+</ul></li>
+<li>Virtual Machine host with a web UI that I can give out to others. I’m currently looking at Incus or Ovirt.</li>
+</ul>
+<p>I recently learned that <a href="https://www.ovirt.org/">Ovirt</a> was still maintained, and it seems to be feature complete. It contains every feature I want, like oauth2 authentication, port security, and a web UI. Although, due to Red Hat abandoning the project, it likely wont’ get beyond feature updates, and instead just get bug and security updates, the software does what I want it to do.</p>
+</section>
+<section id="software-selection" class="level1">
+<h1>Software Selection</h1>
+<section id="virtual-machine-manager" class="level2">
+<h2 class="anchored" data-anchor-id="virtual-machine-manager">Virtual Machine Manager</h2>
+<p>Incus: * <a href="">Authentication</a> - Openid connection * <a href="https://linuxcontainers.org/incus/docs/main/authorization/">Authorization</a> - Openfga authorization - Do I have to create a project for each user? (seems to be no… <a href="https://linuxcontainers.org/incus/docs/main/howto/projects_confine/#confine-projects-to-specific-incus-users">Incus can be configured to dynamically create projects for all users in a specific user group</a>) - What is the difference between the varios levels of authority * <a href="https://linuxcontainers.org/incus/docs/main/explanation/security/#network-security">Port security</a> - Can be overrided on a per instance basis… but how can I make this an unchangable default?</p>
+</section>
+<section id="authentication" class="level2">
+<h2 class="anchored" data-anchor-id="authentication">Authentication</h2>
 
 
-<div class="quarto-listing quarto-listing-container-table" id="listing-listing">
-<table class="quarto-listing-table table">
-<thead>
-<tr>
-<th>
-Date
-</th>
-<th>
-Title
-</th>
-<th>
-Author
-</th>
-</tr>
-</thead>
-<tbody class="list">
-<tr data-index="0" data-categories="linux,_projects" data-listing-date-sort="1725174000000" data-listing-file-modified-sort="1725746165454" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="2" data-listing-word-count-sort="251" data-listing-title-sort="Server Part 5 — Ovirt is still maintained?!" data-listing-filename-sort="index.md">
-<td>
-<span class="listing-date">Sep 1, 2024</span>
-</td>
-<td>
-<a href="../projects/build-server-5/index.html" class="title listing-title">Server Part 5 — Ovirt is still maintained?!</a>
-</td>
-<td>
-<span class="listing-author">&nbsp;</span>
-</td>
-</tr>
-<tr data-index="1" data-categories="linux,_projects" data-listing-date-sort="1710918000000" data-listing-file-modified-sort="1724717102155" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="15" data-listing-word-count-sort="2861" data-listing-title-sort="My server part 4 — Kubernetes" data-listing-filename-sort="index.md">
-<td>
-<span class="listing-date">Mar 20, 2024</span>
-</td>
-<td>
-<a href="../projects/build-server-4/index.html" class="title listing-title">My server part 4 — Kubernetes</a>
-</td>
-<td>
-<span class="listing-author">&nbsp;</span>
-</td>
-</tr>
-<tr data-index="2" data-categories="linux,_projects" data-listing-date-sort="1705478400000" data-listing-file-modified-sort="1724717100504" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="40" data-listing-word-count-sort="7878" data-listing-title-sort="Building my server part 3 — The switch to debian" data-listing-filename-sort="index.qmd">
-<td>
-<span class="listing-date">Jan 17, 2024</span>
-</td>
-<td>
-<a href="../projects/build-server-3/index.html" class="title listing-title">Building my server part 3 — The switch to debian</a>
-</td>
-<td>
-<span class="listing-author">&nbsp;</span>
-</td>
-</tr>
-<tr data-index="3" data-categories="nix,quarto,_projects" data-listing-date-sort="1705305600000" data-listing-file-modified-sort="1724717239883" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="42" data-listing-word-count-sort="8247" data-listing-title-sort="Packaging quarto using nix" data-listing-filename-sort="index.qmd">
-<td>
-<span class="listing-date">Jan 15, 2024</span>
-</td>
-<td>
-<a href="../projects/quarto-via-nix/index.html" class="title listing-title">Packaging quarto using nix</a>
-</td>
-<td>
-<span class="listing-author">&nbsp;</span>
-</td>
-</tr>
-<tr data-index="4" data-categories="linux,_projects" data-listing-date-sort="1690959600000" data-listing-file-modified-sort="1724717109150" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="102" data-listing-word-count-sort="20259" data-listing-title-sort="Building my own Server Part 2 — Software" data-listing-filename-sort="index.qmd">
-<td>
-<span class="listing-date">Aug 2, 2023</span>
-</td>
-<td>
-<a href="../projects/build-server-2/index.html" class="title listing-title">Building my own Server Part 2 — Software</a>
-</td>
-<td>
-<span class="listing-author">&nbsp;</span>
-</td>
-</tr>
-<tr data-index="5" data-categories="linux,_projects" data-listing-date-sort="1690873200000" data-listing-file-modified-sort="1724717075615" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="12" data-listing-word-count-sort="2348" data-listing-title-sort="Building my own Server Part 1 — Hardware" data-listing-filename-sort="index.qmd">
-<td>
-<span class="listing-date">Aug 1, 2023</span>
-</td>
-<td>
-<a href="../projects/build-server/index.html" class="title listing-title">Building my own Server Part 1 — Hardware</a>
-</td>
-<td>
-<span class="listing-author">&nbsp;</span>
-</td>
-</tr>
-<tr data-index="6" data-categories="nix,linux,ansible,_projects" data-listing-date-sort="1689318000000" data-listing-file-modified-sort="1724717204190" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="18" data-listing-word-count-sort="3473" data-listing-title-sort="Automating my server config, first nix, then ansible" data-listing-filename-sort="index.qmd">
-<td>
-<span class="listing-date">Jul 14, 2023</span>
-</td>
-<td>
-<a href="../projects/nixos-vps/index.html" class="title listing-title">Automating my server config, first nix, then ansible</a>
-</td>
-<td>
-<span class="listing-author">&nbsp;</span>
-</td>
-</tr>
-<tr data-index="7" data-categories="nix,hci,_projects" data-listing-date-sort="1686466800000" data-listing-file-modified-sort="1724717213237" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="34" data-listing-word-count-sort="6636" data-listing-title-sort="Packaging Openstack on Nixos" data-listing-filename-sort="index.qmd">
-<td>
-<span class="listing-date">Jun 11, 2023</span>
-</td>
-<td>
-<a href="../projects/openstack-on-nixos/index.html" class="title listing-title">Packaging Openstack on Nixos</a>
-</td>
-<td>
-<span class="listing-author">&nbsp;</span>
-</td>
-</tr>
-<tr data-index="8" data-categories="linux,devops,nix,kasm,_projects" data-listing-date-sort="1683010800000" data-listing-file-modified-sort="1724717119831" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="11" data-listing-word-count-sort="2178" data-listing-title-sort="Compiling KasmVNC on NixOS" data-listing-filename-sort="index.qmd">
-<td>
-<span class="listing-date">May 2, 2023</span>
-</td>
-<td>
-<a href="../projects/compiling-kasmvnc-on-nixos/index.html" class="title listing-title">Compiling KasmVNC on NixOS</a>
-</td>
-<td>
-<span class="listing-author">&nbsp;</span>
-</td>
-</tr>
-<tr data-index="9" data-categories="nix,linux,devops,ubuntu,kasm,_projects" data-listing-date-sort="1674720000000" data-listing-file-modified-sort="1724717255080" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="10" data-listing-word-count-sort="1895" data-listing-title-sort="Kasmweb setup" data-listing-filename-sort="index.qmd">
-<td>
-<span class="listing-date">Jan 26, 2023</span>
-</td>
-<td>
-<a href="../projects/setting-up-kasm/index.html" class="title listing-title">Kasmweb setup</a>
-</td>
-<td>
-<span class="listing-author">&nbsp;</span>
-</td>
-</tr>
-</tbody>
-</table>
-<div class="listing-no-matching d-none">
-No matching items
-</div>
-</div></main> <!-- /main -->
+</section>
+</section>
+
+</main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">
 window.document.addEventListener("DOMContentLoaded", function (event) {
   const toggleBodyColorMode = (bsSheetEl) => {

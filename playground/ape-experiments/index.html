@@ -180,7 +180,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#indygreg-python" id="toc-indygreg-python" class="nav-link" data-scroll-target="#indygreg-python">IndyGreg Python</a></li>
   </ul></li>
   <li><a href="#coreutils" id="toc-coreutils" class="nav-link" data-scroll-target="#coreutils">Coreutils</a></li>
-  <li><a href="#screen-from-a-friend" id="toc-screen-from-a-friend" class="nav-link" data-scroll-target="#screen-from-a-friend">Screen (from a friend)</a></li>
+  <li><a href="#toolpacks" id="toc-toolpacks" class="nav-link" data-scroll-target="#toolpacks">Toolpacks</a></li>
   </ul></li>
   <li><a href="#less-promising-options" id="toc-less-promising-options" class="nav-link" data-scroll-target="#less-promising-options">Less promising options</a>
   <ul class="collapse">
@@ -325,7 +325,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="freebsd" class="level2">
 <h2 class="anchored" data-anchor-id="freebsd">FreeBSD</h2>
-<p>Having trouble launching vagrant vm.</p>
+<p>I’m having trouble packagint the Vagrant VM.</p>
 </section>
 </section>
 <section id="nix-bundle" class="level1">
@@ -427,7 +427,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>          /usr/lib/gcc/x86_64-alpine-linux-musl/13.2.1/../../../../x86_64-alpine-linux-musl/bin/ld: cannot find -ldevstat: No such file or directory</span>
 <span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>          /usr/lib/gcc/x86_64-alpine-linux-musl/13.2.1/../../../../x86_64-alpine-linux-musl/bin/ld: cannot find -lexecinfo: No such file or directory</span>
 <span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a>          collect2: error: ld returned 1 exit status</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>Zellij already ships a <a href="https://github.com/zellij-org/zellij/releases">static version on their releases</a> (zellij-x86_64-unknown-linux-musl.tar.gz). From my testing, it only run’s on Linux.</p>
+<p>Zellij already ships a <a href="https://github.com/zellij-org/zellij/releases">static version on their releases</a> (zellij-x86_64-unknown-linux-musl.tar.gz). From my testing, it only runs on Linux.</p>
 </section>
 <section id="python" class="level2">
 <h2 class="anchored" data-anchor-id="python">Python</h2>
@@ -461,10 +461,16 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li><a href="https://github.com/ahgamut/superconfigure/releases/" class="uri">https://github.com/ahgamut/superconfigure/releases/</a> — this is cosmo. I would prefer a single binary though, for simplicity, rather than seperate staticly compiled coreutils which is what this is.</li>
 </ul>
 </section>
-<section id="screen-from-a-friend" class="level2">
-<h2 class="anchored" data-anchor-id="screen-from-a-friend">Screen (from a friend)</h2>
-<p>A friend compiled screen staticly and gave it to me.</p>
-<p>Apparently, some of the issues with the terminal multiplexers might be because they require <code>nss</code>.</p>
+<section id="toolpacks" class="level2">
+<h2 class="anchored" data-anchor-id="toolpacks">Toolpacks</h2>
+<p>I recently learned about a new project, called <a href="https://github.com/Azathothas/Toolpacks">Toolpacks</a>. Toolpacks is a truly massive set of static binaries, with so many utilities, including zellij, tmux, ssh, and many others. I see 2292 binaries for x86_64 Linux, and good amounts for Windows and Arm Linux as well.</p>
+<p>Another cool thing about Toolpacks is that they also provide <a href="https://en.wikipedia.org/wiki/UPX">UPX</a> versions of the software they distribute. UPX is a method of creating self extracting, compressed binaries that further saves space. For example:</p>
+<div class="sourceCode" id="cb19"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>[moonpie@lizard toolpack]$ du -sh zellij</span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>30M     zellij</span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>[moonpie@lizard toolpack]$ du -sh zellij.upx</span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>8.6M    zellij.upx</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>That’s a pretty big reduction on the zellij binary, which is one of the largest binaries I’ve seen. Interesting, they also have caddy, and nginx. I find this very promising.</p>
+<p>There are also builds of busybox or toybox, which could replace coreutils in a pinch on Linux machines. There are a few other interesting one’s, such as <a href="https://github.com/vdjagilev/nmap-formatter">nmap-formatter</a>, a software that can format nmap XML output and convert it to CSV or other formats, which we may find easier to submit.</p>
 </section>
 </section>
 <section id="less-promising-options" class="level1">
