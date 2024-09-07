@@ -1,7 +1,7 @@
 ---
 title: "Portable executable experiments for CCDC"
 date: "2024-8-6"
-categories: [linux, _playground]
+categories: [linux, _playground]  
 # draft: true
 format:
   html:
@@ -172,7 +172,7 @@ ELF binary type "9" not known.
 
 ## FreeBSD
 
-Having trouble launching vagrant vm. 
+I'm having trouble packagint the Vagrant VM.
 
 
 # Nix bundle
@@ -315,7 +315,7 @@ note: /usr/lib/gcc/x86_64-alpine-linux-musl/13.2.1/../../../../x86_64-alpine-lin
           collect2: error: ld returned 1 exit status
 ```
 
-Zellij already ships a [static version on their releases](https://github.com/zellij-org/zellij/releases) (zellij-x86_64-unknown-linux-musl.tar.gz). From my testing, it only run's on Linux.  
+Zellij already ships a [static version on their releases](https://github.com/zellij-org/zellij/releases) (zellij-x86_64-unknown-linux-musl.tar.gz). From my testing, it only runs on Linux.
 
 
 ## Python
@@ -349,11 +349,22 @@ No freebsd or other non-linux support.
 * <https://github.com/ahgamut/superconfigure/releases/> — this is cosmo. I would prefer a single binary though, for simplicity, rather than seperate staticly compiled coreutils which is what this is. 
 
             
-## Screen (from a friend)
+## Toolpacks
 
-A friend compiled screen staticly and gave it to me. 
+I recently learned about a new project, called [Toolpacks](https://github.com/Azathothas/Toolpacks). Toolpacks is a truly massive set of static binaries, with so many utilities, including zellij, tmux, ssh, and many others. I see 2292 binaries for x86_64 Linux, and good amounts for Windows and Arm Linux as well. 
 
-Apparently, some of the issues with the terminal multiplexers might be because they require `nss`. 
+Another cool thing about Toolpacks is that they also provide [UPX](https://en.wikipedia.org/wiki/UPX) versions of the software they distribute. UPX is a method of creating self extracting, compressed binaries that further saves space. For example:
+
+```{.default}
+[moonpie@lizard toolpack]$ du -sh zellij
+30M     zellij
+[moonpie@lizard toolpack]$ du -sh zellij.upx
+8.6M    zellij.upx
+```
+
+That's a pretty big reduction on the zellij binary, which is one of the largest binaries I've seen. Interesting, they also have caddy, and nginx. I find this very promising.
+
+There are also builds of busybox or toybox, which could replace coreutils in a pinch on Linux machines. There are a few other interesting one's, such as [nmap-formatter](https://github.com/vdjagilev/nmap-formatter), a software that can format nmap XML output and convert it to CSV or other formats, which we may find easier to submit.
 
 # Less promising options
 

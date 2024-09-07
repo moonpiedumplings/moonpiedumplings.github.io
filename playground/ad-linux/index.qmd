@@ -1,0 +1,106 @@
+---
+title: "Connecting Linux machines to Active Directory"
+date: "2024-8-29"
+categories: [linux, cybersecurity, _playground]
+format:
+  html:
+    code-fold: true
+    code-summary: "Show the code"
+    code-block-background: true
+execute:
+  freeze: auto
+---
+
+# Research
+
+
+This is part of a project for CSUN's Layer 8 cybersecurity club. 
+
+There seem to be multiple ways of connecting a Linux machine to an LDAP server, in such a way that users can login using LDAP credentials.
+
+* [nss-pam](https://arthurdejong.org/nss-pam-ldapd/setup)
+* [realmd/sssd](https://www.redhat.com/sysadmin/linux-active-directory)
+* [Windbind/Samba](https://wiki.debian.org/AuthenticatingLinuxWithActiveDirectory) (last updated 2016)
+
+
+Package comparison Table (Repology):
+
+* [nss-pam-ldapd](https://repology.org/project/nss-pam-ldapd/versions)
+* [realmd](https://repology.org/project/realmd/versions)
+* [sssd](https://repology.org/project/sssd/versions) — Not on Arch
+* [samba](https://repology.org/project/samba/versions)
+* [krb5](https://repology.org/project/krb5/versions)
+* [winbind](https://repology.org/project/apmod:auth-ntlm-winbind/versions) — only thing I could find, and not packaged everywhere
+
+
+Looking at this, nss-pam-ldapd seems to be the most generally available option for systems. Although, pam is only portable to systems that have it, all of our systems have pam, except for one — the openbsd system. 
+
+# Deploying lldap
+
+Windows team didn't give us access to their active directory server, so we decided to deploy ldap instead. For deploying lldap, I chose [lldap](https://github.com/lldap/lldap), an all in one ldap implementation, that comes with a web ui for managemnt. 
+
+Here is the docker-compose.yml I am using:
+
+```{.yaml filename='docker-compose.yml'}
+version: "3"
+
+volumes:
+  lldap_data:
+    driver: local
+
+services:
+  lldap:
+    image: docker.io/lldap/lldap:stable
+    ports:
+      # For LDAP, not recommended to expose, see Usage section.
+      - "3890:3890"
+      # For LDAPS (LDAP Over SSL), enable port if LLDAP_LDAPS_OPTIONS__ENABLED set true, look env below
+      - "6360:6360"
+      # For the web front-end
+      - "17170:17170"
+    volumes:
+     # - "lldap_data:/data"
+      # Alternatively, you can mount a local folder
+       - "./lldap_data:/data"
+    environment:
+      #- UID=####
+      #- GID=####
+      #- TZ=####/####
+      - LLDAP_JWT_SECRET="uprising slacks snuggle"
+      - LLDAP_KEY_SEED="uprising slacks snuggle"
+      - LLDAP_LDAP_BASE_DN=dc=example,dc=com
+      # If using LDAPS, set enabled true and configure cert and key path
+      # - LLDAP_LDAPS_OPTIONS__ENABLED=true
+      # - LLDAP_LDAPS_OPTIONS__CERT_FILE=/path/to/certfile.crt
+      # - LLDAP_LDAPS_OPTIONS__KEY_FILE=/path/to/keyfile.key        
+      # You can also set a different database:
+      # - LLDAP_DATABASE_URL=mysql://mysql-user:password@mysql-server/my-database
+      # - LLDAP_DATABASE_URL=postgres://postgres-user:password@postgres-server/my-database
+```
+
+And then I copied the `lldap_config.docker_template.toml` to `./dat a/lldap_config.toml`. This sets up the default config for lldap.
+
+From here, the LDAP configuration can be edited through the web ui accessible at http://<you-ip>:17170      
+
+# Connecting to LDAP
+
+## Archlinux
+
+`sudo pacman -Syu nss-pam-ldapd`
+
+
+## Kali/Debian
+
+`apt update`
+
+`apt install libnss-ldapd nslcd` (Do I need libpam-ldapd?)
+
+## Openbsd
+
+???
+
+## RHEL
+
+`dnf update`
+
+`dnf install realmd sssd` (RHEL clones don't seem to have nss-pam-ldapd)
