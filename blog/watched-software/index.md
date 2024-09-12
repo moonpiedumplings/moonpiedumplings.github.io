@@ -43,8 +43,11 @@ Full featured:
 Multi user Full Featured:
 
 * <https://games-on-whales.github.io/> — <https://github.com/games-on-whales>
-* <https://github.com/spaceness/stardust>
+* <https://github.com/spaceness/stardust> 
 * kasmweb — not open source
+* <https://github.com/pwncollege/dojo>
+  - Is an addon to <https://docs.ctfd.io/docs/overview/>, but adds web workspaces and more.
+  - [ctfd has SSO support](https://docs.ctfd.io/docs/settings/single-sign-on/#oauth) 
 
 
 Single User full featured: 
@@ -58,6 +61,7 @@ Single User full featured:
 * <https://github.com/selkies-project/docker-nvidia-egl-desktop>
   - Also has nvidia-glx-desktop
   - Although the docker containers seem to be maintained, the overall product seems to be dead. It looks like they were working towards a full web UI before it died.
+* <https://github.com/vital987/vubuntu> — last updated 2 years ago
 
 Web apps:
 
