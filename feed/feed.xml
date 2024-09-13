@@ -10,7 +10,302 @@
 <atom:link href="./feed/feed.xml" rel="self" type="application/rss+xml"/>
 <description>All posts, intended to be used in an RSS feed. </description>
 <generator>quarto-1.5.56</generator>
-<lastBuildDate>Sat, 07 Sep 2024 07:00:00 GMT</lastBuildDate>
+<lastBuildDate>Thu, 12 Sep 2024 07:00:00 GMT</lastBuildDate>
+<item>
+  <title>Server Part 5 — Ovirt is still maintained?!</title>
+  <link>./projects/build-server-5/</link>
+  <description><![CDATA[ 
+
+
+
+
+<section id="background-goals" class="level1">
+<h1>Background &amp; Goals</h1>
+<p>Since I got literally no work done on my server, I think it would be prudent to scale down. Rather than opting for a larger option.</p>
+<p>In the order I want, here are concrete goals:</p>
+<ul>
+<li>Syncthing: (I need this in order to sync files between my two laptops)</li>
+<li>Oauth2/Openid/Ldap (Kanidm or Authentik)
+<ul>
+<li>I might switch to <a href="https://kanidm.com/">Kanidm</a> from authentik as my authentication server, as it seems a lot simpler… but it doesn’t seem to support invites</li>
+</ul></li>
+<li>Virtual Machine host with a web UI that I can give out to others. I’m currently looking at Incus or Ovirt.</li>
+</ul>
+<p>I recently learned that <a href="https://www.ovirt.org/">Ovirt</a> was still maintained, and it seems to be feature complete. It contains every feature I want, like oauth2 authentication, port security, and a web UI. Although, due to Red Hat abandoning the project, it likely wont’ get beyond feature updates, and instead just get bug and security updates, the software does what I want it to do.</p>
+</section>
+<section id="software-selection" class="level1">
+<h1>Software Selection</h1>
+<section id="virtual-machine-manager" class="level2">
+<h2 class="anchored" data-anchor-id="virtual-machine-manager">Virtual Machine Manager</h2>
+<p>Incus: * <a href="">Authentication</a> - Openid connection * <a href="https://linuxcontainers.org/incus/docs/main/authorization/">Authorization</a> - Openfga authorization - Do I have to create a project for each user? (seems to be no… <a href="https://linuxcontainers.org/incus/docs/main/howto/projects_confine/#confine-projects-to-specific-incus-users">Incus can be configured to dynamically create projects for all users in a specific user group</a>) - What is the difference between the varios levels of authority * <a href="https://linuxcontainers.org/incus/docs/main/explanation/security/#network-security">Port security</a> - Can be overrided on a per instance basis… but how can I make this an unchangable default?</p>
+</section>
+<section id="authentication" class="level2">
+<h2 class="anchored" data-anchor-id="authentication">Authentication</h2>
+<p>I’m currently deciding between kanidm and authentik.</p>
+<p><a href="https://www.reddit.com/r/selfhosted/comments/wre8ua/authentiktraefikk8sfluxcd_because_documentation/">Here is an authentik on kubernetes with fluxcd guide I foudn</a>.</p>
+</section>
+</section>
+<section id="testing-incus" class="level1">
+<h1>Testing Incus</h1>
+<p>So, Incus is only packaged in <a href="https://backports.debian.org/Instructions/">Debian backports</a>. The first step is to add those. After that, <code>apt update</code>, <code>apt upgrade</code> and <code>apt install incus-tools incus incus-agent incus-client</code>.</p>
+<p>Then, to initialize incus, <a href="https://linuxcontainers.org/incus/docs/main/tutorial/first_steps/">first steps documentation</a>.</p>
+</section>
+<section id="rke2-try-2" class="level1">
+<h1>RKE2 Try 2</h1>
+<p>I uninstalled RKE2, but I want to redeploy my services on it again.</p>
+<p><a href="https://docs.rke2.io/install/quickstart">Quick start guide</a></p>
+<p><code>curl -sfL https://get.rke2.io | sudo sh -</code> (for some reason it crashed and didn’t start when I ran it in a root machinectl session)</p>
+<p>I then copied over <code>/etc/rancher/rke2/rke2.yaml</code> to <code>~/.kube/config</code> on my local machine, in order to configure kubernetes from my local machine.</p>
+<section id="fluxcd" class="level2">
+<h2 class="anchored" data-anchor-id="fluxcd">Fluxcd</h2>
+<p>Now, I also realized that git can work over ssh. So I have a git repo, called <code>fleet-charts</code>, located on my server, which I will access from my laptop via ssh.</p>
+<div class="sourceCode" id="cb1" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb1-1">[moonpie@lizard vscode]$ flux bootstrap git --url ssh://moonpie@moonpiedumpl.ing/fleet-charts --branch=main --private-key-file=/home/moonpie/.ssh/moonstack</span>
+<span id="cb1-2">► cloning branch "main" from Git repository "ssh://moonpie@moonpiedumpl.ing/fleet-charts"</span>
+<span id="cb1-3">⚠️  clone failure: unable to clone: repository not found: git repository: 'ssh://moonpie@moonpiedumpl.ing/fleet-charts'</span>
+<span id="cb1-4">⚠️  clone failure: unable to clone: repository not found: git repository: 'ssh://moonpie@moonpiedumpl.ing/fleet-charts'</span>
+<span id="cb1-5">✗ failed to clone repository: unable to clone: repository not found: git repository: 'ssh://moonpie@moonpiedumpl.ing/fleet-charts</span></code></pre></div>
+<p>I find this odd, because ssh works normally:</p>
+<div class="sourceCode" id="cb2" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb2-1">[moonpie@lizard vscode]$ ssh moonpie@moonpiedumpl.ing -i /home/moonpie/.ssh/moonstack</span>
+<span id="cb2-2"></span>
+<span id="cb2-3">moonpie@thoth:~$</span></code></pre></div>
+<div class="sourceCode" id="cb3" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb3-1">[moonpie@lizard vscode]$ flux bootstrap git --url ssh://moonpie@moonpiedumpl.ing:22/home/moonpie/fleet-charts --branch=main --private-key-file=/home/moonpie/.ssh/moonstack --verbose</span>
+<span id="cb3-2">► cloning branch "main" from Git repository "ssh://moonpie@moonpiedumpl.ing:22/home/moonpie/fleet-charts"</span>
+<span id="cb3-3">✔ cloned repository</span>
+<span id="cb3-4">► generating component manifests</span>
+<span id="cb3-5">✔ generated component manifests</span>
+<span id="cb3-6">✔ committed component manifests to "main" ("a69831db70bea88e9ebc9810b78a33831929793c")</span>
+<span id="cb3-7">► pushing component manifests to "ssh://moonpie@moonpiedumpl.ing:22/home/moonpie/fleet-charts"</span>
+<span id="cb3-8">► installing components in "flux-system" namespace</span></code></pre></div>
+<p>So it looks like I must use an absolute path, and cannot use “~” for relative patths. Or maybe I can use the <code>$HOME</code> environment variable.</p>
+<p>But I actually don’t like this setup. I <a href="">uninstalled flux</a>, and I want to redeploy it, but wish ssh on a different port instead. I want port 22 on this server to be availble for the forgejo ssh service, rather than to be a the administrative ssh service. I’m going to change ssh to port <code>22022</code> in order to avoid conflicts with other services.</p>
+<details>
+<summary>
+Show install command
+</summary>
+<div class="sourceCode" id="cb4" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb4-1">[moonpie@lizard vscode]$ flux bootstrap git --url ssh://moonpie@moonpiedumpl.ing:22022/home/moonpie/fleet-charts --branch=main --private-key-file=/home/moonpie/.ssh/moonstack --verbose</span>
+<span id="cb4-2">► cloning branch "main" from Git repository "ssh://moonpie@moonpiedumpl.ing:22022/home/moonpie/fleet-charts"</span>
+<span id="cb4-3">✔ cloned repository</span>
+<span id="cb4-4">► generating component manifests</span>
+<span id="cb4-5">✔ generated component manifests</span>
+<span id="cb4-6">✔ component manifests are up to date</span>
+<span id="cb4-7">► installing components in "flux-system" namespace</span>
+<span id="cb4-8">✔ installed components</span>
+<span id="cb4-9">✔ reconciled components</span>
+<span id="cb4-10">► determining if source secret "flux-system/flux-system" exists</span>
+<span id="cb4-11">► generating source secret</span>
+<span id="cb4-12">✔ public key: ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCelSERwSNpguy4f2oqrpkPgtq3MT7iKY7fVnofpp72hqdfLH4Z0i34HFy8vXKPL1aKd07HNiMFPujG8E/lE/pb3W5sSNkJPh//YZRz2SlZo7Mh2tkBDLe3Ap8GQgJk/jJHMoCS7YQudT4rAi/vNBuHvMBaFCjXBLqwbaoRBxm5t7hiNFi1I9cSdrIP8v6fubv2VbWV72kiwq/IQeJkURFN9UZJFQ6/Dd6os4ZZg3IEY+EVCpkOyi8d8KnS8fnd8vMk/96jl8mBqRk8ZCsBu6qRbs3HfT6FqCuIgIblxixhrpVmJRJ8cJzMGT5I8deuTPZQ4gPNYYNdxkHW8oztISx0Jql15LtgeJi1iQMwj3ZqIEXPxbgWYZc57jodGvdo7PQTAa3PXOopIJrbmQNi6T2OLwgjidWDgYs7gDJdmAFv52g8zeRh7HyO83yCC7IC1MXodLd9zJinvyBRg5DAdKQnW7zTbcEDsUSGgEI+LQdShRcShmnBzDtJMs2oQujLOaM=</span>
+<span id="cb4-13">Please give the key access to your repository: y</span>
+<span id="cb4-14">► applying source secret "flux-system/flux-system"</span>
+<span id="cb4-15">✔ reconciled source secret</span>
+<span id="cb4-16">► generating sync manifests</span>
+<span id="cb4-17">✔ generated sync manifests</span>
+<span id="cb4-18">✔ committed sync manifests to "main" ("e3f5512df167ca2bc974428cff0dc17787d713f1")</span>
+<span id="cb4-19">► pushing sync manifests to "ssh://moonpie@moonpiedumpl.ing:22022/home/moonpie/fleet-charts"</span>
+<span id="cb4-20">► applying sync manifests</span>
+<span id="cb4-21">✔ reconciled sync configuration</span>
+<span id="cb4-22">◎ waiting for GitRepository "flux-system/flux-system" to be reconciled</span>
+<span id="cb4-23">✔ GitRepository reconciled successfully</span>
+<span id="cb4-24">◎ waiting for Kustomization "flux-system/flux-system" to be reconciled</span>
+<span id="cb4-25">✔ Kustomization reconciled successfully</span>
+<span id="cb4-26">► confirming components are healthy</span>
+<span id="cb4-27">✔ helm-controller: deployment ready</span>
+<span id="cb4-28">✔ kustomize-controller: deployment ready</span>
+<span id="cb4-29">✔ notification-controller: deployment ready</span>
+<span id="cb4-30">✔ source-controller: deployment ready</span>
+<span id="cb4-31">✔ all components are healthy</span></code></pre></div>
+</details>
+<p>And just like that, fluxcd is installed.</p>
+<section id="fluxcd-deployment" class="level3">
+<h3 class="anchored" data-anchor-id="fluxcd-deployment">Fluxcd Deployment</h3>
+
+
+</section>
+</section>
+</section>
+
+ ]]></description>
+  <category>linux</category>
+  <category>_projects</category>
+  <guid>./projects/build-server-5/</guid>
+  <pubDate>Thu, 12 Sep 2024 07:00:00 GMT</pubDate>
+</item>
+<item>
+  <title>The Ultimate Card Game</title>
+  <link>./playground/cardgame/</link>
+  <description><![CDATA[ 
+
+
+
+
+<section id="game-setuplayout" class="level1">
+<h1>Game Setup/Layout</h1>
+<p>Traditional Deck + Hand style. How many in a hand? I’m thinking 7.</p>
+<p>Players start with no mana, but can spend from life</p>
+<p>Life: Players start with 16 life Life can also be used to cast cards, which is basically the only way to cast cards before “factory” type cards are on the field or via 0 or negative cost cards.</p>
+<p>During the “block” phase of an attack, the blocking player can either cast 0 (or negative) cost cards, or cast cards using life. This makes cards effectively “instants”, allowing players to bring stuff on the field at the opponent turn, but at some price, as the cards must be either &lt; 0 cost or paid with life.</p>
+<p>Cards play in their “stunned” state. AkA: cards cannot attack first turn after playing (Might change if I adjust how cards do damage)</p>
+</section>
+<section id="card-design" class="level1">
+<h1>Card Design</h1>
+<p>Round up (?)</p>
+<p>Rarity system:</p>
+<p>Legendary: 32 + cost</p>
+<p>Epic: 16 + cost</p>
+<p>Rare: 8 + cost</p>
+<p>Common: 4 + cost</p>
+<p>30 cards in a deck</p>
+<p>Card ratios must be: (minimum 15/30 cards, probably 30)</p>
+<p>2 legendaries, 4 epic, 8 rare, and 16 common for 30 total. You can have more, but you must maintain that ratio.</p>
+<p>Negative cost cards give player production points to use, in addition to being instants.</p>
+<p>Attack/defense:</p>
+<p>5 card draws at the beginning of the turn: Can be used instead to the card effect.</p>
+<p>Cards:</p>
+<hr>
+<p>Card name, mana cost</p>
+<p>Poorly drawn image</p>
+<p>Detail text/keywords</p>
+<p>Flavor text</p>
+<p>————- Attack Power/Health/Production power</p>
+<p>Alternate Card design:</p>
+<p>Card Name</p>
+<p>Either under or next to name: base costs + addons – (negative production cost increaste) – rarity cost add = mana/production cost</p>
+<p>attack/ power, vertically down the left side of the card</p>
+<p>(number) Card trait</p>
+<p>Flavor text</p>
+<p>Card “Shop”</p>
+<p>Traits cost Trait Number * N where N is the total amount of traits</p>
+<p>Offensive Aspects:</p>
+<p>Attack: X Give this card the ability to attack, and 1 + X attack power. Cards need at least one attack to be able to block.</p>
+<p>Multi-Target-Attack: X attack more than one target/structure, to a total of 2 + X targets. Each attack/block/hit encounter is treated as an individual encounter — this multiplies damage essentially. Alternative description (same function): this card makes multiple attacks against multiple targets, and recovers health between each attack.</p>
+<p>Multi-Blocker-Attack: X This card, when attacking a target, is treated as actually doing 2 + X attacks toward a target. Unblocked attacks go through. Each encounter with a blocker is kept seperate.</p>
+<p>Goals: Replace mtg creature tokens, mtg evasion mechanics (keywords flying, horsemanship, unblockable, trample, etc)</p>
+<p>https://mtg.fandom.com/wiki/Evasion_ability</p>
+<p>AoE: X: 1 + X This cards deals it’s attack damage to 1 + X other blockers.</p>
+<p>Idea: AoE has reversed cost. It targets ATK other targets, dealing some calculation of damage.</p>
+<p>Totally not banding: Collective attack: Base + X. Allows for pooling of attackers up to 1 + X other attackers. Counts as one attack, even to multi block. Attacking player can choose how the damage is distributed to the cards in the merged attack. Merged attacks share offensive traits.</p>
+<p>Double Tap: 1 + ??: Card has does a second attack which happens before the first one in an encounter, doing extra damage. Opponent can pay some porportion of production to remove some proportion of double tap from a card.</p>
+<p>Goals: Shield-remove, replace mtg keyword deathtouch.</p>
+<p>Defensive Aspects:</p>
+<p>Health: Base + X Give this card health trait and 1 + X hit points. (note: If a card has no health, it disappears at the end of a turn).</p>
+<p>Multi Block: 1 + X block more than one attacker of a target, per target blocked, up to 2 + X</p>
+<p>Multi-Target-Block: 1 + X: Block for more than one card, although only one attacker per target, up to 2 + X (stacks with multi block with</p>
+<p>Anti-AoE: Base:1 + X add this cards health power to hower many</p>
+<p>Merged Block: Base:1 + X: This card can do a merged block, which is mostly treated as one block. The health of merged blockers is “pooled” where they all share damage. To kill all cards in the merged block, and attacker must outdamage the pool. (Should merged block allow merging of traits?) (and should merged block allow blocking multi-block?)</p>
+<p>Idea: No merging of traits. Stacks with other defensive traits. Allows for multi-blocking, of one card, but doesn’t</p>
+<p>Collective Block: 1 + X. If multiple cards are blocking one card, they gain a “health” pool, where they all share damage. To kill all cards pooling cards, they must deal enough damage to overcome the “health pool” This card can pool with X cards. Cannot health pool with cards with greater health than itself. Blocking is treated as a merged block, where something like “damage multiplication” can split up the health pool again.</p>
+<p>Do I want collective block to merge traits as well?</p>
+<p>Shield: X: Card gets a seperate “shield of X hit points. If they are damaged by one attack/encounter, it doesn’t rollover into their HP. Opponent(s) can pay production points to reduce the shield value. Shield points can also be spent to reduce active effects</p>
+<p>Goals: Replace mtg keywork indestructuble. Replace clash royale shield mechanic Maybe replace hexproof with a resist spell mechanic?</p>
+<p>Misc Aspects:</p>
+<p>Integrate: X: X Pay N * N production points to combine this card with another card, stacking all values. Integrated cards count as one card, even when targeted by another integrate card, but the calculation becomes N * (N1 + N2)</p>
+<p>Goals: Replace mtg archetype voltron, mtg keywords equip, fortify, enchant, mutate, merge, meld</p>
+<p>Problem: Polarity reversal doesn’t effect integrate. Offensive/defensive equivalent? : Debuff</p>
+<p>Solution: Pay some amount of production to dissasemble integrated cards. Don’t like, as it kinda defeats the points of “green” decks. Maybe: Opponent can pay production to keep integrate card integrated</p>
+<p>Debuff: X: Pay N + N – X points to apply a debuff to a card with value N, where all the aspects of this card are subtracted from that card. Actives and Curses carry over.</p>
+<p>How to remove?</p>
+<p>Active Traits:</p>
+<p>Idea: Cards with active traits can’t block. This forces them to be seperate structures players must defend.</p>
+<p>Mana Generation: X: X * N . Generate mana for casting things</p>
+<p>Give opponent production points: Goal: replicate elixir golem mechanic from clash royale. Problems: Too weak. Decks which use less or no production won’t be affected by this. Needs an alternate ability along with give opponent production points, such as giving opponent another active.</p>
+<p>Idea for both: decrease cost of the fibonacci sequence. This appeals because it has a fixed cost.</p>
+<p>Stealth: Base:1 + X Take 1 + X cards off the field… and then put them back on face down in new spots. Stealthed cards are revealed when they take action, attack, or are dealt damage. Stealth can also be used to move around cards during the blocking phase.</p>
+<p>Cost:</p>
+<p>Goal: Twofold: Obscure cards on board, but also allow to move cards in blocking (or attacking?) phases around. Blue idea, playing with information</p>
+<p>Necromancy: Base:1 + X Search 1 + X through the bottom of the deck/graveyard. Cast a cards base cost, rather than their total creation point cost.</p>
+<p>Goal: Play the roal of black deck, bringing cards back from the dead. Replace mtg https://mtg.fandom.com/wiki/List_of_Magic_slang#Recursion recursion</p>
+<p>Tutor: Cost Base:1 + X, look at the top X cards of your deck and show them to your oppnent. You can cast directly from these cards. Problem: Recursive scry/tutor too op</p>
+<p>Goal: Play the role of blue deck, increasing options player has.</p>
+<p>Polarity Reversal Base: X: Change offensive abilities to their defensive equivalents defensive and vice versa, of a single card, up to X * N of a single trait</p>
+<p>Goal: Buff and nerf at the same time. Can be used to reduce health</p>
+<p>Counterspell/reflect: Base:1 + X: You “take control” of 1 + X “spell” aspects targeting individual things. Problem: How will counterspell and react phases work? Do I want this? It adds extra complexity to casting. Idea: Counter either 1 + X damage/protection/production (distributed) or 1 + X spell effects targeting stuff.</p>
+<p>Goal: play the role of the blue counterspell, while also allowing them to deny production points</p>
+<p>Aspect Enhancement: X: Enhance any aspect of card(s) up to X. Costs (initial aspect cost) + X * N production points.</p>
+<p>Gain Life: X: X and pay X production points to do so</p>
+<p>Also want active?</p>
+<p>Triggers:</p>
+<p>Familiar friends: X: When you play a card with similar trait and valuet and value appears, including this specific trigger + active, Do up to 1 + X of an active trait, based on the common traits and values that are shared.</p>
+<p>Note: Too op if it includes health, attack, and friends… but is it?</p>
+<p>Damage dealt via attacking or blocking (including or excluding overkill): X : X</p>
+<p>Damage taken (including or excluding shield?): X : X</p>
+<p>Goal: Replace elixir golem clash royale</p>
+<p>Card enters play: X: X * N</p>
+<p>Instead of card draw: X: X * N</p>
+<p>Pay production points: I want this mechanic, but do not know how to balance it</p>
+<p>Getting attacked by X cards: X: X</p>
+<p>Lifegain: X: X</p>
+<p>On card draw:</p>
+<p>Curses:</p>
+<p>Negative managen/production: Take X mana from the player every turn, or if they can’t provide that, life. In exchaninge, offer X * N card creation points for players to use. Essentially for each negative mana point, they can add one of each trait for each negative manapoint during the turn. Must be paid before the attacking step.op starting slowing down, I switched to a Linux based operating system, in an attempt to make it faster, using knowl</p>
+<ul>
+<li>Should it die if no mana given?</li>
+<li>Or should it take from life?</li>
+<li>What about production? Probably not effect actives… but I like the idea of cumulative upkeep for a spell tower.</li>
+</ul>
+<p>Day/Night: Opponent gains control of this card during their turn, except the card doesn’t have full stats. It only has X stats, X for each trait in place. It also gains X stats in the opposite section of held traits. So 4 hp, but 0 attack, but 2 x becomes 2 hp, 2 attack.</p>
+<p>How to handle one time spell cards? * Day/night results in the card staying alive, even when it has 0 or less health * Opponent gets a portion of spell effects * Daynight straight up doesn’t affect actives ← I like this one</p>
+<p>May need different name, mtg already has daynight. Traitor? Betrayal? Doublecross? Doubleagent?</p>
+<p>Card on field goes to hand, in exchange for a card that has a base cost less than Cost – X base cost. If there is no such card, then this card goes to the graveyard. You can keep the card on the field in exchange for a sacrifice of at least Cost + X * N from your hand or the field, straight to the graveyard.</p>
+<ul>
+<li>Beginning or end of turn (it would be nice to bounce immediately)</li>
+<li>How to have card be persistent?</li>
+</ul>
+<p>At beginning of turn, or when card is attempted to be played, take it off the field for a card in hand with base value &lt; cost – X, or sacrifice card from field with cost + X?</p>
+<p>AKA: some kind of bounce curse</p>
+<p>At beginning of turn or before played, take cards on the field that are worth more/less than something off the field and put them back into your hand. If you cannot do this, because of a full hand or because of the</p>
+<p>On/before turn, bounce cards value back to hand. If you can’t do that, then bounce this card, exchanging it for something in your hand with less than X. If can’t do that, then graveyard.</p>
+<p>Siege/Battle: X: X card is cast as an X health card under an opponents control. They must defend it, if the attacking player manages to kill it, then it becomes the normal card</p>
+<ul>
+<li>Allow spell damage to kill the battle?</li>
+</ul>
+<p>Goal: replace siege/battle from mtg</p>
+<p>Two ideas:</p>
+<p>Half of cards in graveyard go to exile, the other half go to the bottom of the players deck. Either completely random, pseudorandom, or complete player choice. Note: why is this better than multiple rounds? This could also be a seperate gamemode.</p>
+<p>Potential keywords:</p>
+<p>Recursion: X : X Pay Cost – X to cast this card from your graveyard</p>
+<p>Buyback: X : X Pay Cost – X in addition to casting this spell to return it to your hand when you cast it.</p>
+<p>Sacrifice: X : X sacrifice cards with base values up to X to decrease this cards cost by X</p>
+<p>See also: MTG emerge</p>
+<p>MTG Surge</p>
+<p>MTG rebound</p>
+<p>MTG storm: Pay X to duplicate the on-cast effects of this card?</p>
+</section>
+<section id="combat" class="level1">
+<h1>Combat</h1>
+<p>Defensive player sets up layout at the end of their attacking turn, and cannot change it or reoganize it.</p>
+<p>Attack player sets a layout, and then either chooses to make the first move, or to pick how the connections work.</p>
+<p>Played on something equivalent to a hex grid, but not an actual hex grid. A square grid where each row is offset by ½, and touching squares are considered connected.</p>
+<p>Moves cards can make:</p>
+<p>Move: Move onto an adjacent card.</p>
+<p>Swap: Replace adjacent card with this one</p>
+<p>Pull: Pull connected card under this card.</p>
+<ul>
+<li>Pull into spot, and move this card out of the way?</li>
+</ul>
+<p>Push: Move card out of way? Maybe can push in place to move a card to an adjacent spot</p>
+<p>Spawn: Spawn new piece in a blank spot adjacent to your own pieces, and only your own pieces</p>
+<p>All of these moves can be done over a chain of your color’s cards, including attacking/defending ones.</p>
+<p>Stacked cards are considered as attacking eachother, and cannot move on/off, but they can be moved over.</p>
+<p>The attacker round ends immediately when a player stalemates is unable to make a swap, push, or pull move. ???</p>
+<p>One hive rule (from hive): Players cannot make a move that results in their being two groups of cards.</p>
+<p><a href="https://en.wikipedia.org/wiki/Hive_(game)" class="uri">https://en.wikipedia.org/wiki/Hive_(game)</a></p>
+<p>So… how does a player actually do damage? And how should collective defense/attack and multi attack/defense work?</p>
+<p>Two ways I am thinking of doing damage: Getting a card onto/past all defenders</p>
+<p>Or creating a chain that connects it past defenders. Maybe like 1 damage for each card in the chain?</p>
+<p>How should cards launch an attack against valuable cards? Surrounding them? Building a chain which accesses them?</p>
+<p>Should cards being on top or below matter? Maybe? Only on top cards count for purposes of a chain, and also can surround other cards.</p>
+<p>But also: How about targeting production towers?</p>
+<p>Anyway, this is good, but I need to calculate the fairness of this game. I think the only way to calculate fairness is to write a program that solves this game.</p>
+<p>Combat ends <strong>immediately</strong> where a player cannot make another move (either attacker or defender).</p>
+<p>What about drawish rules, like 3 fold repetition?</p>
+
+
+</section>
+
+ ]]></description>
+  <category>_playground</category>
+  <guid>./playground/cardgame/</guid>
+  <pubDate>Thu, 12 Sep 2024 07:00:00 GMT</pubDate>
+</item>
 <item>
   <title>Software Projects I follow</title>
   <link>./blog/watched-software/</link>
@@ -49,6 +344,11 @@
 <li><a href="https://games-on-whales.github.io/" class="uri">https://games-on-whales.github.io/</a> — <a href="https://github.com/games-on-whales" class="uri">https://github.com/games-on-whales</a></li>
 <li><a href="https://github.com/spaceness/stardust" class="uri">https://github.com/spaceness/stardust</a></li>
 <li>kasmweb — not open source</li>
+<li><a href="https://github.com/pwncollege/dojo" class="uri">https://github.com/pwncollege/dojo</a>
+<ul>
+<li>Is an addon to <a href="https://docs.ctfd.io/docs/overview/" class="uri">https://docs.ctfd.io/docs/overview/</a>, but adds web workspaces and more.</li>
+<li><a href="https://docs.ctfd.io/docs/settings/single-sign-on/#oauth">ctfd has SSO support</a></li>
+</ul></li>
 </ul>
 <p>Single User full featured:</p>
 <ul>
@@ -65,6 +365,7 @@
 <li>Also has nvidia-glx-desktop</li>
 <li>Although the docker containers seem to be maintained, the overall product seems to be dead. It looks like they were working towards a full web UI before it died.</li>
 </ul></li>
+<li><a href="https://github.com/vital987/vubuntu" class="uri">https://github.com/vital987/vubuntu</a> — last updated 2 years ago</li>
 </ul>
 <p>Web apps:</p>
 <ul>
@@ -160,47 +461,6 @@
   <category>linux</category>
   <guid>./blog/watched-software/</guid>
   <pubDate>Sat, 07 Sep 2024 07:00:00 GMT</pubDate>
-</item>
-<item>
-  <title>Server Part 5 — Ovirt is still maintained?!</title>
-  <link>./projects/build-server-5/</link>
-  <description><![CDATA[ 
-
-
-
-
-<section id="background-goals" class="level1">
-<h1>Background &amp; Goals</h1>
-<p>Since I got literally no work done on my server, I think it would be prudent to scale down. Rather than opting for a larger option.</p>
-<p>In the order I want, here are concrete goals:</p>
-<ul>
-<li>Syncthing: (I need this in order to sync files between my two laptops)</li>
-<li>Oauth2/Openid/Ldap (Kanidm or Authentik)
-<ul>
-<li>I might switch to <a href="https://kanidm.com/">Kanidm</a> from authentik as my authentication server, as it seems a lot simpler… but it doesn’t seem to support invites</li>
-</ul></li>
-<li>Virtual Machine host with a web UI that I can give out to others. I’m currently looking at Incus or Ovirt.</li>
-</ul>
-<p>I recently learned that <a href="https://www.ovirt.org/">Ovirt</a> was still maintained, and it seems to be feature complete. It contains every feature I want, like oauth2 authentication, port security, and a web UI. Although, due to Red Hat abandoning the project, it likely wont’ get beyond feature updates, and instead just get bug and security updates, the software does what I want it to do.</p>
-</section>
-<section id="software-selection" class="level1">
-<h1>Software Selection</h1>
-<section id="virtual-machine-manager" class="level2">
-<h2 class="anchored" data-anchor-id="virtual-machine-manager">Virtual Machine Manager</h2>
-<p>Incus: * <a href="">Authentication</a> - Openid connection * <a href="https://linuxcontainers.org/incus/docs/main/authorization/">Authorization</a> - Openfga authorization - Do I have to create a project for each user? (seems to be no… <a href="https://linuxcontainers.org/incus/docs/main/howto/projects_confine/#confine-projects-to-specific-incus-users">Incus can be configured to dynamically create projects for all users in a specific user group</a>) - What is the difference between the varios levels of authority * <a href="https://linuxcontainers.org/incus/docs/main/explanation/security/#network-security">Port security</a> - Can be overrided on a per instance basis… but how can I make this an unchangable default?</p>
-</section>
-<section id="authentication" class="level2">
-<h2 class="anchored" data-anchor-id="authentication">Authentication</h2>
-
-
-</section>
-</section>
-
- ]]></description>
-  <category>linux</category>
-  <category>_projects</category>
-  <guid>./projects/build-server-5/</guid>
-  <pubDate>Sun, 01 Sep 2024 07:00:00 GMT</pubDate>
 </item>
 <item>
   <title>Connecting Linux machines to Active Directory</title>
@@ -4572,30 +4832,6 @@ Show Log
   <category>_writeups</category>
   <guid>./writeups/nice-challenge/</guid>
   <pubDate>Tue, 30 Jan 2024 08:00:00 GMT</pubDate>
-</item>
-<item>
-  <title>How to Ansible</title>
-  <link>./talks/ansible/</link>
-  <description><![CDATA[ 
-
-
-
-
-<p>Recently, <a href="https://github.com/CSUN-CCDC/CCDC-2023/commits?author=moonpiedumplings">I wrote a lot of ansible roles and playbooks for the CCDC competition</a>.</p>
-<p>Here is a link to the roles: <a href="https://github.com/CSUN-CCDC/CCDC-2023/tree/main/linux/ansible/roles" class="uri">https://github.com/CSUN-CCDC/CCDC-2023/tree/main/linux/ansible/roles</a></p>
-<p>These ansible “roles,” cover a variety of tasks that the cybersecurity competition would require from us, including things like managing firewalls (ufw, iptables, firewalld), shuffling passwords of linux users or databases, or doing backups.</p>
-<p>Professor Doris Chaney asked me to present on how to use ansible, so here is where the presentation, code, and guide will go.</p>
-<p>The presentation can be <a href="../../talks/ansible/revealjs.html">found here</a></p>
-<p>I have the recording, but I need to edit it a little bit before I post it, but I will do so soon™.</p>
-
-
-
- ]]></description>
-  <category>linux</category>
-  <category>ansible</category>
-  <category>_talks</category>
-  <guid>./talks/ansible/</guid>
-  <pubDate>Tue, 23 Jan 2024 08:00:00 GMT</pubDate>
 </item>
 </channel>
 </rss>
