@@ -22,6 +22,40 @@ ul.task-list li input[type="checkbox"] {
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
 }
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
 </style>
 
 
@@ -130,7 +164,10 @@ ul.task-list li input[type="checkbox"] {
   <ul>
   <li><a href="#game-setuplayout" id="toc-game-setuplayout" class="nav-link active" data-scroll-target="#game-setuplayout">Game Setup/Layout</a></li>
   <li><a href="#card-design" id="toc-card-design" class="nav-link" data-scroll-target="#card-design">Card Design</a></li>
-  <li><a href="#combat" id="toc-combat" class="nav-link" data-scroll-target="#combat">Combat</a></li>
+  <li><a href="#combat" id="toc-combat" class="nav-link" data-scroll-target="#combat">Combat</a>
+  <ul class="collapse">
+  <li><a href="#programming-this" id="toc-programming-this" class="nav-link" data-scroll-target="#programming-this">Programming This</a></li>
+  </ul></li>
   </ul>
 </nav>
     </div>
@@ -330,8 +367,51 @@ ul.task-list li input[type="checkbox"] {
 <p>Anyway, this is good, but I need to calculate the fairness of this game. I think the only way to calculate fairness is to write a program that solves this game.</p>
 <p>Combat ends <strong>immediately</strong> where a player cannot make another move (either attacker or defender).</p>
 <p>What about drawish rules, like 3 fold repetition?</p>
+<section id="programming-this" class="level2">
+<h2 class="anchored" data-anchor-id="programming-this">Programming This</h2>
+<p>I think I need to convert this to a python program that will solve any set of rules I give it, in order to actually ensure my game is fair., I’ve done some testing on my own, but I don’t think just one person can play chess.</p>
+<ul>
+<li><a href="https://stackoverflow.com/questions/11373122/best-way-to-store-a-triangular-hexagonal-grid-in-python">Hexagonal Grid in python (stackoverflow)</a></li>
+<li><a href="http://www-cs-students.stanford.edu/~amitp/game-programming/grids/">Grids</a></li>
+<li><a href="https://www.redblobgames.com/grids/hexagons/">Grids/hexagons</a></li>
+<li><a href="https://www.redblobgames.com/grids/parts/">Grids/parts</a></li>
+</ul>
+<p>So… how can I make a hexagonal grid in order to calculate solutions to my game?</p>
+<p>I really, really like the idea of representing <a href="https://www.redblobgames.com/grids/hexagons/#coordinates-cube">hexagonal coordinates as a cube</a>.</p>
+<p>Pseudocode of what I want:</p>
+<pre><code>HexGrid = 2d array
+
+CheckLegality: Function that checks if a hex grid config is legal (all nodes are connected)
+
+GetMovesJump: Get Possible moves of the Jump on top of another card type
+
+GetMovesShove: Get possible moves of the shove card out of the way type
+
+GetMovesPull: Get possible moves of the pull card under type
+
+GetMovesSwap: Get possible moves of the swap type
+[moonpie@lizard flux-system]$ kubectl get pods -n flux-system
+NAME                                       READY   STATUS    RESTARTS   AGE
+helm-controller-76dff45854-g8tff           1/1     Running   0          3h4m
+kustomize-controller-6bc5d5b96-sdzql       1/1     Running   0          3h4m
+notification-controller-7f5cd7fdb8-v9672   1/1     Running   0          3h4m
+source-controller-54c89dcbf6-kjjsb         1/1     Running   0          3h4m
+traefik-6f6c897d6-j7g8z                    1/1     Running   0          9m34s
+GetWin: Get the amount of damage a winning attacker would do</code></pre>
+<p>I would also need several other functions/features, like I would have to be able to detect the</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>height <span class="op">=</span> <span class="dv">20</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>width <span class="op">=</span> <span class="dv">20</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>HexGrid <span class="op">=</span> [[[<span class="dv">0</span>, <span class="dv">0</span>] <span class="cf">for</span> x <span class="kw">in</span> <span class="bu">range</span>(width)] <span class="cf">for</span> y <span class="kw">in</span> <span class="bu">range</span>(height)]</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(HexGrid)</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> CheckLegality</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 
 
+</section>
 </section>
 
 </main> <!-- /main -->

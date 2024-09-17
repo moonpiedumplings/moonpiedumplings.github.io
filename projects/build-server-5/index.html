@@ -171,10 +171,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#testing-incus" id="toc-testing-incus" class="nav-link" data-scroll-target="#testing-incus">Testing Incus</a></li>
   <li><a href="#rke2-try-2" id="toc-rke2-try-2" class="nav-link" data-scroll-target="#rke2-try-2">RKE2 Try 2</a>
   <ul class="collapse">
-  <li><a href="#fluxcd" id="toc-fluxcd" class="nav-link" data-scroll-target="#fluxcd">Fluxcd</a>
-  <ul class="collapse">
-  <li><a href="#fluxcd-deployment" id="toc-fluxcd-deployment" class="nav-link" data-scroll-target="#fluxcd-deployment">Fluxcd Deployment</a></li>
-  </ul></li>
+  <li><a href="#fluxcd" id="toc-fluxcd" class="nav-link" data-scroll-target="#fluxcd">Fluxcd</a></li>
+  <li><a href="#traefik" id="toc-traefik" class="nav-link" data-scroll-target="#traefik">Traefik</a></li>
   </ul></li>
   </ul>
 </nav>
@@ -312,11 +310,161 @@ Show install command
 <span id="cb4-31"><a href="#cb4-31" aria-hidden="true" tabindex="-1"></a>✔ all components are healthy</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <p>And just like that, fluxcd is installed.</p>
-<section id="fluxcd-deployment" class="level3">
-<h3 class="anchored" data-anchor-id="fluxcd-deployment">Fluxcd Deployment</h3>
-
-
 </section>
+<section id="traefik" class="level2">
+<h2 class="anchored" data-anchor-id="traefik">Traefik</h2>
+<p>The first step of my cluster should be my reverse proxy, as an ingress. This exposes basically all of my services.</p>
+<p>The <a href="https://fluxcd.io/flux/use-cases/helm/">flux example of helm page</a> actually has an example where they set up helm.</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>[moonpie@lizard home-manager]$ kubectl version</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>Client Version: v1.30.2</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>Kustomize Version: v5.0.4-0.20230601165947-6ce0bf390ce3</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>The connection to the server localhost:8080 was refused - did you specify the right host or port?</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>[moonpie@lizard home-manager]$ git remote -v^C</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>[moonpie@lizard home-manager]$ flux create source helm traefik --url https://helm.traefik.io/traefik --namespace traefik</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>✚ generating HelmRepository source</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>► applying HelmRepository source</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>✗ namespaces "traefik" not found</span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>[moonpie@lizard home-manager]$ flux create source helm traefik --url https://helm.traefik.io/traefik</span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>✚ generating HelmRepository source</span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>► applying HelmRepository source</span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>✔ source created</span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>◎ waiting for HelmRepository source reconciliation</span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>✔ HelmRepository source reconciliation completed</span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>✔ fetched revision: sha256:48513aa497c9bf46e3053d2aef7e4d184d6df2165389a6024b03f8565fd501e8</span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>[moonpie@lizard home-manager]$ flux create helmrelease my-traefik --chart traefik --source HelmRepository/traefik</span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>✚ generating HelmRelease</span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>► applying HelmRelease</span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a>✔ HelmRelease created</span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a>◎ waiting for HelmRelease reconciliation</span>
+<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a>✗ context deadline exceeded</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Is this a failure? I can’t tell?</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>[moonpie@lizard fleet-charts]$ flux get sources all</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>NAME                            REVISION                SUSPENDED       READY   MESSAGE</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>gitrepository/flux-system       main@sha1:e3f5512d      False           True    stored artifact for revision 'main@sha1:e3f5512d'</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>NAME                    REVISION        SUSPENDED       READY   MESSAGE</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>helmrepository/traefik  sha256:48513aa4 False           True    stored artifact: revision 'sha256:48513aa4'</span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>NAME                                    REVISION        SUSPENDED       READY   MESSAGE</span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>helmchart/flux-system-my-traefik        31.0.0          False           True    pulled 'traefik' chart with version '31.0.0'</span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>[moonpie@lizard fleet-charts]$ kubectl get pods --all-namespaces</span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>NAMESPACE     NAME                                                    READY   STATUS      RESTARTS   AGE</span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>flux-system   helm-controller-76dff45854-pj876                        1/1     Running     0          3d1h</span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>flux-system   kustomize-controller-6bc5d5b96-jzj24                    1/1     Running     0          3d1h</span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>flux-system   my-traefik-5b4fbbd9c8-2rck9                             1/1     Running     0          7m24s</span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>flux-system   notification-controller-7f5cd7fdb8-7db4q                1/1     Running     0          3d1h</span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>flux-system   source-controller-54c89dcbf6-p2gd6                      1/1     Running     0          3d1h</span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a>kube-system   cloud-controller-manager-thoth                          1/1     Running     0          3d3h</span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a>kube-system   etcd-thoth                                              1/1     Running     0          3d3h</span>
+<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a>kube-system   helm-install-rke2-canal-hmjrm                           0/1     Completed   0          3d3h</span>
+<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a>kube-system   helm-install-rke2-coredns-m2jwz                         0/1     Completed   0          3d3h</span>
+<span id="cb6-22"><a href="#cb6-22" aria-hidden="true" tabindex="-1"></a>kube-system   helm-install-rke2-ingress-nginx-cszxd                   0/1     Completed   0          3d3h</span>
+<span id="cb6-23"><a href="#cb6-23" aria-hidden="true" tabindex="-1"></a>kube-system   helm-install-rke2-metrics-server-gkqfd                  0/1     Completed   0          3d3h</span>
+<span id="cb6-24"><a href="#cb6-24" aria-hidden="true" tabindex="-1"></a>kube-system   helm-install-rke2-snapshot-controller-crd-ztz6n         0/1     Completed   0          3d3h</span>
+<span id="cb6-25"><a href="#cb6-25" aria-hidden="true" tabindex="-1"></a>kube-system   helm-install-rke2-snapshot-controller-f2zfz             0/1     Completed   0          3d3h</span>
+<span id="cb6-26"><a href="#cb6-26" aria-hidden="true" tabindex="-1"></a>kube-system   helm-install-rke2-snapshot-validation-webhook-52kj2     0/1     Completed   0          3d3h</span>
+<span id="cb6-27"><a href="#cb6-27" aria-hidden="true" tabindex="-1"></a>kube-system   kube-apiserver-thoth                                    1/1     Running     0          3d3h</span>
+<span id="cb6-28"><a href="#cb6-28" aria-hidden="true" tabindex="-1"></a>kube-system   kube-controller-manager-thoth                           1/1     Running     0          3d3h</span>
+<span id="cb6-29"><a href="#cb6-29" aria-hidden="true" tabindex="-1"></a>kube-system   kube-proxy-thoth                                        1/1     Running     0          3d3h</span>
+<span id="cb6-30"><a href="#cb6-30" aria-hidden="true" tabindex="-1"></a>kube-system   kube-scheduler-thoth                                    1/1     Running     0          3d3h</span>
+<span id="cb6-31"><a href="#cb6-31" aria-hidden="true" tabindex="-1"></a>kube-system   rke2-canal-gb7bx                                        2/2     Running     0          3d3h</span>
+<span id="cb6-32"><a href="#cb6-32" aria-hidden="true" tabindex="-1"></a>kube-system   rke2-coredns-rke2-coredns-6bb85f9dd8-zzqlv              1/1     Running     0          3d3h</span>
+<span id="cb6-33"><a href="#cb6-33" aria-hidden="true" tabindex="-1"></a>kube-system   rke2-coredns-rke2-coredns-autoscaler-7b9c797d64-4bwcb   1/1     Running     0          3d3h</span>
+<span id="cb6-34"><a href="#cb6-34" aria-hidden="true" tabindex="-1"></a>kube-system   rke2-ingress-nginx-controller-ct4mj                     1/1     Running     0          3d3h</span>
+<span id="cb6-35"><a href="#cb6-35" aria-hidden="true" tabindex="-1"></a>kube-system   rke2-metrics-server-868fc8795f-5t6v6                    1/1     Running     0          3d3h</span>
+<span id="cb6-36"><a href="#cb6-36" aria-hidden="true" tabindex="-1"></a>kube-system   rke2-snapshot-controller-7dcf5d5b46-5dtvt               1/1     Running     0          3d3h</span>
+<span id="cb6-37"><a href="#cb6-37" aria-hidden="true" tabindex="-1"></a>kube-system   rke2-snapshot-validation-webhook-bf7bbd6fc-gqqgr        1/1     Running     0          3d3h</span>
+<span id="cb6-38"><a href="#cb6-38" aria-hidden="true" tabindex="-1"></a>[moonpie@lizard fleet-charts]$ git pull</span>
+<span id="cb6-39"><a href="#cb6-39" aria-hidden="true" tabindex="-1"></a>Already up to date.</span>
+<span id="cb6-40"><a href="#cb6-40" aria-hidden="true" tabindex="-1"></a>[moonpie@lizard fleet-charts]$</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Another weird thing is that no changes were made to the git repo where I was tracking flux… but changes were made to my cluster. I thought the point of flux was that all state was in the git repo, but that doesn’t seem to be the case here.</p>
+<p>Oh. Oops. RKE2 comes with an nginx controller already. I may have to remove that if I want traefik as an ingress controller.</p>
+<p><a href="https://docs.rke2.io/helm?_highlight=uninstall#disabling-addons">Thankfully, it doesn’t appear to be too hard</a>.</p>
+<div class="code-with-filename">
+<div class="code-with-filename-file">
+<pre><strong>/etc/rancher/rke2/config.yaml</strong></pre>
+</div>
+<div class="sourceCode" id="cb7" data-filename="/etc/rancher/rke2/config.yaml"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">disable</span><span class="kw">:</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> rke2-coredns</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> rke2-ingress-nginx</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>And now, those services are disabled.</p>
+<p>Oh, and I was wrong, there are files in the git repo now.</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>[moonpie@lizard fleet-charts]$ ls *</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>begin.md</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>flux-system:</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>gotk-components.yaml  gotk-sync.yaml  kustomization.yaml</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb9"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>[moonpie@lizard flux-system]$ wc -l *</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a> 12385 gotk-components.yaml</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>    27 gotk-sync.yaml</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>     5 kustomization.yaml</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a> 12417 total</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Uuuh… That’s a lot of lines. I think that <code>gotk-components.yaml</code> file has basically all of the fluxcd components stored and tracked in there.</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>[moonpie@lizard flux-system]$ cat * | grep traefik</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>[moonpie@lizard flux-system]$</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>And… no mentions of traefik? It’s obviously stored in the cluster, given something related shows up when I observe the kubernetes pods, but nothing appears in the git repo.</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>[moonpie@lizard flux-system]$ flux get sources all -A</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>NAMESPACE       NAME                            REVISION                SUSPENDED       READY   MESSAGE                                                                                       </span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>flux-system     gitrepository/flux-system       main@sha1:e3f5512d      False           False   failed to checkout and determine revision: unable to list remote for 'ssh://moonpie@moonpiedumpl.ing:22022/home/moonpie/fleet-charts': dial tcp: lookup moonpiedumpl.ing on 10.43.0.10:53: read udp 10.42.0.22:38747-&gt;10.43.0.10:53: i/o timeout</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Okay, it appears that flux is having trouble accessing my git repo. I found a <a href="https://github.com/fluxcd/flux2/issues/4673">relevant github issue</a>, and it looks like a DNS problem. It looks, since I disabled the Kubernetes CoreDNS service, DNS wasn’t working inside my cluster, preventing it from accessing my domain name.</p>
+<p>So:</p>
+<div class="code-with-filename">
+<div class="code-with-filename-file">
+<pre><strong>/etc/rancher/rke2/config.yaml</strong></pre>
+</div>
+<div class="sourceCode" id="cb12" data-filename="/etc/rancher/rke2/config.yaml"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="fu">disable</span><span class="kw">:</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="co">  # Yeah so apparently this was kind of important. </span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="co">  # - rke2-coredns</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> rke2-ingress-nginx</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>And with this, flux bootstrap works properly:</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>[moonpie@lizard vscode]$ flux bootstrap git --url ssh://moonpie@moonpiedumpl.ing:22022/home/moonpie/flux-config --branch=main --private-key-file=/home/moonpie/.ssh/moonstack --verbose --insecure-skip-tls-verify</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>► cloning branch "main" from Git repository "ssh://moonpie@moonpiedumpl.ing:22022/home/moonpie/flux-config"</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>✔ cloned repository</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>...</span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>...</span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>✔ reconciled sync configuration</span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>◎ waiting for GitRepository "flux-system/flux-system" to be reconciled</span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>✔ GitRepository reconciled successfully</span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>◎ waiting for Kustomization "flux-system/flux-system" to be reconciled</span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>✔ Kustomization reconciled successfully</span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a>► confirming components are healthy</span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a>✔ helm-controller: deployment ready</span>
+<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a>✔ kustomize-controller: deployment ready</span>
+<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a>✔ notification-controller: deployment ready</span>
+<span id="cb13-15"><a href="#cb13-15" aria-hidden="true" tabindex="-1"></a>✔ source-controller: deployment ready</span>
+<span id="cb13-16"><a href="#cb13-16" aria-hidden="true" tabindex="-1"></a>✔ all components are healthy</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>I also changed the name of the git repo to <code>flux-config</code>.</p>
+<p>I also realized that the <code>flux-system</code> repo is the configs of the flux-system namespace. Meaning, each directory <em>should</em> be a namespace? However, I don’t think I’m going to use many namespaces, they seem like extra complexity designed for multi-project or multi-user kubernetes clusters.</p>
+<div class="sourceCode" id="cb14"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>[moonpie@lizard vscode]$ flux create source helm traefik --url https://helm.traefik.io/traefik</span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>✚ generating HelmRepository source</span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>► applying HelmRepository source</span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>✔ source created</span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>◎ waiting for HelmRepository source reconciliation</span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>✔ HelmRepository source reconciliation completed</span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>✔ fetched revision: sha256:48513aa497c9bf46e3053d2aef7e4d184d6df2165389a6024b03f8565fd501e8</span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a>Events:                       &lt;none&gt;</span>
+<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a>[moonpie@lizard flux-config]$ flux create helmrelease traefik --chart traefik --source HelmRepository/traefik --chart-version 31.0.0 --verbose</span>
+<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a>✚ generating HelmRelease</span>
+<span id="cb14-13"><a href="#cb14-13" aria-hidden="true" tabindex="-1"></a>► applying HelmRelease</span>
+<span id="cb14-14"><a href="#cb14-14" aria-hidden="true" tabindex="-1"></a>✔ HelmRelease updated</span>
+<span id="cb14-15"><a href="#cb14-15" aria-hidden="true" tabindex="-1"></a>◎ waiting for HelmRelease reconciliation</span>
+<span id="cb14-16"><a href="#cb14-16" aria-hidden="true" tabindex="-1"></a>^C</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Despite my impatience, it did render, and Traefik did deploy.</p>
+<div class="sourceCode" id="cb15"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>[moonpie@lizard flux-system]$ kubectl get pods -n flux-system</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>NAME                                       READY   STATUS    RESTARTS   AGE</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>helm-controller-76dff45854-g8tff           1/1     Running   0          3h4m</span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>kustomize-controller-6bc5d5b96-sdzql       1/1     Running   0          3h4m</span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>notification-controller-7f5cd7fdb8-v9672   1/1     Running   0          3h4m</span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>source-controller-54c89dcbf6-kjjsb         1/1     Running   0          3h4m</span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>traefik-6f6c897d6-j7g8z                    1/1     Running   0          9m34s</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>But… no changes were made to the git repo? I’m confused, as I thought the point of flux was that all changes would be version controlled.</p>
+
+
 </section>
 </section>
 
