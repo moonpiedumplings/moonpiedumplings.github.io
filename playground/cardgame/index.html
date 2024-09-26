@@ -22,40 +22,6 @@ ul.task-list li input[type="checkbox"] {
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
 }
-/* CSS for syntax highlighting */
-pre > code.sourceCode { white-space: pre; position: relative; }
-pre > code.sourceCode > span { line-height: 1.25; }
-pre > code.sourceCode > span:empty { height: 1.2em; }
-.sourceCode { overflow: visible; }
-code.sourceCode > span { color: inherit; text-decoration: inherit; }
-div.sourceCode { margin: 1em 0; }
-pre.sourceCode { margin: 0; }
-@media screen {
-div.sourceCode { overflow: auto; }
-}
-@media print {
-pre > code.sourceCode { white-space: pre-wrap; }
-pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
-}
-pre.numberSource code
-  { counter-reset: source-line 0; }
-pre.numberSource code > span
-  { position: relative; left: -4em; counter-increment: source-line; }
-pre.numberSource code > span > a:first-child::before
-  { content: counter(source-line);
-    position: relative; left: -1em; text-align: right; vertical-align: baseline;
-    border: none; display: inline-block;
-    -webkit-touch-callout: none; -webkit-user-select: none;
-    -khtml-user-select: none; -moz-user-select: none;
-    -ms-user-select: none; user-select: none;
-    padding: 0 4px; width: 4em;
-  }
-pre.numberSource { margin-left: 3em;  padding-left: 4px; }
-div.sourceCode
-  {   }
-@media screen {
-pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
-}
 </style>
 
 
@@ -163,7 +129,17 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
    
   <ul>
   <li><a href="#game-setuplayout" id="toc-game-setuplayout" class="nav-link active" data-scroll-target="#game-setuplayout">Game Setup/Layout</a></li>
-  <li><a href="#card-design" id="toc-card-design" class="nav-link" data-scroll-target="#card-design">Card Design</a></li>
+  <li><a href="#card-design" id="toc-card-design" class="nav-link" data-scroll-target="#card-design">Card Design</a>
+  <ul class="collapse">
+  <li><a href="#offensive-aspects" id="toc-offensive-aspects" class="nav-link" data-scroll-target="#offensive-aspects">Offensive Aspects:</a></li>
+  <li><a href="#defensive-aspects" id="toc-defensive-aspects" class="nav-link" data-scroll-target="#defensive-aspects">Defensive Aspects:</a></li>
+  <li><a href="#misc-aspects" id="toc-misc-aspects" class="nav-link" data-scroll-target="#misc-aspects">Misc Aspects:</a></li>
+  <li><a href="#active-traits" id="toc-active-traits" class="nav-link" data-scroll-target="#active-traits">Active Traits:</a></li>
+  <li><a href="#anti-actives" id="toc-anti-actives" class="nav-link" data-scroll-target="#anti-actives">Anti-Actives</a></li>
+  <li><a href="#triggers" id="toc-triggers" class="nav-link" data-scroll-target="#triggers">Triggers:</a></li>
+  <li><a href="#curses" id="toc-curses" class="nav-link" data-scroll-target="#curses">Curses:</a></li>
+  <li><a href="#misc-notes-and-workshopping" id="toc-misc-notes-and-workshopping" class="nav-link" data-scroll-target="#misc-notes-and-workshopping">Misc Notes and Workshopping:</a></li>
+  </ul></li>
   <li><a href="#combat" id="toc-combat" class="nav-link" data-scroll-target="#combat">Combat</a>
   <ul class="collapse">
   <li><a href="#programming-this" id="toc-programming-this" class="nav-link" data-scroll-target="#programming-this">Programming This</a></li>
@@ -244,7 +220,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>Flavor text</p>
 <p>Card “Shop”</p>
 <p>Traits cost Trait Number * N where N is the total amount of traits</p>
-<p>Offensive Aspects:</p>
+<section id="offensive-aspects" class="level2">
+<h2 class="anchored" data-anchor-id="offensive-aspects">Offensive Aspects:</h2>
 <p>Attack: X Give this card the ability to attack, and 1 + X attack power. Cards need at least one attack to be able to block.</p>
 <p>Multi-Target-Attack: X attack more than one target/structure, to a total of 2 + X targets. Each attack/block/hit encounter is treated as an individual encounter — this multiplies damage essentially. Alternative description (same function): this card makes multiple attacks against multiple targets, and recovers health between each attack.</p>
 <p>Multi-Blocker-Attack: X This card, when attacking a target, is treated as actually doing 2 + X attacks toward a target. Unblocked attacks go through. Each encounter with a blocker is kept seperate.</p>
@@ -254,11 +231,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>Idea: AoE has reversed cost. It targets ATK other targets, dealing some calculation of damage.</p>
 <p>Totally not banding: Collective attack: Base + X. Allows for pooling of attackers up to 1 + X other attackers. Counts as one attack, even to multi block. Attacking player can choose how the damage is distributed to the cards in the merged attack. Merged attacks share offensive traits.</p>
 <p>Double Tap: 1 + ??: Card has does a second attack which happens before the first one in an encounter, doing extra damage. Opponent can pay some porportion of production to remove some proportion of double tap from a card.</p>
+<p>Alt idea: During each section of the combat phase, player can chose to do extra damage with this card towards cards it is over/under.</p>
 <p>Goals: Shield-remove, replace mtg keyword deathtouch.</p>
-<p>Defensive Aspects:</p>
+</section>
+<section id="defensive-aspects" class="level2">
+<h2 class="anchored" data-anchor-id="defensive-aspects">Defensive Aspects:</h2>
 <p>Health: Base + X Give this card health trait and 1 + X hit points. (note: If a card has no health, it disappears at the end of a turn).</p>
 <p>Multi Block: 1 + X block more than one attacker of a target, per target blocked, up to 2 + X</p>
-<p>Multi-Target-Block: 1 + X: Block for more than one card, although only one attacker per target, up to 2 + X (stacks with multi block with</p>
+<p>Multi-Target-Block: 1 + X: Block for more than one card, although only one attacker per target, up to 2 + X stacks with multi block with</p>
 <p>Anti-AoE: Base:1 + X add this cards health power to hower many</p>
 <p>Merged Block: Base:1 + X: This card can do a merged block, which is mostly treated as one block. The health of merged blockers is “pooled” where they all share damage. To kill all cards in the merged block, and attacker must outdamage the pool. (Should merged block allow merging of traits?) (and should merged block allow blocking multi-block?)</p>
 <p>Idea: No merging of traits. Stacks with other defensive traits. Allows for multi-blocking, of one card, but doesn’t</p>
@@ -266,15 +246,23 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>Do I want collective block to merge traits as well?</p>
 <p>Shield: X: Card gets a seperate “shield of X hit points. If they are damaged by one attack/encounter, it doesn’t rollover into their HP. Opponent(s) can pay production points to reduce the shield value. Shield points can also be spent to reduce active effects</p>
 <p>Goals: Replace mtg keywork indestructuble. Replace clash royale shield mechanic Maybe replace hexproof with a resist spell mechanic?</p>
-<p>Misc Aspects:</p>
+<p>Maybe own ward:</p>
+<p>Ward/Hexprooft: X : X : this card can resist X spell effects, unless opponent pays X production points What’s defensive</p>
+</section>
+<section id="misc-aspects" class="level2">
+<h2 class="anchored" data-anchor-id="misc-aspects">Misc Aspects:</h2>
 <p>Integrate: X: X Pay N * N production points to combine this card with another card, stacking all values. Integrated cards count as one card, even when targeted by another integrate card, but the calculation becomes N * (N1 + N2)</p>
 <p>Goals: Replace mtg archetype voltron, mtg keywords equip, fortify, enchant, mutate, merge, meld</p>
 <p>Problem: Polarity reversal doesn’t effect integrate. Offensive/defensive equivalent? : Debuff</p>
 <p>Solution: Pay some amount of production to dissasemble integrated cards. Don’t like, as it kinda defeats the points of “green” decks. Maybe: Opponent can pay production to keep integrate card integrated</p>
-<p>Debuff: X: Pay N + N – X points to apply a debuff to a card with value N, where all the aspects of this card are subtracted from that card. Actives and Curses carry over.</p>
-<p>How to remove?</p>
-<p>Active Traits:</p>
-<p>Idea: Cards with active traits can’t block. This forces them to be seperate structures players must defend.</p>
+<p>Debuff/Attatch Curse: X: Pay N + N – X points to apply a debuff to a card with value N, where all the aspects of this card are subtracted from that card. Actives and Curses carry over.</p>
+<p>How to remove? Pay cost? Card death?</p>
+</section>
+<section id="active-traits" class="level2">
+<h2 class="anchored" data-anchor-id="active-traits">Active Traits:</h2>
+<ul>
+<li>So the idea behind “actives” is that they generate points/tokens that can be spent on things — but don’t have to be spent. The actives that cost production to use, only cost production on the application of the active, rather than the generation/creation of the points.</li>
+</ul>
 <p>Mana Generation: X: X * N . Generate mana for casting things</p>
 <p>Give opponent production points: Goal: replicate elixir golem mechanic from clash royale. Problems: Too weak. Decks which use less or no production won’t be affected by this. Needs an alternate ability along with give opponent production points, such as giving opponent another active.</p>
 <p>Idea for both: decrease cost of the fibonacci sequence. This appeals because it has a fixed cost.</p>
@@ -286,15 +274,25 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>Tutor: Cost Base:1 + X, look at the top X cards of your deck and show them to your oppnent. You can cast directly from these cards. Problem: Recursive scry/tutor too op</p>
 <p>Goal: Play the role of blue deck, increasing options player has.</p>
 <p>Polarity Reversal Base: X: Change offensive abilities to their defensive equivalents defensive and vice versa, of a single card, up to X * N of a single trait</p>
-<p>Goal: Buff and nerf at the same time. Can be used to reduce health</p>
+<p>Goal: Buff and nerf at the same time. Can be used to reduce health, or increase attack.</p>
 <p>Counterspell/reflect: Base:1 + X: You “take control” of 1 + X “spell” aspects targeting individual things. Problem: How will counterspell and react phases work? Do I want this? It adds extra complexity to casting. Idea: Counter either 1 + X damage/protection/production (distributed) or 1 + X spell effects targeting stuff.</p>
 <p>Goal: play the role of the blue counterspell, while also allowing them to deny production points</p>
-<p>Aspect Enhancement: X: Enhance any aspect of card(s) up to X. Costs (initial aspect cost) + X * N production points.</p>
+<p>Replicate: X: Duplicate active effects, excluding replicate effects. Can duplicate opponents effects, or own. Can replicate counterspell.</p>
+<p>Aspect Enhancement: X: Enhance any aspect of card(s) up to X. Costs (initial aspect cost) + X * N production points. * Having this cost mana is kinda weak.</p>
 <p>Gain Life: X: X and pay X production points to do so</p>
+<p>Deny attackers. Some kind of stop attacker from attacking mechanic.</p>
 <p>Also want active?</p>
-<p>Triggers:</p>
+</section>
+<section id="anti-actives" class="level2">
+<h2 class="anchored" data-anchor-id="anti-actives">Anti-Actives</h2>
+<p>Take life: X :X</p>
+<p>Idea is to have taxes or some sort of sin mechanic.</p>
+</section>
+<section id="triggers" class="level2">
+<h2 class="anchored" data-anchor-id="triggers">Triggers:</h2>
 <p>Familiar friends: X: When you play a card with similar trait and valuet and value appears, including this specific trigger + active, Do up to 1 + X of an active trait, based on the common traits and values that are shared.</p>
 <p>Note: Too op if it includes health, attack, and friends… but is it?</p>
+<p>Also: Familiar friends… but on death?</p>
 <p>Damage dealt via attacking or blocking (including or excluding overkill): X : X</p>
 <p>Damage taken (including or excluding shield?): X : X</p>
 <p>Goal: Replace elixir golem clash royale</p>
@@ -304,14 +302,16 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>Getting attacked by X cards: X: X</p>
 <p>Lifegain: X: X</p>
 <p>On card draw:</p>
-<p>Curses:</p>
+</section>
+<section id="curses" class="level2">
+<h2 class="anchored" data-anchor-id="curses">Curses:</h2>
 <p>Negative managen/production: Take X mana from the player every turn, or if they can’t provide that, life. In exchaninge, offer X * N card creation points for players to use. Essentially for each negative mana point, they can add one of each trait for each negative manapoint during the turn. Must be paid before the attacking step.op starting slowing down, I switched to a Linux based operating system, in an attempt to make it faster, using knowl</p>
 <ul>
 <li>Should it die if no mana given?</li>
 <li>Or should it take from life?</li>
 <li>What about production? Probably not effect actives… but I like the idea of cumulative upkeep for a spell tower.</li>
 </ul>
-<p>Day/Night: Opponent gains control of this card during their turn, except the card doesn’t have full stats. It only has X stats, X for each trait in place. It also gains X stats in the opposite section of held traits. So 4 hp, but 0 attack, but 2 x becomes 2 hp, 2 attack.</p>
+<p>Day/Night: Opponent gains control of this card during their turn, except the card doesn’t have full stats. It only has X stats, X for each trait in place. It also gains X stats in the opposite section of held traits. So 4 hp, but 0 attack, but 2 X becomes 2 hp, 2 attack.</p>
 <p>How to handle one time spell cards? * Day/night results in the card staying alive, even when it has 0 or less health * Opponent gets a portion of spell effects * Daynight straight up doesn’t affect actives ← I like this one</p>
 <p>May need different name, mtg already has daynight. Traitor? Betrayal? Doublecross? Doubleagent?</p>
 <p>Card on field goes to hand, in exchange for a card that has a base cost less than Cost – X base cost. If there is no such card, then this card goes to the graveyard. You can keep the card on the field in exchange for a sacrifice of at least Cost + X * N from your hand or the field, straight to the graveyard.</p>
@@ -321,23 +321,53 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </ul>
 <p>At beginning of turn, or when card is attempted to be played, take it off the field for a card in hand with base value &lt; cost – X, or sacrifice card from field with cost + X?</p>
 <p>AKA: some kind of bounce curse</p>
-<p>At beginning of turn or before played, take cards on the field that are worth more/less than something off the field and put them back into your hand. If you cannot do this, because of a full hand or because of the</p>
+<p>At beginning of turn or before played, take cards on the field that are worth more/less than something off the field and put them back into your hand. If you cannot do this, because of a full hand or because of the value</p>
 <p>On/before turn, bounce cards value back to hand. If you can’t do that, then bounce this card, exchanging it for something in your hand with less than X. If can’t do that, then graveyard.</p>
 <p>Siege/Battle: X: X card is cast as an X health card under an opponents control. They must defend it, if the attacking player manages to kill it, then it becomes the normal card</p>
 <ul>
 <li>Allow spell damage to kill the battle?</li>
 </ul>
 <p>Goal: replace siege/battle from mtg</p>
-<p>Two ideas:</p>
+<p>Equality: X: X times N this card gives oppenent up to X*N of of “actives” it generates, when it generates them.</p>
+<p>Goal: Allow for the creation of board wipe type effects.</p>
+<p>Sacrifice X : X You need to sacrifice cards with a base cost of X * N cards on the field when played.</p>
 <p>Half of cards in graveyard go to exile, the other half go to the bottom of the players deck. Either completely random, pseudorandom, or complete player choice. Note: why is this better than multiple rounds? This could also be a seperate gamemode.</p>
 <p>Potential keywords:</p>
 <p>Recursion: X : X Pay Cost – X to cast this card from your graveyard</p>
 <p>Buyback: X : X Pay Cost – X in addition to casting this spell to return it to your hand when you cast it.</p>
-<p>Sacrifice: X : X sacrifice cards with base values up to X to decrease this cards cost by X</p>
 <p>See also: MTG emerge</p>
 <p>MTG Surge</p>
 <p>MTG rebound</p>
 <p>MTG storm: Pay X to duplicate the on-cast effects of this card?</p>
+</section>
+<section id="misc-notes-and-workshopping" class="level2">
+<h2 class="anchored" data-anchor-id="misc-notes-and-workshopping">Misc Notes and Workshopping:</h2>
+<p>Resources (used to do stuff):</p>
+<ul>
+<li>Mana/Production (can cast from life)
+<ul>
+<li>Life</li>
+</ul></li>
+<li>Cards in hand (artifically increased by scry)
+<ul>
+<li>Draw counts</li>
+</ul></li>
+<li>Cards on field</li>
+<li>Cards in graveyard</li>
+<li>Board space?</li>
+</ul>
+<p>I want synergy to happen, but for the synergy to use up one of the other resources, preventing snowballing/ an infinite combo.</p>
+<p>Maybe I need another resource?</p>
+<p>Catch up mechanics?</p>
+<ul>
+<li>I like the “equality” curse</li>
+<li>But I want one more</li>
+</ul>
+<p>Tribal mechanics:</p>
+<ul>
+<li>Link somehow, artificial synergy</li>
+</ul>
+</section>
 </section>
 <section id="combat" class="level1">
 <h1>Combat</h1>
@@ -362,6 +392,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>Two ways I am thinking of doing damage: Getting a card onto/past all defenders</p>
 <p>Or creating a chain that connects it past defenders. Maybe like 1 damage for each card in the chain?</p>
 <p>How should cards launch an attack against valuable cards? Surrounding them? Building a chain which accesses them?</p>
+<p>Ideas:</p>
+<ul>
+<li>Cards deal (ATK + ATK + ATK) *N where N in the amount of cards surrounding a card</li>
+<li>Players form a set of connections around a card, where the</li>
+<li>Surrounding a card with 6 cards is an insta kill (can be on top cards as well)</li>
+</ul>
 <p>Should cards being on top or below matter? Maybe? Only on top cards count for purposes of a chain, and also can surround other cards.</p>
 <p>But also: How about targeting production towers?</p>
 <p>Anyway, this is good, but I need to calculate the fairness of this game. I think the only way to calculate fairness is to write a program that solves this game.</p>
@@ -379,7 +415,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>So… how can I make a hexagonal grid in order to calculate solutions to my game?</p>
 <p>I really, really like the idea of representing <a href="https://www.redblobgames.com/grids/hexagons/#coordinates-cube">hexagonal coordinates as a cube</a>.</p>
 <p>Pseudocode of what I want:</p>
-<pre><code>HexGrid = 2d array
+<pre><code>HexGrid = 2d array, or graph of nodes
 
 CheckLegality: Function that checks if a hex grid config is legal (all nodes are connected)
 
@@ -390,25 +426,10 @@ GetMovesShove: Get possible moves of the shove card out of the way type
 GetMovesPull: Get possible moves of the pull card under type
 
 GetMovesSwap: Get possible moves of the swap type
-[moonpie@lizard flux-system]$ kubectl get pods -n flux-system
-NAME                                       READY   STATUS    RESTARTS   AGE
-helm-controller-76dff45854-g8tff           1/1     Running   0          3h4m
-kustomize-controller-6bc5d5b96-sdzql       1/1     Running   0          3h4m
-notification-controller-7f5cd7fdb8-v9672   1/1     Running   0          3h4m
-source-controller-54c89dcbf6-kjjsb         1/1     Running   0          3h4m
-traefik-6f6c897d6-j7g8z                    1/1     Running   0          9m34s
+
 GetWin: Get the amount of damage a winning attacker would do</code></pre>
-<p>I would also need several other functions/features, like I would have to be able to detect the</p>
-<div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>height <span class="op">=</span> <span class="dv">20</span></span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>width <span class="op">=</span> <span class="dv">20</span></span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>HexGrid <span class="op">=</span> [[[<span class="dv">0</span>, <span class="dv">0</span>] <span class="cf">for</span> x <span class="kw">in</span> <span class="bu">range</span>(width)] <span class="cf">for</span> y <span class="kw">in</span> <span class="bu">range</span>(height)]</span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(HexGrid)</span>
-<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> CheckLegality</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>I would also need several other functions/features, like I would have to be able to detect if a set of moves is the same as an older set of moves. I think this is easier with a set of nodes than an infinitely large hex grid.</p>
+<p>People at the San Fernando Valley LUG, said I should research “graph theory”, because there already exist algorithms to check if all nodes are connected, or to traverse a graph, or so on.</p>
 
 
 </section>

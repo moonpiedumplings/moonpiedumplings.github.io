@@ -238,7 +238,9 @@ font-style: inherit;"> rke2-ingress-nginx</span></span></code></pre></div>
 <div class="code-with-filename-file">
 <pre><strong>/etc/rancher/rke2/config.yaml</strong></pre>
 </div>
-<div class="sourceCode" id="cb12" data-filename="/etc/rancher/rke2/config.yaml" style="background: #f1f3f5;"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb12-1"><span class="fu" style="color: #4758AB;
+<div class="sourceCode" id="cb12" data-filename="/etc/rancher/rke2/config.yaml" style="background: #f1f3f5;"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb12-1"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">            </span><span class="fu" style="color: #4758AB;
 background-color: null;
 font-style: inherit;">disable</span><span class="kw" style="color: #003B4F;
 background-color: null;
@@ -246,13 +248,13 @@ font-weight: bold;
 font-style: inherit;">:</span></span>
 <span id="cb12-2"><span class="co" style="color: #5E5E5E;
 background-color: null;
-font-style: inherit;">  # Yeah so apparently this was kind of important. </span></span>
+font-style: inherit;">              # Yeah so apparently this was kind of important. </span></span>
 <span id="cb12-3"><span class="co" style="color: #5E5E5E;
 background-color: null;
-font-style: inherit;">  # - rke2-coredns</span></span>
+font-style: inherit;">              # - rke2-coredns</span></span>
 <span id="cb12-4"><span class="at" style="color: #657422;
 background-color: null;
-font-style: inherit;">  </span><span class="kw" style="color: #003B4F;
+font-style: inherit;">              </span><span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">-</span><span class="at" style="color: #657422;
@@ -303,6 +305,330 @@ font-style: inherit;"> rke2-ingress-nginx</span></span></code></pre></div>
 <span id="cb15-6">source-controller-54c89dcbf6-kjjsb         1/1     Running   0          3h4m</span>
 <span id="cb15-7">traefik-6f6c897d6-j7g8z                    1/1     Running   0          9m34s</span></code></pre></div>
 <p>But… no changes were made to the git repo? I’m confused, as I thought the point of flux was that all changes would be version controlled.</p>
+<p>I started to follow the <a href="">flux troubleshooting guide</a>.</p>
+<div class="sourceCode" id="cb16" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb16-1">[moonpie@lizard moonpiedumplings.github.io]$ kubectl describe helmrelease traefik -n flux-system</span>
+<span id="cb16-2">Name:         traefik</span>
+<span id="cb16-3">Namespace:    flux-system</span>
+<span id="cb16-4">...</span>
+<span id="cb16-5">...</span>
+<span id="cb16-6">Status:</span>
+<span id="cb16-7">  Conditions:</span>
+<span id="cb16-8">    Last Transition Time:  2024-09-17T20:16:28Z</span>
+<span id="cb16-9">    Message:               Failed to install after 1 attempt(s)</span>
+<span id="cb16-10">    Observed Generation:   1</span>
+<span id="cb16-11">    Reason:                RetriesExceeded</span>
+<span id="cb16-12">    Status:                True</span>
+<span id="cb16-13">    Type:                  Stalled</span>
+<span id="cb16-14">    Last Transition Time:  2024-09-17T20:16:28Z</span>
+<span id="cb16-15">    Message:               Helm install failed for release flux-system/traefik with chart traefik@31.0.0: client rate limiter Wait returned an error: context deadline</span>
+<span id="cb16-16">...</span>
+<span id="cb16-17">...</span>
+<span id="cb16-18">2024-09-17T20:11:27.315654788Z: CustomResourceDefinition serverstransporttcps.traefik.io is already present. Skipping.</span>
+<span id="cb16-19">2024-09-17T20:11:27.315658603Z: creating 1 resource(s)</span>
+<span id="cb16-20">2024-09-17T20:11:27.324448937Z: CustomResourceDefinition tlsoptions.traefik.io is already present. Skipping.</span>
+<span id="cb16-21">2024-09-17T20:11:27.324452859Z: creating 1 resource(s)</span>
+<span id="cb16-22">2024-09-17T20:11:27.332385521Z: CustomResourceDefinition tlsstores.traefik.io is already present. Skipping.</span>
+<span id="cb16-23">2024-09-17T20:11:27.332389484Z: creating 1 resource(s)</span>
+<span id="cb16-24">2024-09-17T20:11:27.348449663Z: CustomResourceDefinition traefikservices.traefik.io is already present. Skipping.</span>
+<span id="cb16-25">2024-09-17T20:11:27.85810682Z: creating 6 resource(s)</span>
+<span id="cb16-26">2024-09-17T20:11:27.904853344Z: beginning wait for 6 resources with timeout of 5m0s</span>
+<span id="cb16-27">2024-09-17T20:11:27.909519301Z: Service does not have load balancer ingress IP address: flux-system/traefik</span>
+<span id="cb16-28">2024-09-17T20:16:25.90942954Z:  : flux-system/traefik (148 duplicate lines omitted)</span></code></pre></div>
+<p>So it seems I’m missing a “load balancer ingress IP address”.</p>
+<p>I also find it odd that the relevant configs are not automatically added to the git repo. I decided to experiment with adding files to the git repo, rather than using the flux cli.</p>
+<div class="sourceCode" id="cb17" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb17-1">[moonpie@lizard flux-config]$ ls traefik/</span>
+<span id="cb17-2">config.yaml  source.yaml</span></code></pre></div>
+<div class="sourceCode" id="cb18" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb18-1">[moonpie@lizard traefik]$ cat config.yaml</span>
+<span id="cb18-2">---</span>
+<span id="cb18-3">apiVersion: helm.toolkit.fluxcd.io/v2</span>
+<span id="cb18-4">kind: HelmRelease</span>
+<span id="cb18-5">metadata:</span>
+<span id="cb18-6">  name: traefik</span>
+<span id="cb18-7">  namespace: flux-system</span>
+<span id="cb18-8">spec:</span>
+<span id="cb18-9">  chart:</span>
+<span id="cb18-10">    spec:</span>
+<span id="cb18-11">      chart: traefik</span>
+<span id="cb18-12">      reconcileStrategy: ChartVersion</span>
+<span id="cb18-13">      sourceRef:</span>
+<span id="cb18-14">        kind: HelmRepository</span>
+<span id="cb18-15">        name: traefik</span>
+<span id="cb18-16">      version: 31.0.0</span>
+<span id="cb18-17">  interval: 1m0s</span>
+<span id="cb18-18">  values:</span>
+<span id="cb18-19">    service:</span>
+<span id="cb18-20">        type: LoadBalancer</span>
+<span id="cb18-21">[moonpie@lizard traefik]$ cat source.yaml</span>
+<span id="cb18-22">---</span>
+<span id="cb18-23">apiVersion: source.toolkit.fluxcd.io/v1</span>
+<span id="cb18-24">kind: HelmRepository</span>
+<span id="cb18-25">metadata:</span>
+<span id="cb18-26">  name: traefik</span>
+<span id="cb18-27">  namespace: flux-system</span>
+<span id="cb18-28">spec:</span>
+<span id="cb18-29">  interval: 1m0s</span>
+<span id="cb18-30">  url: https://traefik.github.io/charts/</span></code></pre></div>
+<p>This actually deploys properly without errors, so it seems that the flux git repo organization is arbitrary and for the purposes of maknig it readable for humans, and is not actually necessary.</p>
+<p>It probably doesn’t error because I have the <code>service: type: LoadBalancer</code>, but it doesn’t actually use any ports or seem to be deployed in a useful manner.</p>
+<p>Also:</p>
+<div class="sourceCode" id="cb19" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb19-1">[moonpie@lizard traefik]$ kubectl get -n flux-system service</span>
+<span id="cb19-2">NAMESPACE     NAME                               TYPE           CLUSTER-IP      EXTERNAL-IP   PORT(S)                      AGE</span>
+<span id="cb19-3">default       kubernetes                         ClusterIP      10.43.0.1       &lt;none&gt;        443/TCP                      6d20h</span>
+<span id="cb19-4">flux-system   notification-controller            ClusterIP      10.43.164.182   &lt;none&gt;        80/TCP                       2d14h</span>
+<span id="cb19-5">flux-system   source-controller                  ClusterIP      10.43.58.240    &lt;none&gt;        80/TCP                       2d14h</span>
+<span id="cb19-6">flux-system   traefik                            LoadBalancer   10.43.109.84    &lt;pending&gt;     80:30239/TCP,443:31645/TCP   18h</span>
+<span id="cb19-7">flux-system   webhook-receiver                   ClusterIP      10.43.226.89    &lt;none&gt;        80/TCP                       2d14h</span></code></pre></div>
+<p>It seems that traefik comes with a load balancer type service, but it doesn’t actually get an external ip. Why?</p>
+<p>After more research, it seems that a load balancer is actually needed in order to use a load balancer type service. On cloud instances, the cloud server acts as a load balancer and can do this. On bare metal instances, users are on their own. The most common deployment for a bare metal load balancer seems to be <a href="https://metallb.io/">metallb</a>, but that doesn’t really work for me, as I only have ONE ip address and it looks like metallb expects you to be able to ask for more on the spot somehow.</p>
+<p>(well… technically, I can use dhcp to ask for more ip addresses, but it doesn’t look like metallb supports that use case, only something different)</p>
+<p>Instead, I found <a href="https://docs.k3s.io/networking/networking-services?_highlight=ingress#service-load-balancer">klipper</a>. Klipper is an <em>extremely</em> simple load balancing service built into K3s — but disabled in RKE2 by default. All it does is use iptables/nftables to forward traffic from ports you want the load balancer to forward from, to inside the cluster.</p>
+<p><a href="https://docs.rke2.io/networking/networking_services?_highlight=load#service-load-balancer">RKE2 can deply klipper by using an install flag</a>… and it seems, <strong>only</strong> via an install flag. There doesn’t seem to be another way to install klipper, no helm charts or anything… it seems to just be a bash script in a docker container.</p>
+<p>So, it looks like I need to uninstall my cluster and redeploy it…</p>
+<div class="sourceCode" id="cb20" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb20-1">curl -sfL https://get.rke2.io --output install.sh</span>
+<span id="cb20-2">chmod +x install.sh</span>
+<span id="cb20-3"></span>
+<span id="cb20-4">./install.sh --serviceLB # with root privileges</span></code></pre></div>
+<p>But, after I reinstalled flux:</p>
+<div class="sourceCode" id="cb21" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb21-1">[moonpie@lizard traefik]$ flux get all -n flux-system</span>
+<span id="cb21-2">NAME                            REVISION                SUSPENDED       READY   MESSAGE</span>
+<span id="cb21-3">gitrepository/flux-system       main@sha1:819432fd      False           True    stored artifact for revision 'main@sha1:819432fd'</span>
+<span id="cb21-4"></span>
+<span id="cb21-5">NAME                    REVISION        SUSPENDED       READY   MESSAGE</span>
+<span id="cb21-6">helmrepository/traefik  sha256:1c0fc56c False           True    stored artifact: revision 'sha256:1c0fc56c'</span>
+<span id="cb21-7"></span>
+<span id="cb21-8">NAME                            REVISION        SUSPENDED       READY   MESSAGE</span>
+<span id="cb21-9">helmchart/flux-system-traefik   31.0.0          False           True    pulled 'traefik' chart with version '31.0.0'</span>
+<span id="cb21-10"></span>
+<span id="cb21-11">NAME                    REVISION        SUSPENDED       READY   MESSAGE</span>
+<span id="cb21-12"></span>
+<span id="cb21-13">helmrelease/traefik     31.0.0          False           False   Helm install failed for release flux-system/traefik with chart traefik@31.0.0: Unable to continue with install: Service "traefik" in namespace "flux-system" exists and cannot be imported into the current release: invalid ownership metadata; label validation error: missing key "app.kubernetes.io/managed-by": must be set to "Helm"; annotation validation error: missing key "meta.helm.sh/release-name": must be set to "traefik"; annotation validation error: missing key "meta.helm.sh/release-namespace": must be set to "flux-system"</span>
+<span id="cb21-14"></span>
+<span id="cb21-15">NAME                            REVISION                SUSPENDED       READY   MESSAGE</span>
+<span id="cb21-16">kustomization/flux-system       main@sha1:819432fd      False           True    Applied revision: main@sha1:819432fd</span></code></pre></div>
+<div class="sourceCode" id="cb22" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb22-1">root@thoth:/usr/local/bin# ls</span>
+<span id="cb22-2">rke2  rke2-killall.sh  rke2-uninstall.sh</span>
+<span id="cb22-3">root@thoth:/usr/local/bin# rke2</span>
+<span id="cb22-4">rke2               rke2-killall.sh    rke2-uninstall.sh</span>
+<span id="cb22-5">root@thoth:/usr/local/bin# rke2</span>
+<span id="cb22-6">rke2               rke2-killall.sh    rke2-uninstall.sh</span>
+<span id="cb22-7">root@thoth:/usr/local/bin# rke2 server --help</span>
+<span id="cb22-8">NAME:</span>
+<span id="cb22-9">   rke2 server - Run management server</span>
+<span id="cb22-10"></span>
+<span id="cb22-11">USAGE:</span>
+<span id="cb22-12">   rke2 server [OPTIONS]</span>
+<span id="cb22-13"></span>
+<span id="cb22-14">OPTIONS:</span>
+<span id="cb22-15">   --config FILE, -c FILE                        (config) Load configuration from FILE (default: "/etc/rancher/rke2/config.yaml") [$RKE2_CONFIG_FILE]</span>
+<span id="cb22-16">   --debug                                       (logging) Turn on debug logs [$RKE2_DEBUG]</span>
+<span id="cb22-17">   --bind-address value                          (listener) rke2 bind address (default: 0.0.0.0)</span>
+<span id="cb22-18">   --advertise-address value                     (listener) IPv4/IPv6 address that apiserver uses to advertise to members of the cluster (default: node-external-ip/node-ip)</span>
+<span id="cb22-19">   --tls-san value                               (listener) Add additional hostnames or IPv4/IPv6 addresses as Subject Alternative Names on the server TLS cert</span>
+<span id="cb22-20">   --tls-san-security                            (listener) Protect the server TLS cert by refusing to add Subject Alternative Names not associated with the kubernetes apiserver service, s</span>
+<span id="cb22-21">   --data-dir value, -d value                    (data) Folder to hold state (default: "/var/lib/rancher/rke2") [$RKE2_DATA_DIR]</span>
+<span id="cb22-22">   --cluster-cidr value                          (networking) IPv4/IPv6 network CIDRs to use for pod IPs (default: 10.42.0.0/16)</span>
+<span id="cb22-23">   --service-cidr value                          (networking) IPv4/IPv6 network CIDRs to use for service IPs (default: 10.43.0.0/16)</span>
+<span id="cb22-24">   --service-node-port-range value               (networking) Port range to reserve for services with NodePort visibility (default: "30000-32767")</span>
+<span id="cb22-25">   --cluster-dns value                           (networking) IPv4 Cluster IP for coredns service. Should be in your service-cidr range (default: 10.43.0.10)</span>
+<span id="cb22-26">   --cluster-domain value                        (networking) Cluster Domain (default: "cluster.local")</span>
+<span id="cb22-27">   --egress-selector-mode value                  (networking) One of 'agent', 'cluster', 'pod', 'disabled' (default: "agent")</span>
+<span id="cb22-28">   --servicelb-namespace value                   (networking) Namespace of the pods for the servicelb component (default: "kube-system")</span>
+<span id="cb22-29">   --write-kubeconfig value, -o value            (client) Write kubeconfig for admin client to this file [$RKE2_KUBECONFIG_OUTPUT]</span>
+<span id="cb22-30">   --write-kubeconfig-mode value                 (client) Write kubeconfig with this mode [$RKE2_KUBECONFIG_MODE]</span>
+<span id="cb22-31">   --write-kubeconfig-group value                (client) Write kubeconfig with this group [$RKE2_KUBECONFIG_GROUP]</span>
+<span id="cb22-32">   --helm-job-image value                        (helm) Default image to use for helm jobs</span>
+<span id="cb22-33">   --token value, -t value                       (cluster) Shared secret used to join a server or agent to a cluster [$RKE2_TOKEN]</span>
+<span id="cb22-34">   --token-file value                            (cluster) File containing the token [$RKE2_TOKEN_FILE]</span>
+<span id="cb22-35">   --agent-token value                           (cluster) Shared secret used to join agents to the cluster, but not servers [$RKE2_AGENT_TOKEN]</span>
+<span id="cb22-36">   --agent-token-file value                      (cluster) File containing the agent secret [$RKE2_AGENT_TOKEN_FILE]</span>
+<span id="cb22-37">   --server value, -s value                      (cluster) Server to connect to, used to join a cluster [$RKE2_URL]</span>
+<span id="cb22-38">   --cluster-reset                               (cluster) Forget all peers and become sole member of a new cluster [$RKE2_CLUSTER_RESET]</span>
+<span id="cb22-39">   --cluster-reset-restore-path value            (db) Path to snapshot file to be restored</span>
+<span id="cb22-40">   --kube-apiserver-arg value                    (flags) Customized flag for kube-apiserver process</span>
+<span id="cb22-41">   --etcd-arg value                              (flags) Customized flag for etcd process</span>
+<span id="cb22-42">   --kube-controller-manager-arg value           (flags) Customized flag for kube-controller-manager process</span>
+<span id="cb22-43">   --kube-scheduler-arg value                    (flags) Customized flag for kube-scheduler process</span>
+<span id="cb22-44">   --kube-cloud-controller-manager-arg value     (flags) Customized flag for kube-cloud-controller-manager process</span>
+<span id="cb22-45">   --datastore-endpoint value                    (db) Specify etcd, NATS, MySQL, Postgres, or SQLite (default) data source name [$RKE2_DATASTORE_ENDPOINT]</span>
+<span id="cb22-46">   --datastore-cafile value                      (db) TLS Certificate Authority file used to secure datastore backend communication [$RKE2_DATASTORE_CAFILE]</span>
+<span id="cb22-47">   --datastore-certfile value                    (db) TLS certification file used to secure datastore backend communication [$RKE2_DATASTORE_CERTFILE]</span>
+<span id="cb22-48">   --datastore-keyfile value                     (db) TLS key file used to secure datastore backend communication [$RKE2_DATASTORE_KEYFILE]</span>
+<span id="cb22-49">   --etcd-expose-metrics                         (db) Expose etcd metrics to client interface. (default: false)</span>
+<span id="cb22-50">   --etcd-disable-snapshots                      (db) Disable automatic etcd snapshots</span>
+<span id="cb22-51">   --etcd-snapshot-name value                    (db) Set the base name of etcd snapshots (default: etcd-snapshot-&lt;unix-timestamp&gt;) (default: "etcd-snapshot")</span>
+<span id="cb22-52">   --etcd-snapshot-schedule-cron value           (db) Snapshot interval time in cron spec. eg. every 5 hours '0 */5 * * *' (default: "0 */12 * * *")</span>
+<span id="cb22-53">   --etcd-snapshot-retention value               (db) Number of snapshots to retain (default: 5)</span>
+<span id="cb22-54">   --etcd-snapshot-dir value                     (db) Directory to save db snapshots. (default: ${data-dir}/db/snapshots)</span>
+<span id="cb22-55">   --etcd-snapshot-compress                      (db) Compress etcd snapshot</span>
+<span id="cb22-56">   --etcd-s3                                     (db) Enable backup to S3</span>
+<span id="cb22-57">   --etcd-s3-endpoint value                      (db) S3 endpoint url (default: "s3.amazonaws.com")</span>
+<span id="cb22-58">   --etcd-s3-endpoint-ca value                   (db) S3 custom CA cert to connect to S3 endpoint</span>
+<span id="cb22-59">   --etcd-s3-skip-ssl-verify                     (db) Disables S3 SSL certificate validation</span>
+<span id="cb22-60">   --etcd-s3-access-key value                    (db) S3 access key [$AWS_ACCESS_KEY_ID]</span>
+<span id="cb22-61">   --etcd-s3-secret-key value                    (db) S3 secret key [$AWS_SECRET_ACCESS_KEY]</span>
+<span id="cb22-62">   --etcd-s3-bucket value                        (db) S3 bucket name</span>
+<span id="cb22-63">   --etcd-s3-region value                        (db) S3 region / bucket location (optional) (default: "us-east-1")</span>
+<span id="cb22-64">   --etcd-s3-folder value                        (db) S3 folder</span>
+<span id="cb22-65">   --etcd-s3-proxy value                         (db) Proxy server to use when connecting to S3, overriding any proxy-releated environment variables</span>
+<span id="cb22-66">   --etcd-s3-config-secret value                 (db) Name of secret in the kube-system namespace used to configure S3, if etcd-s3 is enabled and no other etcd-s3 options are set</span>
+<span id="cb22-67">   --etcd-s3-insecure                            (db) Disables S3 over HTTPS</span>
+<span id="cb22-68">   --etcd-s3-timeout value                       (db) S3 timeout (default: 5m0s)</span>
+<span id="cb22-69">   --disable value                               (components) Do not deploy packaged components and delete any deployed components (valid items: rke2-coredns, rke2-metrics-server, rke2-sna</span>
+<span id="cb22-70">   --disable-scheduler                           (components) Disable Kubernetes default scheduler</span>
+<span id="cb22-71">   --disable-cloud-controller                    (components) Disable rke2 default cloud controller manager</span>
+<span id="cb22-72">   --disable-kube-proxy                          (components) Disable running kube-proxy</span>
+<span id="cb22-73">   --embedded-registry                           (experimental/components) Enable embedded distributed container registry; requires use of embedded containerd; when enabled agents will als</span>
+<span id="cb22-74">   --supervisor-metrics                          (experimental/components) Enable serving rke2 internal metrics on the supervisor port; when enabled agents will also listen on the supervis</span>
+<span id="cb22-75">   --node-name value                             (agent/node) Node name [$RKE2_NODE_NAME]</span>
+<span id="cb22-76">   --with-node-id                                (agent/node) Append id to node name</span>
+<span id="cb22-77">   --node-label value                            (agent/node) Registering and starting kubelet with set of labels</span>
+<span id="cb22-78">   --node-taint value                            (agent/node) Registering kubelet with set of taints</span>
+<span id="cb22-79">   --image-credential-provider-bin-dir value     (agent/node) The path to the directory where credential provider plugin binaries are located (default: "/var/lib/rancher/credentialprovider</span>
+<span id="cb22-80">   --image-credential-provider-config value      (agent/node) The path to the credential provider plugin config file (default: "/var/lib/rancher/credentialprovider/config.yaml")</span>
+<span id="cb22-81">   --container-runtime-endpoint value            (agent/runtime) Disable embedded containerd and use the CRI socket at the given path; when used with --docker this sets the docker socket p</span>
+<span id="cb22-82">   --default-runtime value                       (agent/runtime) Set the default runtime in containerd</span>
+<span id="cb22-83">   --disable-default-registry-endpoint           (agent/containerd) Disables containerd's fallback default registry endpoint when a mirror is configured for that registry</span>
+<span id="cb22-84">   --snapshotter value                           (agent/runtime) Override default containerd snapshotter (default: "overlayfs")</span>
+<span id="cb22-85">   --private-registry value                      (agent/runtime) Private registry configuration file (default: "/etc/rancher/rke2/registries.yaml")</span>
+<span id="cb22-86">   --system-default-registry value               (agent/runtime) Private registry to be used for all system images [$RKE2_SYSTEM_DEFAULT_REGISTRY]</span>
+<span id="cb22-87">   --node-ip value, -i value                     (agent/networking) IPv4/IPv6 addresses to advertise for node</span>
+<span id="cb22-88">   --node-external-ip value                      (agent/networking) IPv4/IPv6 external IP addresses to advertise for node</span>
+<span id="cb22-89">   --resolv-conf value                           (agent/networking) Kubelet resolv.conf file [$RKE2_RESOLV_CONF]</span>
+<span id="cb22-90">   --kubelet-arg value                           (agent/flags) Customized flag for kubelet process</span>
+<span id="cb22-91">   --kube-proxy-arg value                        (agent/flags) Customized flag for kube-proxy process</span>
+<span id="cb22-92">   --protect-kernel-defaults                     (agent/node) Kernel tuning behavior. If set, error if kernel tunables are different than kubelet defaults.</span>
+<span id="cb22-93">   --enable-pprof                                (experimental) Enable pprof endpoint on supervisor port</span>
+<span id="cb22-94">   --selinux                                     (agent/node) Enable SELinux in containerd [$RKE2_SELINUX]</span>
+<span id="cb22-95">   --lb-server-port value                        (agent/node) Local port for supervisor client load-balancer. If the supervisor and apiserver are not colocated an additional port 1 less than this port will also be used for the apiserver client load-balancer. (default: 6444) [$RKE2_LB_SERVER_PORT]</span>
+<span id="cb22-96">   --cni value                                   (networking) CNI Plugins to deploy, one of none, calico, canal, cilium, flannel; optionally with multus as the first value to enable the multus meta-plugin (default: canal) [$RKE2_CNI]</span>
+<span id="cb22-97">   --ingress-controller value                    (networking) Ingress Controllers to deploy, one of none, ingress-nginx, traefik; the first value will be set as the default ingress class (default: ingress-nginx) [$RKE_INGRESS_CONTROLLER]</span>
+<span id="cb22-98">   --enable-servicelb                            (components) Enable rke2 default cloud controller manager's service controller [$RKE2_ENABLE_SERVICELB]</span>
+<span id="cb22-99">   --kube-apiserver-image value                  (image) Override image to use for kube-apiserver [$RKE2_KUBE_APISERVER_IMAGE]</span>
+<span id="cb22-100">   --kube-controller-manager-image value         (image) Override image to use for kube-controller-manager [$RKE2_KUBE_CONTROLLER_MANAGER_IMAGE]</span>
+<span id="cb22-101">   --cloud-controller-manager-image value        (image) Override image to use for cloud-controller-manager [$RKE2_CLOUD_CONTROLLER_MANAGER_IMAGE]</span>
+<span id="cb22-102">   --kube-proxy-image value                      (image) Override image to use for kube-proxy [$RKE2_KUBE_PROXY_IMAGE]</span>
+<span id="cb22-103">   --kube-scheduler-image value                  (image) Override image to use for kube-scheduler [$RKE2_KUBE_SCHEDULER_IMAGE]</span>
+<span id="cb22-104">   --pause-image value                           (image) Override image to use for pause [$RKE2_PAUSE_IMAGE]</span>
+<span id="cb22-105">   --runtime-image value                         (image) Override image to use for runtime binaries (containerd, kubectl, crictl, etc) [$RKE2_RUNTIME_IMAGE]</span>
+<span id="cb22-106">   --etcd-image value                            (image) Override image to use for etcd [$RKE2_ETCD_IMAGE]</span>
+<span id="cb22-107">   --kubelet-path value                          (experimental/agent) Override kubelet binary path [$RKE2_KUBELET_PATH]</span>
+<span id="cb22-108">   --cloud-provider-name value                   (cloud provider) Cloud provider name [$RKE2_CLOUD_PROVIDER_NAME]</span>
+<span id="cb22-109">   --cloud-provider-config value                 (cloud provider) Cloud provider configuration file path [$RKE2_CLOUD_PROVIDER_CONFIG]</span>
+<span id="cb22-110">   --profile value                               (security) Validate system configuration against the selected benchmark (valid items: cis) [$RKE2_CIS_PROFILE]</span>
+<span id="cb22-111">   --audit-policy-file value                     (security) Path to the file that defines the audit policy configuration [$RKE2_AUDIT_POLICY_FILE]</span>
+<span id="cb22-112">   --pod-security-admission-config-file value    (security) Path to the file that defines Pod Security Admission configuration [$RKE2_POD_SECURITY_ADMISSION_CONFIG_FILE]</span>
+<span id="cb22-113">   --control-plane-resource-requests value       (components) Control Plane resource requests [$RKE2_CONTROL_PLANE_RESOURCE_REQUESTS]</span>
+<span id="cb22-114">   --control-plane-resource-limits value         (components) Control Plane resource limits [$RKE2_CONTROL_PLANE_RESOURCE_LIMITS]</span>
+<span id="cb22-115">   --control-plane-probe-configuration value     (components) Control Plane Probe configuration [$RKE2_CONTROL_PLANE_PROBE_CONFIGURATION]</span>
+<span id="cb22-116">   --kube-apiserver-extra-mount value            (components) kube-apiserver extra volume mounts [$RKE2_KUBE_APISERVER_EXTRA_MOUNT]</span>
+<span id="cb22-117">   --kube-scheduler-extra-mount value            (components) kube-scheduler extra volume mounts [$RKE2_KUBE_SCHEDULER_EXTRA_MOUNT]</span>
+<span id="cb22-118">   --kube-controller-manager-extra-mount value   (components) kube-controller-manager extra volume mounts [$RKE2_KUBE_CONTROLLER_MANAGER_EXTRA_MOUNT]</span>
+<span id="cb22-119">   --kube-proxy-extra-mount value                (components) kube-proxy extra volume mounts [$RKE2_KUBE_PROXY_EXTRA_MOUNT]</span>
+<span id="cb22-120">   --etcd-extra-mount value                      (components) etcd extra volume mounts [$RKE2_ETCD_EXTRA_MOUNT]</span>
+<span id="cb22-121">   --cloud-controller-manager-extra-mount value  (components) cloud-controller-manager extra volume mounts [$RKE2_CLOUD_CONTROLLER_MANAGER_EXTRA_MOUNT]</span>
+<span id="cb22-122">   --kube-apiserver-extra-env value              (components) kube-apiserver extra environment variables [$RKE2_KUBE_APISERVER_EXTRA_ENV]</span>
+<span id="cb22-123">   --kube-scheduler-extra-env value              (components) kube-scheduler extra environment variables [$RKE2_KUBE_SCHEDULER_EXTRA_ENV]</span>
+<span id="cb22-124">   --kube-controller-manager-extra-env value     (components) kube-controller-manager extra environment variables [$RKE2_KUBE_CONTROLLER_MANAGER_EXTRA_ENV]</span>
+<span id="cb22-125">   --kube-proxy-extra-env value                  (components) kube-proxy extra environment variables [$RKE2_KUBE_PROXY_EXTRA_ENV]</span>
+<span id="cb22-126">   --etcd-extra-env value                        (components) etcd extra environment variables [$RKE2_ETCD_EXTRA_ENV]</span>
+<span id="cb22-127">   --cloud-controller-manager-extra-env value    (components) cloud-controller-manager extra environment variables [$RKE2_CLOUD_CONTROLLER_MANAGER_EXTRA_ENV]</span></code></pre></div>
+<p>So, it seems that the –servicelb system is enabled in the rke2 command line, rather than in the install script.</p>
+<p>So, I used <code>systemctl edit rke2-server.service</code> to create an override file for the systemd service.</p>
+<div class="sourceCode" id="cb23" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb23-1">### Editing /etc/systemd/system/rke2-server.service.d/override.conf</span>
+<span id="cb23-2">### Anything between here and the comment below will become the new contents of the file</span>
+<span id="cb23-3"></span>
+<span id="cb23-4"></span>
+<span id="cb23-5">[Service]</span>
+<span id="cb23-6">ExecStart=</span>
+<span id="cb23-7">ExecStart=/usr/local/bin/rke2 server --servicelb</span>
+<span id="cb23-8"></span>
+<span id="cb23-9">### Lines below this comment will be discarded</span>
+<span id="cb23-10"></span>
+<span id="cb23-11">### /usr/local/lib/systemd/system/rke2-server.service</span>
+<span id="cb23-12"># [Unit]</span>
+<span id="cb23-13"># Description=Rancher Kubernetes Engine v2 (server)</span>
+<span id="cb23-14"># Documentation=https://github.com/rancher/rke2#readme</span>
+<span id="cb23-15"># Wants=network-online.target</span>
+<span id="cb23-16"># After=network-online.target</span>
+<span id="cb23-17"># Conflicts=rke2-agent.service</span>
+<span id="cb23-18">#</span>
+<span id="cb23-19"># [Install]</span>
+<span id="cb23-20"># WantedBy=multi-user.target</span>
+<span id="cb23-21">#</span>
+<span id="cb23-22"># [Service]</span>
+<span id="cb23-23"># Type=notify</span>
+<span id="cb23-24"># EnvironmentFile=-/etc/default/%N</span>
+<span id="cb23-25"># EnvironmentFile=-/etc/sysconfig/%N</span>
+<span id="cb23-26"># EnvironmentFile=-/usr/local/lib</span></code></pre></div>
+<p>And after restarting the kubernetes service, and reconciling, traefik deploys successfully!</p>
+<div class="sourceCode" id="cb24" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb24-1">[moonpie@lizard traefik]$ flux get all</span>
+<span id="cb24-2">NAME                            REVISION                SUSPENDED       READY   MESSAGE</span>
+<span id="cb24-3">...</span>
+<span id="cb24-4">...</span>
+<span id="cb24-5"></span>
+<span id="cb24-6">NAME                    REVISION        SUSPENDED       READY   MESSAGE</span>
+<span id="cb24-7">helmrelease/traefik     31.0.0          False           True    Helm install succeeded for release flux-system/traefik.v1 with chart traefik@31.0.0</span>
+<span id="cb24-8"></span>
+<span id="cb24-9">...</span>
+<span id="cb24-10">...</span></code></pre></div>
+<p>Except… not really. The port 80 and 443 are not used when I check <code>sudo ss -tulpn</code>, and if I curl either of those ports, it just times out. A relevant <a href="https://github.com/k3s-io/klipper-lb/issues/6">github issue</a> says that klipper has some problems with canal, and to enable <a href="https://docs.tigera.io/calico/latest/reference/configure-cni-plugins#container-settings">canal ip forwarding</a> in <code>/etc/cni/net.d/10-canal.conflist</code>.</p>
+<p>However, despite doing this, and restarting, the ports are not in use, and the service times out if I try to curl my site.</p>
+<p>But, traefik seems to be working, because if I use the <code>kubectl port-forward</code> command to port forward traefik to my local machine, I can curl it.</p>
+<div class="sourceCode" id="cb25" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb25-1">[moonpie@lizard traefik]$ kubectl port-forward -n flux-system pods/traefik-6f6c897d6-vr78w 8000</span>
+<span id="cb25-2">Forwarding from 127.0.0.1:8000 -&gt; 8000</span>
+<span id="cb25-3">Forwarding from [::1]:8000 -&gt; 8000</span>
+<span id="cb25-4">Handling connection for 8000</span>
+<span id="cb25-5"></span>
+<span id="cb25-6"># In a different terminal</span>
+<span id="cb25-7"></span>
+<span id="cb25-8">[moonpie@lizard traefik]$ curl localhost:8000</span>
+<span id="cb25-9">404 page not found</span></code></pre></div>
+<p>But…</p>
+<div class="sourceCode" id="cb26" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb26-1">[moonpie@lizard traefik]$ kubectl describe -n flux-system svc/traefik</span>
+<span id="cb26-2">Name:                     traefik</span>
+<span id="cb26-3">Namespace:                flux-system</span>
+<span id="cb26-4">Labels:                   app.kubernetes.io/instance=traefik-flux-system</span>
+<span id="cb26-5">                          app.kubernetes.io/managed-by=Helm</span>
+<span id="cb26-6">                          app.kubernetes.io/name=traefik</span>
+<span id="cb26-7">                          helm.sh/chart=traefik-31.0.0</span>
+<span id="cb26-8">                          helm.toolkit.fluxcd.io/name=traefik</span>
+<span id="cb26-9">                          helm.toolkit.fluxcd.io/namespace=flux-system</span>
+<span id="cb26-10">Annotations:              meta.helm.sh/release-name: traefik</span>
+<span id="cb26-11">                          meta.helm.sh/release-namespace: flux-system</span>
+<span id="cb26-12">Selector:                 app.kubernetes.io/instance=traefik-flux-system,app.kubernetes.io/name=traefik</span>
+<span id="cb26-13">Type:                     LoadBalancer</span>
+<span id="cb26-14">IP Family Policy:         SingleStack</span>
+<span id="cb26-15">IP Families:              IPv4</span>
+<span id="cb26-16">IP:                       10.43.249.0</span>
+<span id="cb26-17">IPs:                      10.43.249.0</span>
+<span id="cb26-18">LoadBalancer Ingress:     130.166.90.189</span>
+<span id="cb26-19">Port:                     web  80/TCP</span>
+<span id="cb26-20">TargetPort:               8000/TCP</span>
+<span id="cb26-21">NodePort:                 web  30801/TCP</span>
+<span id="cb26-22">Endpoints:                10.42.0.15:8000</span>
+<span id="cb26-23">Port:                     websecure  443/TCP</span>
+<span id="cb26-24">TargetPort:               websecure/TCP</span>
+<span id="cb26-25">NodePort:                 websecure  32357/TCP</span>
+<span id="cb26-26">Endpoints:                10.42.0.15:8443</span>
+<span id="cb26-27">Session Affinity:         None</span>
+<span id="cb26-28">External Traffic Policy:  Cluster</span></code></pre></div>
+<div class="sourceCode" id="cb27" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb27-1">root@thoth:~# curl 10.42.0.15:8000</span>
+<span id="cb27-2">404 page not found</span></code></pre></div>
+<p>So I’m guessing that this is <em>supposed</em> to be forwarded to port 80 on the host, but it isn’t.</p>
+<div class="sourceCode" id="cb28" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb28-1">[moonpie@lizard traefik]$ kubectl get events --sort-by='.lastTimestamp' -A</span>
+<span id="cb28-2">NAMESPACE     LAST SEEN   TYPE      REASON                    OBJECT                                                         MESSAGE                           </span>
+<span id="cb28-3">...</span>
+<span id="cb28-4">...</span>
+<span id="cb28-5">kube-system   9m43s       Warning   FailedMount               pod/helm-install-rke2-canal-jjmwv                              MountVolume.SetUp failed for volume "content" : object "kube-system"/"chart-content-rke2-canal" not registered</span>
+<span id="cb28-6">kube-system   5m39s       Warning   FailedMount               pod/helm-install-rke2-canal-jjmwv                              MountVolume.SetUp failed for volume "values" : object "kube-system"/"chart-values-rke2-canal" not registered</span>
+<span id="cb28-7">...</span>
+<span id="cb28-8">...</span></code></pre></div>
+<p>Although an interesting error, it’s possible that this isn’t <em>the</em> error that is irritating me. According to a <a href="https://github.com/rancher/rke2/issues/6528#issuecomment-2278536875">github issue comment</a>, RKE2 comes wtih “network policies” that can restrict traffic between pods, and that might be the issue.</p>
+<p>However, on <a href="https://fluxcd.io/flux/installation/configuration/optional-components/#network-policies">according to the fluxcd documentation on networkpolicies</a>, fluxcd comes with rules that disallow traffic to the flux-system namepsace by default… which is where I was attempting to deploy my software.</p>
+<p>So, after I change the configs to deploy traefik to the kubernetes <code>default</code> namespace:</p>
+<div class="sourceCode" id="cb29" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb29-1">[moonpie@lizard traefik]$ curl moonpiedumpl.ing</span>
+<span id="cb29-2">404 page not found</span></code></pre></div>
+<p>It works!</p>
 
 
 </section>
@@ -359,7 +685,8 @@ font-style: inherit;"> rke2-ingress-nginx</span></span></code></pre></div>
 <p>Flavor text</p>
 <p>Card “Shop”</p>
 <p>Traits cost Trait Number * N where N is the total amount of traits</p>
-<p>Offensive Aspects:</p>
+<section id="offensive-aspects" class="level2">
+<h2 class="anchored" data-anchor-id="offensive-aspects">Offensive Aspects:</h2>
 <p>Attack: X Give this card the ability to attack, and 1 + X attack power. Cards need at least one attack to be able to block.</p>
 <p>Multi-Target-Attack: X attack more than one target/structure, to a total of 2 + X targets. Each attack/block/hit encounter is treated as an individual encounter — this multiplies damage essentially. Alternative description (same function): this card makes multiple attacks against multiple targets, and recovers health between each attack.</p>
 <p>Multi-Blocker-Attack: X This card, when attacking a target, is treated as actually doing 2 + X attacks toward a target. Unblocked attacks go through. Each encounter with a blocker is kept seperate.</p>
@@ -369,11 +696,14 @@ font-style: inherit;"> rke2-ingress-nginx</span></span></code></pre></div>
 <p>Idea: AoE has reversed cost. It targets ATK other targets, dealing some calculation of damage.</p>
 <p>Totally not banding: Collective attack: Base + X. Allows for pooling of attackers up to 1 + X other attackers. Counts as one attack, even to multi block. Attacking player can choose how the damage is distributed to the cards in the merged attack. Merged attacks share offensive traits.</p>
 <p>Double Tap: 1 + ??: Card has does a second attack which happens before the first one in an encounter, doing extra damage. Opponent can pay some porportion of production to remove some proportion of double tap from a card.</p>
+<p>Alt idea: During each section of the combat phase, player can chose to do extra damage with this card towards cards it is over/under.</p>
 <p>Goals: Shield-remove, replace mtg keyword deathtouch.</p>
-<p>Defensive Aspects:</p>
+</section>
+<section id="defensive-aspects" class="level2">
+<h2 class="anchored" data-anchor-id="defensive-aspects">Defensive Aspects:</h2>
 <p>Health: Base + X Give this card health trait and 1 + X hit points. (note: If a card has no health, it disappears at the end of a turn).</p>
 <p>Multi Block: 1 + X block more than one attacker of a target, per target blocked, up to 2 + X</p>
-<p>Multi-Target-Block: 1 + X: Block for more than one card, although only one attacker per target, up to 2 + X (stacks with multi block with</p>
+<p>Multi-Target-Block: 1 + X: Block for more than one card, although only one attacker per target, up to 2 + X stacks with multi block with</p>
 <p>Anti-AoE: Base:1 + X add this cards health power to hower many</p>
 <p>Merged Block: Base:1 + X: This card can do a merged block, which is mostly treated as one block. The health of merged blockers is “pooled” where they all share damage. To kill all cards in the merged block, and attacker must outdamage the pool. (Should merged block allow merging of traits?) (and should merged block allow blocking multi-block?)</p>
 <p>Idea: No merging of traits. Stacks with other defensive traits. Allows for multi-blocking, of one card, but doesn’t</p>
@@ -381,15 +711,23 @@ font-style: inherit;"> rke2-ingress-nginx</span></span></code></pre></div>
 <p>Do I want collective block to merge traits as well?</p>
 <p>Shield: X: Card gets a seperate “shield of X hit points. If they are damaged by one attack/encounter, it doesn’t rollover into their HP. Opponent(s) can pay production points to reduce the shield value. Shield points can also be spent to reduce active effects</p>
 <p>Goals: Replace mtg keywork indestructuble. Replace clash royale shield mechanic Maybe replace hexproof with a resist spell mechanic?</p>
-<p>Misc Aspects:</p>
+<p>Maybe own ward:</p>
+<p>Ward/Hexprooft: X : X : this card can resist X spell effects, unless opponent pays X production points What’s defensive</p>
+</section>
+<section id="misc-aspects" class="level2">
+<h2 class="anchored" data-anchor-id="misc-aspects">Misc Aspects:</h2>
 <p>Integrate: X: X Pay N * N production points to combine this card with another card, stacking all values. Integrated cards count as one card, even when targeted by another integrate card, but the calculation becomes N * (N1 + N2)</p>
 <p>Goals: Replace mtg archetype voltron, mtg keywords equip, fortify, enchant, mutate, merge, meld</p>
 <p>Problem: Polarity reversal doesn’t effect integrate. Offensive/defensive equivalent? : Debuff</p>
 <p>Solution: Pay some amount of production to dissasemble integrated cards. Don’t like, as it kinda defeats the points of “green” decks. Maybe: Opponent can pay production to keep integrate card integrated</p>
-<p>Debuff: X: Pay N + N – X points to apply a debuff to a card with value N, where all the aspects of this card are subtracted from that card. Actives and Curses carry over.</p>
-<p>How to remove?</p>
-<p>Active Traits:</p>
-<p>Idea: Cards with active traits can’t block. This forces them to be seperate structures players must defend.</p>
+<p>Debuff/Attatch Curse: X: Pay N + N – X points to apply a debuff to a card with value N, where all the aspects of this card are subtracted from that card. Actives and Curses carry over.</p>
+<p>How to remove? Pay cost? Card death?</p>
+</section>
+<section id="active-traits" class="level2">
+<h2 class="anchored" data-anchor-id="active-traits">Active Traits:</h2>
+<ul>
+<li>So the idea behind “actives” is that they generate points/tokens that can be spent on things — but don’t have to be spent. The actives that cost production to use, only cost production on the application of the active, rather than the generation/creation of the points.</li>
+</ul>
 <p>Mana Generation: X: X * N . Generate mana for casting things</p>
 <p>Give opponent production points: Goal: replicate elixir golem mechanic from clash royale. Problems: Too weak. Decks which use less or no production won’t be affected by this. Needs an alternate ability along with give opponent production points, such as giving opponent another active.</p>
 <p>Idea for both: decrease cost of the fibonacci sequence. This appeals because it has a fixed cost.</p>
@@ -401,15 +739,25 @@ font-style: inherit;"> rke2-ingress-nginx</span></span></code></pre></div>
 <p>Tutor: Cost Base:1 + X, look at the top X cards of your deck and show them to your oppnent. You can cast directly from these cards. Problem: Recursive scry/tutor too op</p>
 <p>Goal: Play the role of blue deck, increasing options player has.</p>
 <p>Polarity Reversal Base: X: Change offensive abilities to their defensive equivalents defensive and vice versa, of a single card, up to X * N of a single trait</p>
-<p>Goal: Buff and nerf at the same time. Can be used to reduce health</p>
+<p>Goal: Buff and nerf at the same time. Can be used to reduce health, or increase attack.</p>
 <p>Counterspell/reflect: Base:1 + X: You “take control” of 1 + X “spell” aspects targeting individual things. Problem: How will counterspell and react phases work? Do I want this? It adds extra complexity to casting. Idea: Counter either 1 + X damage/protection/production (distributed) or 1 + X spell effects targeting stuff.</p>
 <p>Goal: play the role of the blue counterspell, while also allowing them to deny production points</p>
-<p>Aspect Enhancement: X: Enhance any aspect of card(s) up to X. Costs (initial aspect cost) + X * N production points.</p>
+<p>Replicate: X: Duplicate active effects, excluding replicate effects. Can duplicate opponents effects, or own. Can replicate counterspell.</p>
+<p>Aspect Enhancement: X: Enhance any aspect of card(s) up to X. Costs (initial aspect cost) + X * N production points. * Having this cost mana is kinda weak.</p>
 <p>Gain Life: X: X and pay X production points to do so</p>
+<p>Deny attackers. Some kind of stop attacker from attacking mechanic.</p>
 <p>Also want active?</p>
-<p>Triggers:</p>
+</section>
+<section id="anti-actives" class="level2">
+<h2 class="anchored" data-anchor-id="anti-actives">Anti-Actives</h2>
+<p>Take life: X :X</p>
+<p>Idea is to have taxes or some sort of sin mechanic.</p>
+</section>
+<section id="triggers" class="level2">
+<h2 class="anchored" data-anchor-id="triggers">Triggers:</h2>
 <p>Familiar friends: X: When you play a card with similar trait and valuet and value appears, including this specific trigger + active, Do up to 1 + X of an active trait, based on the common traits and values that are shared.</p>
 <p>Note: Too op if it includes health, attack, and friends… but is it?</p>
+<p>Also: Familiar friends… but on death?</p>
 <p>Damage dealt via attacking or blocking (including or excluding overkill): X : X</p>
 <p>Damage taken (including or excluding shield?): X : X</p>
 <p>Goal: Replace elixir golem clash royale</p>
@@ -419,14 +767,16 @@ font-style: inherit;"> rke2-ingress-nginx</span></span></code></pre></div>
 <p>Getting attacked by X cards: X: X</p>
 <p>Lifegain: X: X</p>
 <p>On card draw:</p>
-<p>Curses:</p>
+</section>
+<section id="curses" class="level2">
+<h2 class="anchored" data-anchor-id="curses">Curses:</h2>
 <p>Negative managen/production: Take X mana from the player every turn, or if they can’t provide that, life. In exchaninge, offer X * N card creation points for players to use. Essentially for each negative mana point, they can add one of each trait for each negative manapoint during the turn. Must be paid before the attacking step.op starting slowing down, I switched to a Linux based operating system, in an attempt to make it faster, using knowl</p>
 <ul>
 <li>Should it die if no mana given?</li>
 <li>Or should it take from life?</li>
 <li>What about production? Probably not effect actives… but I like the idea of cumulative upkeep for a spell tower.</li>
 </ul>
-<p>Day/Night: Opponent gains control of this card during their turn, except the card doesn’t have full stats. It only has X stats, X for each trait in place. It also gains X stats in the opposite section of held traits. So 4 hp, but 0 attack, but 2 x becomes 2 hp, 2 attack.</p>
+<p>Day/Night: Opponent gains control of this card during their turn, except the card doesn’t have full stats. It only has X stats, X for each trait in place. It also gains X stats in the opposite section of held traits. So 4 hp, but 0 attack, but 2 X becomes 2 hp, 2 attack.</p>
 <p>How to handle one time spell cards? * Day/night results in the card staying alive, even when it has 0 or less health * Opponent gets a portion of spell effects * Daynight straight up doesn’t affect actives ← I like this one</p>
 <p>May need different name, mtg already has daynight. Traitor? Betrayal? Doublecross? Doubleagent?</p>
 <p>Card on field goes to hand, in exchange for a card that has a base cost less than Cost – X base cost. If there is no such card, then this card goes to the graveyard. You can keep the card on the field in exchange for a sacrifice of at least Cost + X * N from your hand or the field, straight to the graveyard.</p>
@@ -436,23 +786,53 @@ font-style: inherit;"> rke2-ingress-nginx</span></span></code></pre></div>
 </ul>
 <p>At beginning of turn, or when card is attempted to be played, take it off the field for a card in hand with base value &lt; cost – X, or sacrifice card from field with cost + X?</p>
 <p>AKA: some kind of bounce curse</p>
-<p>At beginning of turn or before played, take cards on the field that are worth more/less than something off the field and put them back into your hand. If you cannot do this, because of a full hand or because of the</p>
+<p>At beginning of turn or before played, take cards on the field that are worth more/less than something off the field and put them back into your hand. If you cannot do this, because of a full hand or because of the value</p>
 <p>On/before turn, bounce cards value back to hand. If you can’t do that, then bounce this card, exchanging it for something in your hand with less than X. If can’t do that, then graveyard.</p>
 <p>Siege/Battle: X: X card is cast as an X health card under an opponents control. They must defend it, if the attacking player manages to kill it, then it becomes the normal card</p>
 <ul>
 <li>Allow spell damage to kill the battle?</li>
 </ul>
 <p>Goal: replace siege/battle from mtg</p>
-<p>Two ideas:</p>
+<p>Equality: X: X times N this card gives oppenent up to X*N of of “actives” it generates, when it generates them.</p>
+<p>Goal: Allow for the creation of board wipe type effects.</p>
+<p>Sacrifice X : X You need to sacrifice cards with a base cost of X * N cards on the field when played.</p>
 <p>Half of cards in graveyard go to exile, the other half go to the bottom of the players deck. Either completely random, pseudorandom, or complete player choice. Note: why is this better than multiple rounds? This could also be a seperate gamemode.</p>
 <p>Potential keywords:</p>
 <p>Recursion: X : X Pay Cost – X to cast this card from your graveyard</p>
 <p>Buyback: X : X Pay Cost – X in addition to casting this spell to return it to your hand when you cast it.</p>
-<p>Sacrifice: X : X sacrifice cards with base values up to X to decrease this cards cost by X</p>
 <p>See also: MTG emerge</p>
 <p>MTG Surge</p>
 <p>MTG rebound</p>
 <p>MTG storm: Pay X to duplicate the on-cast effects of this card?</p>
+</section>
+<section id="misc-notes-and-workshopping" class="level2">
+<h2 class="anchored" data-anchor-id="misc-notes-and-workshopping">Misc Notes and Workshopping:</h2>
+<p>Resources (used to do stuff):</p>
+<ul>
+<li>Mana/Production (can cast from life)
+<ul>
+<li>Life</li>
+</ul></li>
+<li>Cards in hand (artifically increased by scry)
+<ul>
+<li>Draw counts</li>
+</ul></li>
+<li>Cards on field</li>
+<li>Cards in graveyard</li>
+<li>Board space?</li>
+</ul>
+<p>I want synergy to happen, but for the synergy to use up one of the other resources, preventing snowballing/ an infinite combo.</p>
+<p>Maybe I need another resource?</p>
+<p>Catch up mechanics?</p>
+<ul>
+<li>I like the “equality” curse</li>
+<li>But I want one more</li>
+</ul>
+<p>Tribal mechanics:</p>
+<ul>
+<li>Link somehow, artificial synergy</li>
+</ul>
+</section>
 </section>
 <section id="combat" class="level1">
 <h1>Combat</h1>
@@ -477,6 +857,12 @@ font-style: inherit;"> rke2-ingress-nginx</span></span></code></pre></div>
 <p>Two ways I am thinking of doing damage: Getting a card onto/past all defenders</p>
 <p>Or creating a chain that connects it past defenders. Maybe like 1 damage for each card in the chain?</p>
 <p>How should cards launch an attack against valuable cards? Surrounding them? Building a chain which accesses them?</p>
+<p>Ideas:</p>
+<ul>
+<li>Cards deal (ATK + ATK + ATK) *N where N in the amount of cards surrounding a card</li>
+<li>Players form a set of connections around a card, where the</li>
+<li>Surrounding a card with 6 cards is an insta kill (can be on top cards as well)</li>
+</ul>
 <p>Should cards being on top or below matter? Maybe? Only on top cards count for purposes of a chain, and also can surround other cards.</p>
 <p>But also: How about targeting production towers?</p>
 <p>Anyway, this is good, but I need to calculate the fairness of this game. I think the only way to calculate fairness is to write a program that solves this game.</p>
@@ -494,7 +880,7 @@ font-style: inherit;"> rke2-ingress-nginx</span></span></code></pre></div>
 <p>So… how can I make a hexagonal grid in order to calculate solutions to my game?</p>
 <p>I really, really like the idea of representing <a href="https://www.redblobgames.com/grids/hexagons/#coordinates-cube">hexagonal coordinates as a cube</a>.</p>
 <p>Pseudocode of what I want:</p>
-<pre><code>HexGrid = 2d array
+<pre><code>HexGrid = 2d array, or graph of nodes
 
 CheckLegality: Function that checks if a hex grid config is legal (all nodes are connected)
 
@@ -505,60 +891,10 @@ GetMovesShove: Get possible moves of the shove card out of the way type
 GetMovesPull: Get possible moves of the pull card under type
 
 GetMovesSwap: Get possible moves of the swap type
-[moonpie@lizard flux-system]$ kubectl get pods -n flux-system
-NAME                                       READY   STATUS    RESTARTS   AGE
-helm-controller-76dff45854-g8tff           1/1     Running   0          3h4m
-kustomize-controller-6bc5d5b96-sdzql       1/1     Running   0          3h4m
-notification-controller-7f5cd7fdb8-v9672   1/1     Running   0          3h4m
-source-controller-54c89dcbf6-kjjsb         1/1     Running   0          3h4m
-traefik-6f6c897d6-j7g8z                    1/1     Running   0          9m34s
+
 GetWin: Get the amount of damage a winning attacker would do</code></pre>
-<p>I would also need several other functions/features, like I would have to be able to detect the</p>
-<div class="sourceCode" id="cb2" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"></span>
-<span id="cb2-2">height <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> <span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">20</span></span>
-<span id="cb2-3">width <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> <span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">20</span></span>
-<span id="cb2-4"></span>
-<span id="cb2-5">HexGrid <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> [[[<span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">0</span>, <span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">0</span>] <span class="cf" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">for</span> x <span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">in</span> <span class="bu" style="color: null;
-background-color: null;
-font-style: inherit;">range</span>(width)] <span class="cf" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">for</span> y <span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">in</span> <span class="bu" style="color: null;
-background-color: null;
-font-style: inherit;">range</span>(height)]</span>
-<span id="cb2-6"></span>
-<span id="cb2-7"><span class="bu" style="color: null;
-background-color: null;
-font-style: inherit;">print</span>(HexGrid)</span>
-<span id="cb2-8"></span>
-<span id="cb2-9"></span>
-<span id="cb2-10"><span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">def</span> CheckLegality</span></code></pre></div>
+<p>I would also need several other functions/features, like I would have to be able to detect if a set of moves is the same as an older set of moves. I think this is easier with a set of nodes than an infinitely large hex grid.</p>
+<p>People at the San Fernando Valley LUG, said I should research “graph theory”, because there already exist algorithms to check if all nodes are connected, or to traverse a graph, or so on.</p>
 
 
 </section>
