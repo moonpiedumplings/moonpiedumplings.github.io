@@ -727,3 +727,35 @@ So, after I change the configs to deploy traefik to the kubernetes `default` nam
 
 It works!
 
+Now,  I need to find a test service to deploy. I deployed [podinfo](https://fluxcd.io/flux/get-started/#add-podinfo-repository-to-flux), because it is a simple web service, used as an example service for fluxcd.
+
+Here was the ingress file that I used to expose it on <podinfo.moonpiedumpl.ing>
+
+```{.yaml filename='podinfo-ingress.yaml'}
+[moonpie@lizard podinfo]$ cat podinfo-ingress.yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: podinfo
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: web
+  namespace: default
+
+spec:
+  rules:
+  - host: podinfo.moonpiedumpl.ing
+    http:
+      paths:
+      - path: /
+        pathType: Exact
+        backend:
+          service:
+            name: podinfo
+            port:
+              number: 8989
+```
+
+Not really simple, and it was a pain to edit because my editor (Kate), set tabs to 4 spaces, rather than two.
+
+Now, how can I add HTTPS/TLS to this? f         
+
