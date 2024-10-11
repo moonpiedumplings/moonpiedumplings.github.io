@@ -9,7 +9,7 @@
 <link>./feed/feed.html</link>
 <atom:link href="./feed/feed.xml" rel="self" type="application/rss+xml"/>
 <description>All posts, intended to be used in an RSS feed. </description>
-<generator>quarto-1.5.56</generator>
+<generator>quarto-1.5.57</generator>
 <lastBuildDate>Thu, 12 Sep 2024 07:00:00 GMT</lastBuildDate>
 <item>
   <title>Server Part 5 — Ovirt is still maintained?!</title>
@@ -116,8 +116,8 @@ Show install command
 </details>
 <p>And just like that, fluxcd is installed.</p>
 </section>
-<section id="traefik" class="level2">
-<h2 class="anchored" data-anchor-id="traefik">Traefik</h2>
+<section id="reverse-proxy-traefik-then-nginx" class="level2">
+<h2 class="anchored" data-anchor-id="reverse-proxy-traefik-then-nginx">Reverse Proxy (Traefik, then Nginx)</h2>
 <p>The first step of my cluster should be my reverse proxy, as an ingress. This exposes basically all of my services.</p>
 <p>The <a href="https://fluxcd.io/flux/use-cases/helm/">flux example of helm page</a> actually has an example where they set up helm.</p>
 <div class="sourceCode" id="cb5" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb5-1">[moonpie@lizard home-manager]$ kubectl version</span>
@@ -629,10 +629,1329 @@ font-style: inherit;"> rke2-ingress-nginx</span></span></code></pre></div>
 <div class="sourceCode" id="cb29" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb29-1">[moonpie@lizard traefik]$ curl moonpiedumpl.ing</span>
 <span id="cb29-2">404 page not found</span></code></pre></div>
 <p>It works!</p>
-<p>Now, I need to find a test service to deploy.</p>
-
-
+<p>Now, I need to find a test service to deploy. I deployed <a href="https://fluxcd.io/flux/get-started/#add-podinfo-repository-to-flux">podinfo</a>, because it is a simple web service, used as an example service for fluxcd.</p>
+<p>Here was the ingress file that I used to expose it on &lt;podinfo.moonpiedumpl.ing&gt;</p>
+<div class="code-with-filename">
+<div class="code-with-filename-file">
+<pre><strong>podinfo-ingress.yaml</strong></pre>
+</div>
+<div class="sourceCode" id="cb30" data-filename="podinfo-ingress.yaml" style="background: #f1f3f5;"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb30-1"><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">[</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">moonpie@lizard podinfo</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">]</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">$ cat podinfo-ingress.yaml</span></span>
+<span id="cb30-2"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">apiVersion</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> networking.k8s.io/v1</span></span>
+<span id="cb30-3"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">kind</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> Ingress</span></span>
+<span id="cb30-4"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">metadata</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span></span>
+<span id="cb30-5"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">name</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> podinfo</span></span>
+<span id="cb30-6"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">annotations</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span></span>
+<span id="cb30-7"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">traefik.ingress.kubernetes.io/router.entrypoints</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> web</span></span>
+<span id="cb30-8"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">namespace</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> default</span></span>
+<span id="cb30-9"></span>
+<span id="cb30-10"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">spec</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span></span>
+<span id="cb30-11"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">rules</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span></span>
+<span id="cb30-12"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">  </span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">-</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">host</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> podinfo.moonpiedumpl.ing</span></span>
+<span id="cb30-13"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">http</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span></span>
+<span id="cb30-14"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">      </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">paths</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span></span>
+<span id="cb30-15"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">      </span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">-</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">path</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> /</span></span>
+<span id="cb30-16"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">        </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">pathType</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> Exact</span></span>
+<span id="cb30-17"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">        </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">backend</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span></span>
+<span id="cb30-18"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">          </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">service</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span></span>
+<span id="cb30-19"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">            </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">name</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> podinfo</span></span>
+<span id="cb30-20"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">            </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">port</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span></span>
+<span id="cb30-21"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">              </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">number</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> </span><span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">9898</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">          </span></span></code></pre></div>
+</div>
+<p>Not really simple, and it was a pain to edit because my editor (Kate), set tabs to 4 spaces, rather than two.</p>
+<p>Now, how can I add HTTPS/TLS to this? Although <a href="https://doc.traefik.io/traefik/https/acme/#configuration-examples">Traefik documents how to enable acme in the first example</a>, however, the documentation on how to add this to each individual site is unclear.</p>
+<p>Based on removing the annotation, and testing, it looks like the annoation isn’t needed. Also, it seems that the <code>kubectl explain ingress --recursive</code> explains the “ingress” kubernetes resource, which is above.</p>
+<p>However, it seems that Traefik provides an “IngressRoute” resource, which is what they expect you to use for automatic https setups like what I am trying to do. But… I’m hesitant to rely on that, as “IngressRoute” seems to be traefik specific, rather than Ingress, which is general to kubernetes.</p>
+<p>Actually, after doing more research, I’ve decided to switch to <a href="https://kubernetes.github.io/ingress-nginx/">ingress-nginx</a>. Unlike traefik, it seems to have build in support for <a href="https://kubernetes.github.io/ingress-nginx/examples/auth/oauth-external-auth/">external oauth authentication</a>. Although Traefik can do it, it’s not build in, and I would have to use a plugin.</p>
+<p>So, this means I’m switching from Traefik to nginx and cert-manager instead.</p>
+<section id="nginxcert-manager" class="level3">
+<h3 class="anchored" data-anchor-id="nginxcert-manager">Nginx/Cert-Manager</h3>
+<p>I followed the <a href="https://cert-manager.io/docs/installation/helm/">official cert-manager installation guide</a>, but converted it into flux configs.</p>
+<div class="code-with-filename">
+<div class="code-with-filename-file">
+<pre><strong>cert-manager/helmsource.yaml</strong></pre>
+</div>
+<div class="sourceCode" id="cb31" data-filename="cert-manager/helmsource.yaml" style="background: #f1f3f5;"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb31-1"><span class="pp" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">---</span></span>
+<span id="cb31-2"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">apiVersion</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> source.toolkit.fluxcd.io/v1</span></span>
+<span id="cb31-3"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">kind</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> HelmRepository</span></span>
+<span id="cb31-4"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">metadata</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span></span>
+<span id="cb31-5"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">name</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> cert-manager</span></span>
+<span id="cb31-6"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">namespace</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> default</span></span>
+<span id="cb31-7"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">spec</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span></span>
+<span id="cb31-8"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">interval</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> 1m0s</span></span>
+<span id="cb31-9"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">url</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> https://charts.jetstack.io</span></span></code></pre></div>
+</div>
+<div class="code-with-filename">
+<div class="code-with-filename-file">
+<pre><strong>cert-manager/helmrelease.yaml</strong></pre>
+</div>
+<div class="sourceCode" id="cb32" data-filename="cert-manager/helmrelease.yaml" style="background: #f1f3f5;"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb32-1"><span class="pp" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">---</span></span>
+<span id="cb32-2"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">apiVersion</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> helm.toolkit.fluxcd.io/v2</span></span>
+<span id="cb32-3"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">kind</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> HelmRelease</span></span>
+<span id="cb32-4"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">metadata</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span></span>
+<span id="cb32-5"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">name</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> cert-manager</span></span>
+<span id="cb32-6"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">namespace</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> default</span></span>
+<span id="cb32-7"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">spec</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span></span>
+<span id="cb32-8"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">chart</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span></span>
+<span id="cb32-9"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">spec</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span></span>
+<span id="cb32-10"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">      </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">chart</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> cert-manager</span></span>
+<span id="cb32-11"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">      </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">reconcileStrategy</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> ChartVersion</span></span>
+<span id="cb32-12"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">      </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">sourceRef</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span></span>
+<span id="cb32-13"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">        </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">kind</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> HelmRepository</span></span>
+<span id="cb32-14"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">        </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">name</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> cert-manager</span></span>
+<span id="cb32-15"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">      </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">version</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> v1.16.0</span></span>
+<span id="cb32-16"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">interval</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> 1m0s</span></span>
+<span id="cb32-17"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">values</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span></span>
+<span id="cb32-18"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">crds</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span></span>
+<span id="cb32-19"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">      </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">enabled</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> </span><span class="ch" style="color: #20794D;
+background-color: null;
+font-style: inherit;">true</span></span></code></pre></div>
+</div>
+<p>One thing that I had to change is the values at the very bottom. It seems that the <code>--set crds.enabled=true</code> in the helm install command options doesn’t work for flux. Instead, I had to seperate it out to what is in the <code>values</code> section above.</p>
+<p>I also deployed ingress-nginx:</p>
+<div class="code-with-filename">
+<div class="code-with-filename-file">
+<pre><strong>helmsource.yaml</strong></pre>
+</div>
+<div class="sourceCode" id="cb33" data-filename="helmsource.yaml" style="background: #f1f3f5;"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb33-1"><span class="pp" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">---</span></span>
+<span id="cb33-2"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">apiVersion</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> source.toolkit.fluxcd.io/v1</span></span>
+<span id="cb33-3"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">kind</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> HelmRepository</span></span>
+<span id="cb33-4"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">metadata</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span></span>
+<span id="cb33-5"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">name</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> ingress-nginx</span></span>
+<span id="cb33-6"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">namespace</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> default</span></span>
+<span id="cb33-7"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">spec</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span></span>
+<span id="cb33-8"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">interval</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> 1m0s</span></span>
+<span id="cb33-9"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">url</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> https://kubernetes.github.io/ingress-nginx</span></span></code></pre></div>
+</div>
+<div class="code-with-filename">
+<div class="code-with-filename-file">
+<pre><strong>helmrelease.yaml</strong></pre>
+</div>
+<div class="sourceCode" id="cb34" data-filename="helmrelease.yaml" style="background: #f1f3f5;"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb34-1"><span class="pp" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">---</span></span>
+<span id="cb34-2"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">apiVersion</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> helm.toolkit.fluxcd.io/v2</span></span>
+<span id="cb34-3"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">kind</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> HelmRelease</span></span>
+<span id="cb34-4"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">metadata</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span></span>
+<span id="cb34-5"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">name</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> ingress-nginx</span></span>
+<span id="cb34-6"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">namespace</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> default</span></span>
+<span id="cb34-7"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">spec</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span></span>
+<span id="cb34-8"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">chart</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span></span>
+<span id="cb34-9"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">spec</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span></span>
+<span id="cb34-10"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">      </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">chart</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> ingress-nginx</span></span>
+<span id="cb34-11"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">      </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">reconcileStrategy</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> ChartVersion</span></span>
+<span id="cb34-12"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">      </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">sourceRef</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span></span>
+<span id="cb34-13"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">        </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">kind</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> HelmRepository</span></span>
+<span id="cb34-14"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">        </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">name</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> ingress-nginx</span></span>
+<span id="cb34-15"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">      # version: </span></span>
+<span id="cb34-16"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">interval</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> 1m0s</span></span></code></pre></div>
+</div>
+<p>Another thing I had to do was to uninstall traefik:</p>
+<div class="sourceCode" id="cb35" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb35-1">[moonpie@lizard flux-config]$ kubectl delete helm</span>
+<span id="cb35-2">helmchartconfigs.helm.cattle.io            helmcharts.source.toolkit.fluxcd.io        helmrepositories.source.toolkit.fluxcd.io</span>
+<span id="cb35-3">helmcharts.helm.cattle.io                  helmreleases.helm.toolkit.fluxcd.io</span>
+<span id="cb35-4">[moonpie@lizard flux-config]$ kubectl delete helmrepositories.source.toolkit.fluxcd.io traefik</span>
+<span id="cb35-5">helmrepository.source.toolkit.fluxcd.io "traefik" deleted</span></code></pre></div>
+<p>For whatever reason, after deleting the traefik files from my git repo, they did not get removed from flux even after reconciling them. But, after this, the install works normally.</p>
+<p>However, when I attempt to appy an ingress, I get an error:</p>
+<div class="sourceCode" id="cb36" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb36-1">Warning: resource ingresses/podinfo is missing the kubectl.kubernetes.io/last-applied-configuration annotation which is required by kubectl apply. kubectl apply should only be used on resources created declaratively by either kubectl create --save-config or kubectl apply. The missing annotation will be patched automatically.</span>
+<span id="cb36-2">Error from server (InternalError): error when applying patch:</span>
+<span id="cb36-3">{"metadata":{"annotations":{"kubectl.kubernetes.io/last-applied-configuration":"{\"apiVersion\":\"networking.k8s.io/v1\",\"kind\":\"Ingress\",\"metadata\":{\"annotations\":{},\"name\":\"podinfo\",\"namespace\":\"default\"},\"spec\":{\"rules\":[{\"host\":\"podinfo.moonpiedumpl.ing\",\"http\":{\"paths\":[{\"backend\":{\"service\":{\"name\":\"podinfo\",\"port\":{\"number\":9898}}},\"path\":\"/\",\"pathType\":\"Exact\"}]}}]}}\n"}}}</span>
+<span id="cb36-4">to:</span>
+<span id="cb36-5">Resource: "networking.k8s.io/v1, Resource=ingresses", GroupVersionKind: "networking.k8s.io/v1, Kind=Ingress"</span>
+<span id="cb36-6">Name: "podinfo", Namespace: "default"</span>
+<span id="cb36-7">for: "podinfo-ingress.yaml": error when patching "podinfo-ingress.yaml": Internal error occurred: failed calling webhook "validate.nginx.ingress.kubernetes.io": failed to call webhook: Post "https://ingress-nginx-controller-admission.default.svc:443/networking/v1/ingresses?timeout=10s": tls: failed to verify certificate: x509: certificate signed by unknown authority</span></code></pre></div>
+<p>This seems to be a sort of race condition, caused by when resources are simautaneously brought up, despite one depending on another. I found dsome relevant github issues.</p>
+<p><a href="https://github.com/kubernetes/ingress-nginx/issues/5968" class="uri">https://github.com/kubernetes/ingress-nginx/issues/5968</a></p>
+<p>There were some hacks related to deleting the hook, but I found in the <a href="https://github.com/kubernetes/ingress-nginx/tree/main/charts/ingress-nginx">helm chart documentation</a>, there is an official option to delete the hook. I set that:</p>
+<div class="code-with-filename">
+<div class="code-with-filename-file">
+<pre><strong>helmrelease.yaml</strong></pre>
+</div>
+<div class="sourceCode" id="cb37" data-filename="helmrelease.yaml" style="background: #f1f3f5;"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb37-1"><span class="pp" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">---</span></span>
+<span id="cb37-2"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">apiVersion</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> helm.toolkit.fluxcd.io/v2</span></span>
+<span id="cb37-3"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">kind</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> HelmRelease</span></span>
+<span id="cb37-4"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">metadata</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span></span>
+<span id="cb37-5"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">name</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> ingress-nginx</span></span>
+<span id="cb37-6"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">namespace</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> default</span></span>
+<span id="cb37-7"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">spec</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span></span>
+<span id="cb37-8"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">chart</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span></span>
+<span id="cb37-9"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">spec</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span></span>
+<span id="cb37-10"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">      </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">chart</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> ingress-nginx</span></span>
+<span id="cb37-11"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">      </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">reconcileStrategy</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> ChartVersion</span></span>
+<span id="cb37-12"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">      </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">sourceRef</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span></span>
+<span id="cb37-13"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">        </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">kind</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> HelmRepository</span></span>
+<span id="cb37-14"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">        </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">name</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> ingress-nginx</span></span>
+<span id="cb37-15"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">      # version:  </span></span>
+<span id="cb37-16"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">interval</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> 1m0s</span></span>
+<span id="cb37-17"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">values</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span></span>
+<span id="cb37-18"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">controller</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span></span>
+<span id="cb37-19"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">      </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">admissionWebhooks</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span></span>
+<span id="cb37-20"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">        </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">enabled</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> </span><span class="ch" style="color: #20794D;
+background-color: null;
+font-style: inherit;">false</span></span></code></pre></div>
+</div>
+<p>Now:</p>
+<div class="sourceCode" id="cb38" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb38-1">[moonpie@lizard podinfo]$ kubectl apply -f podinfo-ingress.yaml</span>
+<span id="cb38-2">ingress.networking.k8s.io/podinfo created</span></code></pre></div>
+<p>But:</p>
+<div class="sourceCode" id="cb39" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb39-1">[moonpie@lizard podinfo]$ curl podinfo.moonpiedumpl.ing</span>
+<span id="cb39-2">&lt;html&gt;</span>
+<span id="cb39-3">&lt;head&gt;&lt;title&gt;404 Not Found&lt;/title&gt;&lt;/head&gt;</span>
+<span id="cb39-4">&lt;body&gt;</span>
+<span id="cb39-5">&lt;center&gt;&lt;h1&gt;404 Not Found&lt;/h1&gt;&lt;/center&gt;</span>
+<span id="cb39-6">&lt;hr&gt;&lt;center&gt;nginx&lt;/center&gt;</span>
+<span id="cb39-7">&lt;/body&gt;</span>
+<span id="cb39-8">&lt;/html&gt;</span></code></pre></div>
+<p>I figured out why, somewhat. For some reason, it was using the traefik ingress class, despite the fact that I uninstalled traefik, and was using nginx. However, even after:</p>
+<div class="sourceCode" id="cb40" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb40-1">[moonpie@lizard podinfo]$ kubectl get ingressclasses.networking.k8s.io</span>
+<span id="cb40-2">NAME      CONTROLLER                      PARAMETERS   AGE</span>
+<span id="cb40-3">nginx     k8s.io/ingress-nginx            &lt;none&gt;       6h29m</span>
+<span id="cb40-4">traefik   traefik.io/ingress-controller   &lt;none&gt;       69m</span>
+<span id="cb40-5">[moonpie@lizard podinfo]$ kubectl delete ingressclasses.networking.k8s.io traefik</span>
+<span id="cb40-6">ingressclass.networking.k8s.io "traefik" deleted</span></code></pre></div>
+<p>It still didn’t work. Also, traefik seems to have a lot of stuff still running:</p>
+<div class="sourceCode" id="cb41" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb41-1">[moonpie@lizard podinfo]$  kubectl get all -A | grep traefik</span>
+<span id="cb41-2">default       pod/traefik-66cc8b6ff6-64zll                                1/1     Running     0              73m</span>
+<span id="cb41-3">kube-system   pod/svclb-traefik-13906a53-vmt4g                            0/2     Pending     0              73m</span>
+<span id="cb41-4">default       service/traefik                              LoadBalancer   10.43.207.1     &lt;pending&gt;        80:32766/TCP,443:30881/TCP   73m</span>
+<span id="cb41-5">kube-system   daemonset.apps/svclb-traefik-13906a53                    1         1         0       1            0           &lt;none&gt;                   73m</span>
+<span id="cb41-6">default       deployment.apps/traefik                                1/1     1            1           73m</span>
+<span id="cb41-7">default       replicaset.apps/traefik-66cc8b6ff6                                1         1         1       73m</span></code></pre></div>
+<p>Woops I forgot to push my changes. Nevermind. So I did, and now it doesn’t work again, and it’s back to a 404.</p>
+<p>I think I figured it out:</p>
+<div class="sourceCode" id="cb42" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb42-1">NAME    CONTROLLER             PARAMETERS   AGE</span>
+<span id="cb42-2">nginx   k8s.io/ingress-nginx   &lt;none&gt;       32h</span>
+<span id="cb42-3">[moonpie@lizard podinfo]$ kubectl describe ingress podinfo</span>
+<span id="cb42-4">Name:             podinfo</span>
+<span id="cb42-5">Labels:           kustomize.toolkit.fluxcd.io/name=flux-system</span>
+<span id="cb42-6">                  kustomize.toolkit.fluxcd.io/namespace=flux-system</span>
+<span id="cb42-7">Namespace:        default</span>
+<span id="cb42-8">Address:</span>
+<span id="cb42-9">Ingress Class:    &lt;none&gt;</span>
+<span id="cb42-10">Default backend:  &lt;default&gt;</span>
+<span id="cb42-11">Rules:</span>
+<span id="cb42-12">  Host                      Path  Backends</span>
+<span id="cb42-13">  ----                      ----  --------</span>
+<span id="cb42-14">  podinfo.moonpiedumpl.ing</span>
+<span id="cb42-15">                            /   podinfo:9898 (10.42.0.40:9898,10.42.0.41:9898)</span>
+<span id="cb42-16">Annotations:                &lt;none&gt;</span>
+<span id="cb42-17">Events:                     &lt;none&gt;</span></code></pre></div>
+<p>The “Ingress Class” is empty, when it probably needs to be filled with something. There are two solutions: I can set it manually, the exact field is ingress.spec.ingressClassName, or I can <a href="https://kubernetes.io/docs/concepts/services-networking/ingress/#default-ingress-class">set it an an ingressclass as a default</a>.</p>
+<p>I edited the nginx helm release with more configuration:</p>
+<div class="sourceCode" id="cb43" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb43-1">[moonpie@lizard flux-config]$ cat nginx/helmrelease.yaml</span>
+<span id="cb43-2">---</span>
+<span id="cb43-3">apiVersion: helm.toolkit.fluxcd.io/v2</span>
+<span id="cb43-4">kind: HelmRelease</span>
+<span id="cb43-5">metadata:</span>
+<span id="cb43-6">  name: ingress-nginx</span>
+<span id="cb43-7">  namespace: default</span>
+<span id="cb43-8">spec:</span>
+<span id="cb43-9">  chart:</span>
+<span id="cb43-10">    spec:</span>
+<span id="cb43-11">      chart: ingress-nginx</span>
+<span id="cb43-12">      reconcileStrategy: ChartVersion</span>
+<span id="cb43-13">      sourceRef:</span>
+<span id="cb43-14">        kind: HelmRepository</span>
+<span id="cb43-15">        name: ingress-nginx</span>
+<span id="cb43-16">      # version:</span>
+<span id="cb43-17">  interval: 1m0s</span>
+<span id="cb43-18">  values:</span>
+<span id="cb43-19">    controller:</span>
+<span id="cb43-20">      admissionWebhooks:</span>
+<span id="cb43-21">        enabled: false</span>
+<span id="cb43-22">      ingressClassResource:</span>
+<span id="cb43-23">        default: true</span></code></pre></div>
+<p>And after this, I had to delete the podinfo ingress, and then recreate it, but it was working again. I wonder why it didn’t change the ingressclass when I reapplied the yaml file?</p>
+<p>Now for TLS/HTTPS.</p>
+<p>Well, TLS already kinda works. It’s just using kubernetes self signed cert, rather than a letsencrypt cert.</p>
+<p><a href="https://cert-manager.io/docs/tutorials/acme/nginx-ingress/">Here is the doumentation on using cert-manager and nginx together</a>. They recommend using the <a href="https://letsencrypt.org/docs/challenge-types/#http-01-challenge">http01</a> (<a href="https://web.archive.org/web/20240930190112/https://cert-manager.io/docs/tutorials/acme/nginx-ingress/">archive</a>) challenge, but that method (or maybe just their method) does not work with wildcard domains.</p>
+<blockquote class="blockquote">
+<p>It is not possible to obtain certificates for wildcard domain names (e.g.&nbsp;<code>*.example.com</code>) using the HTTP01 challenge mechanism.</p>
+</blockquote>
+<p>From <code>kubectl explain issuer.spec.acme.solvers.http01</code>.</p>
+<p>THe other thing I don’t like about that page, is that it suggests that to set the “ingressClassName”, but I don’t want to do that. What if I want to change ingresses later on, would I have to change every single issuer? I think I will just allow it to set it’s own default and hope for the best.</p>
+<p>According the <a href="https://cert-manager.io/docs/configuration/acme/http01/">cert-manager docs for acme http01</a></p>
+<blockquote class="blockquote">
+<p>If class and ingressClassName are not specified, and name is also not specified, cert-manager will default to create new Ingress resources but will not set the ingress class on these resources, meaning all ingress controllers installed in your cluster will serve traffic for the challenge solver, potentially incurring additional cost.</p>
+</blockquote>
+<p>I should be able to not set this field. I played around a bit with leaving the fields blank, but it didn’t work. I had to actually create the field, and leave it blank.</p>
+<div class="code-with-filename">
+<div class="code-with-filename-file">
+<pre><strong>issuer-staging.yaml</strong></pre>
+</div>
+<div class="sourceCode" id="cb44" data-filename="issuer-staging.yaml" style="background: #f1f3f5;"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb44-1"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">apiVersion</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> cert-manager.io/v1</span></span>
+<span id="cb44-2"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">kind</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> Issuer</span></span>
+<span id="cb44-3"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">metadata</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span></span>
+<span id="cb44-4"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">name</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> letsencrypt-staging</span></span>
+<span id="cb44-5"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">spec</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span></span>
+<span id="cb44-6"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">acme</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span></span>
+<span id="cb44-7"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">    # The ACME server URL</span></span>
+<span id="cb44-8"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">server</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> https://acme-staging-v02.api.letsencrypt.org/directory</span></span>
+<span id="cb44-9"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">    # Email address used for ACME registration</span></span>
+<span id="cb44-10"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">email</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> email@example.com</span></span>
+<span id="cb44-11"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">    # Name of a secret used to store the ACME account private key</span></span>
+<span id="cb44-12"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">privateKeySecretRef</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span></span>
+<span id="cb44-13"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">      </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">name</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> letsencrypt-staging</span></span>
+<span id="cb44-14"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">    # Enable the HTTP-01 challenge provider</span></span>
+<span id="cb44-15"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">solvers</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span></span>
+<span id="cb44-16"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">      </span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">-</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">http01</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span></span>
+<span id="cb44-17"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">          </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">ingress</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span></span>
+<span id="cb44-18"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">            </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">ingressClassName</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span></span></code></pre></div>
+</div>
+<p>This of course, has the downside that it will be used on all ingresses, but I should be able to get around this with the <code>http01-edit-in-place: "true"</code> annotation.</p>
+<p>Finally, I <em>think</em> I have TLS working properly:</p>
+<div class="code-with-filename">
+<div class="code-with-filename-file">
+<pre><strong>podinfo-ingress.yaml</strong></pre>
+</div>
+<div class="sourceCode" id="cb45" data-filename="podinfo-ingress.yaml" style="background: #f1f3f5;"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb45-1"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">apiVersion</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> networking.k8s.io/v1</span></span>
+<span id="cb45-2"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">kind</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> Ingress</span></span>
+<span id="cb45-3"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">metadata</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span></span>
+<span id="cb45-4"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">name</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> podinfo</span></span>
+<span id="cb45-5"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">annotations</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span></span>
+<span id="cb45-6"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">cert-manager.io/issuer</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> </span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"letsencrypt-staging"</span></span>
+<span id="cb45-7"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">acme.cert-manager.io/http01-edit-in-place</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> </span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"true"</span></span>
+<span id="cb45-8"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">namespace</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> default</span></span>
+<span id="cb45-9"></span>
+<span id="cb45-10"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">spec</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span></span>
+<span id="cb45-11"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">tls</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span></span>
+<span id="cb45-12"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">  </span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">-</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">hosts</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> </span></span>
+<span id="cb45-13"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">    </span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">-</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> </span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"podinfo.moonpiedumpl.ing"</span></span>
+<span id="cb45-14"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">secretName</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> podinfo-tls</span></span>
+<span id="cb45-15"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">rules</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span></span>
+<span id="cb45-16"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">  </span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">-</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">host</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> podinfo.moonpiedumpl.ing</span></span>
+<span id="cb45-17"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">http</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span></span>
+<span id="cb45-18"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">      </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">paths</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span></span>
+<span id="cb45-19"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">      </span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">-</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">path</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> /</span></span>
+<span id="cb45-20"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">        </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">pathType</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> Exact</span></span>
+<span id="cb45-21"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">        </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">backend</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span></span>
+<span id="cb45-22"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">          </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">service</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span></span>
+<span id="cb45-23"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">            </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">name</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> podinfo</span></span>
+<span id="cb45-24"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">            </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">port</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span></span>
+<span id="cb45-25"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">              </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">number</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> </span><span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">9898</span></span></code></pre></div>
+</div>
 </section>
+</section>
+</section>
+<section id="authentik" class="level1">
+<h1>Authentik</h1>
+<ul>
+<li><a href="https://artifacthub.io/packages/helm/goauthentik/authentik" class="uri">https://artifacthub.io/packages/helm/goauthentik/authentik</a></li>
+<li><a href="https://docs.goauthentik.io/docs/install-config/install/kubernetes">Authentik Docs</a></li>
+</ul>
+
+
 </section>
 
  ]]></description>
@@ -713,9 +2032,8 @@ font-style: inherit;"> rke2-ingress-nginx</span></span></code></pre></div>
 <p>Do I want collective block to merge traits as well?</p>
 <p><strong>Shield</strong>: X: Card gets a seperate “shield of X hit points. If they are damaged by one attack/encounter, it doesn’t rollover into their HP. Opponent(s) can pay production points to reduce the shield value. Shield points can also be spent to reduce active effects</p>
 <p>Goals: Replace mtg keywork indestructuble. Replace clash royale shield mechanic Maybe replace hexproof with a resist spell mechanic?</p>
-<p>Maybe own ward:</p>
 <p><strong>Spellshield</strong>: X : X : For every X spell effects applied to it, it is only influenced by (X - 1 / X) of them. E.g: spellshield 2 means that it halves spell effects applied. 3 means it 1/3rds them and so on. This can be reduced by paying production (?)</p>
-<p>Goal: replace mtg hexproof/ward</p>
+<p>Goal: replace mtg hexproof/ward. What’s offensive equivalent?</p>
 </section>
 <section id="misc-aspects" class="level2">
 <h2 class="anchored" data-anchor-id="misc-aspects">Misc Aspects:</h2>
@@ -750,12 +2068,8 @@ font-style: inherit;"> rke2-ingress-nginx</span></span></code></pre></div>
 <p><strong>Deny attackers</strong>. Some kind of stop attacker from attacking mechanic.</p>
 <p>Also want active?</p>
 <p>I want some kind of burn effect/direct damage, without it being broken.</p>
-<p><strong>Burn/Direct damage</strong>: X: X: Deal direct damage to opponent, but this requires that you must pay production for each damage done, and the</p>
-</section>
-<section id="anti-actives" class="level2">
-<h2 class="anchored" data-anchor-id="anti-actives">Anti-Actives</h2>
-<p><strong>Take life</strong>: X :X</p>
-<p>Idea is to have taxes or some sort of sin mechanic.</p>
+<p><strong>Burn/Direct damage</strong>: X: X: Deal direct damage to opponent, but this requires that you must pay production for each damage done, and damage is limited by defensive cards under your cards along the path.</p>
+<p><strong>Abitrary Active/Trigger</strong> : Produce actives/triggers to place on cards. Should this cost production to apply?</p>
 </section>
 <section id="triggers" class="level2">
 <h2 class="anchored" data-anchor-id="triggers">Triggers:</h2>
@@ -840,10 +2154,19 @@ font-style: inherit;"> rke2-ingress-nginx</span></span></code></pre></div>
 </ul>
 <p>Some kind of meta card attribute?</p>
 <p>Potential keywords:</p>
-<p>Recursion: X : X Pay Cost – X to cast this card from your graveyard</p>
+<p>Recursion: X : X Pay Base Cost – X to cast this card from your graveyard</p>
 <p>Buyback: X : X Pay Cost – X in addition to casting this spell to return it to your hand when you cast it.</p>
 <p>Weight/Strength: Make it harder to move this card/can move weight or move more cards?</p>
-<p>Movement/Restriction: Ability to move over cards it wouldn’t be able to move over + ability to restrict movement of cards</p>
+<p>Movement/Restriction: Ability to move over cards it wouldn’t be able to move over / Ability to restrict movement of cards over itself</p>
+<p>Multiattack/Multiblock: Ability to hold more than one card under and carry / card requires more than one card on top in order for cards to move past it</p>
+<p>Banding/Splitting: Combine and divide mechanics somehow</p>
+<p>Anti-Actives</p>
+<p>Take life: X :X</p>
+<p>Idea is to have taxes or some sort of sin mechanic.</p>
+<p>Gain +X +X when X: Idea is some conditional gain strength mechanic</p>
+<p>In general, I want some kind of state based trigger, that can activate every turn.</p>
+<p>When X cards on the field. When X cards in graveyard. X in hand? etc. How to make fair?</p>
+<p>Alternate cost where players can pay other token types. Maybe decreases N or lets them pay base cost. This can be a curse type.</p>
 <p>See also: MTG emerge</p>
 <p>MTG Surge</p>
 <p>MTG rebound</p>
@@ -951,8 +2274,8 @@ GetWin: Get the amount of damage a winning attacker would do</code></pre>
 <li><a href="https://www.zaproxy.org/" class="uri">https://www.zaproxy.org/</a></li>
 </ul>
 </section>
-<section id="browser-based-destkop-kasmwebvnc" class="level1">
-<h1>Browser based Destkop (Kasmweb/VNC)</h1>
+<section id="browser-based-desktop-kasmwebvnc" class="level1">
+<h1>Browser based Desktop (Kasmweb/VNC)</h1>
 <p>Full featured:</p>
 <p>Multi user Full Featured:</p>
 <ul>
@@ -4390,7 +5713,7 @@ DO NOT CHANGE ANY PASSWORDS</code></pre>
 <p>For the Layer8 Cybersecurity club here at Cal State Northridge, and potentially more clubs, I will do a presentation on how I set up my site with Github pages, and how to set up your own site the same way.</p>
 <p>This guide uses Github Actions to autodeploy, so all users need to do is commit from the web interface of Github, their site will automatically render changes.</p>
 <p>Slides are <a href="../../talks/self-site/revealjs.html">linked here</a></p>
-<p>Video is recorded, and I will have it clipped and uploaded soon™.</p>
+<!--Video is recorded, and I will have it clipped and uploaded soon™.-->
 
 
 
