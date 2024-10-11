@@ -141,7 +141,7 @@ Please give the key access to your repository: y
 
 And just like that, fluxcd is installed. 
 
-## Traefik
+## Reverse Proxy (Traefik, then Nginx)
 
 The first step of my cluster should be my reverse proxy, as an ingress. This exposes basically all of my services. 
 
@@ -752,10 +752,327 @@ spec:
           service:
             name: podinfo
             port:
-              number: 8989
+              number: 9898          
 ```
 
 Not really simple, and it was a pain to edit because my editor (Kate), set tabs to 4 spaces, rather than two.
 
-Now, how can I add HTTPS/TLS to this? f         
+Now, how can I add HTTPS/TLS to this? Although [Traefik documents how to enable acme in the first example](https://doc.traefik.io/traefik/https/acme/#configuration-examples), however, the documentation on how to add this to each individual site is unclear. 
+
+Based on removing the annotation, and testing, it looks like the annoation isn't needed. Also, it seems that the `kubectl explain ingress --recursive` explains the "ingress" kubernetes resource, which is above. 
+
+However, it seems that Traefik provides an "IngressRoute" resource, which is what they expect you to use for automatic https setups like what I am trying to do. But... I'm hesitant to rely on that, as "IngressRoute" seems to be traefik specific, rather than Ingress, which is general to kubernetes. 
+
+Actually, after doing more research, I've decided to switch to [ingress-nginx](https://kubernetes.github.io/ingress-nginx/). Unlike traefik, it seems to have build in support for [external oauth authentication](https://kubernetes.github.io/ingress-nginx/examples/auth/oauth-external-auth/). Although Traefik can do it, it's not build in, and I would have to use a plugin. 
+
+So, this means I'm switching from Traefik to nginx and cert-manager instead. 
+
+### Nginx/Cert-Manager
+
+I followed the [official cert-manager installation guide](https://cert-manager.io/docs/installation/helm/), but converted it into flux configs. 
+
+```{.yaml filename='cert-manager/helmsource.yaml'}
+---
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: HelmRepository
+metadata:
+  name: cert-manager
+  namespace: default
+spec:
+  interval: 1m0s
+  url: https://charts.jetstack.io
+```
+
+
+```{.yaml filename='cert-manager/helmrelease.yaml'}
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: cert-manager
+  namespace: default
+spec:
+  chart:
+    spec:
+      chart: cert-manager
+      reconcileStrategy: ChartVersion
+      sourceRef:
+        kind: HelmRepository
+        name: cert-manager
+      version: v1.16.0
+  interval: 1m0s
+  values:
+    crds:
+      enabled: true
+```
+
+One thing that I had to change is the values at the very bottom. It seems that the `--set crds.enabled=true ` in the helm install command options doesn't work for flux. Instead, I had to seperate it out to what is in the `values` section above. 
+
+I also deployed ingress-nginx:
+
+```{.yaml filename='helmsource.yaml'}
+---
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: HelmRepository
+metadata:
+  name: ingress-nginx
+  namespace: default
+spec:
+  interval: 1m0s
+  url: https://kubernetes.github.io/ingress-nginx
+```
+
+```{.yaml filename='helmrelease.yaml'}
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: ingress-nginx
+  namespace: default
+spec:
+  chart:
+    spec:
+      chart: ingress-nginx
+      reconcileStrategy: ChartVersion
+      sourceRef:
+        kind: HelmRepository
+        name: ingress-nginx
+      # version: 
+  interval: 1m0s
+```
+
+
+Another thing I had to do was to uninstall traefik:
+
+```{.default}
+[moonpie@lizard flux-config]$ kubectl delete helm
+helmchartconfigs.helm.cattle.io            helmcharts.source.toolkit.fluxcd.io        helmrepositories.source.toolkit.fluxcd.io
+helmcharts.helm.cattle.io                  helmreleases.helm.toolkit.fluxcd.io
+[moonpie@lizard flux-config]$ kubectl delete helmrepositories.source.toolkit.fluxcd.io traefik
+helmrepository.source.toolkit.fluxcd.io "traefik" deleted
+```
+
+For whatever reason, after deleting the traefik files from my git repo, they did not get removed from flux even after reconciling them. But, after this, the install works normally. 
+
+However, when I attempt to appy an ingress, I get an error:
+
+```{.default}
+Warning: resource ingresses/podinfo is missing the kubectl.kubernetes.io/last-applied-configuration annotation which is required by kubectl apply. kubectl apply should only be used on resources created declaratively by either kubectl create --save-config or kubectl apply. The missing annotation will be patched automatically.
+Error from server (InternalError): error when applying patch:
+{"metadata":{"annotations":{"kubectl.kubernetes.io/last-applied-configuration":"{\"apiVersion\":\"networking.k8s.io/v1\",\"kind\":\"Ingress\",\"metadata\":{\"annotations\":{},\"name\":\"podinfo\",\"namespace\":\"default\"},\"spec\":{\"rules\":[{\"host\":\"podinfo.moonpiedumpl.ing\",\"http\":{\"paths\":[{\"backend\":{\"service\":{\"name\":\"podinfo\",\"port\":{\"number\":9898}}},\"path\":\"/\",\"pathType\":\"Exact\"}]}}]}}\n"}}}
+to:
+Resource: "networking.k8s.io/v1, Resource=ingresses", GroupVersionKind: "networking.k8s.io/v1, Kind=Ingress"
+Name: "podinfo", Namespace: "default"
+for: "podinfo-ingress.yaml": error when patching "podinfo-ingress.yaml": Internal error occurred: failed calling webhook "validate.nginx.ingress.kubernetes.io": failed to call webhook: Post "https://ingress-nginx-controller-admission.default.svc:443/networking/v1/ingresses?timeout=10s": tls: failed to verify certificate: x509: certificate signed by unknown authority
+```
+
+This seems to be a sort of race condition, caused by when resources are simautaneously brought up, despite one depending on another. I found dsome relevant github issues.
+
+<https://github.com/kubernetes/ingress-nginx/issues/5968>
+
+There were some hacks related to deleting the hook, but I found in the [helm chart documentation](https://github.com/kubernetes/ingress-nginx/tree/main/charts/ingress-nginx), there is an official option to delete the hook. I set that:
+
+```{.yaml filename='helmrelease.yaml'}
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: ingress-nginx
+  namespace: default
+spec:
+  chart:
+    spec:
+      chart: ingress-nginx
+      reconcileStrategy: ChartVersion
+      sourceRef:
+        kind: HelmRepository
+        name: ingress-nginx
+      # version:  
+  interval: 1m0s
+  values:
+    controller:
+      admissionWebhooks:
+        enabled: false
+```
+
+Now:
+
+
+```{.default}
+[moonpie@lizard podinfo]$ kubectl apply -f podinfo-ingress.yaml
+ingress.networking.k8s.io/podinfo created
+```
+
+But:
+
+```{.default}
+[moonpie@lizard podinfo]$ curl podinfo.moonpiedumpl.ing
+<html>
+<head><title>404 Not Found</title></head>
+<body>
+<center><h1>404 Not Found</h1></center>
+<hr><center>nginx</center>
+</body>
+</html>
+```
+
+I figured out why, somewhat. For some reason, it was using the traefik ingress class, despite the fact that I uninstalled traefik, and was using nginx. However, even after:
+
+```{.default}
+[moonpie@lizard podinfo]$ kubectl get ingressclasses.networking.k8s.io
+NAME      CONTROLLER                      PARAMETERS   AGE
+nginx     k8s.io/ingress-nginx            <none>       6h29m
+traefik   traefik.io/ingress-controller   <none>       69m
+[moonpie@lizard podinfo]$ kubectl delete ingressclasses.networking.k8s.io traefik
+ingressclass.networking.k8s.io "traefik" deleted
+```
+
+It still didn't work. Also, traefik seems to have a lot of stuff still running:
+
+```{.default}
+[moonpie@lizard podinfo]$  kubectl get all -A | grep traefik
+default       pod/traefik-66cc8b6ff6-64zll                                1/1     Running     0              73m
+kube-system   pod/svclb-traefik-13906a53-vmt4g                            0/2     Pending     0              73m
+default       service/traefik                              LoadBalancer   10.43.207.1     <pending>        80:32766/TCP,443:30881/TCP   73m
+kube-system   daemonset.apps/svclb-traefik-13906a53                    1         1         0       1            0           <none>                   73m
+default       deployment.apps/traefik                                1/1     1            1           73m
+default       replicaset.apps/traefik-66cc8b6ff6                                1         1         1       73m
+```
+
+Woops I forgot to push my changes. Nevermind. So I did, and now it doesn't work again, and it's back to a 404. 
+
+I think I figured it out:
+
+```{.default}
+NAME    CONTROLLER             PARAMETERS   AGE
+nginx   k8s.io/ingress-nginx   <none>       32h
+[moonpie@lizard podinfo]$ kubectl describe ingress podinfo
+Name:             podinfo
+Labels:           kustomize.toolkit.fluxcd.io/name=flux-system
+                  kustomize.toolkit.fluxcd.io/namespace=flux-system
+Namespace:        default
+Address:
+Ingress Class:    <none>
+Default backend:  <default>
+Rules:
+  Host                      Path  Backends
+  ----                      ----  --------
+  podinfo.moonpiedumpl.ing
+                            /   podinfo:9898 (10.42.0.40:9898,10.42.0.41:9898)
+Annotations:                <none>
+Events:                     <none>
+```
+
+The "Ingress Class" is empty, when it probably needs to be filled with something. There are two solutions: I can set it manually, the exact field is ingress.spec.ingressClassName, or I can [set it an an ingressclass as a default](https://kubernetes.io/docs/concepts/services-networking/ingress/#default-ingress-class). 
+
+I edited the nginx helm release with more configuration:
+
+```{.default}
+[moonpie@lizard flux-config]$ cat nginx/helmrelease.yaml
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: ingress-nginx
+  namespace: default
+spec:
+  chart:
+    spec:
+      chart: ingress-nginx
+      reconcileStrategy: ChartVersion
+      sourceRef:
+        kind: HelmRepository
+        name: ingress-nginx
+      # version:
+  interval: 1m0s
+  values:
+    controller:
+      admissionWebhooks:
+        enabled: false
+      ingressClassResource:
+        default: true
+```
+
+And after this, I had to delete the podinfo ingress, and then recreate it, but it was working again. I wonder why it didn't change the ingressclass when I reapplied the yaml file?
+
+Now for TLS/HTTPS.
+
+Well, TLS already kinda works. It's just using kubernetes self signed cert, rather than a letsencrypt cert. 
+
+[Here is the doumentation on using cert-manager and nginx together](https://cert-manager.io/docs/tutorials/acme/nginx-ingress/). They recommend using the [http01](https://letsencrypt.org/docs/challenge-types/#http-01-challenge) ([archive](https://web.archive.org/web/20240930190112/https://cert-manager.io/docs/tutorials/acme/nginx-ingress/)) challenge, but that method (or maybe just their method) does not work with wildcard domains.
+
+> It is not possible to obtain certificates for wildcard domain names (e.g. `*.example.com`) using the HTTP01 challenge mechanism.
+
+From  `kubectl explain issuer.spec.acme.solvers.http01`. 
+
+THe other thing I don't like about that page, is that it suggests that to set the "ingressClassName", but I don't want to do that. What if I want to change ingresses later on, would I have to change every single issuer? I think I will just allow it to set it's own default and hope for the best.
+
+According the [cert-manager docs for acme http01](https://cert-manager.io/docs/configuration/acme/http01/)
+
+> If class and ingressClassName are not specified, and name is also not specified, cert-manager will default to create new Ingress resources but will not set the ingress class on these resources, meaning all ingress controllers installed in your cluster will serve traffic for the challenge solver, potentially incurring additional cost.
+
+I should be able to not set this field. I played around a bit with leaving the fields blank, but it didn't work. I had to actually create the field, and leave it blank.
+
+```{.yaml filename='issuer-staging.yaml'}
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: letsencrypt-staging
+spec:
+  acme:
+    # The ACME server URL
+    server: https://acme-staging-v02.api.letsencrypt.org/directory
+    # Email address used for ACME registration
+    email: email@example.com
+    # Name of a secret used to store the ACME account private key
+    privateKeySecretRef:
+      name: letsencrypt-staging
+    # Enable the HTTP-01 challenge provider
+    solvers:
+      - http01:
+          ingress:
+            ingressClassName:
+```
+
+This of course, has the downside that it will be used on all ingresses, but I should be able to get around this with the `http01-edit-in-place: "true"` annotation.
+
+Finally, I *think* I have TLS working properly:
+
+```{.yaml filename='podinfo-ingress.yaml'}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: podinfo
+  annotations:
+    cert-manager.io/issuer: "letsencrypt-staging"
+    acme.cert-manager.io/http01-edit-in-place: "true"
+  namespace: default
+
+spec:
+  tls:
+  - hosts: 
+    - "podinfo.moonpiedumpl.ing"
+    secretName: podinfo-tls
+  rules:
+  - host: podinfo.moonpiedumpl.ing
+    http:
+      paths:
+      - path: /
+        pathType: Exact
+        backend:
+          service:
+            name: podinfo
+            port:
+              number: 9898
+```
+
+
+# Authentik
+
+* <https://artifacthub.io/packages/helm/goauthentik/authentik>
+* [Authentik Docs](https://docs.goauthentik.io/docs/install-config/install/kubernetes)
+
+
+
+
 

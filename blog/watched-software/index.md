@@ -36,7 +36,7 @@ Web scanning:
 * <https://www.zaproxy.org/>
 
 
-# Browser based Destkop (Kasmweb/VNC)
+# Browser based Desktop (Kasmweb/VNC)
 
 Full featured: 
 

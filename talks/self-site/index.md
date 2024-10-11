@@ -17,4 +17,4 @@ This guide uses Github Actions to autodeploy, so all users need to do is commit 
 
 Slides are [linked here](./revealjs.md)
 
-Video is recorded, and I will have it clipped and uploaded soon™.
+<!--Video is recorded, and I will have it clipped and uploaded soon™.-->
