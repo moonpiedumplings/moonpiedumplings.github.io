@@ -1066,12 +1066,14 @@ spec:
               number: 9898
 ```
 
+And this works! 
 
 # Authentik
 
 * <https://artifacthub.io/packages/helm/goauthentik/authentik>
 * [Authentik Docs](https://docs.goauthentik.io/docs/install-config/install/kubernetes)
 
+So, authentik looks difficult, because the helm chart requires quite a complex set of configurations, and I don't want to put those in the same file for the helmrelease. 
 
 
 
