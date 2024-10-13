@@ -10,7 +10,76 @@
 <atom:link href="./feed/feed.xml" rel="self" type="application/rss+xml"/>
 <description>All posts, intended to be used in an RSS feed. </description>
 <generator>quarto-1.5.57</generator>
-<lastBuildDate>Thu, 12 Sep 2024 07:00:00 GMT</lastBuildDate>
+<lastBuildDate>Sun, 13 Oct 2024 07:00:00 GMT</lastBuildDate>
+<item>
+  <title>Sympy Gamma, my favorite WolframAlpha alternative</title>
+  <link>./guides/sympy/</link>
+  <description><![CDATA[ 
+
+
+
+
+<section id="intro" class="level1">
+<h1>Intro</h1>
+<p>Many people know about Wolfram Alpha for it’s powerful ability to give step by step solutions to calculus problems… but only if you pay.</p>
+<p>Because of this, I use a free (both as in beer, and as in freedom) alternative, called <a href="https://gamma.sympy.org/">Sympy Gamma</a>. The source code is <a href="https://github.com/sympy/sympy_gamma">on github</a>.</p>
+<p><img src="./guides/sympy/images/parts.jpeg" class="img-fluid"></p>
+<p>It can also do partial fraction decomposition, trig subsitution, and more.</p>
+<p>The step by step solutions, work by several special functions, that attempt to mimic how a student would solve a problem.</p>
+</section>
+<section id="location" class="level1">
+<h1>Location:</h1>
+<p>There are two urls:</p>
+<p><a href="sympygamma.com">sympygamma.com</a></p>
+<p><a href="gamma.sympy.org">gamma.sympy.org</a></p>
+<p>As far as I can tell, these are two different instances of Sympy Gamma, with different rate limits.</p>
+<p>Also, if you use the duckduckgo bang !sympy, then it inputs a function into <a href="sympygamma.com">sympygamma.com</a>.</p>
+<p>There is also <a href="https://sympy-beta.vercel.app/">Sympy Beta</a> (<a href="https://github.com/eagleoflqj/sympy_beta">Source code</a>), which is a version of sympy ported to work entirely in the local browser, using Pyodide and webassembly. I’ve found that it manages to succeed where Sympy Gamma fails, and it also gets around rate limits since it works locally. In addition to that, Sympy Beta is a progressive web app, meaning it works offline after you open it in your browser once.</p>
+<p>After some testing, I actually think I like Sympy Beta better, because of the reasons mentioned above, and some failures of Gamma mentioned below. In addition to that, I could not figure out how to self host Sympy Gamma, as the docker compose would not work. However, Sympy Beta seems to be a simpler, all in one NPM application.</p>
+</section>
+<section id="functions" class="level1">
+<h1>Functions</h1>
+<p>Below are some of the functions I use commmonly, but really, you can use anything from python and the sympy library.</p>
+<p>For most functions, the form is something like <code>function(arguments)</code> with the arguments in parenthesis. <em>Some</em> natural lanugage works in Sympy Beta, but it’s better to just use the python syntax.</p>
+<p><a href="https://docs.sympy.org/latest/modules/integrals/integrals.html">integrate()</a> — also, if you use this function with sympy gamma, it will give you the step by step solution! Most of the time. It sometimes fails, either because sympy can’t figure it out or due to rate limits.</p>
+<p>For example, the partial fractions decomposition step-by-step solutions don’t often show up on Sympy Gamma, and are somewhat obfuscated on Sympy Beta. Sympy Beta often offers multiple solutions as well, with some of them not being partial fraction decomposition. I think the Sympy manual integrate function doesn’t have an explicit rule to do partial fractions decomposition.</p>
+<p><img src="./guides/sympy/images/partsterm1.jpeg" class="img-fluid"> <img src="./guides/sympy/images/partsterm2.jpeg" class="img-fluid"></p>
+<p><a href="https://docs.sympy.org/latest/modules/polys/reference.html#sympy.polys.partfrac.apart">apart()</a> — partial fraction decomposition!</p>
+<p><img src="./guides/sympy/images/apart.jpeg" class="img-fluid"></p>
+<p><a href="https://docs.sympy.org/latest/modules/core.html#sympy.core.function.diff">diff(f(x))</a> — Take the derivative of a function — with steps!</p>
+<p><img src="./guides/sympy/images/diff.jpeg" class="img-fluid"></p>
+<p><a href="https://docs.sympy.org/latest/tutorials/intro-tutorial/calculus.html#limits">limit(f(x), (x, limit))</a> — calculate the limit of a function</p>
+<p><a href="https://docs.sympy.org/latest/modules/polys/reference.html#sympy.polys.polytools.factor">factor(polynomial)</a> — factors a polynomia into irreducible terms.</p>
+<p><a href="https://docs.sympy.org/latest/modules/plotting.html#sympy.plotting.plot.plot">plot(f(x))</a> — plots a function, and shows the graph.</p>
+<p><a href="https://docs.sympy.org/latest/modules/concrete.html#sympy.concrete.summations.summation">summation(f(x), (x, bottom, top))</a> — do a sum. Have top be <code>oo</code> for an infinite sum. Also, on sympy gamma, appending <code>.doit()</code> to this function gives me more information with finite sums.</p>
+<p><a href="https://docs.sympy.org/latest/modules/core.html#sympy.core.expr.Expr.series">series(f(x), x, around, numofterms)</a> — compute a Taylor Series, around “around”, with up to “numofterms” terms. It should be noted that after it computes “goto” terms, it will combine like enough terms, leaving you with less terms than you may have wanted.</p>
+<p><code>help(function)</code> — this function shows you the documentation of any function. This is a built in function into python.</p>
+<p>There are many, many more functions, and they can be found on the <a href="https://docs.sympy.org/latest/index.html">sympy documentation</a>.</p>
+</section>
+<section id="keywords-and-variables" class="level1">
+<h1>Keywords and Variables</h1>
+<p>It’s not like a normal calculator. Sympy is a Python library, meaning everything is designed to be code first. Since it isn’t really good practice to put special symbols like “π” in code, there are alternative, purely text values that you can use to refer to the value of pi, infinity, or <em>e</em>.</p>
+<p><code>oo</code> = infinity. Yes, that is two o’s put togetheer.</p>
+<p><code>E</code> = <em>e</em>. It should be noted that lowercase e does not work.</p>
+<p><code>pi</code> = π. The classic pi, 3.1415…</p>
+</section>
+<section id="other-resources-for-learning-calculus-independently" class="level1">
+<h1>Other resources for learning Calculus independently:</h1>
+<p>I really like:</p>
+<ul>
+<li><a href="https://en.wikibooks.org/wiki/Calculus">Wikibooks — Calculus</a></li>
+<li><a href="https://tutorial.math.lamar.edu/">Paul’s Math Notes</a></li>
+<li>Openstax’s Calulcus Textbooks, <a href="https://openstax.org/details/books/calculus-volume-1">Volume 1</a>, <a href="https://openstax.org/details/books/calculus-volume-2">Volume 2</a>, and <a href="https://openstax.org/details/books/calculus-volume-3">Volume 3</a>. Also, <a href="https://math.libretexts.org/Bookshelves/Calculus/Calculus_(OpenStax)">Full book on libretexts</a></li>
+</ul>
+
+
+</section>
+
+ ]]></description>
+  <category>_guides</category>
+  <guid>./guides/sympy/</guid>
+  <pubDate>Sun, 13 Oct 2024 07:00:00 GMT</pubDate>
+</item>
 <item>
   <title>Server Part 5 — Ovirt is still maintained?!</title>
   <link>./projects/build-server-5/</link>
@@ -1941,6 +2010,7 @@ font-style: inherit;"> </span><span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">9898</span></span></code></pre></div>
 </div>
+<p>And this works!</p>
 </section>
 </section>
 </section>
@@ -1950,6 +2020,7 @@ font-style: inherit;">9898</span></span></code></pre></div>
 <li><a href="https://artifacthub.io/packages/helm/goauthentik/authentik" class="uri">https://artifacthub.io/packages/helm/goauthentik/authentik</a></li>
 <li><a href="https://docs.goauthentik.io/docs/install-config/install/kubernetes">Authentik Docs</a></li>
 </ul>
+<p>So, authentik looks difficult, because the helm chart requires quite a complex set of configurations, and I don’t want to put those in the same file for the helmrelease.</p>
 
 
 </section>
@@ -1976,6 +2047,7 @@ font-style: inherit;">9898</span></span></code></pre></div>
 <p>During the “block” phase of an attack, the blocking player can either cast 0 (or negative) cost cards, or cast cards using life. This makes cards effectively “instants”, allowing players to bring stuff on the field at the opponent turn, but at some price, as the cards must be either &lt; 0 cost or paid with life.</p>
 <p>Cards play in their “stunned” state. AkA: cards cannot attack first turn after playing (Might change if I adjust how cards do damage)</p>
 <p>Half of cards in graveyard go to exile, the other half go to the bottom of the players deck. Either completely random, pseudorandom, or complete player choice. Note: why is this better than multiple rounds? This could also be a seperate gamemode.</p>
+<p>Players can pay production to nerf cards. It costs X * N where N is the total amount of aspect points a card has in that aspect, to reduce that aspect by one. N does not change. So to completeley destroy a 3 health card, it costs 27 production points. To remove one of an 8 aspect card, it’s 8 production points, 2 is 16, etc.</p>
 </section>
 <section id="card-design" class="level1">
 <h1>Card Design</h1>
@@ -2070,6 +2142,7 @@ font-style: inherit;">9898</span></span></code></pre></div>
 <p>I want some kind of burn effect/direct damage, without it being broken.</p>
 <p><strong>Burn/Direct damage</strong>: X: X: Deal direct damage to opponent, but this requires that you must pay production for each damage done, and damage is limited by defensive cards under your cards along the path.</p>
 <p><strong>Abitrary Active/Trigger</strong> : Produce actives/triggers to place on cards. Should this cost production to apply?</p>
+<p><strong>Arbitrary Negative Active/Trigger</strong>: Produces negatives to put on cards. Negative health is straightforward, but negative damage, “agility”, and etc get interesting.</p>
 </section>
 <section id="triggers" class="level2">
 <h2 class="anchored" data-anchor-id="triggers">Triggers:</h2>
@@ -2115,6 +2188,7 @@ font-style: inherit;">9898</span></span></code></pre></div>
 <p>AKA: some kind of bounce curse</p>
 <p>At beginning of turn or before played, take cards on the field that are worth more/less than something off the field and put them back into your hand. If you cannot do this, because of a full hand or because of the value</p>
 <p>On/before turn, bounce cards value back to hand. If you can’t do that, then bounce this card, exchanging it for something in your hand with less than X. If can’t do that, then graveyard.</p>
+<p>On turn, and/or when this card is played, return this cards value +</p>
 <p><strong>Siege/Battle</strong>: X from anything: X card is cast as an X health card under an opponents control. They must defend it, if the attacking player manages to kill it, then it becomes the normal card</p>
 <ul>
 <li>Allow spell damage to kill the battle?</li>
@@ -2159,7 +2233,7 @@ font-style: inherit;">9898</span></span></code></pre></div>
 <p>Weight/Strength: Make it harder to move this card/can move weight or move more cards?</p>
 <p>Movement/Restriction: Ability to move over cards it wouldn’t be able to move over / Ability to restrict movement of cards over itself</p>
 <p>Multiattack/Multiblock: Ability to hold more than one card under and carry / card requires more than one card on top in order for cards to move past it</p>
-<p>Banding/Splitting: Combine and divide mechanics somehow</p>
+<p>Banding/Splitting: Combine and divide mechanics somehow (or maybe I should build these into the game rules)</p>
 <p>Anti-Actives</p>
 <p>Take life: X :X</p>
 <p>Idea is to have taxes or some sort of sin mechanic.</p>
@@ -2167,6 +2241,11 @@ font-style: inherit;">9898</span></span></code></pre></div>
 <p>In general, I want some kind of state based trigger, that can activate every turn.</p>
 <p>When X cards on the field. When X cards in graveyard. X in hand? etc. How to make fair?</p>
 <p>Alternate cost where players can pay other token types. Maybe decreases N or lets them pay base cost. This can be a curse type.</p>
+<p>Tax and Stax: Some kind of opponent restrictions</p>
+<ul>
+<li>Opponent can’t X doesn’t work because of the way my game is designed. However, opponent can’t do X fundamentally equivalent to a tax effect that the opponent can’t afford to play?</li>
+</ul>
+<p>Some kind of sacrifice cards curse.</p>
 <p>See also: MTG emerge</p>
 <p>MTG Surge</p>
 <p>MTG rebound</p>
@@ -6604,172 +6683,6 @@ Show Log
   <category>_writeups</category>
   <guid>./writeups/nice-challenge-2/</guid>
   <pubDate>Tue, 06 Feb 2024 08:00:00 GMT</pubDate>
-</item>
-<item>
-  <title>Nice Challenge 1</title>
-  <dc:creator>Jeffrey Fonseca</dc:creator>
-  <link>./writeups/nice-challenge/</link>
-  <description><![CDATA[ 
-
-
-
-
-<p>This is for the <a href="https://nice-challenge.com/">NICE</a> challenge. It’s a blue team challenge where you are tasked with hardening machines. Perhaps there is more, but all I was asked to do for this challenge was some simple hardening.</p>
-<p>The name of this specific challenge was “Engineer’s Audit Advice - Managing Critical Systems”.</p>
-<p>The introduction was a simulated chatroom.</p>
-<p><img src="./writeups/nice-challenge/images/chatroom.png" class="img-fluid"></p>
-<section id="joomia" class="level1">
-<h1>Joomia</h1>
-<p>Joomia is the Debian 9.3 machine, with an apache2 web server.</p>
-<p>I began by looking at <code>/home/playerone/audit.log</code></p>
-<div class="sourceCode" id="cb1" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb1-1">[ Lynis 2.4.0 ]</span>
-<span id="cb1-2"></span>
-<span id="cb1-3">################################################################################</span>
-<span id="cb1-4">  Lynis comes with ABSOLUTELY NO WARRANTY. This is free software, and you are</span>
-<span id="cb1-5">  welcome to redistribute it under the terms of the GNU General Public License.</span>
-<span id="cb1-6">  See the LICENSE file for details about using this software.</span>
-<span id="cb1-7"></span>
-<span id="cb1-8">  2007-2016, CISOfy - https://cisofy.com/lynis/</span>
-<span id="cb1-9">  Enterprise support available (compliance, plugins, interface and tools)</span>
-<span id="cb1-10">################################################################################</span>
-<span id="cb1-11"></span>
-<span id="cb1-12"></span>
-<span id="cb1-13">[+] Initializing program</span>
-<span id="cb1-14">------------------------------------</span>
-<span id="cb1-15">- Detecting OS... [ DONE ]</span>
-<span id="cb1-16">- Checking profiles... [ DONE ]</span>
-<span id="cb1-17"></span>
-<span id="cb1-18">  ---------------------------------------------------</span>
-<span id="cb1-19">  Program version:           2.4.0</span>
-<span id="cb1-20">  Operating system:          Linux</span>
-<span id="cb1-21">  Operating system name:     Debian</span>
-<span id="cb1-22">  Operating system version:  9.3</span>
-<span id="cb1-23">  Kernel version:            4.9.0</span>
-<span id="cb1-24">  Hardware platform:         x86_64</span>
-<span id="cb1-25">  Hostname:                  Prod-Joomla</span>
-<span id="cb1-26">  ---------------------------------------------------</span>
-<span id="cb1-27">  Profiles:                  /etc/lynis/default.prf</span>
-<span id="cb1-28">  Log file:                  /var/log/lynis.log</span>
-<span id="cb1-29">  Report file:               /var/log/lynis-report.dat</span>
-<span id="cb1-30">  Report version:            1.0</span>
-<span id="cb1-31">  Plugin directory:          /etc/lynis/plugins</span>
-<span id="cb1-32">  ---------------------------------------------------</span>
-<span id="cb1-33">  Auditor:                   [Not Specified]</span>
-<span id="cb1-34">  Test category:             all</span>
-<span id="cb1-35">  Test group:                all</span>
-<span id="cb1-36">  ---------------------------------------------------</span>
-<span id="cb1-37"></span>
-<span id="cb1-38">  Suggestions (45):</span>
-<span id="cb1-39">  ----------------------------</span>
-<span id="cb1-40">  * Install a PAM module for password strength testing like pam_cracklib [AUTH-9262] </span>
-<span id="cb1-41">      https://cisofy.com/controls/AUTH-9262/</span>
-<span id="cb1-42"></span>
-<span id="cb1-43">  * Configure minimum password age in /etc/login.defs [AUTH-9286] </span>
-<span id="cb1-44">      https://cisofy.com/controls/AUTH-9286/</span>
-<span id="cb1-45"></span>
-<span id="cb1-46">  * Configure maximum password age in /etc/login.defs [AUTH-9286] </span>
-<span id="cb1-47">      https://cisofy.com/controls/AUTH-9286/</span>
-<span id="cb1-48"></span>
-<span id="cb1-49">  * Install Apache mod_evasive to guard webserver against DoS/brute force attempts [HTTP-6640] </span>
-<span id="cb1-50">      https://cisofy.com/controls/HTTP-6640/</span>
-<span id="cb1-51"></span>
-<span id="cb1-52">  * Install Apache mod_qos to guard webserver against Slowloris attacks [HTTP-6641] </span>
-<span id="cb1-53">      https://cisofy.com/controls/HTTP-6641/</span>
-<span id="cb1-54"></span>
-<span id="cb1-55">  * Install Apache modsecurity to guard webserver against web application attacks [HTTP-6643] </span>
-<span id="cb1-56">      https://cisofy.com/controls/HTTP-6643/</span>
-<span id="cb1-57"></span>
-<span id="cb1-58">  * Install fail2ban to automatically ban hosts that commit multiple authentication errors. [DEB-0880]</span>
-<span id="cb1-59">      https://cisofy.com/controls/DEB-0880/</span>
-<span id="cb1-60"></span>
-<span id="cb1-61">Note from asteele: In addition to the password aging and cracklib, we should also set a password policy to require passwords be of a minimum strength. I feel the default password policy for pam_cracklib is too weak, therefore you should implement a policy that is stronger than the default given. I would suggest a minimum password length of at least 10. I would also like you to not address the maximum password age as experts suggest that setting a maximum password age encourages the creation of weaker passwords, however setting the minimum password age to at least 3 days is advised.</span></code></pre></div>
-<p>So these are some security things I should do. Coincidentally, the numbers also aligned with the checks we were given:</p>
-<p><img src="./writeups/nice-challenge/images/checksintro.png" class="img-fluid"></p>
-<p>I followed an online <a href="https://phoenixnap.com/kb/apache-mod-evasive">guide</a> (<a href="https://web.archive.org/web/20231130023256/https://phoenixnap.com/kb/apache-mod-evasive">internet archive</a>) to enable apache mod_evasive, and sure enough, the check was passed:</p>
-<p><img src="./writeups/nice-challenge/images/joomiafirst.png" class="img-fluid"></p>
-<p>The process was fairly simple, I installed <code>libapache2-mod-evasive</code>, and then uncommented the relevant options in <code>/etc/apache2/mods-enabled/evasive.conf</code></p>
-<p>Installing fail2ban and apache mod_qos were easy:</p>
-<p><code>sudo apt install libapache2-mod-qos fail2ban</code></p>
-<p>I used a similar process, by uncommenting options in <code>/etc/apache2/mods-enabled</code> to enable mod_qos, and pass the check. Here’s the new config file:</p>
-<div class="sourceCode" id="cb2" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb2-1">&lt;IfModule qos_module&gt;</span>
-<span id="cb2-2">  # minimum request rate (bytes/sec at request reading):</span>
-<span id="cb2-3">  QS_SrvRequestRate                                 120</span>
-<span id="cb2-4"></span>
-<span id="cb2-5">  # limits the connections for this virtual host:</span>
-<span id="cb2-6">  QS_SrvMaxConn                                     100</span>
-<span id="cb2-7"></span>
-<span id="cb2-8">  # allows keep-alive support till the server reaches 600 connections:</span>
-<span id="cb2-9">  QS_SrvMaxConnClose                                600</span>
-<span id="cb2-10"></span>
-<span id="cb2-11">  # allows max 50 connections from a single ip address:</span>
-<span id="cb2-12">  QS_SrvMaxConnPerIP                                 50</span>
-<span id="cb2-13">&lt;/IfModule&gt;</span></code></pre></div>
-<p>The next thing I did was login.defs. They had <code>PASS_MAX_AGE</code> set to 9999, which I left. I did, however, change <code>PASS_MIN_AGE</code> to 3, per the suggesion in <code>audit.log</code>.</p>
-<p>To configure pam and the minimum of the password, I edited `/etc/pam.d/common-password:</p>
-<div class="code-with-filename">
-<div class="code-with-filename-file">
-<pre><strong>"/etc/pam.d/common-password</strong></pre>
-</div>
-<div class="sourceCode" id="cb3" data-filename="&quot;/etc/pam.d/common-password" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb3-1"></span>
-<span id="cb3-2"># here are the per-package modules (the "Primary" block)</span>
-<span id="cb3-3">password    requisite           pam_cracklib.so retry=3 minlen=10 difok=3</span>
-<span id="cb3-4">password    [success=1 default=ignore]  pam_unix.so obscure use_authtok try_first_pass sha512</span>
-<span id="cb3-5"># here's the fallback if no module succeeds</span>
-<span id="cb3-6">password    requisite           pam_deny.so</span>
-<span id="cb3-7"># prime the stack with a positive return value if there isn't one already;</span>
-<span id="cb3-8"># this avoids us returning an error just because nothing sets a success code</span>
-<span id="cb3-9"># since the modules above will each just jump around</span>
-<span id="cb3-10">password    required            pam_permit.so</span>
-<span id="cb3-11"># and here are more per-package modules (the "Additional" block)</span>
-<span id="cb3-12"># end of pam-auth-update config</span></code></pre></div>
-</div>
-<p>And with this, Joomia is done. Except not really, as one of the checks won’t pass, it’s reported as a “known issue”</p>
-</section>
-<section id="fileshare" class="level1">
-<h1>Fileshare</h1>
-<p>The Fileshare is the Ubuntu 16 machine.</p>
-<div class="code-with-filename">
-<div class="code-with-filename-file">
-<pre><strong>/home/playerone/audit.log</strong></pre>
-</div>
-<div class="sourceCode" id="cb4" data-filename="/home/playerone/audit.log" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb4-1"></span>
-<span id="cb4-2">  Suggestions:</span>
-<span id="cb4-3">  ----------------------------</span>
-<span id="cb4-4">  - Install a PAM module for password strength testing like pam_cracklib [AUTH-9262]</span>
-<span id="cb4-5">      https://cisofy.com/controls/AUTH-9262/</span>
-<span id="cb4-6">  </span>
-<span id="cb4-7">  * Configure minimum password age in /etc/login.defs [AUTH-9286] </span>
-<span id="cb4-8">      https://cisofy.com/controls/AUTH-9286/</span>
-<span id="cb4-9"></span>
-<span id="cb4-10">  * Configure maximum password age in /etc/login.defs [AUTH-9286] </span>
-<span id="cb4-11">      https://cisofy.com/controls/AUTH-9286/</span>
-<span id="cb4-12"></span>
-<span id="cb4-13">  - Enable process accounting [ACCT-9622]</span>
-<span id="cb4-14">      https://cisofy.com/controls/ACCT-9622/</span>
-<span id="cb4-15"></span>
-<span id="cb4-16">  - Install fail2ban to automatically ban hosts that commit multiple authentication errors. [DEB-0880]</span>
-<span id="cb4-17">      https://cisofy.com/controls/DEB-0880/</span>
-<span id="cb4-18"></span>
-<span id="cb4-19">Note from asteele: In addition to the password aging and cracklib, we should also set a password policy to require passwords be of a minimum strength. I feel the default password policy for pam_cracklib is too weak, therefore you should implement a policy that is stronger than the default given. I would suggest a minimum password length of at least 10. I would also like you to not address the maximum password age as experts suggest that setting a maximum password age encourages the creation of weaker passwords, however setting the minimum password age to at least 3 days is advised.</span></code></pre></div>
-</div>
-<p>This time, I clipped the lynis output for brevity.</p>
-<p>I started with installing fail2ban again, since that was simple.</p>
-<p>Process accounting was simple as well. I installed <code>acct</code>, and then ran <code>sudo acctn on</code>.</p>
-<p>I copied the same process as the first machine for configuring <code>/etc/login.defs</code>, changing <code>PASS_MIN_AGE</code> to 3.</p>
-<p>For cracklib, I also copied the same process as the above.</p>
-<p>And finally, all checks are passed:</p>
-<p><img src="./writeups/nice-challenge/images/allchecks.png" class="img-fluid"></p>
-<p>The one check that won’t pass, is actually broken, and won’t pass. They documented this in “Known Issues”</p>
-<p><img src="./writeups/nice-challenge/images/knownissues.png" class="img-fluid"></p>
-
-
-</section>
-
- ]]></description>
-  <category>linux</category>
-  <category>_writeups</category>
-  <guid>./writeups/nice-challenge/</guid>
-  <pubDate>Tue, 30 Jan 2024 08:00:00 GMT</pubDate>
 </item>
 </channel>
 </rss>
