@@ -1066,14 +1066,261 @@ spec:
               number: 9898
 ```
 
-And this works! 
+And this works! Except NOT!. It doesn't errors, and I instead need to have my issuer be:
 
-# Authentik
+```{.yaml}
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: letsencrypt-staging
+  namespace: default
+spec:
+  acme:
+    # The ACME server URL
+    server: https://acme-staging-v02.api.letsencrypt.org/directory
+    # Email address used for ACME registration
+    email: moonpiedumplings2@gmail.com
+    # Name of a secret used to store the ACME account private key
+    privateKeySecretRef:
+      name: letsencrypt-staging
+    # Enable the HTTP-01 challenge provider
+    solvers:
+      - http01:
+          ingress: {}
+```
+
+## Authentik
 
 * <https://artifacthub.io/packages/helm/goauthentik/authentik>
 * [Authentik Docs](https://docs.goauthentik.io/docs/install-config/install/kubernetes)
 
+
+
+### Volumes
+
+I attempted to deploy authentik without secrets. However, it crashes: 
+
+```{.default}
+Events:
+  Type     Reason            Age                From               Message
+  ----     ------            ----               ----               -------
+  Warning  FailedScheduling  46s (x4 over 15m)  default-scheduler  0/1 nodes are available: pod has unbound immediate PersistentVolumeClaims. preemption: 0/1 nodes are available: 1 Preemption is not helpful for scheduling.
+```
+
+```{.default}
+[moonpie@lizard cert-manager]$ kubectl get -A persistentvolumeclaims
+NAMESPACE   NAME                                  STATUS    VOLUME   CAPACITY   ACCESS MODES   STORAGECLASS   VOLUMEATTRIBUTESCLASS   AGE
+default     data-authentik-postgresql-0           Pending                                                     <unset>                 39m
+default     redis-data-authentik-redis-master-0   Pending                                                     <unset>                 39m
+```
+
+So, I need to create a persistent volume of some kind, and then have it specifically reference the persistent volume claims that are used.
+
+But... which provider do I use. Ideally, I want something similar to docker/podman volumes, where I don't have to deal with mapping them to exact host paths. I also want these persistent volume claims to be automatically met, that is, dynamically provisioned storage.
+
+I decided to use [openebs] for this. 
+
+Here are my flux configs:
+
+```{.yaml}
+---
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: HelmRepository
+metadata:
+  name: openebs
+  namespace: default
+spec:
+  interval: 1m0s
+  url: https://openebs.github.io/charts
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: openebs
+  namespace: default
+spec:
+  chart:
+    spec:
+      chart: openebs
+      reconcileStrategy: ChartVersion
+      sourceRef:
+        kind: HelmRepository
+        name: openebs
+      # version: 
+  interval: 1m0s
+```
+
+I need to a set a version, but this deploys openebs for now. However, it doesn't instantly work, because the openebs-hostpath provisioner is not set to the default for storage classes. But when I do, using `kubectl edit storageclass openebs-hostpath` 
+
+```{.yaml}
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  annotations:
+    cas.openebs.io/config: |
+      - name: StorageType
+        value: "hostpath"
+      - name: BasePath
+        value: "/var/openebs/local"
+    meta.helm.sh/release-name: openebs
+    meta.helm.sh/release-namespace: default
+    openebs.io/cas-type: local
+    storageclass.kubernetes.io/is-default-class: "true"
+  creationTimestamp: "2024-10-22T02:33:23Z"
+  labels:
+    app.kubernetes.io/managed-by: Helm
+    helm.toolkit.fluxcd.io/name: openebs
+    helm.toolkit.fluxcd.io/namespace: default
+  name: openebs-hostpath
+  resourceVersion: "10886300"
+  uid: 0bfb540c-e5e6-4f4c-bf7b-cd232630742c
+provisioner: openebs.io/local
+reclaimPolicy: Delete
+volumeBindingMode: WaitForFirstConsumer
+```
+
+I appended: `storageclass.kubernetes.io/is-default-class: "true"` to the annotations section, and then PersistentVolumes are automatically created to satisfy the needs of authentik:
+
+```{.default}
+[moonpie@lizard flux-config]$ kubectl get persistentvolumes
+NAME                                       CAPACITY   ACCESS MODES   RECLAIM POLICY   STATUS   CLAIM                                         STORAGECLASS       VOLUMEATTRIBUTESCLASS   REASON   AGE
+pvc-e179a2b6-0fa2-4fd8-9cfd-07c152b10bbe   8Gi        RWO            Delete           Bound    default/redis-data-authentik-redis-master-0   openebs-hostpath   <unset>                          9m35s
+pvc-ed21ace0-2580-4ea1-aaeb-6b24b04bb55e   8Gi        RWO            Delete           Bound    default/data-authentik-postgresql-0           openebs-hostpath   <unset>                          9m35s
+```
+
+After this, the Authentik server is up. But, it looks like a reclaim policy of "delete", means that if I delete the Authentik helm chart, my user data will be deleted as well. 
+
+Instead, I think I  need to manually create volumes in my flux config, that use "claimRef" to get claimed by the right PersistentVolumeClaims. Or maybe I can have openebs volumes retain themselves?
+
+Actually, I think I need to [create another storageclass](https://openebs.io/docs/user-guides/local-storage-user-guide/local-pv-hostpath/hostpath-configuration) that can dynamically provision volumes, but this one has the settings and specs I want, and is the default.
+
+### Secrets/SOPS
+
 So, authentik looks difficult, because the helm chart requires quite a complex set of configurations, and I don't want to put those in the same file for the helmrelease. 
+
+I think what I want to do is this: I should seperate out the authentik configs into a "ConfigMap", which gets fed to the helm chart, and that will be one portion of the authentik config. The other portion will be a "Secret" which gets decrypted by fluxcd and sops. 
+
+* [Fluxcd docs on sops](https://fluxcd.io/flux/guides/mozilla-sops/) (I will be using age, since that's what the sops docs recomment)
+* [FLuxcd docs on configmap and secret references](https://fluxcd.io/flux/migration/helm-operator-migration/#configmap-and-secret-references)
+
+
+I started by following the [sops-age](https://fluxcd.io/flux/guides/mozilla-sops/) guide. 
+
+So, here is the problem I am encountering. I want to encrypt only the relevant values, but a configmap or secret stores the entire secret means that I have to encrypt an entire set of data values. 
+
+I was hoping for something like this:
+
+```{.default filename='helmrelease.yaml'}
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: authentik
+  namespace: default
+spec:
+  chart:
+    spec:
+      chart: authentik
+      reconcileStrategy: ChartVersion
+      sourceRef:
+        kind: HelmRepository
+        name: authentik
+        # Figure out what version I should have
+      # version: 
+  interval: 1m0s
+  values:
+    authentik:
+        secret_key: "PleaseGenerateASecureKey"
+        # This sends anonymous usage-data, stack traces on errors and
+        # performance data to sentry.io, and is fully opt-in
+        error_reporting:
+            enabled: true
+        postgresql:
+            password: "ThisIsNotASecurePassword"
+    server:
+        ingress:
+            ingressClassName: nginx
+            # Change to true when done
+            enabled: false
+            hosts:
+                - authentik.moonpiedumpl.ing
+    postgresql:
+        enabled: true
+        auth:
+            password: "ThisIsNotASecurePassword"
+    redis:
+        enabled: true
+```
+
+And then:
+
+```{.default}
+[moonpie@lizard authentik]$ sops encrypt -a age1sg3u7ndj045gzv3u4w5t5kntplg6sz2hv6k3uxpxq85vtx56rc4s8q83gr --encrypted-regex "^(password|secret_key)$" helmrelease.yaml
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+    name: authentik
+    namespace: default
+spec:
+    chart:
+        spec:
+            chart: authentik
+            reconcileStrategy: ChartVersion
+            sourceRef:
+                kind: HelmRepository
+                name: authentik
+                # Figure out what version I should have
+            # version:
+    interval: 1m0s
+    values:
+        authentik:
+            secret_key: ENC[AES256_GCM,data:nujuuWM84Tid/15KOD9gyOwAaWa6EhsT,iv:kCkgXtzezxpNvHs0AFGELtwUOgzeljqffiqueraE8h0=,tag:5bQuit+QW5q/8RQOvNeNww==,type:str]
+            # This sends anonymous usage-data, stack traces on errors and
+            # performance data to sentry.io, and is fully opt-in
+            error_reporting:
+                enabled: true
+            postgresql:
+                password: ENC[AES256_GCM,data:cZq0luEMYkByNhKyu6L3sio4PDQ5sh1l,iv:7a534BkBd5qZkVFCcRIsJmCZQ0SdGLyqYncI798s0kY=,tag:FossEP7tUupbvKJkZetAjA==,type:str]
+        server:
+            ingress:
+                ingressClassName: nginx
+                # Change to true when done
+                enabled: false
+                hosts:
+                    - authentik.moonpiedumpl.ing
+        postgresql:
+            enabled: true
+            auth:
+                password: ENC[AES256_GCM,data:yzFmr7JyPnBG50rej5yx+k/4jelfAzRF,iv:WoNEJq7HW60T5eTnA/bQ0MvMvKOVIvJt0KIN2dvX3/Q=,tag:dEP3uhYH0M+As7AW0l1vnA==,type:str]
+        redis:
+            enabled: true
+sops:
+    kms: []
+    gcp_kms: []
+    azure_kv: []
+    hc_vault: []
+    age:
+        - recipient: age1sg3u7ndj045gzv3u4w5t5kntplg6sz2hv6k3uxpxq85vtx56rc4s8q83gr
+          enc: |
+            -----BEGIN AGE ENCRYPTED FILE-----
+            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSBDSHVqYzZSU0g4ckZva3Zs
+            eEdIWWt0aFdKaHBhbTRkeUFWZTRHcnVyZVVnCmIwb1BISUxBZDBuUWFzNkV5TUFZ
+            TlZlcXJ0MU9Gd1pSTXAwNUNkalNhcVEKLS0tIGtBQktERWYzdk90YkVCMlhpTUVp
+            Wk05NzhvMFBtWTZIdWVlS0RuRTJjNmcKbWaU9SOlvcW5lBOfMPb9KDCCd4PNuGKg
+            DszzKrN6jWdpiSMdvLcPDJagLPrtCwtgL7XI3jvfmGH1DI87r4KxKA==
+            -----END AGE ENCRYPTED FILE-----
+    lastmodified: "2024-10-19T21:40:39Z"
+    mac: ENC[AES256_GCM,data:rU+SIASsBqnRkO6/HVntpYuk1p2A6QaCKoCtFFWLcaVV8Jn3CInXk/IORgkmpRhEdVzZlts48Rz8sh/OiSZdYsEeCzxfUFwEtBKk/2lpKfIip3cXlV0oDnkKFGP4OO8aXmxUcF0gCxVETSGqxnlb9+3f6KFmJsIs2OqvvFP9PgQ=,iv:DGykNA7WneKPMc972w2++mUwXdtwkYcRLJoLzz0nJEg=,tag:2wdz+FxeAiqAxrGoHVhJIQ==,type:str]
+    pgp: []
+    encrypted_regex: ^(password|secret_key)$
+    version: 3.9.1
+```
+
+Although this looks like the best setup, I don't know if it works, maybe only secrets can be decrypted?
+
+## Nvidia Runtime
+
+[Nvidia container toolkit apt docs](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html#installing-with-apt)
 
 
 
