@@ -176,8 +176,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <ul class="collapse">
   <li><a href="#nginxcert-manager" id="toc-nginxcert-manager" class="nav-link" data-scroll-target="#nginxcert-manager">Nginx/Cert-Manager</a></li>
   </ul></li>
+  <li><a href="#authentik" id="toc-authentik" class="nav-link" data-scroll-target="#authentik">Authentik</a>
+  <ul class="collapse">
+  <li><a href="#volumes" id="toc-volumes" class="nav-link" data-scroll-target="#volumes">Volumes</a></li>
+  <li><a href="#secretssops" id="toc-secretssops" class="nav-link" data-scroll-target="#secretssops">Secrets/SOPS</a></li>
   </ul></li>
-  <li><a href="#authentik" id="toc-authentik" class="nav-link" data-scroll-target="#authentik">Authentik</a></li>
+  <li><a href="#nvidia-runtime" id="toc-nvidia-runtime" class="nav-link" data-scroll-target="#nvidia-runtime">Nvidia Runtime</a></li>
+  </ul></li>
   </ul>
 </nav>
     </div>
@@ -1086,19 +1091,231 @@ Show install command
 <span id="cb45-24"><a href="#cb45-24" aria-hidden="true" tabindex="-1"></a><span class="at">            </span><span class="fu">port</span><span class="kw">:</span></span>
 <span id="cb45-25"><a href="#cb45-25" aria-hidden="true" tabindex="-1"></a><span class="at">              </span><span class="fu">number</span><span class="kw">:</span><span class="at"> </span><span class="dv">9898</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>And this works!</p>
+<p>And this works! Except NOT!. It doesn’t errors, and I instead need to have my issuer be:</p>
+<div class="sourceCode" id="cb46"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a><span class="fu">apiVersion</span><span class="kw">:</span><span class="at"> cert-manager.io/v1</span></span>
+<span id="cb46-2"><a href="#cb46-2" aria-hidden="true" tabindex="-1"></a><span class="fu">kind</span><span class="kw">:</span><span class="at"> Issuer</span></span>
+<span id="cb46-3"><a href="#cb46-3" aria-hidden="true" tabindex="-1"></a><span class="fu">metadata</span><span class="kw">:</span></span>
+<span id="cb46-4"><a href="#cb46-4" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">name</span><span class="kw">:</span><span class="at"> letsencrypt-staging</span></span>
+<span id="cb46-5"><a href="#cb46-5" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">namespace</span><span class="kw">:</span><span class="at"> default</span></span>
+<span id="cb46-6"><a href="#cb46-6" aria-hidden="true" tabindex="-1"></a><span class="fu">spec</span><span class="kw">:</span></span>
+<span id="cb46-7"><a href="#cb46-7" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">acme</span><span class="kw">:</span></span>
+<span id="cb46-8"><a href="#cb46-8" aria-hidden="true" tabindex="-1"></a><span class="co">    # The ACME server URL</span></span>
+<span id="cb46-9"><a href="#cb46-9" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">server</span><span class="kw">:</span><span class="at"> https://acme-staging-v02.api.letsencrypt.org/directory</span></span>
+<span id="cb46-10"><a href="#cb46-10" aria-hidden="true" tabindex="-1"></a><span class="co">    # Email address used for ACME registration</span></span>
+<span id="cb46-11"><a href="#cb46-11" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">email</span><span class="kw">:</span><span class="at"> moonpiedumplings2@gmail.com</span></span>
+<span id="cb46-12"><a href="#cb46-12" aria-hidden="true" tabindex="-1"></a><span class="co">    # Name of a secret used to store the ACME account private key</span></span>
+<span id="cb46-13"><a href="#cb46-13" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">privateKeySecretRef</span><span class="kw">:</span></span>
+<span id="cb46-14"><a href="#cb46-14" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">name</span><span class="kw">:</span><span class="at"> letsencrypt-staging</span></span>
+<span id="cb46-15"><a href="#cb46-15" aria-hidden="true" tabindex="-1"></a><span class="co">    # Enable the HTTP-01 challenge provider</span></span>
+<span id="cb46-16"><a href="#cb46-16" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">solvers</span><span class="kw">:</span></span>
+<span id="cb46-17"><a href="#cb46-17" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="fu">http01</span><span class="kw">:</span></span>
+<span id="cb46-18"><a href="#cb46-18" aria-hidden="true" tabindex="-1"></a><span class="at">          </span><span class="fu">ingress</span><span class="kw">:</span><span class="at"> </span><span class="kw">{}</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </section>
 </section>
-</section>
-<section id="authentik" class="level1">
-<h1>Authentik</h1>
+<section id="authentik" class="level2">
+<h2 class="anchored" data-anchor-id="authentik">Authentik</h2>
 <ul>
 <li><a href="https://artifacthub.io/packages/helm/goauthentik/authentik" class="uri">https://artifacthub.io/packages/helm/goauthentik/authentik</a></li>
 <li><a href="https://docs.goauthentik.io/docs/install-config/install/kubernetes">Authentik Docs</a></li>
 </ul>
+<section id="volumes" class="level3">
+<h3 class="anchored" data-anchor-id="volumes">Volumes</h3>
+<p>I attempted to deploy authentik without secrets. However, it crashes:</p>
+<div class="sourceCode" id="cb47"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a>Events:</span>
+<span id="cb47-2"><a href="#cb47-2" aria-hidden="true" tabindex="-1"></a>  Type     Reason            Age                From               Message</span>
+<span id="cb47-3"><a href="#cb47-3" aria-hidden="true" tabindex="-1"></a>  ----     ------            ----               ----               -------</span>
+<span id="cb47-4"><a href="#cb47-4" aria-hidden="true" tabindex="-1"></a>  Warning  FailedScheduling  46s (x4 over 15m)  default-scheduler  0/1 nodes are available: pod has unbound immediate PersistentVolumeClaims. preemption: 0/1 nodes are available: 1 Preemption is not helpful for scheduling.</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb48"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb48-1"><a href="#cb48-1" aria-hidden="true" tabindex="-1"></a>[moonpie@lizard cert-manager]$ kubectl get -A persistentvolumeclaims</span>
+<span id="cb48-2"><a href="#cb48-2" aria-hidden="true" tabindex="-1"></a>NAMESPACE   NAME                                  STATUS    VOLUME   CAPACITY   ACCESS MODES   STORAGECLASS   VOLUMEATTRIBUTESCLASS   AGE</span>
+<span id="cb48-3"><a href="#cb48-3" aria-hidden="true" tabindex="-1"></a>default     data-authentik-postgresql-0           Pending                                                     &lt;unset&gt;                 39m</span>
+<span id="cb48-4"><a href="#cb48-4" aria-hidden="true" tabindex="-1"></a>default     redis-data-authentik-redis-master-0   Pending                                                     &lt;unset&gt;                 39m</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>So, I need to create a persistent volume of some kind, and then have it specifically reference the persistent volume claims that are used.</p>
+<p>But… which provider do I use. Ideally, I want something similar to docker/podman volumes, where I don’t have to deal with mapping them to exact host paths. I also want these persistent volume claims to be automatically met, that is, dynamically provisioned storage.</p>
+<p>I decided to use [openebs] for this.</p>
+<p>Here are my flux configs:</p>
+<div class="sourceCode" id="cb49"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a><span class="pp">---</span></span>
+<span id="cb49-2"><a href="#cb49-2" aria-hidden="true" tabindex="-1"></a><span class="fu">apiVersion</span><span class="kw">:</span><span class="at"> source.toolkit.fluxcd.io/v1</span></span>
+<span id="cb49-3"><a href="#cb49-3" aria-hidden="true" tabindex="-1"></a><span class="fu">kind</span><span class="kw">:</span><span class="at"> HelmRepository</span></span>
+<span id="cb49-4"><a href="#cb49-4" aria-hidden="true" tabindex="-1"></a><span class="fu">metadata</span><span class="kw">:</span></span>
+<span id="cb49-5"><a href="#cb49-5" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">name</span><span class="kw">:</span><span class="at"> openebs</span></span>
+<span id="cb49-6"><a href="#cb49-6" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">namespace</span><span class="kw">:</span><span class="at"> default</span></span>
+<span id="cb49-7"><a href="#cb49-7" aria-hidden="true" tabindex="-1"></a><span class="fu">spec</span><span class="kw">:</span></span>
+<span id="cb49-8"><a href="#cb49-8" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">interval</span><span class="kw">:</span><span class="at"> 1m0s</span></span>
+<span id="cb49-9"><a href="#cb49-9" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">url</span><span class="kw">:</span><span class="at"> https://openebs.github.io/charts</span></span>
+<span id="cb49-10"><a href="#cb49-10" aria-hidden="true" tabindex="-1"></a><span class="pp">---</span></span>
+<span id="cb49-11"><a href="#cb49-11" aria-hidden="true" tabindex="-1"></a><span class="fu">apiVersion</span><span class="kw">:</span><span class="at"> helm.toolkit.fluxcd.io/v2</span></span>
+<span id="cb49-12"><a href="#cb49-12" aria-hidden="true" tabindex="-1"></a><span class="fu">kind</span><span class="kw">:</span><span class="at"> HelmRelease</span></span>
+<span id="cb49-13"><a href="#cb49-13" aria-hidden="true" tabindex="-1"></a><span class="fu">metadata</span><span class="kw">:</span></span>
+<span id="cb49-14"><a href="#cb49-14" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">name</span><span class="kw">:</span><span class="at"> openebs</span></span>
+<span id="cb49-15"><a href="#cb49-15" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">namespace</span><span class="kw">:</span><span class="at"> default</span></span>
+<span id="cb49-16"><a href="#cb49-16" aria-hidden="true" tabindex="-1"></a><span class="fu">spec</span><span class="kw">:</span></span>
+<span id="cb49-17"><a href="#cb49-17" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">chart</span><span class="kw">:</span></span>
+<span id="cb49-18"><a href="#cb49-18" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">spec</span><span class="kw">:</span></span>
+<span id="cb49-19"><a href="#cb49-19" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">chart</span><span class="kw">:</span><span class="at"> openebs</span></span>
+<span id="cb49-20"><a href="#cb49-20" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">reconcileStrategy</span><span class="kw">:</span><span class="at"> ChartVersion</span></span>
+<span id="cb49-21"><a href="#cb49-21" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">sourceRef</span><span class="kw">:</span></span>
+<span id="cb49-22"><a href="#cb49-22" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">kind</span><span class="kw">:</span><span class="at"> HelmRepository</span></span>
+<span id="cb49-23"><a href="#cb49-23" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">name</span><span class="kw">:</span><span class="at"> openebs</span></span>
+<span id="cb49-24"><a href="#cb49-24" aria-hidden="true" tabindex="-1"></a><span class="co">      # version: </span></span>
+<span id="cb49-25"><a href="#cb49-25" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">interval</span><span class="kw">:</span><span class="at"> 1m0s</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>I need to a set a version, but this deploys openebs for now. However, it doesn’t instantly work, because the openebs-hostpath provisioner is not set to the default for storage classes. But when I do, using <code>kubectl edit storageclass openebs-hostpath</code></p>
+<div class="sourceCode" id="cb50"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb50-1"><a href="#cb50-1" aria-hidden="true" tabindex="-1"></a><span class="fu">apiVersion</span><span class="kw">:</span><span class="at"> storage.k8s.io/v1</span></span>
+<span id="cb50-2"><a href="#cb50-2" aria-hidden="true" tabindex="-1"></a><span class="fu">kind</span><span class="kw">:</span><span class="at"> StorageClass</span></span>
+<span id="cb50-3"><a href="#cb50-3" aria-hidden="true" tabindex="-1"></a><span class="fu">metadata</span><span class="kw">:</span></span>
+<span id="cb50-4"><a href="#cb50-4" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">annotations</span><span class="kw">:</span></span>
+<span id="cb50-5"><a href="#cb50-5" aria-hidden="true" tabindex="-1"></a><span class="fu">    cas.openebs.io/config</span><span class="kw">: </span><span class="ch">|</span></span>
+<span id="cb50-6"><a href="#cb50-6" aria-hidden="true" tabindex="-1"></a>      - name: StorageType</span>
+<span id="cb50-7"><a href="#cb50-7" aria-hidden="true" tabindex="-1"></a>        value: "hostpath"</span>
+<span id="cb50-8"><a href="#cb50-8" aria-hidden="true" tabindex="-1"></a>      - name: BasePath</span>
+<span id="cb50-9"><a href="#cb50-9" aria-hidden="true" tabindex="-1"></a>        value: "/var/openebs/local"</span>
+<span id="cb50-10"><a href="#cb50-10" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">meta.helm.sh/release-name</span><span class="kw">:</span><span class="at"> openebs</span></span>
+<span id="cb50-11"><a href="#cb50-11" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">meta.helm.sh/release-namespace</span><span class="kw">:</span><span class="at"> default</span></span>
+<span id="cb50-12"><a href="#cb50-12" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">openebs.io/cas-type</span><span class="kw">:</span><span class="at"> local</span></span>
+<span id="cb50-13"><a href="#cb50-13" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">storageclass.kubernetes.io/is-default-class</span><span class="kw">:</span><span class="at"> </span><span class="st">"true"</span></span>
+<span id="cb50-14"><a href="#cb50-14" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">creationTimestamp</span><span class="kw">:</span><span class="at"> </span><span class="st">"2024-10-22T02:33:23Z"</span></span>
+<span id="cb50-15"><a href="#cb50-15" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">labels</span><span class="kw">:</span></span>
+<span id="cb50-16"><a href="#cb50-16" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">app.kubernetes.io/managed-by</span><span class="kw">:</span><span class="at"> Helm</span></span>
+<span id="cb50-17"><a href="#cb50-17" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">helm.toolkit.fluxcd.io/name</span><span class="kw">:</span><span class="at"> openebs</span></span>
+<span id="cb50-18"><a href="#cb50-18" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">helm.toolkit.fluxcd.io/namespace</span><span class="kw">:</span><span class="at"> default</span></span>
+<span id="cb50-19"><a href="#cb50-19" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">name</span><span class="kw">:</span><span class="at"> openebs-hostpath</span></span>
+<span id="cb50-20"><a href="#cb50-20" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">resourceVersion</span><span class="kw">:</span><span class="at"> </span><span class="st">"10886300"</span></span>
+<span id="cb50-21"><a href="#cb50-21" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">uid</span><span class="kw">:</span><span class="at"> 0bfb540c-e5e6-4f4c-bf7b-cd232630742c</span></span>
+<span id="cb50-22"><a href="#cb50-22" aria-hidden="true" tabindex="-1"></a><span class="fu">provisioner</span><span class="kw">:</span><span class="at"> openebs.io/local</span></span>
+<span id="cb50-23"><a href="#cb50-23" aria-hidden="true" tabindex="-1"></a><span class="fu">reclaimPolicy</span><span class="kw">:</span><span class="at"> Delete</span></span>
+<span id="cb50-24"><a href="#cb50-24" aria-hidden="true" tabindex="-1"></a><span class="fu">volumeBindingMode</span><span class="kw">:</span><span class="at"> WaitForFirstConsumer</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>I appended: <code>storageclass.kubernetes.io/is-default-class: "true"</code> to the annotations section, and then PersistentVolumes are automatically created to satisfy the needs of authentik:</p>
+<div class="sourceCode" id="cb51"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a>[moonpie@lizard flux-config]$ kubectl get persistentvolumes</span>
+<span id="cb51-2"><a href="#cb51-2" aria-hidden="true" tabindex="-1"></a>NAME                                       CAPACITY   ACCESS MODES   RECLAIM POLICY   STATUS   CLAIM                                         STORAGECLASS       VOLUMEATTRIBUTESCLASS   REASON   AGE</span>
+<span id="cb51-3"><a href="#cb51-3" aria-hidden="true" tabindex="-1"></a>pvc-e179a2b6-0fa2-4fd8-9cfd-07c152b10bbe   8Gi        RWO            Delete           Bound    default/redis-data-authentik-redis-master-0   openebs-hostpath   &lt;unset&gt;                          9m35s</span>
+<span id="cb51-4"><a href="#cb51-4" aria-hidden="true" tabindex="-1"></a>pvc-ed21ace0-2580-4ea1-aaeb-6b24b04bb55e   8Gi        RWO            Delete           Bound    default/data-authentik-postgresql-0           openebs-hostpath   &lt;unset&gt;                          9m35s</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>After this, the Authentik server is up. But, it looks like a reclaim policy of “delete”, means that if I delete the Authentik helm chart, my user data will be deleted as well.</p>
+<p>Instead, I think I need to manually create volumes in my flux config, that use “claimRef” to get claimed by the right PersistentVolumeClaims. Or maybe I can have openebs volumes retain themselves?</p>
+<p>Actually, I think I need to <a href="https://openebs.io/docs/user-guides/local-storage-user-guide/local-pv-hostpath/hostpath-configuration">create another storageclass</a> that can dynamically provision volumes, but this one has the settings and specs I want, and is the default.</p>
+</section>
+<section id="secretssops" class="level3">
+<h3 class="anchored" data-anchor-id="secretssops">Secrets/SOPS</h3>
 <p>So, authentik looks difficult, because the helm chart requires quite a complex set of configurations, and I don’t want to put those in the same file for the helmrelease.</p>
+<p>I think what I want to do is this: I should seperate out the authentik configs into a “ConfigMap”, which gets fed to the helm chart, and that will be one portion of the authentik config. The other portion will be a “Secret” which gets decrypted by fluxcd and sops.</p>
+<ul>
+<li><a href="https://fluxcd.io/flux/guides/mozilla-sops/">Fluxcd docs on sops</a> (I will be using age, since that’s what the sops docs recomment)</li>
+<li><a href="https://fluxcd.io/flux/migration/helm-operator-migration/#configmap-and-secret-references">FLuxcd docs on configmap and secret references</a></li>
+</ul>
+<p>I started by following the <a href="https://fluxcd.io/flux/guides/mozilla-sops/">sops-age</a> guide.</p>
+<p>So, here is the problem I am encountering. I want to encrypt only the relevant values, but a configmap or secret stores the entire secret means that I have to encrypt an entire set of data values.</p>
+<p>I was hoping for something like this:</p>
+<div class="code-with-filename">
+<div class="code-with-filename-file">
+<pre><strong>helmrelease.yaml</strong></pre>
+</div>
+<div class="sourceCode" id="cb52" data-filename="helmrelease.yaml"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb52-1"><a href="#cb52-1" aria-hidden="true" tabindex="-1"></a>---</span>
+<span id="cb52-2"><a href="#cb52-2" aria-hidden="true" tabindex="-1"></a>apiVersion: helm.toolkit.fluxcd.io/v2</span>
+<span id="cb52-3"><a href="#cb52-3" aria-hidden="true" tabindex="-1"></a>kind: HelmRelease</span>
+<span id="cb52-4"><a href="#cb52-4" aria-hidden="true" tabindex="-1"></a>metadata:</span>
+<span id="cb52-5"><a href="#cb52-5" aria-hidden="true" tabindex="-1"></a>  name: authentik</span>
+<span id="cb52-6"><a href="#cb52-6" aria-hidden="true" tabindex="-1"></a>  namespace: default</span>
+<span id="cb52-7"><a href="#cb52-7" aria-hidden="true" tabindex="-1"></a>spec:</span>
+<span id="cb52-8"><a href="#cb52-8" aria-hidden="true" tabindex="-1"></a>  chart:</span>
+<span id="cb52-9"><a href="#cb52-9" aria-hidden="true" tabindex="-1"></a>    spec:</span>
+<span id="cb52-10"><a href="#cb52-10" aria-hidden="true" tabindex="-1"></a>      chart: authentik</span>
+<span id="cb52-11"><a href="#cb52-11" aria-hidden="true" tabindex="-1"></a>      reconcileStrategy: ChartVersion</span>
+<span id="cb52-12"><a href="#cb52-12" aria-hidden="true" tabindex="-1"></a>      sourceRef:</span>
+<span id="cb52-13"><a href="#cb52-13" aria-hidden="true" tabindex="-1"></a>        kind: HelmRepository</span>
+<span id="cb52-14"><a href="#cb52-14" aria-hidden="true" tabindex="-1"></a>        name: authentik</span>
+<span id="cb52-15"><a href="#cb52-15" aria-hidden="true" tabindex="-1"></a>        # Figure out what version I should have</span>
+<span id="cb52-16"><a href="#cb52-16" aria-hidden="true" tabindex="-1"></a>      # version: </span>
+<span id="cb52-17"><a href="#cb52-17" aria-hidden="true" tabindex="-1"></a>  interval: 1m0s</span>
+<span id="cb52-18"><a href="#cb52-18" aria-hidden="true" tabindex="-1"></a>  values:</span>
+<span id="cb52-19"><a href="#cb52-19" aria-hidden="true" tabindex="-1"></a>    authentik:</span>
+<span id="cb52-20"><a href="#cb52-20" aria-hidden="true" tabindex="-1"></a>        secret_key: "PleaseGenerateASecureKey"</span>
+<span id="cb52-21"><a href="#cb52-21" aria-hidden="true" tabindex="-1"></a>        # This sends anonymous usage-data, stack traces on errors and</span>
+<span id="cb52-22"><a href="#cb52-22" aria-hidden="true" tabindex="-1"></a>        # performance data to sentry.io, and is fully opt-in</span>
+<span id="cb52-23"><a href="#cb52-23" aria-hidden="true" tabindex="-1"></a>        error_reporting:</span>
+<span id="cb52-24"><a href="#cb52-24" aria-hidden="true" tabindex="-1"></a>            enabled: true</span>
+<span id="cb52-25"><a href="#cb52-25" aria-hidden="true" tabindex="-1"></a>        postgresql:</span>
+<span id="cb52-26"><a href="#cb52-26" aria-hidden="true" tabindex="-1"></a>            password: "ThisIsNotASecurePassword"</span>
+<span id="cb52-27"><a href="#cb52-27" aria-hidden="true" tabindex="-1"></a>    server:</span>
+<span id="cb52-28"><a href="#cb52-28" aria-hidden="true" tabindex="-1"></a>        ingress:</span>
+<span id="cb52-29"><a href="#cb52-29" aria-hidden="true" tabindex="-1"></a>            ingressClassName: nginx</span>
+<span id="cb52-30"><a href="#cb52-30" aria-hidden="true" tabindex="-1"></a>            # Change to true when done</span>
+<span id="cb52-31"><a href="#cb52-31" aria-hidden="true" tabindex="-1"></a>            enabled: false</span>
+<span id="cb52-32"><a href="#cb52-32" aria-hidden="true" tabindex="-1"></a>            hosts:</span>
+<span id="cb52-33"><a href="#cb52-33" aria-hidden="true" tabindex="-1"></a>                - authentik.moonpiedumpl.ing</span>
+<span id="cb52-34"><a href="#cb52-34" aria-hidden="true" tabindex="-1"></a>    postgresql:</span>
+<span id="cb52-35"><a href="#cb52-35" aria-hidden="true" tabindex="-1"></a>        enabled: true</span>
+<span id="cb52-36"><a href="#cb52-36" aria-hidden="true" tabindex="-1"></a>        auth:</span>
+<span id="cb52-37"><a href="#cb52-37" aria-hidden="true" tabindex="-1"></a>            password: "ThisIsNotASecurePassword"</span>
+<span id="cb52-38"><a href="#cb52-38" aria-hidden="true" tabindex="-1"></a>    redis:</span>
+<span id="cb52-39"><a href="#cb52-39" aria-hidden="true" tabindex="-1"></a>        enabled: true</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>And then:</p>
+<div class="sourceCode" id="cb53"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb53-1"><a href="#cb53-1" aria-hidden="true" tabindex="-1"></a>[moonpie@lizard authentik]$ sops encrypt -a age1sg3u7ndj045gzv3u4w5t5kntplg6sz2hv6k3uxpxq85vtx56rc4s8q83gr --encrypted-regex "^(password|secret_key)$" helmrelease.yaml</span>
+<span id="cb53-2"><a href="#cb53-2" aria-hidden="true" tabindex="-1"></a>apiVersion: helm.toolkit.fluxcd.io/v2</span>
+<span id="cb53-3"><a href="#cb53-3" aria-hidden="true" tabindex="-1"></a>kind: HelmRelease</span>
+<span id="cb53-4"><a href="#cb53-4" aria-hidden="true" tabindex="-1"></a>metadata:</span>
+<span id="cb53-5"><a href="#cb53-5" aria-hidden="true" tabindex="-1"></a>    name: authentik</span>
+<span id="cb53-6"><a href="#cb53-6" aria-hidden="true" tabindex="-1"></a>    namespace: default</span>
+<span id="cb53-7"><a href="#cb53-7" aria-hidden="true" tabindex="-1"></a>spec:</span>
+<span id="cb53-8"><a href="#cb53-8" aria-hidden="true" tabindex="-1"></a>    chart:</span>
+<span id="cb53-9"><a href="#cb53-9" aria-hidden="true" tabindex="-1"></a>        spec:</span>
+<span id="cb53-10"><a href="#cb53-10" aria-hidden="true" tabindex="-1"></a>            chart: authentik</span>
+<span id="cb53-11"><a href="#cb53-11" aria-hidden="true" tabindex="-1"></a>            reconcileStrategy: ChartVersion</span>
+<span id="cb53-12"><a href="#cb53-12" aria-hidden="true" tabindex="-1"></a>            sourceRef:</span>
+<span id="cb53-13"><a href="#cb53-13" aria-hidden="true" tabindex="-1"></a>                kind: HelmRepository</span>
+<span id="cb53-14"><a href="#cb53-14" aria-hidden="true" tabindex="-1"></a>                name: authentik</span>
+<span id="cb53-15"><a href="#cb53-15" aria-hidden="true" tabindex="-1"></a>                # Figure out what version I should have</span>
+<span id="cb53-16"><a href="#cb53-16" aria-hidden="true" tabindex="-1"></a>            # version:</span>
+<span id="cb53-17"><a href="#cb53-17" aria-hidden="true" tabindex="-1"></a>    interval: 1m0s</span>
+<span id="cb53-18"><a href="#cb53-18" aria-hidden="true" tabindex="-1"></a>    values:</span>
+<span id="cb53-19"><a href="#cb53-19" aria-hidden="true" tabindex="-1"></a>        authentik:</span>
+<span id="cb53-20"><a href="#cb53-20" aria-hidden="true" tabindex="-1"></a>            secret_key: ENC[AES256_GCM,data:nujuuWM84Tid/15KOD9gyOwAaWa6EhsT,iv:kCkgXtzezxpNvHs0AFGELtwUOgzeljqffiqueraE8h0=,tag:5bQuit+QW5q/8RQOvNeNww==,type:str]</span>
+<span id="cb53-21"><a href="#cb53-21" aria-hidden="true" tabindex="-1"></a>            # This sends anonymous usage-data, stack traces on errors and</span>
+<span id="cb53-22"><a href="#cb53-22" aria-hidden="true" tabindex="-1"></a>            # performance data to sentry.io, and is fully opt-in</span>
+<span id="cb53-23"><a href="#cb53-23" aria-hidden="true" tabindex="-1"></a>            error_reporting:</span>
+<span id="cb53-24"><a href="#cb53-24" aria-hidden="true" tabindex="-1"></a>                enabled: true</span>
+<span id="cb53-25"><a href="#cb53-25" aria-hidden="true" tabindex="-1"></a>            postgresql:</span>
+<span id="cb53-26"><a href="#cb53-26" aria-hidden="true" tabindex="-1"></a>                password: ENC[AES256_GCM,data:cZq0luEMYkByNhKyu6L3sio4PDQ5sh1l,iv:7a534BkBd5qZkVFCcRIsJmCZQ0SdGLyqYncI798s0kY=,tag:FossEP7tUupbvKJkZetAjA==,type:str]</span>
+<span id="cb53-27"><a href="#cb53-27" aria-hidden="true" tabindex="-1"></a>        server:</span>
+<span id="cb53-28"><a href="#cb53-28" aria-hidden="true" tabindex="-1"></a>            ingress:</span>
+<span id="cb53-29"><a href="#cb53-29" aria-hidden="true" tabindex="-1"></a>                ingressClassName: nginx</span>
+<span id="cb53-30"><a href="#cb53-30" aria-hidden="true" tabindex="-1"></a>                # Change to true when done</span>
+<span id="cb53-31"><a href="#cb53-31" aria-hidden="true" tabindex="-1"></a>                enabled: false</span>
+<span id="cb53-32"><a href="#cb53-32" aria-hidden="true" tabindex="-1"></a>                hosts:</span>
+<span id="cb53-33"><a href="#cb53-33" aria-hidden="true" tabindex="-1"></a>                    - authentik.moonpiedumpl.ing</span>
+<span id="cb53-34"><a href="#cb53-34" aria-hidden="true" tabindex="-1"></a>        postgresql:</span>
+<span id="cb53-35"><a href="#cb53-35" aria-hidden="true" tabindex="-1"></a>            enabled: true</span>
+<span id="cb53-36"><a href="#cb53-36" aria-hidden="true" tabindex="-1"></a>            auth:</span>
+<span id="cb53-37"><a href="#cb53-37" aria-hidden="true" tabindex="-1"></a>                password: ENC[AES256_GCM,data:yzFmr7JyPnBG50rej5yx+k/4jelfAzRF,iv:WoNEJq7HW60T5eTnA/bQ0MvMvKOVIvJt0KIN2dvX3/Q=,tag:dEP3uhYH0M+As7AW0l1vnA==,type:str]</span>
+<span id="cb53-38"><a href="#cb53-38" aria-hidden="true" tabindex="-1"></a>        redis:</span>
+<span id="cb53-39"><a href="#cb53-39" aria-hidden="true" tabindex="-1"></a>            enabled: true</span>
+<span id="cb53-40"><a href="#cb53-40" aria-hidden="true" tabindex="-1"></a>sops:</span>
+<span id="cb53-41"><a href="#cb53-41" aria-hidden="true" tabindex="-1"></a>    kms: []</span>
+<span id="cb53-42"><a href="#cb53-42" aria-hidden="true" tabindex="-1"></a>    gcp_kms: []</span>
+<span id="cb53-43"><a href="#cb53-43" aria-hidden="true" tabindex="-1"></a>    azure_kv: []</span>
+<span id="cb53-44"><a href="#cb53-44" aria-hidden="true" tabindex="-1"></a>    hc_vault: []</span>
+<span id="cb53-45"><a href="#cb53-45" aria-hidden="true" tabindex="-1"></a>    age:</span>
+<span id="cb53-46"><a href="#cb53-46" aria-hidden="true" tabindex="-1"></a>        - recipient: age1sg3u7ndj045gzv3u4w5t5kntplg6sz2hv6k3uxpxq85vtx56rc4s8q83gr</span>
+<span id="cb53-47"><a href="#cb53-47" aria-hidden="true" tabindex="-1"></a>          enc: |</span>
+<span id="cb53-48"><a href="#cb53-48" aria-hidden="true" tabindex="-1"></a>            -----BEGIN AGE ENCRYPTED FILE-----</span>
+<span id="cb53-49"><a href="#cb53-49" aria-hidden="true" tabindex="-1"></a>            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSBDSHVqYzZSU0g4ckZva3Zs</span>
+<span id="cb53-50"><a href="#cb53-50" aria-hidden="true" tabindex="-1"></a>            eEdIWWt0aFdKaHBhbTRkeUFWZTRHcnVyZVVnCmIwb1BISUxBZDBuUWFzNkV5TUFZ</span>
+<span id="cb53-51"><a href="#cb53-51" aria-hidden="true" tabindex="-1"></a>            TlZlcXJ0MU9Gd1pSTXAwNUNkalNhcVEKLS0tIGtBQktERWYzdk90YkVCMlhpTUVp</span>
+<span id="cb53-52"><a href="#cb53-52" aria-hidden="true" tabindex="-1"></a>            Wk05NzhvMFBtWTZIdWVlS0RuRTJjNmcKbWaU9SOlvcW5lBOfMPb9KDCCd4PNuGKg</span>
+<span id="cb53-53"><a href="#cb53-53" aria-hidden="true" tabindex="-1"></a>            DszzKrN6jWdpiSMdvLcPDJagLPrtCwtgL7XI3jvfmGH1DI87r4KxKA==</span>
+<span id="cb53-54"><a href="#cb53-54" aria-hidden="true" tabindex="-1"></a>            -----END AGE ENCRYPTED FILE-----</span>
+<span id="cb53-55"><a href="#cb53-55" aria-hidden="true" tabindex="-1"></a>    lastmodified: "2024-10-19T21:40:39Z"</span>
+<span id="cb53-56"><a href="#cb53-56" aria-hidden="true" tabindex="-1"></a>    mac: ENC[AES256_GCM,data:rU+SIASsBqnRkO6/HVntpYuk1p2A6QaCKoCtFFWLcaVV8Jn3CInXk/IORgkmpRhEdVzZlts48Rz8sh/OiSZdYsEeCzxfUFwEtBKk/2lpKfIip3cXlV0oDnkKFGP4OO8aXmxUcF0gCxVETSGqxnlb9+3f6KFmJsIs2OqvvFP9PgQ=,iv:DGykNA7WneKPMc972w2++mUwXdtwkYcRLJoLzz0nJEg=,tag:2wdz+FxeAiqAxrGoHVhJIQ==,type:str]</span>
+<span id="cb53-57"><a href="#cb53-57" aria-hidden="true" tabindex="-1"></a>    pgp: []</span>
+<span id="cb53-58"><a href="#cb53-58" aria-hidden="true" tabindex="-1"></a>    encrypted_regex: ^(password|secret_key)$</span>
+<span id="cb53-59"><a href="#cb53-59" aria-hidden="true" tabindex="-1"></a>    version: 3.9.1</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Although this looks like the best setup, I don’t know if it works, maybe only secrets can be decrypted?</p>
+</section>
+</section>
+<section id="nvidia-runtime" class="level2">
+<h2 class="anchored" data-anchor-id="nvidia-runtime">Nvidia Runtime</h2>
+<p><a href="https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html#installing-with-apt">Nvidia container toolkit apt docs</a></p>
 
 
+</section>
 </section>
 
 </main> <!-- /main -->

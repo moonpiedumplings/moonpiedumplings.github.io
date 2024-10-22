@@ -128,26 +128,32 @@ ul.task-list li input[type="checkbox"] {
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#game-setuplayout" id="toc-game-setuplayout" class="nav-link active" data-scroll-target="#game-setuplayout">Game Setup/Layout</a></li>
+  <li><a href="#game-setuplayout" id="toc-game-setuplayout" class="nav-link active" data-scroll-target="#game-setuplayout">Game Setup/Layout</a>
+  <ul class="collapse">
+  <li><a href="#gamemodes" id="toc-gamemodes" class="nav-link" data-scroll-target="#gamemodes">Gamemodes:</a></li>
+  </ul></li>
   <li><a href="#card-design" id="toc-card-design" class="nav-link" data-scroll-target="#card-design">Card Design</a>
   <ul class="collapse">
+  <li><a href="#offensivedefensive-trait-spreadsheet" id="toc-offensivedefensive-trait-spreadsheet" class="nav-link" data-scroll-target="#offensivedefensive-trait-spreadsheet">Offensive/Defensive Trait Spreadsheet</a></li>
   <li><a href="#offensive-aspects" id="toc-offensive-aspects" class="nav-link" data-scroll-target="#offensive-aspects">Offensive Aspects:</a></li>
   <li><a href="#defensive-aspects" id="toc-defensive-aspects" class="nav-link" data-scroll-target="#defensive-aspects">Defensive Aspects:</a></li>
   <li><a href="#misc-aspects" id="toc-misc-aspects" class="nav-link" data-scroll-target="#misc-aspects">Misc Aspects:</a></li>
   <li><a href="#active-traits" id="toc-active-traits" class="nav-link" data-scroll-target="#active-traits">Active Traits:</a></li>
+  <li><a href="#table" id="toc-table" class="nav-link" data-scroll-target="#table">Table</a></li>
   <li><a href="#triggers" id="toc-triggers" class="nav-link" data-scroll-target="#triggers">Triggers:</a></li>
   <li><a href="#curses" id="toc-curses" class="nav-link" data-scroll-target="#curses">Curses:</a></li>
   <li><a href="#misc-notes-and-workshopping" id="toc-misc-notes-and-workshopping" class="nav-link" data-scroll-target="#misc-notes-and-workshopping">Misc Notes and Workshopping:</a></li>
   </ul></li>
   <li><a href="#combat" id="toc-combat" class="nav-link" data-scroll-target="#combat">Combat</a>
   <ul class="collapse">
+  <li><a href="#combat-phase" id="toc-combat-phase" class="nav-link" data-scroll-target="#combat-phase">Combat Phase</a></li>
   <li><a href="#programming-this" id="toc-programming-this" class="nav-link" data-scroll-target="#programming-this">Programming This</a></li>
   </ul></li>
   </ul>
 </nav>
     </div>
 <!-- main -->
-<main class="content" id="quarto-document-content">
+<main class="content page-columns page-full" id="quarto-document-content">
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
@@ -189,10 +195,17 @@ ul.task-list li input[type="checkbox"] {
 <p>Life: Players start with 16 life Life can also be used to cast cards, which is basically the only way to cast cards before “factory” type cards are on the field or via 0 or negative cost cards.</p>
 <p>During the “block” phase of an attack, the blocking player can either cast 0 (or negative) cost cards, or cast cards using life. This makes cards effectively “instants”, allowing players to bring stuff on the field at the opponent turn, but at some price, as the cards must be either &lt; 0 cost or paid with life.</p>
 <p>Cards play in their “stunned” state. AkA: cards cannot attack first turn after playing (Might change if I adjust how cards do damage)</p>
-<p>Half of cards in graveyard go to exile, the other half go to the bottom of the players deck. Either completely random, pseudorandom, or complete player choice. Note: why is this better than multiple rounds? This could also be a seperate gamemode.</p>
 <p>Players can pay production to nerf cards. It costs X * N where N is the total amount of aspect points a card has in that aspect, to reduce that aspect by one. N does not change. So to completeley destroy a 3 health card, it costs 27 production points. To remove one of an 8 aspect card, it’s 8 production points, 2 is 16, etc.</p>
+<section id="gamemodes" class="level2">
+<h2 class="anchored" data-anchor-id="gamemodes">Gamemodes:</h2>
+<p>Best of 1, 16 life.</p>
+<p>Best of 3, 16 life.</p>
+<p>Alternate: Half of cards in graveyard go to exile, the other half go to the bottom of the players deck. Either completely random, pseudorandom, or complete player choice. Note: why is this better than multiple rounds? This could also be a seperate gamemode.</p>
+<p>Players have no life, but instead have a shared number line that acts as life. But, if the players have a certain difference between their opponent, then they lose. This difference starts as 2^32 or some other arbitrarily high power of two. But, it halves with every turn (or maybe every half turn?), eventually reducing itself down to one where it stays there.</p>
+<p>C*mmander: Players get to start with a 64 (more than legendary, or maybe 128) value card on the board. If it dies they lose? Or maybe they can recast it and they have player life.</p>
 </section>
-<section id="card-design" class="level1">
+</section>
+<section id="card-design" class="level1 page-columns page-full">
 <h1>Card Design</h1>
 <p>Round up (?)</p>
 <p>Rarity system:</p>
@@ -221,19 +234,64 @@ ul.task-list li input[type="checkbox"] {
 <p>Flavor text</p>
 <p>Card “Shop”</p>
 <p>Traits cost Trait Number * N where N is the total amount of traits</p>
+<section id="offensivedefensive-trait-spreadsheet" class="level2 page-columns page-full">
+<h2 class="anchored" data-anchor-id="offensivedefensive-trait-spreadsheet">Offensive/Defensive Trait Spreadsheet</h2>
+<div class="column-screen-inset">
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Offensive Trait</th>
+<th>Defensive Equivalent</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Attack: This card does X damage, or has X health</td>
+<td>Health: This card has X health</td>
+</tr>
+<tr class="even">
+<td>Multi-Attack: During combat phase, this card can launch and extra attack (solo or with others?) up to X extra times</td>
+<td>Shield: This card has X sets of it’s health, and a single attack, no matter how much damage it is, can only break a single shield</td>
+</tr>
+<tr class="odd">
+<td>Spellstorm: For every token applied to this card by the controller, actually X tokens are applied, and these applications count for the purposes of triggers</td>
+<td>Spellshield: For every X token applied to this card by opponent, this card is only affected by 1/X of them. If less than X-1 are applied, then this card isn’t affected at all</td>
+</tr>
+<tr class="even">
+<td>Weight: This card is equivalent to X-1 cards for the purposes of moving it</td>
+<td>Strength: This card can move X more cards than it could usually move, but they must be next to eachother OR could move X cards from further away, like a reach type mechanic</td>
+</tr>
+<tr class="odd">
+<td>Agility: This card can move over X cards it wouldn’t normally be able to move over</td>
+<td>RestrictionTypeThing: This card restrict movement of cards over, or onto itself</td>
+</tr>
+<tr class="even">
+<td>MultiAttack (needs different name): This card can hold more than one card under it, and even move with more than one card under it, up to X extra cards</td>
+<td>MultiBlock (needs different name): This card requires X more cards on top of it to be able to move past it. The extra cards on top of it, fight the card independently, and do not deal cumulative damage (or take less damage than this cards whole attack stat)</td>
+</tr>
+<tr class="odd">
+<td>Buyback: Pay base cost - X when casting this card or when it’s on the field. Then, when it dies, it returns to your hand instead of going to the graveyard. (too weak. maybe mtg storm?)</td>
+<td>Recursion: This card can be cast from the graveyard for the base cost - X recursion tokens on it (maybe X * N?)</td>
+</tr>
+<tr class="even">
+<td>Integrate: Pay N * N production points to combine this card with another card, stacking all values. Integrated cards count as one card, even when targeted by another integrate card, but the calculation becomes N3 * (N1 + N2) (Goals: Replace mtg archetype voltron, mtg keywords equip, fortify, enchant, mutate, merge, meld)</td>
+<td>Debuff/Attatch Curse: X: Pay N + N – X points to apply a debuff to a card with value N, where all the aspects of this card are subtracted from that card. Actives and Curses carry over. The card can be considered to be “recast” and curses activate immediately.</td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
 <section id="offensive-aspects" class="level2">
 <h2 class="anchored" data-anchor-id="offensive-aspects">Offensive Aspects:</h2>
 <p><strong>Attack</strong>: X Give this card the ability to attack, and 1 + X attack power. Cards need at least one attack to be able to block.</p>
-<p><strong>Multi-Target-Attack</strong>: X attack more than one target/structure, to a total of 2 + X targets. Each attack/block/hit encounter is treated as an individual encounter — this multiplies damage essentially. Alternative description (same function): this card makes multiple attacks against multiple targets, and recovers health between each attack.</p>
-<p><strong>Multi-Blocker-Attack</strong>: X This card, when attacking a target, is treated as actually doing 2 + X attacks toward a target. Unblocked attacks go through. Each encounter with a blocker is kept seperate.</p>
-<p>Goals: Replace mtg creature tokens, mtg evasion mechanics (keywords flying, horsemanship, unblockable, trample, etc)</p>
-<p>https://mtg.fandom.com/wiki/Evasion_ability</p>
-<p><strong>Area-Of-Attack</strong>: X: 1 + X This cards deals it’s attack damage to 1 + X other blockers.</p>
-<p><strong>Collective attack</strong>: Base + X. Allows for pooling of attackers up to 1 + X other attackers. Counts as one attack, even to multi block. Attacking player can choose how the damage is distributed to the cards in the merged attack. Merged attacks share offensive traits.</p>
-<p>Idea: replace mtg banding</p>
 <p><strong>Double Tap</strong>: 1 + ??: Card has does a second attack which happens before the first one in an encounter, doing extra damage. Opponent can pay some porportion of production to remove some proportion of double tap from a card.</p>
 <p>Alt idea: During each section of the combat phase, player can chose to do extra damage with this card towards cards it is over/under.</p>
 <p>Goals: Shield-remove, replace mtg keyword deathtouch.</p>
+<p><strong>Spellbuff</strong>: tokens applied to this card by it’s controller are multiplied, and count as that many applications of that token.</p>
 </section>
 <section id="defensive-aspects" class="level2">
 <h2 class="anchored" data-anchor-id="defensive-aspects">Defensive Aspects:</h2>
@@ -252,15 +310,99 @@ ul.task-list li input[type="checkbox"] {
 </section>
 <section id="misc-aspects" class="level2">
 <h2 class="anchored" data-anchor-id="misc-aspects">Misc Aspects:</h2>
-<p><strong>Integrate</strong>: X: X Pay N * N production points to combine this card with another card, stacking all values. Integrated cards count as one card, even when targeted by another integrate card, but the calculation becomes N * (N1 + N2)</p>
-<p>Goals: Replace mtg archetype voltron, mtg keywords equip, fortify, enchant, mutate, merge, meld</p>
-<p>Problem: Polarity reversal doesn’t effect integrate. Offensive/defensive equivalent? : Debuff/Attatch</p>
-<p>Solution: Pay some amount of production to dissasemble integrated cards. Don’t like, as it kinda defeats the points of “green” decks. Maybe: Opponent can pay production to keep integrate card integrated</p>
+<p><strong>Integrate</strong>: X: X Pay N * N production points to combine this card with another card, stacking all values. Integrated cards count as one card, even when targeted by another integrate card, but the calculation becomes N3 * (N1 + N2)</p>
 <p><strong>Debuff/Attatch Curse</strong>: X: Pay N + N – X points to apply a debuff to a card with value N, where all the aspects of this card are subtracted from that card. Actives and Curses carry over.</p>
 <p>How to remove? Pay cost? Card death?</p>
 </section>
 <section id="active-traits" class="level2">
 <h2 class="anchored" data-anchor-id="active-traits">Active Traits:</h2>
+</section>
+<section id="table" class="level2">
+<h2 class="anchored" data-anchor-id="table">Table</h2>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Active</th>
+<th>Cost (* N) : Output</th>
+<th>Application Cost?</th>
+<th>Effect</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Mana Generation (probably call it just Mana for short)</td>
+<td>X : X * N (*N?)</td>
+<td>N/A</td>
+<td>Generates Mana for casting things</td>
+</tr>
+<tr class="even">
+<td>Stealth</td>
+<td>X : X</td>
+<td>Don’t know.</td>
+<td>N/A</td>
+</tr>
+<tr class="odd">
+<td>Necromancy (or maybe recursion?)</td>
+<td>X : X</td>
+<td>Don’t know, probably not</td>
+<td>Apply to cards in your graveyard. Then, those cards can be cast for base cost - amount of Necromancy/Recursion tokens applied to them again. (or maybe base cost - X*N?)</td>
+</tr>
+<tr class="even">
+<td>Scry/Tutor</td>
+<td>X : X (*N?)</td>
+<td>Don’t know, probably</td>
+<td>N/A yet. Probably look at X cards or look at cards with up to X production point cost</td>
+</tr>
+<tr class="odd">
+<td>Polarity Reversal</td>
+<td>X : X (*N?)</td>
+<td>Probably not</td>
+<td>Change offensive abilities to their defensive equivalents defensive and vice versa, of a single card</td>
+</tr>
+<tr class="even">
+<td>Counterspell</td>
+<td>X : X</td>
+<td></td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>Replicate</td>
+<td>X : X</td>
+<td></td>
+<td></td>
+</tr>
+<tr class="even">
+<td>Gain Life</td>
+<td>X : X</td>
+<td>1 production point per token</td>
+<td>Gain life when applied</td>
+</tr>
+<tr class="odd">
+<td>Burn (direct damage)</td>
+<td>X : X</td>
+<td>probably</td>
+<td>Apply direct damage to any card or your opponent, as long as their is a card path from you to that card or your player</td>
+</tr>
+<tr class="even">
+<td>Arbitrary Aspect (trigger?)</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>Arbitrary Negative Aspect</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
 <ul>
 <li>So the idea behind “actives” is that they generate points/tokens that can be spent on things — but don’t have to be spent. The actives that cost production to use, only cost production on the application of the active, rather than the generation/creation of the points.</li>
 </ul>
@@ -286,9 +428,46 @@ ul.task-list li input[type="checkbox"] {
 <p><strong>Burn/Direct damage</strong>: X: X: Deal direct damage to opponent, but this requires that you must pay production for each damage done, and damage is limited by defensive cards under your cards along the path.</p>
 <p><strong>Abitrary Active/Trigger</strong> : Produce actives/triggers to place on cards. Should this cost production to apply?</p>
 <p><strong>Arbitrary Negative Active/Trigger</strong>: Produces negatives to put on cards. Negative health is straightforward, but negative damage, “agility”, and etc get interesting.</p>
+<p><strong>Empheral</strong>: Cause a card to not be affected by stuff, but also not be able to affect stuff. Basically mtg phase.</p>
 </section>
 <section id="triggers" class="level2">
 <h2 class="anchored" data-anchor-id="triggers">Triggers:</h2>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Trigger Name</th>
+<th>Output</th>
+<th>Multi-Activate</th>
+<th>Triggers on?</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Instead of card draw</td>
+<td>X * N</td>
+<td>Probably Not</td>
+<td>Players decide to do this instead of drawing one of their five cards they can draw</td>
+</tr>
+<tr class="even">
+<td>On card play</td>
+<td>X * N</td>
+<td>No</td>
+<td>Generates actives when this card is played</td>
+</tr>
+<tr class="odd">
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
 <p><strong>Familiar friends</strong>: X: When you play a card with similar trait and valuet and value appears, including this specific trigger + active, Do up to 1 + X of an active trait, based on the common traits and values that are shared.</p>
 <p>Note: Too op if it includes health, attack, and friends… but is it?</p>
 <p>Also: Familiar friends… but on death?</p>
@@ -301,7 +480,11 @@ ul.task-list li input[type="checkbox"] {
 <p><strong>Getting attacked by X cards</strong>: X: X</p>
 <p><strong>When XYZ active token is applied</strong>: X : X</p>
 <p>Most notable of this is: “when lifegain” as that has very good synergy</p>
+<p>Problem (?): Can go infinite.</p>
 <p><strong>When opponent takes damage</strong>: X : X</p>
+<ul>
+<li>This could lead to going infinite with “burn” tokens.</li>
+</ul>
 <p><strong>Formation: When pattern created during attack/defense phase</strong>: Form a pattern of your own cards (must be on on top): X : X * (cards with same trigger in the pattern) * (amount of different patterns linked together):</p>
 <p>Eg: A pattern can be a straight line, or a curved line, or a grouping of three, a lightning bolt or whatever. Orientation does not matter (?), only relative orientation does.</p>
 <p>Probably a better way to do this.</p>
@@ -311,13 +494,13 @@ ul.task-list li input[type="checkbox"] {
 </section>
 <section id="curses" class="level2">
 <h2 class="anchored" data-anchor-id="curses">Curses:</h2>
-<p><strong>Constant Mana Cost</strong>: Take X mana from the player every turn, or if they can’t provide that, life. In exchaninge, offer X * N card creation points for players to use. Essentially for each negative mana point, they can add one of each trait for each negative manapoint during the turn. Must be paid before the attacking step.</p>
+<p><strong>Constant Mana Cost</strong>: Take X mana from the player every turn, or if they can’t provide that, life. In exchange, offer X * N card creation points for players to use. Essentially for each negative mana point, they can add one of each trait for each negative mana point during the turn. Must be paid before the attacking step.</p>
 <ul>
 <li>Should it die if no mana given?</li>
 <li>Or should it take from life?</li>
 <li>What about production? Probably not effect actives… but I like the idea of cumulative upkeep for a spell tower.</li>
 </ul>
-<p>I think I need to seperate this into two different curses: One which does damage, and one that doesn’t.</p>
+<p>I think I need to separate this into two different curses: One which does damage, and one that doesn’t.</p>
 <p><strong>Day/Night</strong>: X from anything: X Opponent gains control of this card during their turn, except the card doesn’t have full stats. It only has X stats, X for each trait in place. It also gains X stats in the opposite section of held traits. So 4 hp, but 0 attack, but 2 X becomes 2 hp, 2 attack.</p>
 <p>How to handle one time spell cards? * Day/night results in the card staying alive, even when it has 0 or less health * Opponent gets a portion of spell effects * Daynight straight up doesn’t affect actives ← I like this one</p>
 <p>May need different name, mtg already has daynight. Traitor? Betrayal? Doublecross? Doubleagent?</p>
@@ -337,12 +520,14 @@ ul.task-list li input[type="checkbox"] {
 <li>Allow spell damage to kill the battle?</li>
 </ul>
 <p>Goal: replace siege/battle from mtg</p>
-<p><strong>Equality</strong>: X from triggers/actives: X times N this card gives oppenent up to X*N of of “actives” it generates, when it generates them.</p>
+<p><strong>Equality</strong>: X from triggers/actives: X times N this card gives opponent up to X*N of of “actives” it generates, when it generates them.</p>
 <p>Goal: Allow for the creation of board wipe type effects.</p>
 <p><strong>Sacrifice</strong> X from anything : X You need to sacrifice cards with a base cost of X * N cards on the field when played.</p>
 </section>
 <section id="misc-notes-and-workshopping" class="level2">
 <h2 class="anchored" data-anchor-id="misc-notes-and-workshopping">Misc Notes and Workshopping:</h2>
+<p>Goals: Replace mtg creature tokens, mtg evasion mechanics (keywords flying, horsemanship, unblockable, trample, etc)</p>
+<p>https://mtg.fandom.com/wiki/Evasion_ability</p>
 <p>Resources (used to do stuff):</p>
 <ul>
 <li>Mana/Production (can cast from life)
@@ -364,18 +549,13 @@ ul.task-list li input[type="checkbox"] {
 <li>I like the “equality” curse</li>
 <li>But I want one more</li>
 </ul>
-<p>Tribal mechanics:</p>
-<ul>
-<li>Link somehow, artificial synergy</li>
-<li>Trigger that triggers if you form a specific chain patter. Like forming a certain type of connection. Multiplies for every card in the chain that also has the trigger, and</li>
-</ul>
 <p>Some kind of meta card attribute?</p>
 <p>Potential keywords:</p>
 <p>Recursion: X : X Pay Base Cost – X to cast this card from your graveyard</p>
 <p>Buyback: X : X Pay Cost – X in addition to casting this spell to return it to your hand when you cast it.</p>
-<p>Weight/Strength: Make it harder to move this card/can move weight or move more cards?</p>
-<p>Movement/Restriction: Ability to move over cards it wouldn’t be able to move over / Ability to restrict movement of cards over itself</p>
-<p>Multiattack/Multiblock: Ability to hold more than one card under and carry / card requires more than one card on top in order for cards to move past it</p>
+<ul>
+<li>Too weak</li>
+</ul>
 <p>Banding/Splitting: Combine and divide mechanics somehow (or maybe I should build these into the game rules)</p>
 <p>Anti-Actives</p>
 <p>Take life: X :X</p>
@@ -383,11 +563,13 @@ ul.task-list li input[type="checkbox"] {
 <p>Gain +X +X when X: Idea is some conditional gain strength mechanic</p>
 <p>In general, I want some kind of state based trigger, that can activate every turn.</p>
 <p>When X cards on the field. When X cards in graveyard. X in hand? etc. How to make fair?</p>
+<p>Okay, after watching <a href="https://www.youtube.com/watch?v=HuAkw707oOA">A video about lifedecking</a>, I’ve realized that it’s problematic to incentivize cards in the graveyard, because players want to <em>play</em> their cards, and a strategy which incentivizes sacrifice or something along those lines isn’t really that. But, this problem with lifedecking also applies to <em>any</em> incentive to maintain a “state” of the game. Although an ongoing incentive to maintain a certain boardstate is good to get to, it also incentivies players to <em>keep</em> that board state — which may not be fun. So this will be put on hold for a while, and instead, I will only incentivize <em>actions</em> by the players. Interesting =/= fun to play.</p>
 <p>Alternate cost where players can pay other token types. Maybe decreases N or lets them pay base cost. This can be a curse type.</p>
-<p>Tax and Stax: Some kind of opponent restrictions</p>
+<p>Tax and Stax: Fundamentally, a tax an opponent can’t pay to do something is like a stax: Some kind of opponent restrictions… actually, I don’t like this. I want a control archetype, but I confused control with stax/tax. Clash Royale manages to have control be a major archetype without s/tax.</p>
 <ul>
 <li>Opponent can’t X doesn’t work because of the way my game is designed. However, opponent can’t do X fundamentally equivalent to a tax effect that the opponent can’t afford to play?</li>
 </ul>
+<p>Formation application token: Allow for multiplication of tokens on the battlefield. Costs X1 * X2 * X3 * N where X1 is the multiplication and X2 is the formation size, and X3 is the total tokens it can take. So a 2 * 1 * 3 would double up to three tokens for a single card.</p>
 <p>Some kind of sacrifice cards curse.</p>
 <p>See also: MTG emerge</p>
 <p>MTG Surge</p>
@@ -420,15 +602,29 @@ ul.task-list li input[type="checkbox"] {
 <p>How should cards launch an attack against valuable cards? Surrounding them? Building a chain which accesses them?</p>
 <p>Ideas:</p>
 <ul>
-<li>Cards deal (ATK + ATK + ATK) *N where N in the amount of cards surrounding a card</li>
-<li>Players form a set of connections around a card, where the</li>
+<li>Attackers cards deal (ATK + ATK + ATK) *N where N in the amount of cards surrounding a card, but those cards of that set can’t attack a player</li>
+<li>Defenders cards can protect (DEF* )</li>
 <li>Surrounding a card with 6 cards is an insta kill (can be on top cards as well)</li>
+<li>This is in <em>addition</em> to the mechanic where cards on top of eachother battle.</li>
 </ul>
+<p>Idea: replace mtg banding</p>
 <p>Should cards being on top or below matter? Maybe? Only on top cards count for purposes of a chain, and also can surround other cards.</p>
-<p>But also: How about targeting production towers?</p>
 <p>Anyway, this is good, but I need to calculate the fairness of this game. I think the only way to calculate fairness is to write a program that solves this game.</p>
 <p>Combat ends <strong>immediately</strong> where a player cannot make another move (either attacker or defender).</p>
 <p>What about drawish rules, like 3 fold repetition?</p>
+<section id="combat-phase" class="level2">
+<h2 class="anchored" data-anchor-id="combat-phase">Combat Phase</h2>
+<p>It goes step by step. Steps go like</p>
+<ul>
+<li><p>Offensive player moves cards, or plays cards into the combat zone. This one can only be done once.</p></li>
+<li><p>Offensive player activates an “instead of draw trigger” Only done once, and mutually exclusive with the above.</p></li>
+<li><p>Defensive player makes a move, or plays a card into the combat zone.</p></li>
+<li><p>End step</p></li>
+</ul>
+<p>Or maybe vice versa?</p>
+<p>Regardless, cards only die at the end of each “step”, giving either player time to do things like counterspell and react with spell type abilities.</p>
+<p>Infinite Loop Prevention: A trigger can only be triggered once per combat step (for both players).</p>
+</section>
 <section id="programming-this" class="level2">
 <h2 class="anchored" data-anchor-id="programming-this">Programming This</h2>
 <p>I think I need to convert this to a python program that will solve any set of rules I give it, in order to actually ensure my game is fair., I’ve done some testing on my own, but I don’t think just one person can play chess.</p>

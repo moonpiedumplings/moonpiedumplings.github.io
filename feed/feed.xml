@@ -2010,19 +2010,693 @@ font-style: inherit;"> </span><span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">9898</span></span></code></pre></div>
 </div>
-<p>And this works!</p>
+<p>And this works! Except NOT!. It doesn’t errors, and I instead need to have my issuer be:</p>
+<div class="sourceCode" id="cb46" style="background: #f1f3f5;"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb46-1"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">apiVersion</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> cert-manager.io/v1</span></span>
+<span id="cb46-2"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">kind</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> Issuer</span></span>
+<span id="cb46-3"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">metadata</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span></span>
+<span id="cb46-4"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">name</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> letsencrypt-staging</span></span>
+<span id="cb46-5"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">namespace</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> default</span></span>
+<span id="cb46-6"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">spec</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span></span>
+<span id="cb46-7"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">acme</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span></span>
+<span id="cb46-8"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">    # The ACME server URL</span></span>
+<span id="cb46-9"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">server</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> https://acme-staging-v02.api.letsencrypt.org/directory</span></span>
+<span id="cb46-10"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">    # Email address used for ACME registration</span></span>
+<span id="cb46-11"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">email</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> moonpiedumplings2@gmail.com</span></span>
+<span id="cb46-12"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">    # Name of a secret used to store the ACME account private key</span></span>
+<span id="cb46-13"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">privateKeySecretRef</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span></span>
+<span id="cb46-14"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">      </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">name</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> letsencrypt-staging</span></span>
+<span id="cb46-15"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">    # Enable the HTTP-01 challenge provider</span></span>
+<span id="cb46-16"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">solvers</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span></span>
+<span id="cb46-17"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">      </span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">-</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">http01</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span></span>
+<span id="cb46-18"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">          </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">ingress</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> </span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">{}</span></span></code></pre></div>
 </section>
 </section>
-</section>
-<section id="authentik" class="level1">
-<h1>Authentik</h1>
+<section id="authentik" class="level2">
+<h2 class="anchored" data-anchor-id="authentik">Authentik</h2>
 <ul>
 <li><a href="https://artifacthub.io/packages/helm/goauthentik/authentik" class="uri">https://artifacthub.io/packages/helm/goauthentik/authentik</a></li>
 <li><a href="https://docs.goauthentik.io/docs/install-config/install/kubernetes">Authentik Docs</a></li>
 </ul>
+<section id="volumes" class="level3">
+<h3 class="anchored" data-anchor-id="volumes">Volumes</h3>
+<p>I attempted to deploy authentik without secrets. However, it crashes:</p>
+<div class="sourceCode" id="cb47" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb47-1">Events:</span>
+<span id="cb47-2">  Type     Reason            Age                From               Message</span>
+<span id="cb47-3">  ----     ------            ----               ----               -------</span>
+<span id="cb47-4">  Warning  FailedScheduling  46s (x4 over 15m)  default-scheduler  0/1 nodes are available: pod has unbound immediate PersistentVolumeClaims. preemption: 0/1 nodes are available: 1 Preemption is not helpful for scheduling.</span></code></pre></div>
+<div class="sourceCode" id="cb48" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb48-1">[moonpie@lizard cert-manager]$ kubectl get -A persistentvolumeclaims</span>
+<span id="cb48-2">NAMESPACE   NAME                                  STATUS    VOLUME   CAPACITY   ACCESS MODES   STORAGECLASS   VOLUMEATTRIBUTESCLASS   AGE</span>
+<span id="cb48-3">default     data-authentik-postgresql-0           Pending                                                     &lt;unset&gt;                 39m</span>
+<span id="cb48-4">default     redis-data-authentik-redis-master-0   Pending                                                     &lt;unset&gt;                 39m</span></code></pre></div>
+<p>So, I need to create a persistent volume of some kind, and then have it specifically reference the persistent volume claims that are used.</p>
+<p>But… which provider do I use. Ideally, I want something similar to docker/podman volumes, where I don’t have to deal with mapping them to exact host paths. I also want these persistent volume claims to be automatically met, that is, dynamically provisioned storage.</p>
+<p>I decided to use [openebs] for this.</p>
+<p>Here are my flux configs:</p>
+<div class="sourceCode" id="cb49" style="background: #f1f3f5;"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb49-1"><span class="pp" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">---</span></span>
+<span id="cb49-2"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">apiVersion</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> source.toolkit.fluxcd.io/v1</span></span>
+<span id="cb49-3"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">kind</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> HelmRepository</span></span>
+<span id="cb49-4"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">metadata</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span></span>
+<span id="cb49-5"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">name</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> openebs</span></span>
+<span id="cb49-6"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">namespace</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> default</span></span>
+<span id="cb49-7"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">spec</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span></span>
+<span id="cb49-8"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">interval</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> 1m0s</span></span>
+<span id="cb49-9"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">url</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> https://openebs.github.io/charts</span></span>
+<span id="cb49-10"><span class="pp" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">---</span></span>
+<span id="cb49-11"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">apiVersion</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> helm.toolkit.fluxcd.io/v2</span></span>
+<span id="cb49-12"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">kind</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> HelmRelease</span></span>
+<span id="cb49-13"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">metadata</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span></span>
+<span id="cb49-14"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">name</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> openebs</span></span>
+<span id="cb49-15"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">namespace</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> default</span></span>
+<span id="cb49-16"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">spec</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span></span>
+<span id="cb49-17"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">chart</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span></span>
+<span id="cb49-18"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">spec</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span></span>
+<span id="cb49-19"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">      </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">chart</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> openebs</span></span>
+<span id="cb49-20"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">      </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">reconcileStrategy</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> ChartVersion</span></span>
+<span id="cb49-21"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">      </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">sourceRef</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span></span>
+<span id="cb49-22"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">        </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">kind</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> HelmRepository</span></span>
+<span id="cb49-23"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">        </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">name</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> openebs</span></span>
+<span id="cb49-24"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">      # version: </span></span>
+<span id="cb49-25"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">interval</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> 1m0s</span></span></code></pre></div>
+<p>I need to a set a version, but this deploys openebs for now. However, it doesn’t instantly work, because the openebs-hostpath provisioner is not set to the default for storage classes. But when I do, using <code>kubectl edit storageclass openebs-hostpath</code></p>
+<div class="sourceCode" id="cb50" style="background: #f1f3f5;"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb50-1"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">apiVersion</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> storage.k8s.io/v1</span></span>
+<span id="cb50-2"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">kind</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> StorageClass</span></span>
+<span id="cb50-3"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">metadata</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span></span>
+<span id="cb50-4"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">annotations</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span></span>
+<span id="cb50-5"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">    cas.openebs.io/config</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">: </span><span class="ch" style="color: #20794D;
+background-color: null;
+font-style: inherit;">|</span></span>
+<span id="cb50-6">      - name: StorageType</span>
+<span id="cb50-7">        value: "hostpath"</span>
+<span id="cb50-8">      - name: BasePath</span>
+<span id="cb50-9">        value: "/var/openebs/local"</span>
+<span id="cb50-10"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">meta.helm.sh/release-name</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> openebs</span></span>
+<span id="cb50-11"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">meta.helm.sh/release-namespace</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> default</span></span>
+<span id="cb50-12"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">openebs.io/cas-type</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> local</span></span>
+<span id="cb50-13"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">storageclass.kubernetes.io/is-default-class</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> </span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"true"</span></span>
+<span id="cb50-14"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">creationTimestamp</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> </span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"2024-10-22T02:33:23Z"</span></span>
+<span id="cb50-15"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">labels</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span></span>
+<span id="cb50-16"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">app.kubernetes.io/managed-by</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> Helm</span></span>
+<span id="cb50-17"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">helm.toolkit.fluxcd.io/name</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> openebs</span></span>
+<span id="cb50-18"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">helm.toolkit.fluxcd.io/namespace</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> default</span></span>
+<span id="cb50-19"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">name</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> openebs-hostpath</span></span>
+<span id="cb50-20"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">resourceVersion</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> </span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"10886300"</span></span>
+<span id="cb50-21"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">uid</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> 0bfb540c-e5e6-4f4c-bf7b-cd232630742c</span></span>
+<span id="cb50-22"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">provisioner</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> openebs.io/local</span></span>
+<span id="cb50-23"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">reclaimPolicy</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> Delete</span></span>
+<span id="cb50-24"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">volumeBindingMode</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> WaitForFirstConsumer</span></span></code></pre></div>
+<p>I appended: <code>storageclass.kubernetes.io/is-default-class: "true"</code> to the annotations section, and then PersistentVolumes are automatically created to satisfy the needs of authentik:</p>
+<div class="sourceCode" id="cb51" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb51-1">[moonpie@lizard flux-config]$ kubectl get persistentvolumes</span>
+<span id="cb51-2">NAME                                       CAPACITY   ACCESS MODES   RECLAIM POLICY   STATUS   CLAIM                                         STORAGECLASS       VOLUMEATTRIBUTESCLASS   REASON   AGE</span>
+<span id="cb51-3">pvc-e179a2b6-0fa2-4fd8-9cfd-07c152b10bbe   8Gi        RWO            Delete           Bound    default/redis-data-authentik-redis-master-0   openebs-hostpath   &lt;unset&gt;                          9m35s</span>
+<span id="cb51-4">pvc-ed21ace0-2580-4ea1-aaeb-6b24b04bb55e   8Gi        RWO            Delete           Bound    default/data-authentik-postgresql-0           openebs-hostpath   &lt;unset&gt;                          9m35s</span></code></pre></div>
+<p>After this, the Authentik server is up. But, it looks like a reclaim policy of “delete”, means that if I delete the Authentik helm chart, my user data will be deleted as well.</p>
+<p>Instead, I think I need to manually create volumes in my flux config, that use “claimRef” to get claimed by the right PersistentVolumeClaims. Or maybe I can have openebs volumes retain themselves?</p>
+<p>Actually, I think I need to <a href="https://openebs.io/docs/user-guides/local-storage-user-guide/local-pv-hostpath/hostpath-configuration">create another storageclass</a> that can dynamically provision volumes, but this one has the settings and specs I want, and is the default.</p>
+</section>
+<section id="secretssops" class="level3">
+<h3 class="anchored" data-anchor-id="secretssops">Secrets/SOPS</h3>
 <p>So, authentik looks difficult, because the helm chart requires quite a complex set of configurations, and I don’t want to put those in the same file for the helmrelease.</p>
+<p>I think what I want to do is this: I should seperate out the authentik configs into a “ConfigMap”, which gets fed to the helm chart, and that will be one portion of the authentik config. The other portion will be a “Secret” which gets decrypted by fluxcd and sops.</p>
+<ul>
+<li><a href="https://fluxcd.io/flux/guides/mozilla-sops/">Fluxcd docs on sops</a> (I will be using age, since that’s what the sops docs recomment)</li>
+<li><a href="https://fluxcd.io/flux/migration/helm-operator-migration/#configmap-and-secret-references">FLuxcd docs on configmap and secret references</a></li>
+</ul>
+<p>I started by following the <a href="https://fluxcd.io/flux/guides/mozilla-sops/">sops-age</a> guide.</p>
+<p>So, here is the problem I am encountering. I want to encrypt only the relevant values, but a configmap or secret stores the entire secret means that I have to encrypt an entire set of data values.</p>
+<p>I was hoping for something like this:</p>
+<div class="code-with-filename">
+<div class="code-with-filename-file">
+<pre><strong>helmrelease.yaml</strong></pre>
+</div>
+<div class="sourceCode" id="cb52" data-filename="helmrelease.yaml" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb52-1">---</span>
+<span id="cb52-2">apiVersion: helm.toolkit.fluxcd.io/v2</span>
+<span id="cb52-3">kind: HelmRelease</span>
+<span id="cb52-4">metadata:</span>
+<span id="cb52-5">  name: authentik</span>
+<span id="cb52-6">  namespace: default</span>
+<span id="cb52-7">spec:</span>
+<span id="cb52-8">  chart:</span>
+<span id="cb52-9">    spec:</span>
+<span id="cb52-10">      chart: authentik</span>
+<span id="cb52-11">      reconcileStrategy: ChartVersion</span>
+<span id="cb52-12">      sourceRef:</span>
+<span id="cb52-13">        kind: HelmRepository</span>
+<span id="cb52-14">        name: authentik</span>
+<span id="cb52-15">        # Figure out what version I should have</span>
+<span id="cb52-16">      # version: </span>
+<span id="cb52-17">  interval: 1m0s</span>
+<span id="cb52-18">  values:</span>
+<span id="cb52-19">    authentik:</span>
+<span id="cb52-20">        secret_key: "PleaseGenerateASecureKey"</span>
+<span id="cb52-21">        # This sends anonymous usage-data, stack traces on errors and</span>
+<span id="cb52-22">        # performance data to sentry.io, and is fully opt-in</span>
+<span id="cb52-23">        error_reporting:</span>
+<span id="cb52-24">            enabled: true</span>
+<span id="cb52-25">        postgresql:</span>
+<span id="cb52-26">            password: "ThisIsNotASecurePassword"</span>
+<span id="cb52-27">    server:</span>
+<span id="cb52-28">        ingress:</span>
+<span id="cb52-29">            ingressClassName: nginx</span>
+<span id="cb52-30">            # Change to true when done</span>
+<span id="cb52-31">            enabled: false</span>
+<span id="cb52-32">            hosts:</span>
+<span id="cb52-33">                - authentik.moonpiedumpl.ing</span>
+<span id="cb52-34">    postgresql:</span>
+<span id="cb52-35">        enabled: true</span>
+<span id="cb52-36">        auth:</span>
+<span id="cb52-37">            password: "ThisIsNotASecurePassword"</span>
+<span id="cb52-38">    redis:</span>
+<span id="cb52-39">        enabled: true</span></code></pre></div>
+</div>
+<p>And then:</p>
+<div class="sourceCode" id="cb53" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb53-1">[moonpie@lizard authentik]$ sops encrypt -a age1sg3u7ndj045gzv3u4w5t5kntplg6sz2hv6k3uxpxq85vtx56rc4s8q83gr --encrypted-regex "^(password|secret_key)$" helmrelease.yaml</span>
+<span id="cb53-2">apiVersion: helm.toolkit.fluxcd.io/v2</span>
+<span id="cb53-3">kind: HelmRelease</span>
+<span id="cb53-4">metadata:</span>
+<span id="cb53-5">    name: authentik</span>
+<span id="cb53-6">    namespace: default</span>
+<span id="cb53-7">spec:</span>
+<span id="cb53-8">    chart:</span>
+<span id="cb53-9">        spec:</span>
+<span id="cb53-10">            chart: authentik</span>
+<span id="cb53-11">            reconcileStrategy: ChartVersion</span>
+<span id="cb53-12">            sourceRef:</span>
+<span id="cb53-13">                kind: HelmRepository</span>
+<span id="cb53-14">                name: authentik</span>
+<span id="cb53-15">                # Figure out what version I should have</span>
+<span id="cb53-16">            # version:</span>
+<span id="cb53-17">    interval: 1m0s</span>
+<span id="cb53-18">    values:</span>
+<span id="cb53-19">        authentik:</span>
+<span id="cb53-20">            secret_key: ENC[AES256_GCM,data:nujuuWM84Tid/15KOD9gyOwAaWa6EhsT,iv:kCkgXtzezxpNvHs0AFGELtwUOgzeljqffiqueraE8h0=,tag:5bQuit+QW5q/8RQOvNeNww==,type:str]</span>
+<span id="cb53-21">            # This sends anonymous usage-data, stack traces on errors and</span>
+<span id="cb53-22">            # performance data to sentry.io, and is fully opt-in</span>
+<span id="cb53-23">            error_reporting:</span>
+<span id="cb53-24">                enabled: true</span>
+<span id="cb53-25">            postgresql:</span>
+<span id="cb53-26">                password: ENC[AES256_GCM,data:cZq0luEMYkByNhKyu6L3sio4PDQ5sh1l,iv:7a534BkBd5qZkVFCcRIsJmCZQ0SdGLyqYncI798s0kY=,tag:FossEP7tUupbvKJkZetAjA==,type:str]</span>
+<span id="cb53-27">        server:</span>
+<span id="cb53-28">            ingress:</span>
+<span id="cb53-29">                ingressClassName: nginx</span>
+<span id="cb53-30">                # Change to true when done</span>
+<span id="cb53-31">                enabled: false</span>
+<span id="cb53-32">                hosts:</span>
+<span id="cb53-33">                    - authentik.moonpiedumpl.ing</span>
+<span id="cb53-34">        postgresql:</span>
+<span id="cb53-35">            enabled: true</span>
+<span id="cb53-36">            auth:</span>
+<span id="cb53-37">                password: ENC[AES256_GCM,data:yzFmr7JyPnBG50rej5yx+k/4jelfAzRF,iv:WoNEJq7HW60T5eTnA/bQ0MvMvKOVIvJt0KIN2dvX3/Q=,tag:dEP3uhYH0M+As7AW0l1vnA==,type:str]</span>
+<span id="cb53-38">        redis:</span>
+<span id="cb53-39">            enabled: true</span>
+<span id="cb53-40">sops:</span>
+<span id="cb53-41">    kms: []</span>
+<span id="cb53-42">    gcp_kms: []</span>
+<span id="cb53-43">    azure_kv: []</span>
+<span id="cb53-44">    hc_vault: []</span>
+<span id="cb53-45">    age:</span>
+<span id="cb53-46">        - recipient: age1sg3u7ndj045gzv3u4w5t5kntplg6sz2hv6k3uxpxq85vtx56rc4s8q83gr</span>
+<span id="cb53-47">          enc: |</span>
+<span id="cb53-48">            -----BEGIN AGE ENCRYPTED FILE-----</span>
+<span id="cb53-49">            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSBDSHVqYzZSU0g4ckZva3Zs</span>
+<span id="cb53-50">            eEdIWWt0aFdKaHBhbTRkeUFWZTRHcnVyZVVnCmIwb1BISUxBZDBuUWFzNkV5TUFZ</span>
+<span id="cb53-51">            TlZlcXJ0MU9Gd1pSTXAwNUNkalNhcVEKLS0tIGtBQktERWYzdk90YkVCMlhpTUVp</span>
+<span id="cb53-52">            Wk05NzhvMFBtWTZIdWVlS0RuRTJjNmcKbWaU9SOlvcW5lBOfMPb9KDCCd4PNuGKg</span>
+<span id="cb53-53">            DszzKrN6jWdpiSMdvLcPDJagLPrtCwtgL7XI3jvfmGH1DI87r4KxKA==</span>
+<span id="cb53-54">            -----END AGE ENCRYPTED FILE-----</span>
+<span id="cb53-55">    lastmodified: "2024-10-19T21:40:39Z"</span>
+<span id="cb53-56">    mac: ENC[AES256_GCM,data:rU+SIASsBqnRkO6/HVntpYuk1p2A6QaCKoCtFFWLcaVV8Jn3CInXk/IORgkmpRhEdVzZlts48Rz8sh/OiSZdYsEeCzxfUFwEtBKk/2lpKfIip3cXlV0oDnkKFGP4OO8aXmxUcF0gCxVETSGqxnlb9+3f6KFmJsIs2OqvvFP9PgQ=,iv:DGykNA7WneKPMc972w2++mUwXdtwkYcRLJoLzz0nJEg=,tag:2wdz+FxeAiqAxrGoHVhJIQ==,type:str]</span>
+<span id="cb53-57">    pgp: []</span>
+<span id="cb53-58">    encrypted_regex: ^(password|secret_key)$</span>
+<span id="cb53-59">    version: 3.9.1</span></code></pre></div>
+<p>Although this looks like the best setup, I don’t know if it works, maybe only secrets can be decrypted?</p>
+</section>
+</section>
+<section id="nvidia-runtime" class="level2">
+<h2 class="anchored" data-anchor-id="nvidia-runtime">Nvidia Runtime</h2>
+<p><a href="https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html#installing-with-apt">Nvidia container toolkit apt docs</a></p>
 
 
+</section>
 </section>
 
  ]]></description>
@@ -2046,10 +2720,17 @@ font-style: inherit;">9898</span></span></code></pre></div>
 <p>Life: Players start with 16 life Life can also be used to cast cards, which is basically the only way to cast cards before “factory” type cards are on the field or via 0 or negative cost cards.</p>
 <p>During the “block” phase of an attack, the blocking player can either cast 0 (or negative) cost cards, or cast cards using life. This makes cards effectively “instants”, allowing players to bring stuff on the field at the opponent turn, but at some price, as the cards must be either &lt; 0 cost or paid with life.</p>
 <p>Cards play in their “stunned” state. AkA: cards cannot attack first turn after playing (Might change if I adjust how cards do damage)</p>
-<p>Half of cards in graveyard go to exile, the other half go to the bottom of the players deck. Either completely random, pseudorandom, or complete player choice. Note: why is this better than multiple rounds? This could also be a seperate gamemode.</p>
 <p>Players can pay production to nerf cards. It costs X * N where N is the total amount of aspect points a card has in that aspect, to reduce that aspect by one. N does not change. So to completeley destroy a 3 health card, it costs 27 production points. To remove one of an 8 aspect card, it’s 8 production points, 2 is 16, etc.</p>
+<section id="gamemodes" class="level2">
+<h2 class="anchored" data-anchor-id="gamemodes">Gamemodes:</h2>
+<p>Best of 1, 16 life.</p>
+<p>Best of 3, 16 life.</p>
+<p>Alternate: Half of cards in graveyard go to exile, the other half go to the bottom of the players deck. Either completely random, pseudorandom, or complete player choice. Note: why is this better than multiple rounds? This could also be a seperate gamemode.</p>
+<p>Players have no life, but instead have a shared number line that acts as life. But, if the players have a certain difference between their opponent, then they lose. This difference starts as 2^32 or some other arbitrarily high power of two. But, it halves with every turn (or maybe every half turn?), eventually reducing itself down to one where it stays there.</p>
+<p>C*mmander: Players get to start with a 64 (more than legendary, or maybe 128) value card on the board. If it dies they lose? Or maybe they can recast it and they have player life.</p>
 </section>
-<section id="card-design" class="level1">
+</section>
+<section id="card-design" class="level1 page-columns page-full">
 <h1>Card Design</h1>
 <p>Round up (?)</p>
 <p>Rarity system:</p>
@@ -2078,19 +2759,64 @@ font-style: inherit;">9898</span></span></code></pre></div>
 <p>Flavor text</p>
 <p>Card “Shop”</p>
 <p>Traits cost Trait Number * N where N is the total amount of traits</p>
+<section id="offensivedefensive-trait-spreadsheet" class="level2 page-columns page-full">
+<h2 class="anchored" data-anchor-id="offensivedefensive-trait-spreadsheet">Offensive/Defensive Trait Spreadsheet</h2>
+<div class="column-screen-inset">
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Offensive Trait</th>
+<th>Defensive Equivalent</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Attack: This card does X damage, or has X health</td>
+<td>Health: This card has X health</td>
+</tr>
+<tr class="even">
+<td>Multi-Attack: During combat phase, this card can launch and extra attack (solo or with others?) up to X extra times</td>
+<td>Shield: This card has X sets of it’s health, and a single attack, no matter how much damage it is, can only break a single shield</td>
+</tr>
+<tr class="odd">
+<td>Spellstorm: For every token applied to this card by the controller, actually X tokens are applied, and these applications count for the purposes of triggers</td>
+<td>Spellshield: For every X token applied to this card by opponent, this card is only affected by 1/X of them. If less than X-1 are applied, then this card isn’t affected at all</td>
+</tr>
+<tr class="even">
+<td>Weight: This card is equivalent to X-1 cards for the purposes of moving it</td>
+<td>Strength: This card can move X more cards than it could usually move, but they must be next to eachother OR could move X cards from further away, like a reach type mechanic</td>
+</tr>
+<tr class="odd">
+<td>Agility: This card can move over X cards it wouldn’t normally be able to move over</td>
+<td>RestrictionTypeThing: This card restrict movement of cards over, or onto itself</td>
+</tr>
+<tr class="even">
+<td>MultiAttack (needs different name): This card can hold more than one card under it, and even move with more than one card under it, up to X extra cards</td>
+<td>MultiBlock (needs different name): This card requires X more cards on top of it to be able to move past it. The extra cards on top of it, fight the card independently, and do not deal cumulative damage (or take less damage than this cards whole attack stat)</td>
+</tr>
+<tr class="odd">
+<td>Buyback: Pay base cost - X when casting this card or when it’s on the field. Then, when it dies, it returns to your hand instead of going to the graveyard. (too weak. maybe mtg storm?)</td>
+<td>Recursion: This card can be cast from the graveyard for the base cost - X recursion tokens on it (maybe X * N?)</td>
+</tr>
+<tr class="even">
+<td>Integrate: Pay N * N production points to combine this card with another card, stacking all values. Integrated cards count as one card, even when targeted by another integrate card, but the calculation becomes N3 * (N1 + N2) (Goals: Replace mtg archetype voltron, mtg keywords equip, fortify, enchant, mutate, merge, meld)</td>
+<td>Debuff/Attatch Curse: X: Pay N + N – X points to apply a debuff to a card with value N, where all the aspects of this card are subtracted from that card. Actives and Curses carry over. The card can be considered to be “recast” and curses activate immediately.</td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
 <section id="offensive-aspects" class="level2">
 <h2 class="anchored" data-anchor-id="offensive-aspects">Offensive Aspects:</h2>
 <p><strong>Attack</strong>: X Give this card the ability to attack, and 1 + X attack power. Cards need at least one attack to be able to block.</p>
-<p><strong>Multi-Target-Attack</strong>: X attack more than one target/structure, to a total of 2 + X targets. Each attack/block/hit encounter is treated as an individual encounter — this multiplies damage essentially. Alternative description (same function): this card makes multiple attacks against multiple targets, and recovers health between each attack.</p>
-<p><strong>Multi-Blocker-Attack</strong>: X This card, when attacking a target, is treated as actually doing 2 + X attacks toward a target. Unblocked attacks go through. Each encounter with a blocker is kept seperate.</p>
-<p>Goals: Replace mtg creature tokens, mtg evasion mechanics (keywords flying, horsemanship, unblockable, trample, etc)</p>
-<p>https://mtg.fandom.com/wiki/Evasion_ability</p>
-<p><strong>Area-Of-Attack</strong>: X: 1 + X This cards deals it’s attack damage to 1 + X other blockers.</p>
-<p><strong>Collective attack</strong>: Base + X. Allows for pooling of attackers up to 1 + X other attackers. Counts as one attack, even to multi block. Attacking player can choose how the damage is distributed to the cards in the merged attack. Merged attacks share offensive traits.</p>
-<p>Idea: replace mtg banding</p>
 <p><strong>Double Tap</strong>: 1 + ??: Card has does a second attack which happens before the first one in an encounter, doing extra damage. Opponent can pay some porportion of production to remove some proportion of double tap from a card.</p>
 <p>Alt idea: During each section of the combat phase, player can chose to do extra damage with this card towards cards it is over/under.</p>
 <p>Goals: Shield-remove, replace mtg keyword deathtouch.</p>
+<p><strong>Spellbuff</strong>: tokens applied to this card by it’s controller are multiplied, and count as that many applications of that token.</p>
 </section>
 <section id="defensive-aspects" class="level2">
 <h2 class="anchored" data-anchor-id="defensive-aspects">Defensive Aspects:</h2>
@@ -2109,15 +2835,99 @@ font-style: inherit;">9898</span></span></code></pre></div>
 </section>
 <section id="misc-aspects" class="level2">
 <h2 class="anchored" data-anchor-id="misc-aspects">Misc Aspects:</h2>
-<p><strong>Integrate</strong>: X: X Pay N * N production points to combine this card with another card, stacking all values. Integrated cards count as one card, even when targeted by another integrate card, but the calculation becomes N * (N1 + N2)</p>
-<p>Goals: Replace mtg archetype voltron, mtg keywords equip, fortify, enchant, mutate, merge, meld</p>
-<p>Problem: Polarity reversal doesn’t effect integrate. Offensive/defensive equivalent? : Debuff/Attatch</p>
-<p>Solution: Pay some amount of production to dissasemble integrated cards. Don’t like, as it kinda defeats the points of “green” decks. Maybe: Opponent can pay production to keep integrate card integrated</p>
+<p><strong>Integrate</strong>: X: X Pay N * N production points to combine this card with another card, stacking all values. Integrated cards count as one card, even when targeted by another integrate card, but the calculation becomes N3 * (N1 + N2)</p>
 <p><strong>Debuff/Attatch Curse</strong>: X: Pay N + N – X points to apply a debuff to a card with value N, where all the aspects of this card are subtracted from that card. Actives and Curses carry over.</p>
 <p>How to remove? Pay cost? Card death?</p>
 </section>
 <section id="active-traits" class="level2">
 <h2 class="anchored" data-anchor-id="active-traits">Active Traits:</h2>
+</section>
+<section id="table" class="level2">
+<h2 class="anchored" data-anchor-id="table">Table</h2>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Active</th>
+<th>Cost (* N) : Output</th>
+<th>Application Cost?</th>
+<th>Effect</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Mana Generation (probably call it just Mana for short)</td>
+<td>X : X * N (*N?)</td>
+<td>N/A</td>
+<td>Generates Mana for casting things</td>
+</tr>
+<tr class="even">
+<td>Stealth</td>
+<td>X : X</td>
+<td>Don’t know.</td>
+<td>N/A</td>
+</tr>
+<tr class="odd">
+<td>Necromancy (or maybe recursion?)</td>
+<td>X : X</td>
+<td>Don’t know, probably not</td>
+<td>Apply to cards in your graveyard. Then, those cards can be cast for base cost - amount of Necromancy/Recursion tokens applied to them again. (or maybe base cost - X*N?)</td>
+</tr>
+<tr class="even">
+<td>Scry/Tutor</td>
+<td>X : X (*N?)</td>
+<td>Don’t know, probably</td>
+<td>N/A yet. Probably look at X cards or look at cards with up to X production point cost</td>
+</tr>
+<tr class="odd">
+<td>Polarity Reversal</td>
+<td>X : X (*N?)</td>
+<td>Probably not</td>
+<td>Change offensive abilities to their defensive equivalents defensive and vice versa, of a single card</td>
+</tr>
+<tr class="even">
+<td>Counterspell</td>
+<td>X : X</td>
+<td></td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>Replicate</td>
+<td>X : X</td>
+<td></td>
+<td></td>
+</tr>
+<tr class="even">
+<td>Gain Life</td>
+<td>X : X</td>
+<td>1 production point per token</td>
+<td>Gain life when applied</td>
+</tr>
+<tr class="odd">
+<td>Burn (direct damage)</td>
+<td>X : X</td>
+<td>probably</td>
+<td>Apply direct damage to any card or your opponent, as long as their is a card path from you to that card or your player</td>
+</tr>
+<tr class="even">
+<td>Arbitrary Aspect (trigger?)</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>Arbitrary Negative Aspect</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
 <ul>
 <li>So the idea behind “actives” is that they generate points/tokens that can be spent on things — but don’t have to be spent. The actives that cost production to use, only cost production on the application of the active, rather than the generation/creation of the points.</li>
 </ul>
@@ -2143,9 +2953,46 @@ font-style: inherit;">9898</span></span></code></pre></div>
 <p><strong>Burn/Direct damage</strong>: X: X: Deal direct damage to opponent, but this requires that you must pay production for each damage done, and damage is limited by defensive cards under your cards along the path.</p>
 <p><strong>Abitrary Active/Trigger</strong> : Produce actives/triggers to place on cards. Should this cost production to apply?</p>
 <p><strong>Arbitrary Negative Active/Trigger</strong>: Produces negatives to put on cards. Negative health is straightforward, but negative damage, “agility”, and etc get interesting.</p>
+<p><strong>Empheral</strong>: Cause a card to not be affected by stuff, but also not be able to affect stuff. Basically mtg phase.</p>
 </section>
 <section id="triggers" class="level2">
 <h2 class="anchored" data-anchor-id="triggers">Triggers:</h2>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Trigger Name</th>
+<th>Output</th>
+<th>Multi-Activate</th>
+<th>Triggers on?</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Instead of card draw</td>
+<td>X * N</td>
+<td>Probably Not</td>
+<td>Players decide to do this instead of drawing one of their five cards they can draw</td>
+</tr>
+<tr class="even">
+<td>On card play</td>
+<td>X * N</td>
+<td>No</td>
+<td>Generates actives when this card is played</td>
+</tr>
+<tr class="odd">
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
 <p><strong>Familiar friends</strong>: X: When you play a card with similar trait and valuet and value appears, including this specific trigger + active, Do up to 1 + X of an active trait, based on the common traits and values that are shared.</p>
 <p>Note: Too op if it includes health, attack, and friends… but is it?</p>
 <p>Also: Familiar friends… but on death?</p>
@@ -2158,7 +3005,11 @@ font-style: inherit;">9898</span></span></code></pre></div>
 <p><strong>Getting attacked by X cards</strong>: X: X</p>
 <p><strong>When XYZ active token is applied</strong>: X : X</p>
 <p>Most notable of this is: “when lifegain” as that has very good synergy</p>
+<p>Problem (?): Can go infinite.</p>
 <p><strong>When opponent takes damage</strong>: X : X</p>
+<ul>
+<li>This could lead to going infinite with “burn” tokens.</li>
+</ul>
 <p><strong>Formation: When pattern created during attack/defense phase</strong>: Form a pattern of your own cards (must be on on top): X : X * (cards with same trigger in the pattern) * (amount of different patterns linked together):</p>
 <p>Eg: A pattern can be a straight line, or a curved line, or a grouping of three, a lightning bolt or whatever. Orientation does not matter (?), only relative orientation does.</p>
 <p>Probably a better way to do this.</p>
@@ -2168,13 +3019,13 @@ font-style: inherit;">9898</span></span></code></pre></div>
 </section>
 <section id="curses" class="level2">
 <h2 class="anchored" data-anchor-id="curses">Curses:</h2>
-<p><strong>Constant Mana Cost</strong>: Take X mana from the player every turn, or if they can’t provide that, life. In exchaninge, offer X * N card creation points for players to use. Essentially for each negative mana point, they can add one of each trait for each negative manapoint during the turn. Must be paid before the attacking step.</p>
+<p><strong>Constant Mana Cost</strong>: Take X mana from the player every turn, or if they can’t provide that, life. In exchange, offer X * N card creation points for players to use. Essentially for each negative mana point, they can add one of each trait for each negative mana point during the turn. Must be paid before the attacking step.</p>
 <ul>
 <li>Should it die if no mana given?</li>
 <li>Or should it take from life?</li>
 <li>What about production? Probably not effect actives… but I like the idea of cumulative upkeep for a spell tower.</li>
 </ul>
-<p>I think I need to seperate this into two different curses: One which does damage, and one that doesn’t.</p>
+<p>I think I need to separate this into two different curses: One which does damage, and one that doesn’t.</p>
 <p><strong>Day/Night</strong>: X from anything: X Opponent gains control of this card during their turn, except the card doesn’t have full stats. It only has X stats, X for each trait in place. It also gains X stats in the opposite section of held traits. So 4 hp, but 0 attack, but 2 X becomes 2 hp, 2 attack.</p>
 <p>How to handle one time spell cards? * Day/night results in the card staying alive, even when it has 0 or less health * Opponent gets a portion of spell effects * Daynight straight up doesn’t affect actives ← I like this one</p>
 <p>May need different name, mtg already has daynight. Traitor? Betrayal? Doublecross? Doubleagent?</p>
@@ -2194,12 +3045,14 @@ font-style: inherit;">9898</span></span></code></pre></div>
 <li>Allow spell damage to kill the battle?</li>
 </ul>
 <p>Goal: replace siege/battle from mtg</p>
-<p><strong>Equality</strong>: X from triggers/actives: X times N this card gives oppenent up to X*N of of “actives” it generates, when it generates them.</p>
+<p><strong>Equality</strong>: X from triggers/actives: X times N this card gives opponent up to X*N of of “actives” it generates, when it generates them.</p>
 <p>Goal: Allow for the creation of board wipe type effects.</p>
 <p><strong>Sacrifice</strong> X from anything : X You need to sacrifice cards with a base cost of X * N cards on the field when played.</p>
 </section>
 <section id="misc-notes-and-workshopping" class="level2">
 <h2 class="anchored" data-anchor-id="misc-notes-and-workshopping">Misc Notes and Workshopping:</h2>
+<p>Goals: Replace mtg creature tokens, mtg evasion mechanics (keywords flying, horsemanship, unblockable, trample, etc)</p>
+<p>https://mtg.fandom.com/wiki/Evasion_ability</p>
 <p>Resources (used to do stuff):</p>
 <ul>
 <li>Mana/Production (can cast from life)
@@ -2221,18 +3074,13 @@ font-style: inherit;">9898</span></span></code></pre></div>
 <li>I like the “equality” curse</li>
 <li>But I want one more</li>
 </ul>
-<p>Tribal mechanics:</p>
-<ul>
-<li>Link somehow, artificial synergy</li>
-<li>Trigger that triggers if you form a specific chain patter. Like forming a certain type of connection. Multiplies for every card in the chain that also has the trigger, and</li>
-</ul>
 <p>Some kind of meta card attribute?</p>
 <p>Potential keywords:</p>
 <p>Recursion: X : X Pay Base Cost – X to cast this card from your graveyard</p>
 <p>Buyback: X : X Pay Cost – X in addition to casting this spell to return it to your hand when you cast it.</p>
-<p>Weight/Strength: Make it harder to move this card/can move weight or move more cards?</p>
-<p>Movement/Restriction: Ability to move over cards it wouldn’t be able to move over / Ability to restrict movement of cards over itself</p>
-<p>Multiattack/Multiblock: Ability to hold more than one card under and carry / card requires more than one card on top in order for cards to move past it</p>
+<ul>
+<li>Too weak</li>
+</ul>
 <p>Banding/Splitting: Combine and divide mechanics somehow (or maybe I should build these into the game rules)</p>
 <p>Anti-Actives</p>
 <p>Take life: X :X</p>
@@ -2240,11 +3088,13 @@ font-style: inherit;">9898</span></span></code></pre></div>
 <p>Gain +X +X when X: Idea is some conditional gain strength mechanic</p>
 <p>In general, I want some kind of state based trigger, that can activate every turn.</p>
 <p>When X cards on the field. When X cards in graveyard. X in hand? etc. How to make fair?</p>
+<p>Okay, after watching <a href="https://www.youtube.com/watch?v=HuAkw707oOA">A video about lifedecking</a>, I’ve realized that it’s problematic to incentivize cards in the graveyard, because players want to <em>play</em> their cards, and a strategy which incentivizes sacrifice or something along those lines isn’t really that. But, this problem with lifedecking also applies to <em>any</em> incentive to maintain a “state” of the game. Although an ongoing incentive to maintain a certain boardstate is good to get to, it also incentivies players to <em>keep</em> that board state — which may not be fun. So this will be put on hold for a while, and instead, I will only incentivize <em>actions</em> by the players. Interesting =/= fun to play.</p>
 <p>Alternate cost where players can pay other token types. Maybe decreases N or lets them pay base cost. This can be a curse type.</p>
-<p>Tax and Stax: Some kind of opponent restrictions</p>
+<p>Tax and Stax: Fundamentally, a tax an opponent can’t pay to do something is like a stax: Some kind of opponent restrictions… actually, I don’t like this. I want a control archetype, but I confused control with stax/tax. Clash Royale manages to have control be a major archetype without s/tax.</p>
 <ul>
 <li>Opponent can’t X doesn’t work because of the way my game is designed. However, opponent can’t do X fundamentally equivalent to a tax effect that the opponent can’t afford to play?</li>
 </ul>
+<p>Formation application token: Allow for multiplication of tokens on the battlefield. Costs X1 * X2 * X3 * N where X1 is the multiplication and X2 is the formation size, and X3 is the total tokens it can take. So a 2 * 1 * 3 would double up to three tokens for a single card.</p>
 <p>Some kind of sacrifice cards curse.</p>
 <p>See also: MTG emerge</p>
 <p>MTG Surge</p>
@@ -2277,15 +3127,29 @@ font-style: inherit;">9898</span></span></code></pre></div>
 <p>How should cards launch an attack against valuable cards? Surrounding them? Building a chain which accesses them?</p>
 <p>Ideas:</p>
 <ul>
-<li>Cards deal (ATK + ATK + ATK) *N where N in the amount of cards surrounding a card</li>
-<li>Players form a set of connections around a card, where the</li>
+<li>Attackers cards deal (ATK + ATK + ATK) *N where N in the amount of cards surrounding a card, but those cards of that set can’t attack a player</li>
+<li>Defenders cards can protect (DEF* )</li>
 <li>Surrounding a card with 6 cards is an insta kill (can be on top cards as well)</li>
+<li>This is in <em>addition</em> to the mechanic where cards on top of eachother battle.</li>
 </ul>
+<p>Idea: replace mtg banding</p>
 <p>Should cards being on top or below matter? Maybe? Only on top cards count for purposes of a chain, and also can surround other cards.</p>
-<p>But also: How about targeting production towers?</p>
 <p>Anyway, this is good, but I need to calculate the fairness of this game. I think the only way to calculate fairness is to write a program that solves this game.</p>
 <p>Combat ends <strong>immediately</strong> where a player cannot make another move (either attacker or defender).</p>
 <p>What about drawish rules, like 3 fold repetition?</p>
+<section id="combat-phase" class="level2">
+<h2 class="anchored" data-anchor-id="combat-phase">Combat Phase</h2>
+<p>It goes step by step. Steps go like</p>
+<ul>
+<li><p>Offensive player moves cards, or plays cards into the combat zone. This one can only be done once.</p></li>
+<li><p>Offensive player activates an “instead of draw trigger” Only done once, and mutually exclusive with the above.</p></li>
+<li><p>Defensive player makes a move, or plays a card into the combat zone.</p></li>
+<li><p>End step</p></li>
+</ul>
+<p>Or maybe vice versa?</p>
+<p>Regardless, cards only die at the end of each “step”, giving either player time to do things like counterspell and react with spell type abilities.</p>
+<p>Infinite Loop Prevention: A trigger can only be triggered once per combat step (for both players).</p>
+</section>
 <section id="programming-this" class="level2">
 <h2 class="anchored" data-anchor-id="programming-this">Programming This</h2>
 <p>I think I need to convert this to a python program that will solve any set of rules I give it, in order to actually ensure my game is fair., I’ve done some testing on my own, but I don’t think just one person can play chess.</p>
