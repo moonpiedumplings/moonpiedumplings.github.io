@@ -1,0 +1,103 @@
+---
+title: "Installing Unity"
+date: "2024-10-22"
+categories: [linux, guides]
+draft: true
+format:
+  html:
+    code-fold: true
+    code-summary: "Show the code"
+    code-block-background: true
+    code-overflow: wrap
+execute:
+  freeze: auto
+---
+
+
+First, begin with installing distrobox and podman, on your respective distro.
+
+Here's how to do it one some of the major distros:
+
+`pacman -Syu distrobox podman`
+
+`apt update && apt install -y distrobox podman`
+
+`dnf install distrobox podman`
+
+Then, create an Ubuntu 22.04 container, since that is what Unity officially supports. 
+
+`distrobox create --image docker.io/library/ubuntu:22.04 --name unity`
+
+Then, you can enter the container: 
+
+`distrobox enter unity`
+
+From here, follow the steps on [Unity's official site](https://docs.unity3d.com/hub/manual/InstallHub.html):
+
+```{.default}
+wget -qO - https://hub.unity3d.com/linux/keys/public | gpg --dearmor | sudo tee /usr/share/keyrings/Unity_Technologies_ApS.gpg > /dev/null`
+```
+
+```{.default}
+sudo sh -c 'echo "deb [signed-by=/usr/share/keyrings/Unity_Technologies_ApS.gpg] https://hub.unity3d.com/linux/repos/deb stable main" > /etc/apt/sources.list.d/unityhub.list'`
+```
+
+```{.default}
+sudo apt update && sudo apt install unityhub`
+```
+
+After this, install Microsoft VSCode using [their official steps](https://code.visualstudio.com/docs/setup/linux)
+
+```{.default}
+sudo apt-get install wget gpg apt-transport-https
+```
+
+```{.default}
+wget -qO- https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > packages.microsoft.gpg
+```
+
+```{.default}
+sudo install -D -o root -g root -m 644 packages.microsoft.gpg /etc/apt/keyrings/packages.microsoft.gpg
+``` 
+
+```{.default}
+echo "deb [arch=amd64,arm64,armhf signed-by=/etc/apt/keyrings/packages.microsoft.gpg] https://packages.microsoft.com/repos/code stable main" |sudo tee /etc/apt/sources.list.d/vscode.list > /dev/null
+```
+
+```{.default}
+rm -f packages.microsoft.gpg
+```
+
+```{.default}
+sudo apt update && sudo apt install code -y
+```
+
+Since we are doing unity development, we will also need `dotnet-sdk-8.0`
+
+```{.default}
+sudo apt install dotnet-sdk-8.0
+```
+
+# VSCode Configuration
+
+There are several extensions that significantly enhance the C#, .NET, and Unity development experience.
+
+`ms-dotnettools.csharp` — This is Microsoft's C# and .NET extension, and it will pull a few extensions as a dependency.
+
+`VisualStudioToolsForUnity.vstuc` — This is Microsoft's official Unity extension.
+
+
+# Logging into Unity Hub
+
+This process can be somewhat difficult, as Unity Hub will not show up on the desktop.
+
+In addition to this, you may need the package `xdg-portal-gtk`, or other xdg-potal related packages.  
+
+```
+apt install xdg-desktop-portal
+```
+
+
+
+
+
