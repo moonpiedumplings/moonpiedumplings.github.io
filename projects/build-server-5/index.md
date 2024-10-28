@@ -1194,6 +1194,8 @@ Instead, I think I  need to manually create volumes in my flux config, that use 
 
 Actually, I think I need to [create another storageclass](https://openebs.io/docs/user-guides/local-storage-user-guide/local-pv-hostpath/hostpath-configuration) that can dynamically provision volumes, but this one has the settings and specs I want, and is the default.
 
+
+
 ### Secrets/SOPS
 
 So, authentik looks difficult, because the helm chart requires quite a complex set of configurations, and I don't want to put those in the same file for the helmrelease. 
