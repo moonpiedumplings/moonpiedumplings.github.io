@@ -1,8 +1,7 @@
 ---
-title: "Installing Unity"
-date: "2024-10-22"
+title: "Installing Unity on Distrobox"
+date: "2024-10-27"
 categories: [linux, guides]
-draft: true
 format:
   html:
     code-fold: true
@@ -18,19 +17,29 @@ First, begin with installing distrobox and podman, on your respective distro.
 
 Here's how to do it one some of the major distros:
 
-`pacman -Syu distrobox podman`
 
-`apt update && apt install -y distrobox podman`
+```
+pacman -Syu distrobox podman
+```
 
-`dnf install distrobox podman`
+```
+apt update && apt install -y distrobox podman
+```
+
+```
+dnf install distrobox podman
+```
 
 Then, create an Ubuntu 22.04 container, since that is what Unity officially supports. 
 
-`distrobox create --image docker.io/library/ubuntu:22.04 --name unity`
+```distrobox create --image docker.io/library/ubuntu:22.04 --name unity
+```
 
 Then, you can enter the container: 
 
-`distrobox enter unity`
+````
+distrobox enter unity
+```
 
 From here, follow the steps on [Unity's official site](https://docs.unity3d.com/hub/manual/InstallHub.html):
 
@@ -91,13 +100,46 @@ There are several extensions that significantly enhance the C#, .NET, and Unity 
 
 This process can be somewhat difficult, as Unity Hub will not show up on the desktop.
 
-In addition to this, you may need the package `xdg-portal-gtk`, or other xdg-potal related packages.  
+And for some reason, I needed flatpak on my host system (or more likely, one of it's dependencies).
+
+`sudo pacman -Syu flatpak`  — or however your distro will install flatpak. 
+
+
+First, launch unity in the container.
 
 ```
-apt install xdg-desktop-portal
+distrobox enter unity
 ```
 
-https://github.com/89luca89/distrobox/issues/645
+```
+unityhub
+```
+
+Then, click the login button. A browser will be opened, asking you to login. However, you will not automatically be redirected to Unity Hub, from that page, you have to do it manually.
+
+
+
+Copy the link on the bottom right. And then, in another distrobox session (Unity Hub must still be running for this to work)
+
+```
+unityhub [copied link]
+```
+
+
+If you need to install a specific version of Unity not available in the Unity Hub, this is a similar process. Go to [Unity's release archive](https://unity.com/releases/editor/archive), find the relevant link, and then copy the install link, and paste it like above. 
+
+
+# Misc
+
+One thing I like to do is use [Zellij](https://zellij.dev/) as a terminal multiplexer
+
+
+```
+cd /bin
+sudo wget https://bin.ajam.dev/x86_64_Linux/zellij
+chmod +x zellij
+zellij
+``` 
 
 
 
