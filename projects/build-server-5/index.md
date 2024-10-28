@@ -1195,6 +1195,30 @@ Instead, I think I  need to manually create volumes in my flux config, that use 
 Actually, I think I need to [create another storageclass](https://openebs.io/docs/user-guides/local-storage-user-guide/local-pv-hostpath/hostpath-configuration) that can dynamically provision volumes, but this one has the settings and specs I want, and is the default.
 
 
+So, I did that:
+
+```{.yaml filename='openebs/localpath.yaml'}
+---
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: openebs-persistent-hostpath
+  namespace: default
+  annotations:
+    openebs.io/cas-type: local
+    cas.openebs.io/config: |
+      - name: StorageType
+        value: hostpath
+      - name: BasePath
+        value: /var/openebs/persistent/
+    storageclass.kubernetes.io/is-default-class: "true"
+provisioner: openebs.io/local
+reclaimPolicy: Retain
+volumeBindingMode: WaitForFirstConsumer
+```
+
+And with this, I should get persistent data.
+
 
 ### Secrets/SOPS
 
