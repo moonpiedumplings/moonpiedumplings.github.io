@@ -255,7 +255,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>^C0134:err:virtual:virtual_setup_exception stack overflow 1280 bytes addr 0x952cd2 stack 0x1500b00 (0x1500000-0x1501000-0x1600000)</span>
 <span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>^C013c:err:virtual:virtual_setup_exception stack overflow 1280 bytes addr 0x952cd2 stack 0x1600b00 (0x1600000-0x1601000-0x1700000)</span>
 <span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>^C0144:err:virtual:virtual_setup_exception stack overflow 1280 bytes addr 0x952cd2 stack 0x1700b00 (0x1700000-0x1701000-0x1800000)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>My Arch Linux install attempts to use wine to load up the python program. There are also issues quitting, and I end up having to use pkill to kill python.</p>
+<p>My Arch Linux install attempts to use wine to load up the python program. There are also issues quitting, and I end up having to use pkill to kill python. This is because my OS attempts to use <a href="https://en.wikipedia.org/wiki/Binfmt_misc">binfmt_misc</a>, and finds out that Wine is an acceptable program for launching ape binaries. ape binaries are not designed to run under wine, this behavior happens instead.</p>
 <p>The way to avoid this is to use the <a href="https://justine.lol/apeloader/">ape loader</a>.</p>
 <div class="sourceCode" id="cb2"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>[moonpie@lizard apeb]$ ./ape-x86_64.elf ./python</span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>Python 3.12.3 (main, Aug  3 2024, 10:18:33) [GCC 14.1.0] on linux</span>
@@ -315,21 +315,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="dragonflybsd" class="level2">
 <h2 class="anchored" data-anchor-id="dragonflybsd">DragonflyBSD</h2>
-<p>We’ve seen this FreeBSD fork in the competition environment.</p>
+<p>We’ve seen this FreeBSD fork in the competition environment. But, DragonFlyBSD was forked from FreeBSD 4.8, which was nearly 21 years ago. At this point, they have diverged to the point where ape binaries do not run on Dragonfly. Cosmo does not officially support DragonflyBSD, and it’s highly likely that there are other differences, like the <code>pf</code> firewall configuration file having different syntax.</p>
 <div class="sourceCode" id="cb10"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>[vagrant@dragonflybsd6 ~]$ ./ape ./python</span>
-<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>ELF binary type "9" not known.</span>
-<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>-bash: ./ape: cannot execute binary file: Exec format error</span>
-<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>[vagrant@dragonflybsd6 ~]$ ./ape ./tmux</span>
-<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>ELF binary type "9" not known.</span>
-<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>-bash: ./ape: cannot execute binary file: Exec format error</span>
-<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>[vagrant@dragonflybsd6 ~]$ ./ape ./vim</span>
-<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>ELF binary type "9" not known.</span>
-<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>-bash: ./ape: cannot execute binary file: Exec format error</span>
-<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>[vagrant@dragonflybsd6 ~]$</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>ELF binary type "9" not known.</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </section>
 <section id="freebsd" class="level2">
 <h2 class="anchored" data-anchor-id="freebsd">FreeBSD</h2>
-<p>I intend to test, but vagrant networking is giving me trouble.</p>
+<p>I intend to test, but vagrant networking is giving me trouble. Cosmo should work with FreeBSD though.</p>
 </section>
 </section>
 <section id="nix-bundle" class="level1">
