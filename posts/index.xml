@@ -10,7 +10,303 @@
 <atom:link href="./posts/index.xml" rel="self" type="application/rss+xml"/>
 <description>All posts</description>
 <generator>quarto-1.5.57</generator>
-<lastBuildDate>Sun, 27 Oct 2024 07:00:00 GMT</lastBuildDate>
+<lastBuildDate>Thu, 31 Oct 2024 07:00:00 GMT</lastBuildDate>
+<item>
+  <title>Portable executable experiments for CCDC</title>
+  <link>./playground/ape-experiments/</link>
+  <description><![CDATA[ 
+
+
+
+
+<p>The college I am going to has a team that comeptes in a competition called <a href="https://en.wikipedia.org/wiki/National_Collegiate_Cyber_Defense_Competition">CCDC</a>, which is a blue team cybersecurity competition. It involves securing misconfigured, outdated OS’s and services, while being asked to do tasks called “injects”, and protecting a highly vulnerable environment from “red teamers” — competition organizers who play the role of a hypothetical attacker.</p>
+<p>One of the big problems encountered in CCDC is the portability of applications. Competitors will be asked to work across a variety of Linux distros, of various types and various package versions, and even across the BSD versions. Of course, sometimes the solution is simple: install your tools, like python or tmux, from the package manager on every Linux/BSD OS.</p>
+<p>The second problem is that the organizers of the competition may break our package managers. Deleting repos, or giving us a distro without a package manager, or giving us End-Of-Life distributions, with dead repositories.</p>
+<p>And also, we aren’t allowed to do a distribution release upgrade. So we can’t go from CentOS 8 to CentOS Stream or other things like that. We also aren’t allowed to replace non-containerized scored services with containers. We also aren’t allowed to replace scored services with another application of the same type, so no replacing Apache with Caddy.</p>
+<p>However, we can use static executables to replace services, and there are real limits on what kind of utilities we can deploy, other than resources usage (Linux/BSD machines usually have 2 gigabytes of ram).</p>
+<p>I was looking into portable executables, to mitigate some of the problems and restrictions. I would like to have a portable version of python, so that ansible playbooks relating to firewall automation and backups can be run as soon as possible, and also a portable terminal multiplexer, so that our team members can collaborate directly. I would also like portable (statically compiled) versions of some of the services, so that we can replace them in place, rather than being forced to rely on a package manager that may not work.</p>
+<section id="apecosmo" class="level1">
+<h1>Ape/Cosmo</h1>
+<p><a href="https://justine.lol/cosmopolitan/index.html">Cosmopolitan</a> is a project that turns C into build once, run anywhere language. It works by creating a fat binary that contains code for all other operating systems, including UEFI, and then dynamically figuring out where it is being run.</p>
+<p>There are some precompiled binaries for ape as well:</p>
+<ul>
+<li><a href="https://github.com/ahgamut/superconfigure/releases" class="uri">https://github.com/ahgamut/superconfigure/releases</a></li>
+<li><a href="https://cosmo.zip/pub/cosmos/bin/" class="uri">https://cosmo.zip/pub/cosmos/bin/</a></li>
+</ul>
+<p>Some of these tools are very interesting, in particular <code>tmux</code> and <code>python</code>. Ansible requires python to be on the machines, but it can be difficult to get python on a machine, especially if the package manager is broken. I can easily imagine something like:</p>
+<p><code>cat staticpython | ssh hostname "cat &gt; remotestaticssh"</code></p>
+<p>The above would enable us to get a version of staticly compiled python on anything with ssh, and only ssh needed. There are also some <a href="https://superuser.com/questions/291423/how-to-copy-a-file-without-using-scp-inside-an-ssh-session">other ways to do it</a>.</p>
+<p>I download an actually portable version of tmux and python, and attempt to run them (the test is to see if they still work without glibc, which is often a limitation of portability for many other portable binaries).</p>
+<div class="sourceCode" id="cb1" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb1-1">[moonpie@lizard apeb]$ ./python</span>
+<span id="cb1-2">0088:err:sync:RtlpWaitForCriticalSection section 00006FFFFFFAC440 "../wine-staging/dlls/ntdll/loader.c: loader_section" wait timed out in thread 0088, blocked by 007c, retrying (60 sec)</span>
+<span id="cb1-3">0120:fixme:file:server_get_file_info Unsupported info class 1c</span>
+<span id="cb1-4">0120:fixme:file:NtFsControlFile FSCTL_GET_REPARSE_POINT semi-stub</span>
+<span id="cb1-5">0120:fixme:file:server_get_file_info Unsupported info class 1c</span>
+<span id="cb1-6">0120:fixme:file:server_get_file_info Unsupported info class 1c</span>
+<span id="cb1-7">Python 3.12.3 (main, Aug  3 2024, 10:18:33) [GCC 14.1.0] on linux</span>
+<span id="cb1-8">Type "help", "copyright", "credits" or "license" for more information.</span>
+<span id="cb1-9">0120:fixme:file:server_get_file_info Unsupported info class 1c</span>
+<span id="cb1-10">&gt;&gt;&gt; exit(_</span>
+<span id="cb1-11">^C0124:err:virtual:virtual_setup_exception stack overflow 1280 bytes addr 0x952cd2 stack 0x1300b00 (0x1300000-0x1301000-0x1400000)</span>
+<span id="cb1-12">^C012c:err:virtual:virtual_setup_exception stack overflow 1280 bytes addr 0x952cd2 stack 0x1400b00 (0x1400000-0x1401000-0x1500000)</span>
+<span id="cb1-13">^C0134:err:virtual:virtual_setup_exception stack overflow 1280 bytes addr 0x952cd2 stack 0x1500b00 (0x1500000-0x1501000-0x1600000)</span>
+<span id="cb1-14">^C013c:err:virtual:virtual_setup_exception stack overflow 1280 bytes addr 0x952cd2 stack 0x1600b00 (0x1600000-0x1601000-0x1700000)</span>
+<span id="cb1-15">^C0144:err:virtual:virtual_setup_exception stack overflow 1280 bytes addr 0x952cd2 stack 0x1700b00 (0x1700000-0x1701000-0x1800000)</span></code></pre></div>
+<p>My Arch Linux install attempts to use wine to load up the python program. There are also issues quitting, and I end up having to use pkill to kill python.</p>
+<p>The way to avoid this is to use the <a href="https://justine.lol/apeloader/">ape loader</a>.</p>
+<div class="sourceCode" id="cb2" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb2-1">[moonpie@lizard apeb]$ ./ape-x86_64.elf ./python</span>
+<span id="cb2-2">Python 3.12.3 (main, Aug  3 2024, 10:18:33) [GCC 14.1.0] on linux</span>
+<span id="cb2-3">Type "help", "copyright", "credits" or "license" for more information.</span>
+<span id="cb2-4">&gt;&gt;&gt;</span>
+<span id="cb2-5">``</span>
+<span id="cb2-6"></span>
+<span id="cb2-7">And this works. But, although there is also a version of python distributed with many python libraries included, called `pypack1`, it doesn't contain some crucial python packages that I may need for ansible administration of systems, like sql manipulation tools. </span>
+<span id="cb2-8"></span>
+<span id="cb2-9">```{.default}</span>
+<span id="cb2-10">[moonpie@lizard apeb]$ ./ape-x86_64.elf ./python -m venv venv</span>
+<span id="cb2-11">Error: Command '['/home/moonpie/vscode/test/apeb/venv/bin/python', '-m', 'ensurepip', '--upgrade', '--default-pip']' returned non-zero exit status 1.</span></code></pre></div>
+<p>Yeah. I’m not too worried, because I wrote my roles so that the databse manipulation can also be done remotely, from a playbook running on localhost, but it would be simpler if everything can be run on the remote systems.</p>
+<div class="sourceCode" id="cb3" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb3-1">[moonpie@lizard apeb]$ ./ape-x86_64.elf ./tmux</span>
+<span id="cb3-2">[moonpie@lizard apeb]$ ./ape-x86_64.elf ./tmux -h</span>
+<span id="cb3-3">tmux: unknown option -- h</span>
+<span id="cb3-4">usage: tmux [-2CDlNuvV] [-c shell-command] [-f file] [-L socket-name]</span>
+<span id="cb3-5">            [-S socket-path] [-T features] [command [flags]]</span></code></pre></div>
+<p>And tmux just won’t load, although it will print the help output. I find this very weird, as I could get tmux to load earlier, but not now. It doesn’t load on my host system, or in an Debian or Alpine container.</p>
+<p>This only seems to apply to the ape tmux, as tmux installed by apt in a debian container doesn’t have this issue, and then after that, tmux is able to start sessions normally, but then it can’t again after I kill all sessions. At least this isolates it to an issue with ape.</p>
+<p>It could just be a bug of some sort, but the package version only updated 3 days ago from now (August 6th), so those haven’t changed.</p>
+<p>The weirdest thing is that the ape tmux is actually able to work normally… but only after I launch a session via non-ape tmux. And then, one I kill all tmux sessions, then it stops working again.</p>
+<p>It seems like the ape tmux is having trouble starting the server:</p>
+<div class="sourceCode" id="cb4" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb4-1">/stuff # ape ./tmux start-server</span>
+<span id="cb4-2">/stuff #</span>
+<span id="cb4-3">/stuff # ape ./tmux ls</span>
+<span id="cb4-4">no server running on /tmp/tmux-0/default</span></code></pre></div>
+<p>I found a <a href="https://github.com/tmux/tmux/issues/736">half relevant issue</a>, but the failed solution gives me more answers:</p>
+<div class="sourceCode" id="cb5" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb5-1">/stuff # ape ./tmux new-session -t testing -d</span>
+<span id="cb5-2">create window failed: fork failed: Operation not permitted</span></code></pre></div>
+<p>I eventually made a post on the redbean discord server, and uploaded my <a href="https://gist.github.com/moonpiedumplings/809dcc89cfe289f8341aae85069a57e1">strace to a github gist</a>. I’ll wait to see if anyone replies.</p>
+<div class="sourceCode" id="cb6" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb6-1">[moonpie@lizard apeb]$ ./ape-x86_64.elf ./tmux new-session -d -vv</span>
+<span id="cb6-2">no server running on /tmp/tmux-1000/default</span></code></pre></div>
+<div class="sourceCode" id="cb7" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb7-1">/stuff # ./ape-x86_64.elf ./tmux new-session -d -vv</span>
+<span id="cb7-2">no server running on /tmp/tmux-0/default</span></code></pre></div>
+<p>So tmux can be ran with -vv for something more verbose.</p>
+<p>This might also be a tmux bug, since the version of tmux provided by ape/cosmo is 3.3a, rather than the latest 3.4, however, the nix bundled tmux also has this issue, and nix has 3.4 of tmux.</p>
+<p>I played around with attempting to build newer versions of tmux from the <a href="https://github.com/ahgamut/superconfigure?tab=readme-ov-file#how-can-i-build-these-locally">superconfigure</a> github repo, but their instructions don’t seem to work. The scripts assume Ubuntu 22 LTS, although I was only able to find that out after looking at what distro was used in their github actions.</p>
+<section id="openbsd" class="level2">
+<h2 class="anchored" data-anchor-id="openbsd">Openbsd</h2>
+<div class="sourceCode" id="cb8" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb8-1">[vagrant@openbsd7 ~]$ ./ape ./python</span>
+<span id="cb8-2">Python 3.12.3 (main, Aug  3 2024, 10:18:33) [GCC 14.1.0] on linux</span>
+<span id="cb8-3">Type "help", "copyright", "credits" or "license" for more information.</span>
+<span id="cb8-4">&gt;&gt;&gt;</span>
+<span id="cb8-5">[vagrant@openbsd7 ~]$ ./ape ./tmux new-ession -d -vv</span>
+<span id="cb8-6">no server running on /tmp/tmux-1000/default</span></code></pre></div>
+</section>
+<section id="netbsd" class="level2">
+<h2 class="anchored" data-anchor-id="netbsd">NetBSD</h2>
+<div class="sourceCode" id="cb9" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb9-1">[vagrant@netbsd8 ~]$ ./ape ./python</span>
+<span id="cb9-2">Python 3.12.3 (main, Aug  3 2024, 10:18:33) [GCC 14.1.0] on linux</span>
+<span id="cb9-3">Type "help", "copyright", "credits" or "license" for more information.</span>
+<span id="cb9-4">&gt;&gt;&gt;</span>
+<span id="cb9-5">[vagrant@netbsd8 ~]$ ./ape ./tmux new-session -d -vv</span>
+<span id="cb9-6">no server running on /tmp/tmux-1000/default</span></code></pre></div>
+<p>Vim executes successfully as well. It’s able to execute without the ape interpeter, but python crashes when I try to do that.</p>
+</section>
+<section id="dragonflybsd" class="level2">
+<h2 class="anchored" data-anchor-id="dragonflybsd">DragonflyBSD</h2>
+<p>We’ve seen this FreeBSD fork in the competition environment.</p>
+<div class="sourceCode" id="cb10" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb10-1">[vagrant@dragonflybsd6 ~]$ ./ape ./python</span>
+<span id="cb10-2">ELF binary type "9" not known.</span>
+<span id="cb10-3">-bash: ./ape: cannot execute binary file: Exec format error</span>
+<span id="cb10-4">[vagrant@dragonflybsd6 ~]$ ./ape ./tmux</span>
+<span id="cb10-5">ELF binary type "9" not known.</span>
+<span id="cb10-6">-bash: ./ape: cannot execute binary file: Exec format error</span>
+<span id="cb10-7">[vagrant@dragonflybsd6 ~]$ ./ape ./vim</span>
+<span id="cb10-8">ELF binary type "9" not known.</span>
+<span id="cb10-9">-bash: ./ape: cannot execute binary file: Exec format error</span>
+<span id="cb10-10">[vagrant@dragonflybsd6 ~]$</span></code></pre></div>
+</section>
+<section id="freebsd" class="level2">
+<h2 class="anchored" data-anchor-id="freebsd">FreeBSD</h2>
+<p>I intend to test, but vagrant networking is giving me trouble.</p>
+</section>
+</section>
+<section id="nix-bundle" class="level1">
+<h1>Nix bundle</h1>
+<p><code>nix bundle nixpkgs#programname</code> is a command that bundles a program into a self extracting archive that uses proot to run itself. A big problem with nix bundle is that it mostly only works on Linux, and relying on proot makes it less portable compared to ape. <a href="https://nix.dev/manual/nix/2.13/command-ref/new-cli/nix3-bundle">Here is the official manual</a>… on an unofficial site.</p>
+<div class="sourceCode" id="cb11" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb11-1">[moonpie@lizard apeb]$ nix bundle nixpkgs#zellij</span>
+<span id="cb11-2">[moonpie@lizard apeb]$ ls -la zellij</span>
+<span id="cb11-3">lrwxrwxrwx 1 moonpie moonpie 47 Aug  6 22:28 zellij -&gt; /nix/store/5d5fi0x4g7v33m7jscxwjijaxi3lg2kp-arx</span></code></pre></div>
+<p>One thing that is mildly annoying is that nix builds stuff in the nix store, and then symlinks to it from the outside, meaning you have to copy out the binary first.</p>
+<p>The first thing I tried to do was bundle zellij and tmux, and funnily enough, they run into the exact same issue as ape. If I launch a zellij or tmux session using a non-ape, non nix-bundled session, first, then I can use the nix bundled zellij or tmux normally.</p>
+</section>
+<section id="guix-pack" class="level1">
+<h1>Guix pack</h1>
+<p>Guix pack is different. Rather than doing self extracting or staticly compiled executables, it generates a tarball (or docker image, but I’m focused on tarball), which can be extracted and has the programs with a vendored dependency.</p>
+<p>I found a <a href="https://hub.docker.com/r/metacall/guix">docker container for guix</a>, which is good because I’d rather run guix entirely in a podman container in my home volume, to avoid snapshotting guix in btrfs snapshots of the root subvolume.</p>
+<p><code>podman run -it --rm -v ".:/stuff" --privileged</code></p>
+<p>I had to run it with –privileged, otherwise the guix builder fails.</p>
+<p>Once inside, the <code>guix pack</code> command packs programs into a tarball. <a href="https://guix.gnu.org/manual/en/html_node/Invoking-guix-pack.html">Documentation</a></p>
+<p><code>guix pack -RR tmux</code> generates a tarball… but I’m struggling to run it outside the store.</p>
+</section>
+<section id="appimage" class="level1">
+<h1>Appimage</h1>
+<p>Appimages are good, but with a few caveats: They only work on Linux, and they require fuse2 (not fuse3, but fuse2) to run, and they rely on the same version of glibc.</p>
+<p>There are some <a href="https://github.com/tmux/tmux/wiki/Installing#appimage-package">prebuilt appimages for tmux</a> and it works fine after I install fuse2.</p>
+</section>
+<section id="static-compilation" class="level1">
+<h1>Static Compilation</h1>
+<section id="tmux" class="level2">
+<h2 class="anchored" data-anchor-id="tmux">Tmux</h2>
+<p><a href="https://github.com/tmux/tmux/wiki/Installing">tmux has instructions for installing</a>.</p>
+<p><code>apk add git gcc musl-dev openssl-dev openssl-libs-static openssl ncurses-terminfo</code></p>
+<p>After these packages are installed, compiling tmux staticly will work. (it should be noted that the instructions assume you use the relase tarball, rather than directly from the source code).</p>
+<div class="sourceCode" id="cb12" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb12-1">./configure --enable-static</span>
+<span id="cb12-2"></span>
+<span id="cb12-3">make</span></code></pre></div>
+<p>However:</p>
+<div class="sourceCode" id="cb13" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb13-1">/stuff # ./stmux</span>
+<span id="cb13-2">can't find terminfo database</span></code></pre></div>
+<p>The staticly compiled tmux doesn’t include ncurses and terminfo libraries. After installing <code>ncurses-terminfo</code> then it works fine.</p>
+<p>Apparently it’s possible to staticly bundle ncurses, libevent, and tmux, but it’s an even more involved process. Users must compile ncurses, which generates .a files and then link those to tmux when compiling using LIBS and -l flag to link it.</p>
+</section>
+<section id="zellij" class="level2">
+<h2 class="anchored" data-anchor-id="zellij">Zellij</h2>
+<div class="sourceCode" id="cb14" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb14-1">git clone https://github.com/zellij-org/zellij/</span>
+<span id="cb14-2"></span>
+<span id="cb14-3">podman run -it --rm -v "./zellij:/zellij" docker.io/library/rust:alpine3.18</span>
+<span id="cb14-4"></span>
+<span id="cb14-5">apk add openssl1.1-compat openssl1.1-compat-dev openssl1.1-compat-libs-static musl-utils musl-dev protoc # but only for alpine 3.18</span>
+<span id="cb14-6"></span>
+<span id="cb14-7">alternatively: apk add openssl openssl-libs-static openssl-dev musl-utils musl-dev protoc</span>
+<span id="cb14-8"></span>
+<span id="cb14-9">cd /zellij</span>
+<span id="cb14-10"></span>
+<span id="cb14-11">rustup target add x86_64-unknown-linux-musl</span>
+<span id="cb14-12"></span>
+<span id="cb14-13">rustup target add wasm32-wasi</span>
+<span id="cb14-14"></span>
+<span id="cb14-15">RUSTFLAGS="-C target-feature=+crt-static" OPENSSL_NO_VENDOR="1" cargo build --target x86_64-unknown-linux-musl  </span>
+<span id="cb14-16"></span>
+<span id="cb14-17"></span>
+<span id="cb14-18">/stuff/zellij # RUSTFLAGS="-C target-feature=+crt-static" OPENSSL_NO_VENDOR="1" cargo xtask build</span>
+<span id="cb14-19">error: cannot produce proc-macro for `prost-derive v0.11.9` as the target `x86_64-unknown-linux-musl` does not support these crate types</span></code></pre></div>
+<p>This still crashes for now, but I need to figure out how to compile it if I want to target other BSD’s.</p>
+<p><code>error: couldn't read /stuff/zellij/zellij-utils/../target/wasm32-wasi/debug/compact-bar.wasm: No such file or directory (os error 2)</code></p>
+<p>Let’s try debian, since it seems they do their official builds — even musl ones — on ubuntu.</p>
+<div class="sourceCode" id="cb15" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb15-1"></span>
+<span id="cb15-2">podman run -it --rm -v "./zellij:/zellij" docker.io/library/rust:bookworm</span>
+<span id="cb15-3"></span>
+<span id="cb15-4">apt update &amp;&amp; apt install musl-tools protobuf-compiler</span>
+<span id="cb15-5"></span>
+<span id="cb15-6">rustup target add x86_64-unknown-linux-musl</span>
+<span id="cb15-7"></span>
+<span id="cb15-8">rustup target add wasm32-wasi</span>
+<span id="cb15-9"></span>
+<span id="cb15-10">cargo xtask ci cross x86_64-unknown-linux-musl   # This crashes</span>
+<span id="cb15-11"></span>
+<span id="cb15-12">cargo build --verbose --release --target x86_64-unknown-linux-musl # This works</span>
+<span id="cb15-13"></span>
+<span id="cb15-14">rustup target add x86_64-unknown-netbsd</span>
+<span id="cb15-15"></span>
+<span id="cb15-16">cargo build --verbose --release --target x86_64-unknown-netbsd</span>
+<span id="cb15-17"> error occurred: Failed to find tool. Is `x86_64--netbsd-gcc` installed?</span></code></pre></div>
+<p>So it seems like cross compilation support isn’t too good.</p>
+<p>Then I tried with the alpine container in the same directory:</p>
+<div class="sourceCode" id="cb16" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb16-1"></span>
+<span id="cb16-2">apk add openssl openssl-libs-static openssl-dev musl-utils musl-dev protoc gcc-cross-embedded</span>
+<span id="cb16-3"></span>
+<span id="cb16-4">rustup target add wasm32-wasi</span>
+<span id="cb16-5"></span>
+<span id="cb16-6">rustup target add x86_64-unknown-netbsd</span>
+<span id="cb16-7"></span>
+<span id="cb16-8">RUSTFLAGS="-C target-feature=+crt-static" OPENSSL_NO_VENDOR="1" OPENSSL_INCLUDE_DIR="/usr/include/openssl" OPENSSL_LIB_DIR="/usr/lib" cargo build --target x86_64-unknown-freebsd</span></code></pre></div>
+<p>This is much closer, but doesn’t work.</p>
+<div class="sourceCode" id="cb17" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb17-1">note: /usr/lib/gcc/x86_64-alpine-linux-musl/13.2.1/../../../../x86_64-alpine-linux-musl/bin/ld: cannot find -lexecinfo: No such file or directory</span>
+<span id="cb17-2">          /usr/lib/gcc/x86_64-alpine-linux-musl/13.2.1/../../../../x86_64-alpine-linux-musl/bin/ld: cannot find -lkvm: No such file or directory</span>
+<span id="cb17-3">          /usr/lib/gcc/x86_64-alpine-linux-musl/13.2.1/../../../../x86_64-alpine-linux-musl/bin/ld: cannot find -lmemstat: No such file or directory</span>
+<span id="cb17-4">          /usr/lib/gcc/x86_64-alpine-linux-musl/13.2.1/../../../../x86_64-alpine-linux-musl/bin/ld: cannot find -lkvm: No such file or directory</span>
+<span id="cb17-5">          /usr/lib/gcc/x86_64-alpine-linux-musl/13.2.1/../../../../x86_64-alpine-linux-musl/bin/ld: cannot find -lprocstat: No such file or directory</span>
+<span id="cb17-6">          /usr/lib/gcc/x86_64-alpine-linux-musl/13.2.1/../../../../x86_64-alpine-linux-musl/bin/ld: cannot find -ldevstat: No such file or directory</span>
+<span id="cb17-7">          /usr/lib/gcc/x86_64-alpine-linux-musl/13.2.1/../../../../x86_64-alpine-linux-musl/bin/ld: cannot find -lexecinfo: No such file or directory</span>
+<span id="cb17-8">          collect2: error: ld returned 1 exit status</span></code></pre></div>
+<p>Zellij already ships a <a href="https://github.com/zellij-org/zellij/releases">static version on their releases</a> (zellij-x86_64-unknown-linux-musl.tar.gz). From my testing, it only runs on Linux.</p>
+</section>
+<section id="python" class="level2">
+<h2 class="anchored" data-anchor-id="python">Python</h2>
+<ul>
+<li><a href="https://github.com/indygreg/python-build-standalone" class="uri">https://github.com/indygreg/python-build-standalone</a> / <a href="https://gregoryszorc.com/docs/python-build-standalone/main/" class="uri">https://gregoryszorc.com/docs/python-build-standalone/main/</a></li>
+<li><a href="https://pyoxidizer.readthedocs.io/en/latest/pyoxy.html" class="uri">https://pyoxidizer.readthedocs.io/en/latest/pyoxy.html</a></li>
+<li><a href="https://wiki.python.org/moin/BuildStatically" class="uri">https://wiki.python.org/moin/BuildStatically</a> — not as promising</li>
+<li><a href="https://github.com/RustPython/RustPython" class="uri">https://github.com/RustPython/RustPython</a>
+<ul>
+<li>Not <a href="https://rustpython.github.io/pages/whats-left">feature complete</a></li>
+</ul></li>
+</ul>
+<p>Also, I just want to note about python, that <code>help('modules')</code> in an interactive shell will list all the modules that a python interpreter is able to access. With statically compiled versions of python, this shows what python libraries have been bundled with the library.</p>
+<section id="indygreg-python" class="level3">
+<h3 class="anchored" data-anchor-id="indygreg-python">IndyGreg Python</h3>
+<div class="sourceCode" id="cb18" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb18-1">usage: build-main.py [-h]</span>
+<span id="cb18-2">                     [--target-triple {s390x-unknown-linux-gnu,x86_64_v4-unknown-linux-gnu,ppc64le-unknown-linux-gnu,x86_64_v2-unknown-linux-gnu,i686-unknown-linux-gnu,x86_64_v3-unknown-linux-gnu,x86_64-unknown-linux-musl,x86_64-unknown-linux-gnu,armv7-unknown-linux-gnueabihf,armv7-unknown-linux-gnueabi,x86_64_v4-unknown-linux-musl,mipsel-unknown-linux-gnu,x86_64_v3-unknown-linux-musl,mips-unknown-linux-gnu,aarch64-unknown-linux-gnu,x86_64_v2-unknown-linux-musl}]</span>
+<span id="cb18-3">                     [--optimizations {lto,pgo+lto,noopt,pgo,debug}] [--python {cpython-3.10,cpython-3.11,cpython-3.8,cpython-3.12,cpython-3.9}] [--python-source PYTHON_SOURCE]</span>
+<span id="cb18-4">                     [--break-on-failure] [--no-docker] [--serial]</span>
+<span id="cb18-5">                     [--make-target {default,toolchain-image-xcb,toolchain-image-build,empty,toolchain-image-xcb.cross,toolchain-image-gcc,toolchain,toolchain-image-build.cross}]</span>
+<span id="cb18-6">build-main.py: error: argument --target-triple: invalid choice: 'x86_64-unknown-freebsd' (choose from 's390x-unknown-linux-gnu', 'x86_64_v4-unknown-linux-gnu', 'ppc64le-unknown-linux-gnu', 'x86_64_v2-unknown-linux-gnu', 'i686-unknown-linux-gnu', 'x86_64_v3-unknown-linux-gnu', 'x86_64-unknown-linux-musl', 'x86_64-unknown-linux-gnu', 'armv7-unknown-linux-gnueabihf', 'armv7-unknown-linux-gnueabi', 'x86_64_v4-unknown-linux-musl', 'mipsel-unknown-linux-gnu', 'x86_64_v3-unknown-linux-musl', 'mips-unknown-linux-gnu', 'aarch64-unknown-linux-gnu', 'x86_64_v2-unknown-linux-musl')</span>
+<span id="cb18-7">[moonpie@lizard python-build-standalone]$ ./build-linux.py --target x86_64-unknown-freebsd</span></code></pre></div>
+<p>No freebsd or other non-linux support.</p>
+</section>
+</section>
+<section id="coreutils" class="level2">
+<h2 class="anchored" data-anchor-id="coreutils">Coreutils</h2>
+<ul>
+<li><a href="https://github.com/uutils/coreutils" class="uri">https://github.com/uutils/coreutils</a></li>
+<li><a href="https://packages.debian.org/sid/busybox-static" class="uri">https://packages.debian.org/sid/busybox-static</a></li>
+<li><a href="https://busybox.net/FAQ.html" class="uri">https://busybox.net/FAQ.html</a> — looks like busybox releases are already staticly linked, but they mostly focus on Linux releases</li>
+<li><a href="https://github.com/ahgamut/superconfigure/releases/" class="uri">https://github.com/ahgamut/superconfigure/releases/</a> — this is cosmo. I would prefer a single binary though, for simplicity, rather than seperate staticly compiled coreutils which is what this is. But, if in a pinch, it makes a good replacement for a broken coreutil.</li>
+</ul>
+</section>
+<section id="toolpacks" class="level2">
+<h2 class="anchored" data-anchor-id="toolpacks">Toolpacks</h2>
+<p>I recently learned about a new project, called <a href="https://github.com/Azathothas/Toolpacks">Toolpacks</a>. Toolpacks is a truly massive set of static binaries, with so many utilities, including zellij, tmux, ssh, and many others. I see 2292 binaries for x86_64 Linux, and good amounts for Windows and Arm Linux as well.</p>
+<p>Another cool thing about Toolpacks is that they also provide <a href="https://en.wikipedia.org/wiki/UPX">UPX</a> versions of the software they distribute. UPX is a method of creating self extracting, compressed binaries that further saves space. For example:</p>
+<div class="sourceCode" id="cb19" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb19-1">[moonpie@lizard toolpack]$ du -sh zellij</span>
+<span id="cb19-2">30M     zellij</span>
+<span id="cb19-3">[moonpie@lizard toolpack]$ du -sh zellij.upx</span>
+<span id="cb19-4">8.6M    zellij.upx</span></code></pre></div>
+<p>That’s a pretty big reduction on the zellij binary, which is one of the largest binaries I’ve seen. Interesting, they also have caddy, and nginx. I find this very promising.</p>
+<p>There are also builds of busybox or toybox, which could replace coreutils in a pinch on Linux machines. There are a few other interesting one’s, such as <a href="https://github.com/vdjagilev/nmap-formatter">nmap-formatter</a>, a software that can format nmap XML output and convert it to CSV or other formats, which we may find easier to submit.</p>
+</section>
+</section>
+<section id="dockerc" class="level1">
+<h1>Dockerc</h1>
+<p><a href="https://github.com/NilsIrl/dockerc">Dockerc</a> is a project that compiles a docker container to a static executable, by bundling the runtime. I discovered this because it was packaged on the Toolpacks listed above.</p>
+<p>Because it is a container, I’m going to assume that this solution only works on Linux — but that doesn’t mean it’s not useful.</p>
+<div class="sourceCode" id="cb20" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb20-1">vagrant@debian10:~$ sudo dockerc --image docker://library/httpd -o httpd --rootfull</span>
+<span id="cb20-2">vagrant@debian10:~$ sudo ./httpd</span>
+<span id="cb20-3">unknown argument ignored: lazytime</span>
+<span id="cb20-4">AH00557: httpd: apr_sockaddr_info_get() failed for umoci-default</span>
+<span id="cb20-5">AH00557: httpd: apr_sockaddr_info_ge....</span></code></pre></div>
+<p>And it works — kinda. httpd doesn’t seem to bind an address. However, if I use an alpine container (which starts a shell), and then test with <code>python -m http.server</code>, that binds an address to the same localhost as the alpine machine.</p>
+<div class="sourceCode" id="cb21" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb21-1">sudo dockerc --image docker://docker.io/library/nginx --output nginx --rootfull</span>
+<span id="cb21-2"></span>
+<span id="cb21-3">sudo ./nginx</span></code></pre></div>
+<p>This also does not bind ports.</p>
+</section>
+<section id="less-promising-options" class="level1">
+<h1>Less promising options</h1>
+<section id="pkgin" class="level2">
+<h2 class="anchored" data-anchor-id="pkgin">pkgin</h2>
+<p><a href="https://pkgin.net/" class="uri">https://pkgin.net/</a></p>
+<p>Pkgin is a package manager that can build things from source quickly. It works on multiple BSDs (including Dragonfly), Macos, and Debian Linux. I don’t think we’ll ever see OpenSolaris but we’ll see.</p>
+
+
+</section>
+</section>
+
+ ]]></description>
+  <category>linux</category>
+  <category>_playground</category>
+  <guid>./playground/ape-experiments/</guid>
+  <pubDate>Thu, 31 Oct 2024 07:00:00 GMT</pubDate>
+</item>
 <item>
   <title>Installing Unity on Distrobox</title>
   <link>./guides/unity-distrobox/</link>
@@ -250,7 +546,19 @@ Show install command
 <span id="cb4-31">✔ all components are healthy</span></code></pre></div>
 </details>
 <p>And just like that, fluxcd is installed.</p>
-</section>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Flux suspend/resume resources
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><code>flux suspend source git flux-system</code> pauses flux’s reconciliation with the git repo. This allows me to test applying resources with <code>kubectl apply -f</code>, before I commit to git.</p>
+<p><code>flux resume source git flux-system</code> resumes flux’s reconciliation.</p>
+<div class="c">
 <section id="reverse-proxy-traefik-then-nginx" class="level2">
 <h2 class="anchored" data-anchor-id="reverse-proxy-traefik-then-nginx">Reverse Proxy (Traefik, then Nginx)</h2>
 <p>The first step of my cluster should be my reverse proxy, as an ingress. This exposes basically all of my services.</p>
@@ -2638,6 +2946,524 @@ font-style: inherit;"> WaitForFirstConsumer</span></span></code></pre></div>
 <p>After this, the Authentik server is up. But, it looks like a reclaim policy of “delete”, means that if I delete the Authentik helm chart, my user data will be deleted as well.</p>
 <p>Instead, I think I need to manually create volumes in my flux config, that use “claimRef” to get claimed by the right PersistentVolumeClaims. Or maybe I can have openebs volumes retain themselves?</p>
 <p>Actually, I think I need to <a href="https://openebs.io/docs/user-guides/local-storage-user-guide/local-pv-hostpath/hostpath-configuration">create another storageclass</a> that can dynamically provision volumes, but this one has the settings and specs I want, and is the default.</p>
+<p>So, I did that:</p>
+<div class="code-with-filename">
+<div class="code-with-filename-file">
+<pre><strong>openebs/localpath.yaml</strong></pre>
+</div>
+<div class="sourceCode" id="cb52" data-filename="openebs/localpath.yaml" style="background: #f1f3f5;"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb52-1"><span class="pp" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">---</span></span>
+<span id="cb52-2"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">apiVersion</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> storage.k8s.io/v1</span></span>
+<span id="cb52-3"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">kind</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> StorageClass</span></span>
+<span id="cb52-4"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">metadata</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span></span>
+<span id="cb52-5"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">name</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> openebs-persistent-hostpath</span></span>
+<span id="cb52-6"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">namespace</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> default</span></span>
+<span id="cb52-7"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">annotations</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span></span>
+<span id="cb52-8"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">openebs.io/cas-type</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> local</span></span>
+<span id="cb52-9"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">    cas.openebs.io/config</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">: </span><span class="ch" style="color: #20794D;
+background-color: null;
+font-style: inherit;">|</span></span>
+<span id="cb52-10">      - name: StorageType</span>
+<span id="cb52-11">        value: hostpath</span>
+<span id="cb52-12">      - name: BasePath</span>
+<span id="cb52-13">        value: /var/openebs/persistent/</span>
+<span id="cb52-14"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">storageclass.kubernetes.io/is-default-class</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> </span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"true"</span></span>
+<span id="cb52-15"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">provisioner</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> openebs.io/local</span></span>
+<span id="cb52-16"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">reclaimPolicy</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> Retain</span></span>
+<span id="cb52-17"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">volumeBindingMode</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> WaitForFirstConsumer</span></span></code></pre></div>
+</div>
+<p>And with this, I should get persistent data. Now, I should get the ingress working.</p>
+</section>
+<section id="ingress" class="level3">
+<h3 class="anchored" data-anchor-id="ingress">Ingress</h3>
+<div class="sourceCode" id="cb53" style="background: #f1f3f5;"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb53-1"><span class="pp" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">---</span></span>
+<span id="cb53-2"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">apiVersion</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> helm.toolkit.fluxcd.io/v2</span></span>
+<span id="cb53-3"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">kind</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> HelmRelease</span></span>
+<span id="cb53-4"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">metadata</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span></span>
+<span id="cb53-5"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">name</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> authentik</span></span>
+<span id="cb53-6"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">namespace</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> default</span></span>
+<span id="cb53-7"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">spec</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span></span>
+<span id="cb53-8"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">chart</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span></span>
+<span id="cb53-9"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">spec</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span></span>
+<span id="cb53-10"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">      </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">chart</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> authentik</span></span>
+<span id="cb53-11"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">      </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">reconcileStrategy</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> ChartVersion</span></span>
+<span id="cb53-12"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">      </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">sourceRef</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span></span>
+<span id="cb53-13"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">        </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">kind</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> HelmRepository</span></span>
+<span id="cb53-14"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">        </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">name</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> authentik</span></span>
+<span id="cb53-15"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">        # Figure out what version I should have</span></span>
+<span id="cb53-16"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">      # version: </span></span>
+<span id="cb53-17"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">interval</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> 1m0s</span></span>
+<span id="cb53-18"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">values</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span></span>
+<span id="cb53-19"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">authentik</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span></span>
+<span id="cb53-20"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">        </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">secret_key</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> </span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"PleaseGenerateASecureKey"</span></span>
+<span id="cb53-21"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">        # This sends anonymous usage-data, stack traces on errors and</span></span>
+<span id="cb53-22"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">        # performance data to sentry.io, and is fully opt-in</span></span>
+<span id="cb53-23"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">        </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">error_reporting</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span></span>
+<span id="cb53-24"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">            </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">enabled</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> </span><span class="ch" style="color: #20794D;
+background-color: null;
+font-style: inherit;">true</span></span>
+<span id="cb53-25"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">        </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">postgresql</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span></span>
+<span id="cb53-26"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">            </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">password</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> </span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"ThisIsNotASecurePassword"</span></span>
+<span id="cb53-27"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">server</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span></span>
+<span id="cb53-28"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">        </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">ingress</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span></span>
+<span id="cb53-29"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">            </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">ingressClassName</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> nginx</span></span>
+<span id="cb53-30"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">            # Change to true when done</span></span>
+<span id="cb53-31"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">            </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">enabled</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> </span><span class="ch" style="color: #20794D;
+background-color: null;
+font-style: inherit;">true</span></span>
+<span id="cb53-32"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">            </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">hosts</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span></span>
+<span id="cb53-33"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">                </span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">-</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> sso.moonpiedumpl.ing</span></span>
+<span id="cb53-34"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">            </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">annotations</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span></span>
+<span id="cb53-35"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">                </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">cert-manager.io/issuer</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> </span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"letsencrypt-staging"</span></span>
+<span id="cb53-36"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">                </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">acme.cert-manager.io/http01-edit-in-place</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> </span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"true"</span></span>
+<span id="cb53-37"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">            </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">tls</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span></span>
+<span id="cb53-38"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">              </span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">-</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">hosts</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> </span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">[</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">sso.moonpiedumpl.ing</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">]</span></span>
+<span id="cb53-39"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">                </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">secretName</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> sso-acme</span></span>
+<span id="cb53-40"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">postgresql</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span></span>
+<span id="cb53-41"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">        </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">enabled</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> </span><span class="ch" style="color: #20794D;
+background-color: null;
+font-style: inherit;">true</span></span>
+<span id="cb53-42"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">        </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">auth</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span></span>
+<span id="cb53-43"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">            </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">password</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> </span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"ThisIsNotASecurePassword"</span></span>
+<span id="cb53-44"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">redis</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span></span>
+<span id="cb53-45"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">        </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">enabled</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> </span><span class="ch" style="color: #20794D;
+background-color: null;
+font-style: inherit;">true</span></span></code></pre></div>
+<p>And this works, including getting an SSL certificate from the letsencrypt-staging server.</p>
+<p>Now I need to set up encryption of my secrets, because I want for this git repo to be public.</p>
 </section>
 <section id="secretssops" class="level3">
 <h3 class="anchored" data-anchor-id="secretssops">Secrets/SOPS</h3>
@@ -2654,114 +3480,134 @@ font-style: inherit;"> WaitForFirstConsumer</span></span></code></pre></div>
 <div class="code-with-filename-file">
 <pre><strong>helmrelease.yaml</strong></pre>
 </div>
-<div class="sourceCode" id="cb52" data-filename="helmrelease.yaml" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb52-1">---</span>
-<span id="cb52-2">apiVersion: helm.toolkit.fluxcd.io/v2</span>
-<span id="cb52-3">kind: HelmRelease</span>
-<span id="cb52-4">metadata:</span>
-<span id="cb52-5">  name: authentik</span>
-<span id="cb52-6">  namespace: default</span>
-<span id="cb52-7">spec:</span>
-<span id="cb52-8">  chart:</span>
-<span id="cb52-9">    spec:</span>
-<span id="cb52-10">      chart: authentik</span>
-<span id="cb52-11">      reconcileStrategy: ChartVersion</span>
-<span id="cb52-12">      sourceRef:</span>
-<span id="cb52-13">        kind: HelmRepository</span>
-<span id="cb52-14">        name: authentik</span>
-<span id="cb52-15">        # Figure out what version I should have</span>
-<span id="cb52-16">      # version: </span>
-<span id="cb52-17">  interval: 1m0s</span>
-<span id="cb52-18">  values:</span>
-<span id="cb52-19">    authentik:</span>
-<span id="cb52-20">        secret_key: "PleaseGenerateASecureKey"</span>
-<span id="cb52-21">        # This sends anonymous usage-data, stack traces on errors and</span>
-<span id="cb52-22">        # performance data to sentry.io, and is fully opt-in</span>
-<span id="cb52-23">        error_reporting:</span>
-<span id="cb52-24">            enabled: true</span>
-<span id="cb52-25">        postgresql:</span>
-<span id="cb52-26">            password: "ThisIsNotASecurePassword"</span>
-<span id="cb52-27">    server:</span>
-<span id="cb52-28">        ingress:</span>
-<span id="cb52-29">            ingressClassName: nginx</span>
-<span id="cb52-30">            # Change to true when done</span>
-<span id="cb52-31">            enabled: false</span>
-<span id="cb52-32">            hosts:</span>
-<span id="cb52-33">                - authentik.moonpiedumpl.ing</span>
-<span id="cb52-34">    postgresql:</span>
-<span id="cb52-35">        enabled: true</span>
-<span id="cb52-36">        auth:</span>
-<span id="cb52-37">            password: "ThisIsNotASecurePassword"</span>
-<span id="cb52-38">    redis:</span>
-<span id="cb52-39">        enabled: true</span></code></pre></div>
+<div class="sourceCode" id="cb54" data-filename="helmrelease.yaml" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb54-1">---</span>
+<span id="cb54-2">apiVersion: helm.toolkit.fluxcd.io/v2</span>
+<span id="cb54-3">kind: HelmRelease</span>
+<span id="cb54-4">metadata:</span>
+<span id="cb54-5">  name: authentik</span>
+<span id="cb54-6">  namespace: default</span>
+<span id="cb54-7">spec:</span>
+<span id="cb54-8">  chart:</span>
+<span id="cb54-9">    spec:</span>
+<span id="cb54-10">      chart: authentik</span>
+<span id="cb54-11">      reconcileStrategy: ChartVersion</span>
+<span id="cb54-12">      sourceRef:</span>
+<span id="cb54-13">        kind: HelmRepository</span>
+<span id="cb54-14">        name: authentik</span>
+<span id="cb54-15">        # Figure out what version I should have</span>
+<span id="cb54-16">      # version: </span>
+<span id="cb54-17">  interval: 1m0s</span>
+<span id="cb54-18">  values:</span>
+<span id="cb54-19">    authentik:</span>
+<span id="cb54-20">        secret_key: "PleaseGenerateASecureKey"</span>
+<span id="cb54-21">        # This sends anonymous usage-data, stack traces on errors and</span>
+<span id="cb54-22">        # performance data to sentry.io, and is fully opt-in</span>
+<span id="cb54-23">        error_reporting:</span>
+<span id="cb54-24">            enabled: true</span>
+<span id="cb54-25">        postgresql:</span>
+<span id="cb54-26">            password: "ThisIsNotASecurePassword"</span>
+<span id="cb54-27">    server:</span>
+<span id="cb54-28">        ingress:</span>
+<span id="cb54-29">            ingressClassName: nginx</span>
+<span id="cb54-30">            # Change to true when done</span>
+<span id="cb54-31">            enabled: false</span>
+<span id="cb54-32">            hosts:</span>
+<span id="cb54-33">                - authentik.moonpiedumpl.ing</span>
+<span id="cb54-34">    postgresql:</span>
+<span id="cb54-35">        enabled: true</span>
+<span id="cb54-36">        auth:</span>
+<span id="cb54-37">            password: "ThisIsNotASecurePassword"</span>
+<span id="cb54-38">    redis:</span>
+<span id="cb54-39">        enabled: true</span></code></pre></div>
 </div>
 <p>And then:</p>
-<div class="sourceCode" id="cb53" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb53-1">[moonpie@lizard authentik]$ sops encrypt -a age1sg3u7ndj045gzv3u4w5t5kntplg6sz2hv6k3uxpxq85vtx56rc4s8q83gr --encrypted-regex "^(password|secret_key)$" helmrelease.yaml</span>
-<span id="cb53-2">apiVersion: helm.toolkit.fluxcd.io/v2</span>
-<span id="cb53-3">kind: HelmRelease</span>
-<span id="cb53-4">metadata:</span>
-<span id="cb53-5">    name: authentik</span>
-<span id="cb53-6">    namespace: default</span>
-<span id="cb53-7">spec:</span>
-<span id="cb53-8">    chart:</span>
-<span id="cb53-9">        spec:</span>
-<span id="cb53-10">            chart: authentik</span>
-<span id="cb53-11">            reconcileStrategy: ChartVersion</span>
-<span id="cb53-12">            sourceRef:</span>
-<span id="cb53-13">                kind: HelmRepository</span>
-<span id="cb53-14">                name: authentik</span>
-<span id="cb53-15">                # Figure out what version I should have</span>
-<span id="cb53-16">            # version:</span>
-<span id="cb53-17">    interval: 1m0s</span>
-<span id="cb53-18">    values:</span>
-<span id="cb53-19">        authentik:</span>
-<span id="cb53-20">            secret_key: ENC[AES256_GCM,data:nujuuWM84Tid/15KOD9gyOwAaWa6EhsT,iv:kCkgXtzezxpNvHs0AFGELtwUOgzeljqffiqueraE8h0=,tag:5bQuit+QW5q/8RQOvNeNww==,type:str]</span>
-<span id="cb53-21">            # This sends anonymous usage-data, stack traces on errors and</span>
-<span id="cb53-22">            # performance data to sentry.io, and is fully opt-in</span>
-<span id="cb53-23">            error_reporting:</span>
-<span id="cb53-24">                enabled: true</span>
-<span id="cb53-25">            postgresql:</span>
-<span id="cb53-26">                password: ENC[AES256_GCM,data:cZq0luEMYkByNhKyu6L3sio4PDQ5sh1l,iv:7a534BkBd5qZkVFCcRIsJmCZQ0SdGLyqYncI798s0kY=,tag:FossEP7tUupbvKJkZetAjA==,type:str]</span>
-<span id="cb53-27">        server:</span>
-<span id="cb53-28">            ingress:</span>
-<span id="cb53-29">                ingressClassName: nginx</span>
-<span id="cb53-30">                # Change to true when done</span>
-<span id="cb53-31">                enabled: false</span>
-<span id="cb53-32">                hosts:</span>
-<span id="cb53-33">                    - authentik.moonpiedumpl.ing</span>
-<span id="cb53-34">        postgresql:</span>
-<span id="cb53-35">            enabled: true</span>
-<span id="cb53-36">            auth:</span>
-<span id="cb53-37">                password: ENC[AES256_GCM,data:yzFmr7JyPnBG50rej5yx+k/4jelfAzRF,iv:WoNEJq7HW60T5eTnA/bQ0MvMvKOVIvJt0KIN2dvX3/Q=,tag:dEP3uhYH0M+As7AW0l1vnA==,type:str]</span>
-<span id="cb53-38">        redis:</span>
-<span id="cb53-39">            enabled: true</span>
-<span id="cb53-40">sops:</span>
-<span id="cb53-41">    kms: []</span>
-<span id="cb53-42">    gcp_kms: []</span>
-<span id="cb53-43">    azure_kv: []</span>
-<span id="cb53-44">    hc_vault: []</span>
-<span id="cb53-45">    age:</span>
-<span id="cb53-46">        - recipient: age1sg3u7ndj045gzv3u4w5t5kntplg6sz2hv6k3uxpxq85vtx56rc4s8q83gr</span>
-<span id="cb53-47">          enc: |</span>
-<span id="cb53-48">            -----BEGIN AGE ENCRYPTED FILE-----</span>
-<span id="cb53-49">            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSBDSHVqYzZSU0g4ckZva3Zs</span>
-<span id="cb53-50">            eEdIWWt0aFdKaHBhbTRkeUFWZTRHcnVyZVVnCmIwb1BISUxBZDBuUWFzNkV5TUFZ</span>
-<span id="cb53-51">            TlZlcXJ0MU9Gd1pSTXAwNUNkalNhcVEKLS0tIGtBQktERWYzdk90YkVCMlhpTUVp</span>
-<span id="cb53-52">            Wk05NzhvMFBtWTZIdWVlS0RuRTJjNmcKbWaU9SOlvcW5lBOfMPb9KDCCd4PNuGKg</span>
-<span id="cb53-53">            DszzKrN6jWdpiSMdvLcPDJagLPrtCwtgL7XI3jvfmGH1DI87r4KxKA==</span>
-<span id="cb53-54">            -----END AGE ENCRYPTED FILE-----</span>
-<span id="cb53-55">    lastmodified: "2024-10-19T21:40:39Z"</span>
-<span id="cb53-56">    mac: ENC[AES256_GCM,data:rU+SIASsBqnRkO6/HVntpYuk1p2A6QaCKoCtFFWLcaVV8Jn3CInXk/IORgkmpRhEdVzZlts48Rz8sh/OiSZdYsEeCzxfUFwEtBKk/2lpKfIip3cXlV0oDnkKFGP4OO8aXmxUcF0gCxVETSGqxnlb9+3f6KFmJsIs2OqvvFP9PgQ=,iv:DGykNA7WneKPMc972w2++mUwXdtwkYcRLJoLzz0nJEg=,tag:2wdz+FxeAiqAxrGoHVhJIQ==,type:str]</span>
-<span id="cb53-57">    pgp: []</span>
-<span id="cb53-58">    encrypted_regex: ^(password|secret_key)$</span>
-<span id="cb53-59">    version: 3.9.1</span></code></pre></div>
-<p>Although this looks like the best setup, I don’t know if it works, maybe only secrets can be decrypted?</p>
+<div class="sourceCode" id="cb55" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb55-1">[moonpie@lizard authentik]$ sops encrypt -a age1sg3u7ndj045gzv3u4w5t5kntplg6sz2hv6k3uxpxq85vtx56rc4s8q83gr --encrypted-regex "^(password|secret_key)$" helmrelease.yaml</span>
+<span id="cb55-2">apiVersion: helm.toolkit.fluxcd.io/v2</span>
+<span id="cb55-3">kind: HelmRelease</span>
+<span id="cb55-4">metadata:</span>
+<span id="cb55-5">    name: authentik</span>
+<span id="cb55-6">    namespace: default</span>
+<span id="cb55-7">spec:</span>
+<span id="cb55-8">    chart:</span>
+<span id="cb55-9">        spec:</span>
+<span id="cb55-10">            chart: authentik</span>
+<span id="cb55-11">            reconcileStrategy: ChartVersion</span>
+<span id="cb55-12">            sourceRef:</span>
+<span id="cb55-13">                kind: HelmRepository</span>
+<span id="cb55-14">                name: authentik</span>
+<span id="cb55-15">                # Figure out what version I should have</span>
+<span id="cb55-16">            # version:</span>
+<span id="cb55-17">    interval: 1m0s</span>
+<span id="cb55-18">    values:</span>
+<span id="cb55-19">        authentik:</span>
+<span id="cb55-20">            secret_key: ENC[AES256_GCM,data:nujuuWM84Tid/15KOD9gyOwAaWa6EhsT,iv:kCkgXtzezxpNvHs0AFGELtwUOgzeljqffiqueraE8h0=,tag:5bQuit+QW5q/8RQOvNeNww==,type:str]</span>
+<span id="cb55-21">            # This sends anonymous usage-data, stack traces on errors and</span>
+<span id="cb55-22">            # performance data to sentry.io, and is fully opt-in</span>
+<span id="cb55-23">            error_reporting:</span>
+<span id="cb55-24">                enabled: true</span>
+<span id="cb55-25">            postgresql:</span>
+<span id="cb55-26">                password: ENC[AES256_GCM,data:cZq0luEMYkByNhKyu6L3sio4PDQ5sh1l,iv:7a534BkBd5qZkVFCcRIsJmCZQ0SdGLyqYncI798s0kY=,tag:FossEP7tUupbvKJkZetAjA==,type:str]</span>
+<span id="cb55-27">        server:</span>
+<span id="cb55-28">            ingress:</span>
+<span id="cb55-29">                ingressClassName: nginx</span>
+<span id="cb55-30">                # Change to true when done</span>
+<span id="cb55-31">                enabled: false</span>
+<span id="cb55-32">                hosts:</span>
+<span id="cb55-33">                    - authentik.moonpiedumpl.ing</span>
+<span id="cb55-34">        postgresql:</span>
+<span id="cb55-35">            enabled: true</span>
+<span id="cb55-36">            auth:</span>
+<span id="cb55-37">                password: ENC[AES256_GCM,data:yzFmr7JyPnBG50rej5yx+k/4jelfAzRF,iv:WoNEJq7HW60T5eTnA/bQ0MvMvKOVIvJt0KIN2dvX3/Q=,tag:dEP3uhYH0M+As7AW0l1vnA==,type:str]</span>
+<span id="cb55-38">        redis:</span>
+<span id="cb55-39">            enabled: true</span>
+<span id="cb55-40">sops:</span>
+<span id="cb55-41">    kms: []</span>
+<span id="cb55-42">    gcp_kms: []</span>
+<span id="cb55-43">    azure_kv: []</span>
+<span id="cb55-44">    hc_vault: []</span>
+<span id="cb55-45">    age:</span>
+<span id="cb55-46">        - recipient: age1sg3u7ndj045gzv3u4w5t5kntplg6sz2hv6k3uxpxq85vtx56rc4s8q83gr</span>
+<span id="cb55-47">          enc: |</span>
+<span id="cb55-48">            -----BEGIN AGE ENCRYPTED FILE-----</span>
+<span id="cb55-49">            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSBDSHVqYzZSU0g4ckZva3Zs</span>
+<span id="cb55-50">            eEdIWWt0aFdKaHBhbTRkeUFWZTRHcnVyZVVnCmIwb1BISUxBZDBuUWFzNkV5TUFZ</span>
+<span id="cb55-51">            TlZlcXJ0MU9Gd1pSTXAwNUNkalNhcVEKLS0tIGtBQktERWYzdk90YkVCMlhpTUVp</span>
+<span id="cb55-52">            Wk05NzhvMFBtWTZIdWVlS0RuRTJjNmcKbWaU9SOlvcW5lBOfMPb9KDCCd4PNuGKg</span>
+<span id="cb55-53">            DszzKrN6jWdpiSMdvLcPDJagLPrtCwtgL7XI3jvfmGH1DI87r4KxKA==</span>
+<span id="cb55-54">            -----END AGE ENCRYPTED FILE-----</span>
+<span id="cb55-55">    lastmodified: "2024-10-19T21:40:39Z"</span>
+<span id="cb55-56">    mac: ENC[AES256_GCM,data:rU+SIASsBqnRkO6/HVntpYuk1p2A6QaCKoCtFFWLcaVV8Jn3CInXk/IORgkmpRhEdVzZlts48Rz8sh/OiSZdYsEeCzxfUFwEtBKk/2lpKfIip3cXlV0oDnkKFGP4OO8aXmxUcF0gCxVETSGqxnlb9+3f6KFmJsIs2OqvvFP9PgQ=,iv:DGykNA7WneKPMc972w2++mUwXdtwkYcRLJoLzz0nJEg=,tag:2wdz+FxeAiqAxrGoHVhJIQ==,type:str]</span>
+<span id="cb55-57">    pgp: []</span>
+<span id="cb55-58">    encrypted_regex: ^(password|secret_key)$</span>
+<span id="cb55-59">    version: 3.9.1</span></code></pre></div>
+<p>Although this looks like the best setup, I don’t know if it works, maybe only kubernetes secrets can be decrypted?</p>
 </section>
 </section>
-<section id="nvidia-runtime" class="level2">
-<h2 class="anchored" data-anchor-id="nvidia-runtime">Nvidia Runtime</h2>
+<section id="static-site" class="level2">
+<h2 class="anchored" data-anchor-id="static-site">Static Site</h2>
+<p>I want to move my blog over to my own domain name. I think the easiest way to do this is. When <a href="https://quarto.org/">quarto</a>, the static site I use “publishes”, what it actually does is push a copy of the compiled static site to another git branch, gh-pages. Github automatically reads from that branch and serves the site at <code>*.github.io</code> domains.</p>
+<p>I think I can do something similar with:</p>
+<ul>
+<li>Flux git source that automatically pulls from that same branch every so often</li>
+<li>Web server that mounts the git repo as a volume and serves from it.</li>
+</ul>
+<p>There is also this <a href="https://git.gay/gitgay/pages-server">forgejo static site server</a>, but I’m not going to be looking at that for now.</p>
+</section>
+<section id="forgejo" class="level2">
+<h2 class="anchored" data-anchor-id="forgejo">Forgejo</h2>
+</section>
+<section id="misc-notes-for-later-on" class="level1">
+<h1>Misc Notes for later on:</h1>
+<ul>
+<li>https://github.com/stakater/Reloader — reload services in kubernetes when configmap or secrets change</li>
+</ul>
 <p><a href="https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html#installing-with-apt">Nvidia container toolkit apt docs</a></p>
 
 
+</section>
+</div>
+</div>
+</div>
 </section>
 </section>
 
@@ -2928,7 +3774,7 @@ font-style: inherit;"> WaitForFirstConsumer</span></span></code></pre></div>
 <tbody>
 <tr class="odd">
 <td>Mana Generation (probably call it just Mana for short)</td>
-<td>X : X * N (*N?)</td>
+<td>X : X * N (*N? probably not)</td>
 <td>N/A</td>
 <td>Generates Mana for casting things</td>
 </tr>
@@ -2957,36 +3803,42 @@ font-style: inherit;"> WaitForFirstConsumer</span></span></code></pre></div>
 <td>Change offensive abilities to their defensive equivalents defensive and vice versa, of a single card</td>
 </tr>
 <tr class="even">
-<td>Counterspell</td>
+<td>Phase/Empherality</td>
 <td>X : X</td>
-<td></td>
-<td></td>
+<td>Probably not</td>
+<td>Decrease the amount that a card can interact, or be interacted with by X. Does X less damage, or but takes X less damage. How should this interact with</td>
 </tr>
 <tr class="odd">
-<td>Replicate</td>
+<td>Counterspell</td>
 <td>X : X</td>
-<td></td>
-<td></td>
+<td>Maybe a mechanic where counterspell can take from existing aspects on board, but it costs production</td>
+<td>Either take a token that opponent is holding directly, or take a token on the board.</td>
 </tr>
 <tr class="even">
+<td>Replicate</td>
+<td>X : X</td>
+<td>Maybe a mechanic where replicate can take from existing aspects on board, but it costs production</td>
+<td>Copy a token that is in play or that anyone is holding</td>
+</tr>
+<tr class="odd">
 <td>Gain Life</td>
 <td>X : X</td>
 <td>1 production point per token</td>
 <td>Gain life when applied</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>Burn (direct damage)</td>
 <td>X : X</td>
 <td>probably</td>
 <td>Apply direct damage to any card or your opponent, as long as their is a card path from you to that card or your player</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>Arbitrary Aspect (trigger?)</td>
 <td></td>
 <td></td>
 <td></td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>Arbitrary Negative Aspect</td>
 <td></td>
 <td></td>
@@ -3052,8 +3904,8 @@ font-style: inherit;"> WaitForFirstConsumer</span></span></code></pre></div>
 <td>Generates actives when this card is played</td>
 </tr>
 <tr class="odd">
-<td></td>
-<td></td>
+<td>Familier Friends</td>
+<td>X</td>
 <td></td>
 <td></td>
 </tr>
@@ -3125,7 +3977,7 @@ font-style: inherit;"> WaitForFirstConsumer</span></span></code></pre></div>
 <ul>
 <li>Life</li>
 </ul></li>
-<li>Cards in hand (artifically increased by scry)
+<li>Cards in hand (artificially increased by scry)
 <ul>
 <li>Draw counts</li>
 </ul></li>
@@ -3249,7 +4101,7 @@ GetWin: Get the amount of damage a winning attacker would do</code></pre>
 </section>
 
  ]]></description>
-  <category>_playground</category>
+  <category>\[\_playground\]</category>
   <guid>./playground/cardgame/</guid>
   <pubDate>Thu, 12 Sep 2024 07:00:00 GMT</pubDate>
 </item>
@@ -3845,283 +4697,6 @@ Tip
   <category>_writeups</category>
   <guid>./writeups/nice-challenge-6/</guid>
   <pubDate>Sun, 25 Aug 2024 07:00:00 GMT</pubDate>
-</item>
-<item>
-  <title>Portable executable experiments for CCDC</title>
-  <link>./playground/ape-experiments/</link>
-  <description><![CDATA[ 
-
-
-
-
-<p>One of the big problems encountered in <a href="https://en.wikipedia.org/wiki/National_Collegiate_Cyber_Defense_Competition">CCDC</a> is the portability of tools. Competitors will be asked to work across a vareity of Linux distros, of various types and various package versions, and even across the BSD versions. Of course, sometimes the solution is simple: install your tools, like python or tmux, from the package manager on every Linux/BSD OS.</p>
-<p>The second problem is that the organizers of the competition may break our package managers. Deleting repos, or giving us a distro without a package manager.</p>
-<p>I was looking into portable executables, to get around this. I would like to have a portable version of python, so that ansible playbooks relating to firewall automation and backups can be run as soon as possible, and also a portable terminal multiplexer, so that our team members can collaborate directly.</p>
-<section id="apecosmo" class="level1">
-<h1>Ape/Cosmo</h1>
-<p><a href="https://justine.lol/cosmopolitan/index.html">Cosmopolitan</a> is a project that turns C into build once, run anywhere language. It works by creating a fat binary that contains code for all other operating systems, including UEFI, and then dynamically figuring out where it is being run.</p>
-<p>There are some precompiled binaries for ape as well:</p>
-<ul>
-<li><a href="https://github.com/ahgamut/superconfigure/releases" class="uri">https://github.com/ahgamut/superconfigure/releases</a></li>
-<li><a href="https://cosmo.zip/pub/cosmos/bin/" class="uri">https://cosmo.zip/pub/cosmos/bin/</a></li>
-</ul>
-<p>Some of these tools are very interesting, in particular <code>tmux</code> and <code>python</code>. Ansible requires python to be on the machines, but it can be difficult to get python on a machine, especially if the package manager is broken. I can easily imagine something like:</p>
-<p><code>cat staticpython | ssh hostname "cat &gt; remotestaticssh"</code></p>
-<p>The above would enable us to get a version of staticly compiled python on anything with ssh, and only ssh needed. There are also some <a href="https://superuser.com/questions/291423/how-to-copy-a-file-without-using-scp-inside-an-ssh-session">other ways to do it</a>.</p>
-<p>I download an actually portable version of tmux and python, and attempt to run them (the test is to see if they still work without glibc, which is often a limitation of portability for many other portable binaries).</p>
-<div class="sourceCode" id="cb1" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb1-1">[moonpie@lizard apeb]$ ./python</span>
-<span id="cb1-2">0088:err:sync:RtlpWaitForCriticalSection section 00006FFFFFFAC440 "../wine-staging/dlls/ntdll/loader.c: loader_section" wait timed out in thread 0088, blocked by 007c, retrying (60 sec)</span>
-<span id="cb1-3">0120:fixme:file:server_get_file_info Unsupported info class 1c</span>
-<span id="cb1-4">0120:fixme:file:NtFsControlFile FSCTL_GET_REPARSE_POINT semi-stub</span>
-<span id="cb1-5">0120:fixme:file:server_get_file_info Unsupported info class 1c</span>
-<span id="cb1-6">0120:fixme:file:server_get_file_info Unsupported info class 1c</span>
-<span id="cb1-7">Python 3.12.3 (main, Aug  3 2024, 10:18:33) [GCC 14.1.0] on linux</span>
-<span id="cb1-8">Type "help", "copyright", "credits" or "license" for more information.</span>
-<span id="cb1-9">0120:fixme:file:server_get_file_info Unsupported info class 1c</span>
-<span id="cb1-10">&gt;&gt;&gt; exit(_</span>
-<span id="cb1-11">^C0124:err:virtual:virtual_setup_exception stack overflow 1280 bytes addr 0x952cd2 stack 0x1300b00 (0x1300000-0x1301000-0x1400000)</span>
-<span id="cb1-12">^C012c:err:virtual:virtual_setup_exception stack overflow 1280 bytes addr 0x952cd2 stack 0x1400b00 (0x1400000-0x1401000-0x1500000)</span>
-<span id="cb1-13">^C0134:err:virtual:virtual_setup_exception stack overflow 1280 bytes addr 0x952cd2 stack 0x1500b00 (0x1500000-0x1501000-0x1600000)</span>
-<span id="cb1-14">^C013c:err:virtual:virtual_setup_exception stack overflow 1280 bytes addr 0x952cd2 stack 0x1600b00 (0x1600000-0x1601000-0x1700000)</span>
-<span id="cb1-15">^C0144:err:virtual:virtual_setup_exception stack overflow 1280 bytes addr 0x952cd2 stack 0x1700b00 (0x1700000-0x1701000-0x1800000)</span></code></pre></div>
-<p>uhhhh…. my Arch Linux install attempts to use wine to load up the python program. There are also issues quitting, and I end up having to use pkill to kill python.</p>
-<p>The way to avoid this is to use the <a href="https://justine.lol/apeloader/">ape loader</a>.</p>
-<div class="sourceCode" id="cb2" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb2-1">[moonpie@lizard apeb]$ ./ape-x86_64.elf ./python</span>
-<span id="cb2-2">Python 3.12.3 (main, Aug  3 2024, 10:18:33) [GCC 14.1.0] on linux</span>
-<span id="cb2-3">Type "help", "copyright", "credits" or "license" for more information.</span>
-<span id="cb2-4">&gt;&gt;&gt;</span>
-<span id="cb2-5">``</span>
-<span id="cb2-6"></span>
-<span id="cb2-7">And this works. But, although there is also a version of python distributed with many python libraries included, called `pypack1`, it doesn't contain some crucial python packages that I may need for ansible administration of systems, like sql manipulation tools. </span>
-<span id="cb2-8"></span>
-<span id="cb2-9">```{.default}</span>
-<span id="cb2-10">[moonpie@lizard apeb]$ ./ape-x86_64.elf ./python -m venv venv</span>
-<span id="cb2-11">Error: Command '['/home/moonpie/vscode/test/apeb/venv/bin/python', '-m', 'ensurepip', '--upgrade', '--default-pip']' returned non-zero exit status 1.</span></code></pre></div>
-<p>Yeah. I’m not too worried, because I wrote my roles so that the databse manipulation can also be done remotely, from a playbook running on localhost, but it would be simpler if everything can be run on the remote systems.</p>
-<div class="sourceCode" id="cb3" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb3-1">[moonpie@lizard apeb]$ ./ape-x86_64.elf ./tmux</span>
-<span id="cb3-2">[moonpie@lizard apeb]$ ./ape-x86_64.elf ./tmux -h</span>
-<span id="cb3-3">tmux: unknown option -- h</span>
-<span id="cb3-4">usage: tmux [-2CDlNuvV] [-c shell-command] [-f file] [-L socket-name]</span>
-<span id="cb3-5">            [-S socket-path] [-T features] [command [flags]]</span></code></pre></div>
-<p>And tmux just won’t load, although it will print the help output. I find this very weird, as I could get tmux to load earlier, but not now. It doesn’t load on my host system, or in an Debian or Alpine container.</p>
-<p>This only seems to apply to the ape tmux, as tmux installed by apt in a debian container doesn’t have this issue, and then after that, tmux is able to start sessions normally, but then it can’t again after I kill all sessions. At least this isolates it to an issue with ape.</p>
-<p>It could just be a bug of some sort, but the package version only updated 3 days ago from now (August 6th), so those haven’t changed.</p>
-<p>The weirdest thing is that the ape tmux is actually able to work normally… but only after I launch a session via non-ape tmux. And then, one I kill all tmux sessions, then it stops working again.</p>
-<p>It seems like the ape tmux is having trouble starting the server:</p>
-<div class="sourceCode" id="cb4" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb4-1">/stuff # ape ./tmux start-server</span>
-<span id="cb4-2">/stuff #</span>
-<span id="cb4-3">/stuff # ape ./tmux ls</span>
-<span id="cb4-4">no server running on /tmp/tmux-0/default</span></code></pre></div>
-<p>I found a <a href="https://github.com/tmux/tmux/issues/736">half relevant issue</a>, but the failed solution gives me more answers:</p>
-<div class="sourceCode" id="cb5" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb5-1">/stuff # ape ./tmux new-session -t testing -d</span>
-<span id="cb5-2">create window failed: fork failed: Operation not permitted</span></code></pre></div>
-<p>I eventually made a post on the redbean discord server, and uploaded my <a href="https://gist.github.com/moonpiedumplings/809dcc89cfe289f8341aae85069a57e1">strace to a github gist</a>. I’ll wait to see if anyone replies.</p>
-<div class="sourceCode" id="cb6" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb6-1">[moonpie@lizard apeb]$ ./ape-x86_64.elf ./tmux new-session -d -vv</span>
-<span id="cb6-2">no server running on /tmp/tmux-1000/default</span></code></pre></div>
-<div class="sourceCode" id="cb7" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb7-1">/stuff # ./ape-x86_64.elf ./tmux new-session -d -vv</span>
-<span id="cb7-2">no server running on /tmp/tmux-0/default</span></code></pre></div>
-<p>So tmux can be ran with -vv for something more verbose.</p>
-<p>This might also be a tmux bug, since the version of tmux provided by ape/cosmo is 3.3a, rather than the latest 3.4, however, the nix bundled tmux also has this issue, and nix has 3.4 of tmux.</p>
-<p>I played around with attempting to build newer versions of tmux from the <a href="https://github.com/ahgamut/superconfigure?tab=readme-ov-file#how-can-i-build-these-locally">superconfigure</a> github repo, but their instructions don’t seem to work. The scripts assume Ubuntu 22 LTS, although I was only able to find that out after looking at what distro was used in their github actions.</p>
-<section id="openbsd" class="level2">
-<h2 class="anchored" data-anchor-id="openbsd">Openbsd</h2>
-<div class="sourceCode" id="cb8" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb8-1">[vagrant@openbsd7 ~]$ ./ape ./python</span>
-<span id="cb8-2">Python 3.12.3 (main, Aug  3 2024, 10:18:33) [GCC 14.1.0] on linux</span>
-<span id="cb8-3">Type "help", "copyright", "credits" or "license" for more information.</span>
-<span id="cb8-4">&gt;&gt;&gt;</span>
-<span id="cb8-5">[vagrant@openbsd7 ~]$ ./ape ./tmux new-ession -d -vv</span>
-<span id="cb8-6">no server running on /tmp/tmux-1000/default</span></code></pre></div>
-</section>
-<section id="netbsd" class="level2">
-<h2 class="anchored" data-anchor-id="netbsd">NetBSD</h2>
-<div class="sourceCode" id="cb9" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb9-1">[vagrant@netbsd8 ~]$ ./ape ./python</span>
-<span id="cb9-2">Python 3.12.3 (main, Aug  3 2024, 10:18:33) [GCC 14.1.0] on linux</span>
-<span id="cb9-3">Type "help", "copyright", "credits" or "license" for more information.</span>
-<span id="cb9-4">&gt;&gt;&gt;</span>
-<span id="cb9-5">[vagrant@netbsd8 ~]$ ./ape ./tmux new-session -d -vv</span>
-<span id="cb9-6">no server running on /tmp/tmux-1000/default</span></code></pre></div>
-<p>Vim executes successfully as well. It’s able to execute without the ape interpeter, but python crashes when I try to do that.</p>
-</section>
-<section id="dragonflybsd" class="level2">
-<h2 class="anchored" data-anchor-id="dragonflybsd">DragonflyBSD</h2>
-<p>We’ve seen this FreeBSD fork in the competition environment.</p>
-<div class="sourceCode" id="cb10" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb10-1">[vagrant@dragonflybsd6 ~]$ ./ape ./python</span>
-<span id="cb10-2">ELF binary type "9" not known.</span>
-<span id="cb10-3">-bash: ./ape: cannot execute binary file: Exec format error</span>
-<span id="cb10-4">[vagrant@dragonflybsd6 ~]$ ./ape ./tmux</span>
-<span id="cb10-5">ELF binary type "9" not known.</span>
-<span id="cb10-6">-bash: ./ape: cannot execute binary file: Exec format error</span>
-<span id="cb10-7">[vagrant@dragonflybsd6 ~]$ ./ape ./vim</span>
-<span id="cb10-8">ELF binary type "9" not known.</span>
-<span id="cb10-9">-bash: ./ape: cannot execute binary file: Exec format error</span>
-<span id="cb10-10">[vagrant@dragonflybsd6 ~]$</span></code></pre></div>
-</section>
-<section id="freebsd" class="level2">
-<h2 class="anchored" data-anchor-id="freebsd">FreeBSD</h2>
-<p>I’m having trouble packagint the Vagrant VM.</p>
-</section>
-</section>
-<section id="nix-bundle" class="level1">
-<h1>Nix bundle</h1>
-<p><code>nix bundle nixpkgs#programname</code> is a command that bundles a program into a self extracting archive that uses proot to run itself. A big problem with nix bundle is that it mostly only works on Linux, and relying on proot makes it less portable compared to ape. <a href="https://nix.dev/manual/nix/2.13/command-ref/new-cli/nix3-bundle">Here is the official manual</a>… on an unofficial site.</p>
-<div class="sourceCode" id="cb11" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb11-1">[moonpie@lizard apeb]$ nix bundle nixpkgs#zellij</span>
-<span id="cb11-2">[moonpie@lizard apeb]$ ls -la zellij</span>
-<span id="cb11-3">lrwxrwxrwx 1 moonpie moonpie 47 Aug  6 22:28 zellij -&gt; /nix/store/5d5fi0x4g7v33m7jscxwjijaxi3lg2kp-arx</span></code></pre></div>
-<p>One thing that is mildly annoying is that nix builds stuff in the nix store, and then symlinks to it from the outside, meaning you have to copy out the binary first.</p>
-<p>The first thing I tried to do was bundle zellij and tmux, and funnily enough, they run into the exact same issue as ape. If I launch a zellij or tmux session using a non-ape, non nix-bundled session, first, then I can use the nix bundled zellij or tmux normally.</p>
-</section>
-<section id="guix-pack" class="level1">
-<h1>Guix pack</h1>
-<p>Guix pack is different. Rather than doing self extracting or staticly compiled executables, it generates a tarball (or docker image, but I’m focused on tarball), which can be extracted and has the programs with a vendored dependency.</p>
-<p>I found a <a href="https://hub.docker.com/r/metacall/guix">docker container for guix</a>, which is good because I’d rather run guix entirely in a podman container in my home volume, to avoid snapshotting guix in btrfs snapshots of the root subvolume.</p>
-<p><code>podman run -it --rm -v ".:/stuff" --privileged</code></p>
-<p>I had to run it with –privileged, otherwise the guix builder fails.</p>
-<p>Once inside, the <code>guix pack</code> command packs programs into a tarball. <a href="https://guix.gnu.org/manual/en/html_node/Invoking-guix-pack.html">Documentation</a></p>
-<p><code>guix pack -RR tmux</code> generates a tarball… but I’m struggling to run it outside the store.</p>
-</section>
-<section id="appimage" class="level1">
-<h1>Appimage</h1>
-<p>Appimages are good, but with a few caveats: They only work on Linux, and they require fuse2 (not fuse3, but fuse2) to run, and they rely on the same version of glibc.</p>
-<p>There are some <a href="https://github.com/tmux/tmux/wiki/Installing#appimage-package">prebuilt appimages for tmux</a> and it works fine after I install fuse2.</p>
-</section>
-<section id="static-compilation" class="level1">
-<h1>Static Compilation</h1>
-<section id="tmux" class="level2">
-<h2 class="anchored" data-anchor-id="tmux">Tmux</h2>
-<p><a href="https://github.com/tmux/tmux/wiki/Installing">tmux has instructions for installing</a>.</p>
-<p><code>apk add git gcc musl-dev openssl-dev openssl-libs-static openssl ncurses-terminfo</code></p>
-<p>After these packages are installed, compiling tmux staticly will work. (it should be noted that the instructions assume you use the relase tarball, rather than directly from the source code).</p>
-<div class="sourceCode" id="cb12" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb12-1">./configure --enable-static</span>
-<span id="cb12-2"></span>
-<span id="cb12-3">make</span></code></pre></div>
-<p>However:</p>
-<div class="sourceCode" id="cb13" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb13-1">/stuff # ./stmux</span>
-<span id="cb13-2">can't find terminfo database</span></code></pre></div>
-<p>The staticly compiled tmux doesn’t include ncurses and terminfo libraries. After installing <code>ncurses-terminfo</code> then it works fine.</p>
-<p>Apparently it’s possible to staticly bundle ncurses, libevent, and tmux, but it’s an even more involved process. Users must compile ncurses, which generates .a files and then link those to tmux when compiling using LIBS and -l flag to link it.</p>
-</section>
-<section id="zellij" class="level2">
-<h2 class="anchored" data-anchor-id="zellij">Zellij</h2>
-<div class="sourceCode" id="cb14" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb14-1">git clone https://github.com/zellij-org/zellij/</span>
-<span id="cb14-2"></span>
-<span id="cb14-3">podman run -it --rm -v "./zellij:/zellij" docker.io/library/rust:alpine3.18</span>
-<span id="cb14-4"></span>
-<span id="cb14-5">apk add openssl1.1-compat openssl1.1-compat-dev openssl1.1-compat-libs-static musl-utils musl-dev protoc # but only for alpine 3.18</span>
-<span id="cb14-6"></span>
-<span id="cb14-7">alternatively: apk add openssl openssl-libs-static openssl-dev musl-utils musl-dev protoc</span>
-<span id="cb14-8"></span>
-<span id="cb14-9">cd /zellij</span>
-<span id="cb14-10"></span>
-<span id="cb14-11">rustup target add x86_64-unknown-linux-musl</span>
-<span id="cb14-12"></span>
-<span id="cb14-13">rustup target add wasm32-wasi</span>
-<span id="cb14-14"></span>
-<span id="cb14-15">RUSTFLAGS="-C target-feature=+crt-static" OPENSSL_NO_VENDOR="1" cargo build --target x86_64-unknown-linux-musl  </span>
-<span id="cb14-16"></span>
-<span id="cb14-17"></span>
-<span id="cb14-18">/stuff/zellij # RUSTFLAGS="-C target-feature=+crt-static" OPENSSL_NO_VENDOR="1" cargo xtask build</span>
-<span id="cb14-19">error: cannot produce proc-macro for `prost-derive v0.11.9` as the target `x86_64-unknown-linux-musl` does not support these crate types</span></code></pre></div>
-<p>This still crashes for now, but I need to figure out how to compile it if I want to target other BSD’s.</p>
-<p><code>error: couldn't read /stuff/zellij/zellij-utils/../target/wasm32-wasi/debug/compact-bar.wasm: No such file or directory (os error 2)</code></p>
-<p>Let’s try debian, since it seems they do their official builds — even musl ones — on ubuntu.</p>
-<div class="sourceCode" id="cb15" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb15-1"></span>
-<span id="cb15-2">podman run -it --rm -v "./zellij:/zellij" docker.io/library/rust:bookworm</span>
-<span id="cb15-3"></span>
-<span id="cb15-4">apt update &amp;&amp; apt install musl-tools protobuf-compiler</span>
-<span id="cb15-5"></span>
-<span id="cb15-6">rustup target add x86_64-unknown-linux-musl</span>
-<span id="cb15-7"></span>
-<span id="cb15-8">rustup target add wasm32-wasi</span>
-<span id="cb15-9"></span>
-<span id="cb15-10">cargo xtask ci cross x86_64-unknown-linux-musl   # This crashes</span>
-<span id="cb15-11"></span>
-<span id="cb15-12">cargo build --verbose --release --target x86_64-unknown-linux-musl # This works</span>
-<span id="cb15-13"></span>
-<span id="cb15-14">rustup target add x86_64-unknown-netbsd</span>
-<span id="cb15-15"></span>
-<span id="cb15-16">cargo build --verbose --release --target x86_64-unknown-netbsd</span>
-<span id="cb15-17"> error occurred: Failed to find tool. Is `x86_64--netbsd-gcc` installed?</span></code></pre></div>
-<p>So it seems like cross compilation support isn’t too good.</p>
-<p>Then I tried with the alpine container in the same directory:</p>
-<div class="sourceCode" id="cb16" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb16-1"></span>
-<span id="cb16-2">apk add openssl openssl-libs-static openssl-dev musl-utils musl-dev protoc gcc-cross-embedded</span>
-<span id="cb16-3"></span>
-<span id="cb16-4">rustup target add wasm32-wasi</span>
-<span id="cb16-5"></span>
-<span id="cb16-6">rustup target add x86_64-unknown-netbsd</span>
-<span id="cb16-7"></span>
-<span id="cb16-8">RUSTFLAGS="-C target-feature=+crt-static" OPENSSL_NO_VENDOR="1" OPENSSL_INCLUDE_DIR="/usr/include/openssl" OPENSSL_LIB_DIR="/usr/lib" cargo build --target x86_64-unknown-freebsd</span></code></pre></div>
-<p>This is much closer, but doesn’t work.</p>
-<div class="sourceCode" id="cb17" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb17-1">note: /usr/lib/gcc/x86_64-alpine-linux-musl/13.2.1/../../../../x86_64-alpine-linux-musl/bin/ld: cannot find -lexecinfo: No such file or directory</span>
-<span id="cb17-2">          /usr/lib/gcc/x86_64-alpine-linux-musl/13.2.1/../../../../x86_64-alpine-linux-musl/bin/ld: cannot find -lkvm: No such file or directory</span>
-<span id="cb17-3">          /usr/lib/gcc/x86_64-alpine-linux-musl/13.2.1/../../../../x86_64-alpine-linux-musl/bin/ld: cannot find -lmemstat: No such file or directory</span>
-<span id="cb17-4">          /usr/lib/gcc/x86_64-alpine-linux-musl/13.2.1/../../../../x86_64-alpine-linux-musl/bin/ld: cannot find -lkvm: No such file or directory</span>
-<span id="cb17-5">          /usr/lib/gcc/x86_64-alpine-linux-musl/13.2.1/../../../../x86_64-alpine-linux-musl/bin/ld: cannot find -lprocstat: No such file or directory</span>
-<span id="cb17-6">          /usr/lib/gcc/x86_64-alpine-linux-musl/13.2.1/../../../../x86_64-alpine-linux-musl/bin/ld: cannot find -ldevstat: No such file or directory</span>
-<span id="cb17-7">          /usr/lib/gcc/x86_64-alpine-linux-musl/13.2.1/../../../../x86_64-alpine-linux-musl/bin/ld: cannot find -lexecinfo: No such file or directory</span>
-<span id="cb17-8">          collect2: error: ld returned 1 exit status</span></code></pre></div>
-<p>Zellij already ships a <a href="https://github.com/zellij-org/zellij/releases">static version on their releases</a> (zellij-x86_64-unknown-linux-musl.tar.gz). From my testing, it only runs on Linux.</p>
-</section>
-<section id="python" class="level2">
-<h2 class="anchored" data-anchor-id="python">Python</h2>
-<ul>
-<li><a href="https://github.com/indygreg/python-build-standalone" class="uri">https://github.com/indygreg/python-build-standalone</a> / <a href="https://gregoryszorc.com/docs/python-build-standalone/main/" class="uri">https://gregoryszorc.com/docs/python-build-standalone/main/</a></li>
-<li><a href="https://pyoxidizer.readthedocs.io/en/latest/pyoxy.html" class="uri">https://pyoxidizer.readthedocs.io/en/latest/pyoxy.html</a></li>
-<li><a href="https://wiki.python.org/moin/BuildStatically" class="uri">https://wiki.python.org/moin/BuildStatically</a> — not as promising</li>
-<li><a href="https://github.com/RustPython/RustPython" class="uri">https://github.com/RustPython/RustPython</a>
-<ul>
-<li>Not <a href="https://rustpython.github.io/pages/whats-left">feature complete</a></li>
-</ul></li>
-</ul>
-<section id="indygreg-python" class="level3">
-<h3 class="anchored" data-anchor-id="indygreg-python">IndyGreg Python</h3>
-<div class="sourceCode" id="cb18" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb18-1">usage: build-main.py [-h]</span>
-<span id="cb18-2">                     [--target-triple {s390x-unknown-linux-gnu,x86_64_v4-unknown-linux-gnu,ppc64le-unknown-linux-gnu,x86_64_v2-unknown-linux-gnu,i686-unknown-linux-gnu,x86_64_v3-unknown-linux-gnu,x86_64-unknown-linux-musl,x86_64-unknown-linux-gnu,armv7-unknown-linux-gnueabihf,armv7-unknown-linux-gnueabi,x86_64_v4-unknown-linux-musl,mipsel-unknown-linux-gnu,x86_64_v3-unknown-linux-musl,mips-unknown-linux-gnu,aarch64-unknown-linux-gnu,x86_64_v2-unknown-linux-musl}]</span>
-<span id="cb18-3">                     [--optimizations {lto,pgo+lto,noopt,pgo,debug}] [--python {cpython-3.10,cpython-3.11,cpython-3.8,cpython-3.12,cpython-3.9}] [--python-source PYTHON_SOURCE]</span>
-<span id="cb18-4">                     [--break-on-failure] [--no-docker] [--serial]</span>
-<span id="cb18-5">                     [--make-target {default,toolchain-image-xcb,toolchain-image-build,empty,toolchain-image-xcb.cross,toolchain-image-gcc,toolchain,toolchain-image-build.cross}]</span>
-<span id="cb18-6">build-main.py: error: argument --target-triple: invalid choice: 'x86_64-unknown-freebsd' (choose from 's390x-unknown-linux-gnu', 'x86_64_v4-unknown-linux-gnu', 'ppc64le-unknown-linux-gnu', 'x86_64_v2-unknown-linux-gnu', 'i686-unknown-linux-gnu', 'x86_64_v3-unknown-linux-gnu', 'x86_64-unknown-linux-musl', 'x86_64-unknown-linux-gnu', 'armv7-unknown-linux-gnueabihf', 'armv7-unknown-linux-gnueabi', 'x86_64_v4-unknown-linux-musl', 'mipsel-unknown-linux-gnu', 'x86_64_v3-unknown-linux-musl', 'mips-unknown-linux-gnu', 'aarch64-unknown-linux-gnu', 'x86_64_v2-unknown-linux-musl')</span>
-<span id="cb18-7">[moonpie@lizard python-build-standalone]$ ./build-linux.py --target x86_64-unknown-freebsd</span></code></pre></div>
-<p>No freebsd or other non-linux support.</p>
-</section>
-</section>
-<section id="coreutils" class="level2">
-<h2 class="anchored" data-anchor-id="coreutils">Coreutils</h2>
-<ul>
-<li><a href="https://github.com/uutils/coreutils" class="uri">https://github.com/uutils/coreutils</a></li>
-<li><a href="https://packages.debian.org/sid/busybox-static" class="uri">https://packages.debian.org/sid/busybox-static</a></li>
-<li><a href="https://busybox.net/FAQ.html" class="uri">https://busybox.net/FAQ.html</a> — looks like busybox releases are already staticly linked, but they mostly focus on Linux releases</li>
-<li><a href="https://github.com/ahgamut/superconfigure/releases/" class="uri">https://github.com/ahgamut/superconfigure/releases/</a> — this is cosmo. I would prefer a single binary though, for simplicity, rather than seperate staticly compiled coreutils which is what this is.</li>
-</ul>
-</section>
-<section id="toolpacks" class="level2">
-<h2 class="anchored" data-anchor-id="toolpacks">Toolpacks</h2>
-<p>I recently learned about a new project, called <a href="https://github.com/Azathothas/Toolpacks">Toolpacks</a>. Toolpacks is a truly massive set of static binaries, with so many utilities, including zellij, tmux, ssh, and many others. I see 2292 binaries for x86_64 Linux, and good amounts for Windows and Arm Linux as well.</p>
-<p>Another cool thing about Toolpacks is that they also provide <a href="https://en.wikipedia.org/wiki/UPX">UPX</a> versions of the software they distribute. UPX is a method of creating self extracting, compressed binaries that further saves space. For example:</p>
-<div class="sourceCode" id="cb19" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb19-1">[moonpie@lizard toolpack]$ du -sh zellij</span>
-<span id="cb19-2">30M     zellij</span>
-<span id="cb19-3">[moonpie@lizard toolpack]$ du -sh zellij.upx</span>
-<span id="cb19-4">8.6M    zellij.upx</span></code></pre></div>
-<p>That’s a pretty big reduction on the zellij binary, which is one of the largest binaries I’ve seen. Interesting, they also have caddy, and nginx. I find this very promising.</p>
-<p>There are also builds of busybox or toybox, which could replace coreutils in a pinch on Linux machines. There are a few other interesting one’s, such as <a href="https://github.com/vdjagilev/nmap-formatter">nmap-formatter</a>, a software that can format nmap XML output and convert it to CSV or other formats, which we may find easier to submit.</p>
-</section>
-</section>
-<section id="less-promising-options" class="level1">
-<h1>Less promising options</h1>
-<section id="pkgin" class="level2">
-<h2 class="anchored" data-anchor-id="pkgin">pkgin</h2>
-<p><a href="https://pkgin.net/" class="uri">https://pkgin.net/</a></p>
-<p>Pkgin is a package manager that can build things from source quickly. It works on multiple BSDs (including Dragonfly), Macos, and Debian Linux. I don’t think we’ll ever see Opensolaris but we’ll see.</p>
-
-
-</section>
-</section>
-
- ]]></description>
-  <category>linux</category>
-  <category>_playground</category>
-  <guid>./playground/ape-experiments/</guid>
-  <pubDate>Tue, 06 Aug 2024 07:00:00 GMT</pubDate>
 </item>
 <item>
   <title>Creating a nix flake shell, the “proper” way</title>

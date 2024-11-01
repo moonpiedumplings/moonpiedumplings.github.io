@@ -6,7 +6,7 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
-<meta name="dcterms.date" content="2024-08-06">
+<meta name="dcterms.date" content="2024-10-31">
 
 <title>Portable executable experiments for CCDC – Jeffrey Fonseca</title>
 <style>
@@ -182,6 +182,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#coreutils" id="toc-coreutils" class="nav-link" data-scroll-target="#coreutils">Coreutils</a></li>
   <li><a href="#toolpacks" id="toc-toolpacks" class="nav-link" data-scroll-target="#toolpacks">Toolpacks</a></li>
   </ul></li>
+  <li><a href="#dockerc" id="toc-dockerc" class="nav-link" data-scroll-target="#dockerc">Dockerc</a></li>
   <li><a href="#less-promising-options" id="toc-less-promising-options" class="nav-link" data-scroll-target="#less-promising-options">Less promising options</a>
   <ul class="collapse">
   <li><a href="#pkgin" id="toc-pkgin" class="nav-link" data-scroll-target="#pkgin">pkgin</a></li>
@@ -209,7 +210,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <div>
     <div class="quarto-title-meta-heading">Published</div>
     <div class="quarto-title-meta-contents">
-      <p class="date">August 6, 2024</p>
+      <p class="date">October 31, 2024</p>
     </div>
   </div>
   
@@ -221,9 +222,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </header>
 
 
-<p>One of the big problems encountered in <a href="https://en.wikipedia.org/wiki/National_Collegiate_Cyber_Defense_Competition">CCDC</a> is the portability of tools. Competitors will be asked to work across a vareity of Linux distros, of various types and various package versions, and even across the BSD versions. Of course, sometimes the solution is simple: install your tools, like python or tmux, from the package manager on every Linux/BSD OS.</p>
-<p>The second problem is that the organizers of the competition may break our package managers. Deleting repos, or giving us a distro without a package manager.</p>
-<p>I was looking into portable executables, to get around this. I would like to have a portable version of python, so that ansible playbooks relating to firewall automation and backups can be run as soon as possible, and also a portable terminal multiplexer, so that our team members can collaborate directly.</p>
+<p>The college I am going to has a team that comeptes in a competition called <a href="https://en.wikipedia.org/wiki/National_Collegiate_Cyber_Defense_Competition">CCDC</a>, which is a blue team cybersecurity competition. It involves securing misconfigured, outdated OS’s and services, while being asked to do tasks called “injects”, and protecting a highly vulnerable environment from “red teamers” — competition organizers who play the role of a hypothetical attacker.</p>
+<p>One of the big problems encountered in CCDC is the portability of applications. Competitors will be asked to work across a variety of Linux distros, of various types and various package versions, and even across the BSD versions. Of course, sometimes the solution is simple: install your tools, like python or tmux, from the package manager on every Linux/BSD OS.</p>
+<p>The second problem is that the organizers of the competition may break our package managers. Deleting repos, or giving us a distro without a package manager, or giving us End-Of-Life distributions, with dead repositories.</p>
+<p>And also, we aren’t allowed to do a distribution release upgrade. So we can’t go from CentOS 8 to CentOS Stream or other things like that. We also aren’t allowed to replace non-containerized scored services with containers. We also aren’t allowed to replace scored services with another application of the same type, so no replacing Apache with Caddy.</p>
+<p>However, we can use static executables to replace services, and there are real limits on what kind of utilities we can deploy, other than resources usage (Linux/BSD machines usually have 2 gigabytes of ram).</p>
+<p>I was looking into portable executables, to mitigate some of the problems and restrictions. I would like to have a portable version of python, so that ansible playbooks relating to firewall automation and backups can be run as soon as possible, and also a portable terminal multiplexer, so that our team members can collaborate directly. I would also like portable (statically compiled) versions of some of the services, so that we can replace them in place, rather than being forced to rely on a package manager that may not work.</p>
 <section id="apecosmo" class="level1">
 <h1>Ape/Cosmo</h1>
 <p><a href="https://justine.lol/cosmopolitan/index.html">Cosmopolitan</a> is a project that turns C into build once, run anywhere language. It works by creating a fat binary that contains code for all other operating systems, including UEFI, and then dynamically figuring out where it is being run.</p>
@@ -251,7 +255,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>^C0134:err:virtual:virtual_setup_exception stack overflow 1280 bytes addr 0x952cd2 stack 0x1500b00 (0x1500000-0x1501000-0x1600000)</span>
 <span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>^C013c:err:virtual:virtual_setup_exception stack overflow 1280 bytes addr 0x952cd2 stack 0x1600b00 (0x1600000-0x1601000-0x1700000)</span>
 <span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>^C0144:err:virtual:virtual_setup_exception stack overflow 1280 bytes addr 0x952cd2 stack 0x1700b00 (0x1700000-0x1701000-0x1800000)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>uhhhh…. my Arch Linux install attempts to use wine to load up the python program. There are also issues quitting, and I end up having to use pkill to kill python.</p>
+<p>My Arch Linux install attempts to use wine to load up the python program. There are also issues quitting, and I end up having to use pkill to kill python.</p>
 <p>The way to avoid this is to use the <a href="https://justine.lol/apeloader/">ape loader</a>.</p>
 <div class="sourceCode" id="cb2"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>[moonpie@lizard apeb]$ ./ape-x86_64.elf ./python</span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>Python 3.12.3 (main, Aug  3 2024, 10:18:33) [GCC 14.1.0] on linux</span>
@@ -325,7 +329,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="freebsd" class="level2">
 <h2 class="anchored" data-anchor-id="freebsd">FreeBSD</h2>
-<p>I’m having trouble packagint the Vagrant VM.</p>
+<p>I intend to test, but vagrant networking is giving me trouble.</p>
 </section>
 </section>
 <section id="nix-bundle" class="level1">
@@ -440,6 +444,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li>Not <a href="https://rustpython.github.io/pages/whats-left">feature complete</a></li>
 </ul></li>
 </ul>
+<p>Also, I just want to note about python, that <code>help('modules')</code> in an interactive shell will list all the modules that a python interpreter is able to access. With statically compiled versions of python, this shows what python libraries have been bundled with the library.</p>
 <section id="indygreg-python" class="level3">
 <h3 class="anchored" data-anchor-id="indygreg-python">IndyGreg Python</h3>
 <div class="sourceCode" id="cb18"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>usage: build-main.py [-h]</span>
@@ -458,7 +463,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li><a href="https://github.com/uutils/coreutils" class="uri">https://github.com/uutils/coreutils</a></li>
 <li><a href="https://packages.debian.org/sid/busybox-static" class="uri">https://packages.debian.org/sid/busybox-static</a></li>
 <li><a href="https://busybox.net/FAQ.html" class="uri">https://busybox.net/FAQ.html</a> — looks like busybox releases are already staticly linked, but they mostly focus on Linux releases</li>
-<li><a href="https://github.com/ahgamut/superconfigure/releases/" class="uri">https://github.com/ahgamut/superconfigure/releases/</a> — this is cosmo. I would prefer a single binary though, for simplicity, rather than seperate staticly compiled coreutils which is what this is.</li>
+<li><a href="https://github.com/ahgamut/superconfigure/releases/" class="uri">https://github.com/ahgamut/superconfigure/releases/</a> — this is cosmo. I would prefer a single binary though, for simplicity, rather than seperate staticly compiled coreutils which is what this is. But, if in a pinch, it makes a good replacement for a broken coreutil.</li>
 </ul>
 </section>
 <section id="toolpacks" class="level2">
@@ -473,12 +478,27 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>There are also builds of busybox or toybox, which could replace coreutils in a pinch on Linux machines. There are a few other interesting one’s, such as <a href="https://github.com/vdjagilev/nmap-formatter">nmap-formatter</a>, a software that can format nmap XML output and convert it to CSV or other formats, which we may find easier to submit.</p>
 </section>
 </section>
+<section id="dockerc" class="level1">
+<h1>Dockerc</h1>
+<p><a href="https://github.com/NilsIrl/dockerc">Dockerc</a> is a project that compiles a docker container to a static executable, by bundling the runtime. I discovered this because it was packaged on the Toolpacks listed above.</p>
+<p>Because it is a container, I’m going to assume that this solution only works on Linux — but that doesn’t mean it’s not useful.</p>
+<div class="sourceCode" id="cb20"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>vagrant@debian10:~$ sudo dockerc --image docker://library/httpd -o httpd --rootfull</span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>vagrant@debian10:~$ sudo ./httpd</span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>unknown argument ignored: lazytime</span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>AH00557: httpd: apr_sockaddr_info_get() failed for umoci-default</span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>AH00557: httpd: apr_sockaddr_info_ge....</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>And it works — kinda. httpd doesn’t seem to bind an address. However, if I use an alpine container (which starts a shell), and then test with <code>python -m http.server</code>, that binds an address to the same localhost as the alpine machine.</p>
+<div class="sourceCode" id="cb21"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>sudo dockerc --image docker://docker.io/library/nginx --output nginx --rootfull</span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>sudo ./nginx</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>This also does not bind ports.</p>
+</section>
 <section id="less-promising-options" class="level1">
 <h1>Less promising options</h1>
 <section id="pkgin" class="level2">
 <h2 class="anchored" data-anchor-id="pkgin">pkgin</h2>
 <p><a href="https://pkgin.net/" class="uri">https://pkgin.net/</a></p>
-<p>Pkgin is a package manager that can build things from source quickly. It works on multiple BSDs (including Dragonfly), Macos, and Debian Linux. I don’t think we’ll ever see Opensolaris but we’ll see.</p>
+<p>Pkgin is a package manager that can build things from source quickly. It works on multiple BSDs (including Dragonfly), Macos, and Debian Linux. I don’t think we’ll ever see OpenSolaris but we’ll see.</p>
 
 
 </section>
