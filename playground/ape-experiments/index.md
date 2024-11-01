@@ -1,6 +1,6 @@
 ---
 title: "Portable executable experiments for CCDC"
-date: "2024-8-6"
+date: "2024-10-31"
 categories: [linux, _playground]  
 # draft: true
 format:
@@ -8,19 +8,25 @@ format:
     code-fold: true
     code-summary: "Show the code"
     code-block-background: true
+    code-overflow: wrap
 execute:
   freeze: auto
 ---
 
+The college I am going to has a team that comeptes in a competition called [CCDC](https://en.wikipedia.org/wiki/National_Collegiate_Cyber_Defense_Competition), which is a blue team cybersecurity competition. It involves securing misconfigured, outdated OS's and services, while being asked to do tasks called "injects", and protecting a highly vulnerable environment from "red teamers" — competition organizers who play the role of a hypothetical attacker. 
 
-One of the big problems encountered in [CCDC](https://en.wikipedia.org/wiki/National_Collegiate_Cyber_Defense_Competition) is the portability of tools. Competitors will be asked to work across a vareity of Linux distros, of various types and various package versions, and even across the BSD versions. Of course, sometimes the solution is simple: install your tools, like python or tmux, from the package manager on every Linux/BSD OS.
+One of the big problems encountered in CCDC is the portability of applications. Competitors will be asked to work across a variety of Linux distros, of various types and various package versions, and even across the BSD versions. Of course, sometimes the solution is simple: install your tools, like python or tmux, from the package manager on every Linux/BSD OS.
 
-The second problem is that the organizers of the competition may break our package managers. Deleting repos, or giving us a distro without a package manager.
+The second problem is that the organizers of the competition may break our package managers. Deleting repos, or giving us a distro without a package manager, or giving us End-Of-Life distributions, with dead repositories. 
 
-I was looking into portable executables, to get around this. I would like to have a portable version of python, so that ansible playbooks relating to firewall automation and backups can be run as soon as possible, and also a portable terminal multiplexer, so that our team members can collaborate directly. 
+And also, we aren't allowed to do a distribution release upgrade. So we can't go from CentOS 8 to CentOS Stream or other things like that. We also aren't allowed to replace non-containerized scored services with containers. We also aren't allowed to replace scored services with another application of the same type, so no replacing Apache with Caddy. 
+
+However, we can use static executables to replace services, and there are real limits on what kind of utilities we can deploy, other than resources usage (Linux/BSD machines usually have 2 gigabytes of ram).
+
+I was looking into portable executables, to mitigate some of the problems and restrictions. I would like to have a portable version of python, so that ansible playbooks relating to firewall automation and backups can be run as soon as possible, and also a portable terminal multiplexer, so that our team members can collaborate directly. I would also like portable (statically compiled) versions of some of the services, so that we can replace them in place, rather than being forced to rely on a package manager that may not work.
+
 
 # Ape/Cosmo
-
 
 [Cosmopolitan](https://justine.lol/cosmopolitan/index.html) is a project that turns C into build once, run anywhere language. It works by creating a fat binary that contains code for all other operating systems, including UEFI, and then dynamically figuring out where it is being run. 
 
@@ -58,7 +64,7 @@ Type "help", "copyright", "credits" or "license" for more information.
 ^C0144:err:virtual:virtual_setup_exception stack overflow 1280 bytes addr 0x952cd2 stack 0x1700b00 (0x1700000-0x1701000-0x1800000)
 ```
 
-uhhhh.... my Arch Linux install attempts to use wine to load up the python program. There are also issues quitting, and I end up having to use pkill to kill python. 
+My Arch Linux install attempts to use wine to load up the python program. There are also issues quitting, and I end up having to use pkill to kill python. 
 
 The way to avoid this is to use the [ape loader](https://justine.lol/apeloader/). 
 
@@ -172,8 +178,7 @@ ELF binary type "9" not known.
 
 ## FreeBSD
 
-I'm having trouble packagint the Vagrant VM.
-
+I intend to test, but vagrant networking is giving me trouble.
 
 # Nix bundle
 
@@ -325,6 +330,8 @@ Zellij already ships a [static version on their releases](https://github.com/zel
 * <https://wiki.python.org/moin/BuildStatically> — not as promising
 * <https://github.com/RustPython/RustPython>
   - Not [feature complete](https://rustpython.github.io/pages/whats-left)
+
+Also, I just want to note about python, that `help('modules')` in an interactive shell will list all the modules that a python interpreter is able to access. With statically compiled versions of python, this shows what python libraries have been bundled with the library. 
       
 
 ### IndyGreg Python
@@ -346,7 +353,7 @@ No freebsd or other non-linux support.
 * <https://github.com/uutils/coreutils>
 * <https://packages.debian.org/sid/busybox-static>
 * <https://busybox.net/FAQ.html> — looks like busybox releases are already staticly linked, but they mostly focus on Linux releases
-* <https://github.com/ahgamut/superconfigure/releases/> — this is cosmo. I would prefer a single binary though, for simplicity, rather than seperate staticly compiled coreutils which is what this is. 
+* <https://github.com/ahgamut/superconfigure/releases/> — this is cosmo. I would prefer a single binary though, for simplicity, rather than seperate staticly compiled coreutils which is what this is. But, if in a pinch, it makes a good replacement for a broken coreutil.
 
             
 ## Toolpacks
@@ -366,10 +373,36 @@ That's a pretty big reduction on the zellij binary, which is one of the largest 
 
 There are also builds of busybox or toybox, which could replace coreutils in a pinch on Linux machines. There are a few other interesting one's, such as [nmap-formatter](https://github.com/vdjagilev/nmap-formatter), a software that can format nmap XML output and convert it to CSV or other formats, which we may find easier to submit.
 
+
+
+# Dockerc
+
+[Dockerc](https://github.com/NilsIrl/dockerc) is a project that compiles a docker container to a static executable, by bundling the runtime. I discovered this because it was packaged on the Toolpacks listed above.
+
+Because it is a container, I'm going to assume that this solution only works on Linux — but that doesn't mean it's not useful.
+
+```{.default}
+vagrant@debian10:~$ sudo dockerc --image docker://library/httpd -o httpd --rootfull
+vagrant@debian10:~$ sudo ./httpd
+unknown argument ignored: lazytime
+AH00557: httpd: apr_sockaddr_info_get() failed for umoci-default
+AH00557: httpd: apr_sockaddr_info_ge....
+```
+
+And it works — kinda. httpd doesn't seem to bind an address. However, if I use an alpine container (which starts a shell), and then test with `python -m http.server`, that binds an address to the same localhost as the alpine machine. 
+
+```{.default}
+sudo dockerc --image docker://docker.io/library/nginx --output nginx --rootfull
+
+sudo ./nginx
+```
+
+This also does not bind ports. 
+
 # Less promising options
 
 ## pkgin
 
 <https://pkgin.net/>
 
-Pkgin is a package manager that can build things from source quickly. It works on multiple BSDs (including Dragonfly), Macos, and Debian Linux. I don't think we'll ever see Opensolaris but we'll see. 
+Pkgin is a package manager that can build things from source quickly. It works on multiple BSDs (including Dragonfly), Macos, and Debian Linux. I don't think we'll ever see OpenSolaris but we'll see. 

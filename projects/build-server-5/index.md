@@ -141,6 +141,16 @@ Please give the key access to your repository: y
 
 And just like that, fluxcd is installed. 
 
+::: {.callout-tip}
+
+# Flux suspend/resume resources
+
+`flux suspend source git flux-system` pauses flux's reconciliation with the git repo. This allows me to test applying resources with `kubectl apply -f`, before I commit to git.
+
+`flux resume source git flux-system` resumes flux's reconciliation.
+
+:::c
+
 ## Reverse Proxy (Traefik, then Nginx)
 
 The first step of my cluster should be my reverse proxy, as an ingress. This exposes basically all of my services. 
@@ -1217,7 +1227,61 @@ reclaimPolicy: Retain
 volumeBindingMode: WaitForFirstConsumer
 ```
 
-And with this, I should get persistent data.
+And with this, I should get persistent data. Now, I should get the ingress working.
+
+### Ingress
+
+```{.yaml}
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: authentik
+  namespace: default
+spec:
+  chart:
+    spec:
+      chart: authentik
+      reconcileStrategy: ChartVersion
+      sourceRef:
+        kind: HelmRepository
+        name: authentik
+        # Figure out what version I should have
+      # version: 
+  interval: 1m0s
+  values:
+    authentik:
+        secret_key: "PleaseGenerateASecureKey"
+        # This sends anonymous usage-data, stack traces on errors and
+        # performance data to sentry.io, and is fully opt-in
+        error_reporting:
+            enabled: true
+        postgresql:
+            password: "ThisIsNotASecurePassword"
+    server:
+        ingress:
+            ingressClassName: nginx
+            # Change to true when done
+            enabled: true
+            hosts:
+                - sso.moonpiedumpl.ing
+            annotations:
+                cert-manager.io/issuer: "letsencrypt-staging"
+                acme.cert-manager.io/http01-edit-in-place: "true"
+            tls:
+              - hosts: [sso.moonpiedumpl.ing]
+                secretName: sso-acme
+    postgresql:
+        enabled: true
+        auth:
+            password: "ThisIsNotASecurePassword"
+    redis:
+        enabled: true
+```
+
+And this works, including getting an SSL certificate from the letsencrypt-staging server. 
+
+Now I need to set up encryption of my secrets, because I want for this git repo to be public.
 
 
 ### Secrets/SOPS
@@ -1342,12 +1406,30 @@ sops:
     version: 3.9.1
 ```
 
-Although this looks like the best setup, I don't know if it works, maybe only secrets can be decrypted?
+Although this looks like the best setup, I don't know if it works, maybe only kubernetes secrets can be decrypted?
 
-## Nvidia Runtime
+
+
+## Static Site
+
+I want to move my blog over to my own domain name. I think the easiest way to do this is. When [quarto](https://quarto.org/), the static site I use "publishes", what it actually does is push a copy of the compiled static site to another git branch, gh-pages. Github automatically reads from that branch and serves the site at `*.github.io` domains. 
+
+I think I can do something similar with:
+
+* Flux git source that automatically pulls from that same branch every so often
+* Web server that mounts the git repo as a volume and serves from it.
+
+There is also this [forgejo static site server](https://git.gay/gitgay/pages-server), but I'm not going to be looking at that for now. 
+
+
+## Forgejo
+
+
+
+# Misc Notes for later on:
+
+* https://github.com/stakater/Reloader — reload services in kubernetes when configmap or secrets change
+
 
 [Nvidia container toolkit apt docs](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html#installing-with-apt)
-
-
-
 
