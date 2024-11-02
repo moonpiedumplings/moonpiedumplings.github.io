@@ -64,7 +64,7 @@ Type "help", "copyright", "credits" or "license" for more information.
 ^C0144:err:virtual:virtual_setup_exception stack overflow 1280 bytes addr 0x952cd2 stack 0x1700b00 (0x1700000-0x1701000-0x1800000)
 ```
 
-My Arch Linux install attempts to use wine to load up the python program. There are also issues quitting, and I end up having to use pkill to kill python. 
+My Arch Linux install attempts to use wine to load up the python program. There are also issues quitting, and I end up having to use pkill to kill python. This is because my OS attempts to use [binfmt_misc](https://en.wikipedia.org/wiki/Binfmt_misc), and finds out that Wine is an acceptable program for launching ape binaries. ape binaries are not designed to run under wine, this behavior happens instead.
 
 The way to avoid this is to use the [ape loader](https://justine.lol/apeloader/). 
 
@@ -161,24 +161,16 @@ Vim executes successfully as well. It's able to execute without the ape interpet
 
 ## DragonflyBSD
 
-We've seen this FreeBSD fork in the competition environment.
+We've seen this FreeBSD fork in the competition environment. But, DragonFlyBSD was forked from FreeBSD 4.8, which was nearly 21 years ago. At this point, they have diverged to the point where ape binaries do not run on Dragonfly. Cosmo does not officially support DragonflyBSD, and it's highly likely that there are other differences, like the `pf` firewall configuration file having different syntax.
 
 ```{.default}
 [vagrant@dragonflybsd6 ~]$ ./ape ./python
 ELF binary type "9" not known.
--bash: ./ape: cannot execute binary file: Exec format error
-[vagrant@dragonflybsd6 ~]$ ./ape ./tmux
-ELF binary type "9" not known.
--bash: ./ape: cannot execute binary file: Exec format error
-[vagrant@dragonflybsd6 ~]$ ./ape ./vim
-ELF binary type "9" not known.
--bash: ./ape: cannot execute binary file: Exec format error
-[vagrant@dragonflybsd6 ~]$
 ```
 
 ## FreeBSD
 
-I intend to test, but vagrant networking is giving me trouble.
+I intend to test, but vagrant networking is giving me trouble. Cosmo should work with FreeBSD though.
 
 # Nix bundle
 

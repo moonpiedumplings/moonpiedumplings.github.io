@@ -149,7 +149,7 @@ And just like that, fluxcd is installed.
 
 `flux resume source git flux-system` resumes flux's reconciliation.
 
-:::c
+:::
 
 ## Reverse Proxy (Traefik, then Nginx)
 
