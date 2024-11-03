@@ -1421,8 +1421,25 @@ I think I can do something similar with:
 
 There is also this [forgejo static site server](https://git.gay/gitgay/pages-server), but I'm not going to be looking at that for now. 
 
+I also am searching for some static site premade deployment that can pull from a helm chart. 
+
+* [Gimlet](https://gimlet.io/docs/frontend/static-site-deployment-tutorial) — this looks really complex, but looks like it does what I want.
+* some nginx + curl solution,  <https://github.com/redhat-cop/helm-charts/tree/main/charts/static-site>, [artifacthub](https://artifacthub.io/packages/helm/redhat-cop/static-site) — I really like this solution, but it doesn't seem to be maintained. Artifiacthub reports security vulnerabilities in the older containers used.
+
+Ah, I think I found something that works best: <https://artifacthub.io/packages/helm/bitnami/nginx> 
+
+It took some effort to figure this one out. 
+
+  
+
 
 ## Forgejo
+
+Forgejo has a helm chart
+
+[Artifacthub](https://artifacthub.io/packages/helm/forgejo-helm/forgejo). [Git repo](jttps://code.forgejo.org/forgejo-helm/forgejo-helm).
+
+I don't think I will be doing rootless, although that was my original plan.w
 
 
 
