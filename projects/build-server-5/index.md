@@ -1430,8 +1430,61 @@ Ah, I think I found something that works best: <https://artifacthub.io/packages/
 
 It took some effort to figure this one out. 
 
-  
+```{.yaml}
+---
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: HelmRepository
+metadata:
+  name: nginx
+  namespace: default
+spec:
+  type: oci
+  interval: 5m0s
+  url: oci://docker.io/bitnamicharts
+```
 
+So apparently, when using OCI helm charts, the organization acts as the "repo", where you get helm charts from.
+
+```{.yaml}
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: nginx
+  namespace: default
+spec:
+  chart:
+    spec:
+      chart: nginx
+      reconcileStrategy: ChartVersion
+      sourceRef:
+        kind: HelmRepository
+        name: nginx
+      version: "18.2.4"
+  interval: 1m0s
+  values:
+    cloneStaticSiteFromGit:
+      enabled: true
+      repository: https://github.com/moonpiedumplings/moonpiedumplings.github.io
+      branch: gh-pages
+      # 60 seconds is the default
+      interval: 60
+    ingress:
+      enabled: true
+      hostname: moonpiedumpl.ing
+      annotations:
+        cert-manager.io/issuer: "letsencrypt-staging"
+        acme.cert-manager.io/http01-edit-in-place: "true"
+      tls:
+        - hosts: [moonpiedumpl.ing]
+          secretName: blog-acme
+```
+
+And this works, although I'm unhappy that I can't use a "latest" tag to automatically update to the latest version of the chart.
+
+Also, the ingress created does not seem to have ssl set up properly. It has cert-manager's local source, rather than the letsencrypt-staging for a source. But, the site is up on <moonpiedumpl.ing>. This is a lot simpler than some custom CI solution, and I suspect I can simply disable Github's automatic static site generation from the branch, while still having quarto render my static site to the `gh-pages` branch. 
+
+This is probably because authentik and the bitnami helm nginx chart use differing values for their ingress configuration.
 
 ## Forgejo
 
@@ -1439,7 +1492,7 @@ Forgejo has a helm chart
 
 [Artifacthub](https://artifacthub.io/packages/helm/forgejo-helm/forgejo). [Git repo](jttps://code.forgejo.org/forgejo-helm/forgejo-helm).
 
-I don't think I will be doing rootless, although that was my original plan.w
+I don't think I will be doing rootless, although that was my original plan.
 
 
 
