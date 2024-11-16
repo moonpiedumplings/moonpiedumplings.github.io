@@ -1,6 +1,6 @@
 ---
-title: "Server Part 5 — Ovirt is still maintained?!"
-description: "But wait... LXC now supports OIDC? But this post is mostly kubernetes"
+title: "Kubernetes, GitOps, and FluxCD"
+description: "Also, apparently Incus supports OIDC"
 date: "2024-9-12"
 categories: [linux, _projects]
 # draft: true
@@ -65,7 +65,7 @@ I uninstalled RKE2, but I want to redeploy my services on it again.
 
 I then copied over `/etc/rancher/rke2/rke2.yaml` to `~/.kube/config` on my local machine, in order to configure kubernetes from my local machine.
 
-## Fluxcd
+## FluxCD
 
 Now, I also realized that git can work over ssh. So I have a git repo, called `fleet-charts`, located on my server, which I will access from my laptop via ssh.
 
