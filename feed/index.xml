@@ -6,13 +6,13 @@
       version="2.0">
 <channel>
 <title>Jeffrey Fonseca</title>
-<link>./feed/feed.html</link>
-<atom:link href="./feed/feed.xml" rel="self" type="application/rss+xml"/>
+<link>./feed/</link>
+<atom:link href="./feed/index.xml" rel="self" type="application/rss+xml"/>
 <description>All posts, intended to be used in an RSS feed. </description>
 <generator>quarto-1.5.57</generator>
-<lastBuildDate>Tue, 22 Oct 2024 07:00:00 GMT</lastBuildDate>
+<lastBuildDate>Sun, 27 Oct 2024 07:00:00 GMT</lastBuildDate>
 <item>
-  <title>Installing Unity</title>
+  <title>Installing Unity on Distrobox</title>
   <link>./guides/unity-distrobox/</link>
   <description><![CDATA[ 
 
@@ -21,26 +21,61 @@
 
 <p>First, begin with installing distrobox and podman, on your respective distro.</p>
 <p>Here’s how to do it one some of the major distros:</p>
-<p><code>pacman -Syu distrobox podman</code></p>
-<p><code>apt update &amp;&amp; apt install -y distrobox podman</code></p>
-<p><code>dnf install distrobox podman</code></p>
+<pre><code>pacman -Syu distrobox podman</code></pre>
+<pre><code>apt update &amp;&amp; apt install -y distrobox podman</code></pre>
+<pre><code>dnf install distrobox podman</code></pre>
 <p>Then, create an Ubuntu 22.04 container, since that is what Unity officially supports.</p>
 <p><code>distrobox create --image docker.io/library/ubuntu:22.04 --name unity</code></p>
 <p>Then, you can enter the container:</p>
-<p><code>distrobox enter unity</code></p>
+<p>`<code>distrobox enter unity</code></p>
 <p>From here, follow the steps on <a href="https://docs.unity3d.com/hub/manual/InstallHub.html">Unity’s official site</a>:</p>
-<p><code>wget -qO - https://hub.unity3d.com/linux/keys/public | gpg --dearmor | sudo tee /usr/share/keyrings/Unity_Technologies_ApS.gpg &gt; /dev/null</code></p>
-<p><code>sudo sh -c 'echo "deb [signed-by=/usr/share/keyrings/Unity_Technologies_ApS.gpg] https://hub.unity3d.com/linux/repos/deb stable main" &gt; /etc/apt/sources.list.d/unityhub.list'</code></p>
-<p><code>sudo apt update &amp;&amp; sudo apt install unityhub</code></p>
-<p>After this, insta</p>
+<div class="sourceCode" id="cb4" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb4-1">wget -qO - https://hub.unity3d.com/linux/keys/public | gpg --dearmor | sudo tee /usr/share/keyrings/Unity_Technologies_ApS.gpg &gt; /dev/null`</span></code></pre></div>
+<div class="sourceCode" id="cb5" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb5-1">sudo sh -c 'echo "deb [signed-by=/usr/share/keyrings/Unity_Technologies_ApS.gpg] https://hub.unity3d.com/linux/repos/deb stable main" &gt; /etc/apt/sources.list.d/unityhub.list'`</span></code></pre></div>
+<div class="sourceCode" id="cb6" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb6-1">sudo apt update &amp;&amp; sudo apt install unityhub`</span></code></pre></div>
+<p>After this, install Microsoft VSCode using <a href="https://code.visualstudio.com/docs/setup/linux">their official steps</a></p>
+<div class="sourceCode" id="cb7" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb7-1">sudo apt-get install wget gpg apt-transport-https</span></code></pre></div>
+<div class="sourceCode" id="cb8" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb8-1">wget -qO- https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor &gt; packages.microsoft.gpg</span></code></pre></div>
+<div class="sourceCode" id="cb9" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb9-1">sudo install -D -o root -g root -m 644 packages.microsoft.gpg /etc/apt/keyrings/packages.microsoft.gpg</span></code></pre></div>
+<div class="sourceCode" id="cb10" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb10-1">echo "deb [arch=amd64,arm64,armhf signed-by=/etc/apt/keyrings/packages.microsoft.gpg] https://packages.microsoft.com/repos/code stable main" |sudo tee /etc/apt/sources.list.d/vscode.list &gt; /dev/null</span></code></pre></div>
+<div class="sourceCode" id="cb11" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb11-1">rm -f packages.microsoft.gpg</span></code></pre></div>
+<div class="sourceCode" id="cb12" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb12-1">sudo apt update &amp;&amp; sudo apt install code -y</span></code></pre></div>
+<p>Since we are doing unity development, we will also need <code>dotnet-sdk-8.0</code></p>
+<div class="sourceCode" id="cb13" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb13-1">sudo apt install dotnet-sdk-8.0</span></code></pre></div>
+<section id="vscode-configuration" class="level1">
+<h1>VSCode Configuration</h1>
+<p>There are several extensions that significantly enhance the C#, .NET, and Unity development experience.</p>
+<p><code>ms-dotnettools.csharp</code> — This is Microsoft’s C# and .NET extension, and it will pull a few extensions as a dependency.</p>
+<p><code>VisualStudioToolsForUnity.vstuc</code> — This is Microsoft’s official Unity extension.</p>
+</section>
+<section id="logging-into-unity-hub" class="level1">
+<h1>Logging into Unity Hub</h1>
+<p>This process can be somewhat difficult, as Unity Hub will not show up on the desktop.</p>
+<p>And for some reason, I needed flatpak on my host system (or more likely, one of it’s dependencies).</p>
+<p><code>sudo pacman -Syu flatpak</code> — or however your distro will install flatpak.</p>
+<p>First, launch unity in the container.</p>
+<pre><code>distrobox enter unity</code></pre>
+<pre><code>unityhub</code></pre>
+<p>Then, click the login button. A browser will be opened, asking you to login. However, you will not automatically be redirected to Unity Hub, from that page, you have to do it manually.</p>
+<p>Copy the link on the bottom right. And then, in another distrobox session (Unity Hub must still be running for this to work)</p>
+<pre><code>unityhub [copied link]</code></pre>
+<p>If you need to install a specific version of Unity not available in the Unity Hub, this is a similar process. Go to <a href="https://unity.com/releases/editor/archive">Unity’s release archive</a>, find the relevant link, and then copy the install link, and paste it like above.</p>
+</section>
+<section id="misc" class="level1">
+<h1>Misc</h1>
+<p>One thing I like to do is use <a href="https://zellij.dev/">Zellij</a> as a terminal multiplexer</p>
+<pre><code>cd /bin
+sudo wget https://bin.ajam.dev/x86_64_Linux/zellij
+chmod +x zellij
+zellij</code></pre>
 
 
+</section>
 
  ]]></description>
   <category>linux</category>
   <category>guides</category>
   <guid>./guides/unity-distrobox/</guid>
-  <pubDate>Tue, 22 Oct 2024 07:00:00 GMT</pubDate>
+  <pubDate>Sun, 27 Oct 2024 07:00:00 GMT</pubDate>
 </item>
 <item>
   <title>Sympy Gamma, my favorite WolframAlpha alternative</title>
