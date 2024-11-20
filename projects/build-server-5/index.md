@@ -1342,10 +1342,18 @@ spec:
         enabled: true
 ```
 
-And then:
+And then, I need to encrypt this file. 
+
+Before I do so, I generate secure passphrases using [genpass](https://sr.ht/~cyplo/genpass/), which is available in nixpkgs. 
 
 ```{.default}
-[moonpie@lizard authentik]$ sops encrypt -a age1sg3u7ndj045gzv3u4w5t5kntplg6sz2hv6k3uxpxq85vtx56rc4s8q83gr --encrypted-regex "^(password|secret_key)$" helmrelease.yaml
+sops --age=age1sg3u7ndj045gzv3u4w5t5kntplg6sz2hv6k3uxpxq85vtx56rc4s8q83gr \
+--encrypt --encrypted-regex '^(secret_key|password)$'
+```
+
+I then pipe this out to a new file.
+
+```{.default}
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
@@ -1360,28 +1368,36 @@ spec:
                 kind: HelmRepository
                 name: authentik
                 # Figure out what version I should have
-            # version:
+            # version: 
     interval: 1m0s
     values:
         authentik:
-            secret_key: ENC[AES256_GCM,data:nujuuWM84Tid/15KOD9gyOwAaWa6EhsT,iv:kCkgXtzezxpNvHs0AFGELtwUOgzeljqffiqueraE8h0=,tag:5bQuit+QW5q/8RQOvNeNww==,type:str]
+            secret_key: ENC[AES256_GCM,data:igq7ugHC00ZPZ/0jFjAr/phAeCvhKn0J/avbNe01207L9Q==,iv:1NZuqFBFhc9vXQvTBw8nG20ZpZ6sUUxXrQRUw+KZ4yM=,tag:1QQUWHuiEavXfDi5lhQBFg==,type:str]
             # This sends anonymous usage-data, stack traces on errors and
             # performance data to sentry.io, and is fully opt-in
             error_reporting:
                 enabled: true
             postgresql:
-                password: ENC[AES256_GCM,data:cZq0luEMYkByNhKyu6L3sio4PDQ5sh1l,iv:7a534BkBd5qZkVFCcRIsJmCZQ0SdGLyqYncI798s0kY=,tag:FossEP7tUupbvKJkZetAjA==,type:str]
+                password: ENC[AES256_GCM,data:9yNwAnLg62WePY0yiNBty+ii0CFOm+iSC6GI4ZzAgmGJ4Q==,iv:EsRZzPm8bZHycrhK2ZFPv2fp863pnwy2rGINXiyvCIk=,tag:PObidHEMUMFAmO0K50Nvqg==,type:str]
         server:
             ingress:
-                ingressClassName: nginx
+                # Should default to nginx already
+                # ingressClassName: nginx
                 # Change to true when done
-                enabled: false
+                enabled: true
                 hosts:
-                    - authentik.moonpiedumpl.ing
+                    - sso.moonpiedumpl.ing
+                annotations:
+                    cert-manager.io/issuer: letsencrypt-staging
+                    acme.cert-manager.io/http01-edit-in-place: "true"
+                tls:
+                    - hosts:
+                        - sso.moonpiedumpl.ing
+                      secretName: sso-acme
         postgresql:
             enabled: true
             auth:
-                password: ENC[AES256_GCM,data:yzFmr7JyPnBG50rej5yx+k/4jelfAzRF,iv:WoNEJq7HW60T5eTnA/bQ0MvMvKOVIvJt0KIN2dvX3/Q=,tag:dEP3uhYH0M+As7AW0l1vnA==,type:str]
+                password: ENC[AES256_GCM,data:QZgcD4a+wqktN7c9mmHWicFjTDm8ZDdDx41LdMEBEeABjQ==,iv:63TiPtJYywkIZwldp4PQcU3WzHKAYRGwqo/JtwE3eb8=,tag:sAE1dlWH11LFwH7/Fbk0Iw==,type:str]
         redis:
             enabled: true
 sops:
@@ -1393,22 +1409,64 @@ sops:
         - recipient: age1sg3u7ndj045gzv3u4w5t5kntplg6sz2hv6k3uxpxq85vtx56rc4s8q83gr
           enc: |
             -----BEGIN AGE ENCRYPTED FILE-----
-            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSBDSHVqYzZSU0g4ckZva3Zs
-            eEdIWWt0aFdKaHBhbTRkeUFWZTRHcnVyZVVnCmIwb1BISUxBZDBuUWFzNkV5TUFZ
-            TlZlcXJ0MU9Gd1pSTXAwNUNkalNhcVEKLS0tIGtBQktERWYzdk90YkVCMlhpTUVp
-            Wk05NzhvMFBtWTZIdWVlS0RuRTJjNmcKbWaU9SOlvcW5lBOfMPb9KDCCd4PNuGKg
-            DszzKrN6jWdpiSMdvLcPDJagLPrtCwtgL7XI3jvfmGH1DI87r4KxKA==
+            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSBNdXVSa0FtTVFNV01iUndk
+            RklNNk02OFVxVVQ3RUZyUnFvTWFaUHpVNlhRCkdSUUpVdnBBU3JiSndZeFpPVlFx
+            OXpLcmhYSjJ1czI4QzFCZFdrcis3QWMKLS0tIFB5ZlQ4TytpNkEyUFJQUWs4VE4w
+            dzkzS0tMbjFzRitKbkpKVFg0a0owOXcKvSBlZmn4pocBHrc5QbUNA5W3p5kiRaYM
+            08eMw2rCn5f6hvB2uEoImiSaKQjThmgWLcCRL4kOB+itrto6b4wC0A==
             -----END AGE ENCRYPTED FILE-----
-    lastmodified: "2024-10-19T21:40:39Z"
-    mac: ENC[AES256_GCM,data:rU+SIASsBqnRkO6/HVntpYuk1p2A6QaCKoCtFFWLcaVV8Jn3CInXk/IORgkmpRhEdVzZlts48Rz8sh/OiSZdYsEeCzxfUFwEtBKk/2lpKfIip3cXlV0oDnkKFGP4OO8aXmxUcF0gCxVETSGqxnlb9+3f6KFmJsIs2OqvvFP9PgQ=,iv:DGykNA7WneKPMc972w2++mUwXdtwkYcRLJoLzz0nJEg=,tag:2wdz+FxeAiqAxrGoHVhJIQ==,type:str]
+    lastmodified: "2024-11-20T06:54:32Z"
+    mac: ENC[AES256_GCM,data:BsAJJcQe2W0OObtlrJLmZZ1cgExRJ8Qpm/2p2oUXOQAHkK1K6Jc1ZeHTo7sTZaSQVxcMUFkdA/s9eRsTQ8dUcsI/rLLbzQXqlKjmre/ZDhjcNoevr2X4GTacso3koIcCrkdnO1X0mZC1q9C6myv5BQ4KbjCDjCO50FIrrFsoMW0=,iv:roIs3cREdk2tVX/Fatm1AC7JfyrSRORlmYM5muceQP4=,tag:pk+3z0ztaN+cHzd3cCQUMA==,type:str]
     pgp: []
-    encrypted_regex: ^(password|secret_key)$
+    encrypted_regex: ^(secret_key|password)$
     version: 3.9.1
 ```
 
 Although this looks like the best setup, I don't know if it works, maybe only kubernetes secrets can be decrypted?
 
+Yup, this indeed fails:
 
+```
+[moonpie@cachyos-x8664 authentik]$ flux get all
+NAME                            REVISION                SUSPENDED       READY   MESSAGE
+gitrepository/flux-system       main@sha1:bb1f1636      False           True    stored artifact for revision 'main@sha1:bb1f1636'
+
+NAME                            REVISION                SUSPENDED       READY   MESSAGE                                                                                                       
+kustomization/flux-system       main@sha1:ca8f3c07      False           False   HelmRelease/default/authentik dry-run failed: failed to create typed patch object (default/authentik; helm.toolkit.fluxcd.io/v2, Kind=HelmRelease): .sops: field not declared in schema
+```
+
+
+I think I need to create a "kustomization" in order to automatically decrypt secrets. 
+
+```{.yaml}
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: my-secrets
+  namespace: flux-system
+spec:
+  decryption:
+    provider: sops
+    secretRef:
+      name: sops-age
+  interval: 10m0s
+  path: ./
+  prune: true
+  sourceRef:
+    kind: "GitRepository"
+    name: "flux-system"
+```
+
+But, even after applying this, it still doesn't work. 
+
+[One relevant blog post](https://blog.sldk.de/2021/03/handling-secrets-in-flux-v2-repositories-with-sops/) suggests making a similar edit... to the autogenerated flux yaml files.
+
+[Another blog post](https://hackernoon.com/how-to-handle-kubernetes-secrets-with-argocd-and-sops-r92d3wt1) creates a custom argocd dockerfile...
+
+According to a [GitHub issue](https://github.com/fluxcd/flux2/issues/4075), Flux does not, and will not support sops encryption of files directly. In fact, the user there claims that only secrets support decryption.
+
+I think I need to separate out my sensitive data in to a secret, and then do that.
 
 ## Static Site
 
