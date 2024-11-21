@@ -1422,7 +1422,7 @@ sops:
     version: 3.9.1
 ```
 
-Although this looks like the best setup, I don't know if it works, maybe only kubernetes secrets can be decrypted?
+Although this looks like the best setup, I don't know if it works, maybe only kubernetes secrets can be decrypted? I will have to apply it to test.,
 
 Yup, this indeed fails:
 
