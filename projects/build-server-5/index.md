@@ -1466,7 +1466,95 @@ But, even after applying this, it still doesn't work.
 
 According to a [GitHub issue](https://github.com/fluxcd/flux2/issues/4075), Flux does not, and will not support sops encryption of files directly. In fact, the user there claims that only secrets support decryption.
 
-I think I need to separate out my sensitive data in to a secret, and then do that.
+I think I need to separate out my sensitive data in to a secret, and then do sops on that secret. However, I'm confused on how to do this, especially since the fluxcd docs do not make it very clear.
+
+I created a secret:
+
+```{.yaml}
+apiVersion: v1
+kind: Secret
+metadata:
+  name: authentik-secrets
+  namespace: default
+type: Opaque
+stringData:
+  values.yaml: |
+    authentik:
+      secret_key: "PleaseGenerateASecureKey"
+      postgresql:
+        password: "ThisIsNotASecurePassword"
+    postgresql:
+      auth:
+        password: "ThisIsNotASecurePassword"
+```
+
+But one thing I really, really dislike about this setup is how I cannot encrypt just the values of the secrets I desire to encrypt. Instead, I am forced to encyrpt the whole yaml thing, which I think would make it difficult to rotate individual passwords/keys later on.
+
+Is there a secret encryption/storing method that: 
+
+* Is minimal (no vault)
+* Runs locally (no GCP or AWS or other cloud services)
+* Securely stores individual keys
+
+But that's off topic, back to sops.
+
+I can encrypt this with:
+
+```
+sops --age=age1sg3u7ndj045gzv3u4w5t5kntplg6sz2hv6k3uxpxq85vtx56rc4s8q83gr \
+--encrypt --encrypted-regex '^(values.yaml)$'
+```
+
+And then I get an encrypted file:
+
+```{.yaml}
+apiVersion: v1
+kind: Secret
+metadata:
+    name: authentik-secrets
+    namespace: default
+type: Opaque
+stringData:
+    values.yaml: ENC[AES256_GCM,data:KiY+8u181696Bq+xSa+kpcHJLdUFmi69isy5FCV2hPdQI8BuqGRxzFnffZwcKwoBCcBDbEhCJj/ReJr62F+AZ2vG84v/FNlQVn9SXZKHHrB0abkIHczIbqne9ZPFakGWAszB9k1/Weg/YD6XpdZAudDgI7XZSxaDlPq4dLbylKh/6Gqi2WRnCF/CO09v8lqAVN5+hiUsflnmtsztt9KqgeTc01hxsoiB,iv:QbcFLLERkx6NWq1PlFu9ZNEYaOiV9GRhLNdNYzPKObQ=,tag:l88TF3ve1UolANDPzat+7Q==,type:str]
+sops:
+    kms: []
+    gcp_kms: []
+    azure_kv: []
+    hc_vault: []
+    age:
+        - recipient: age1sg3u7ndj045gzv3u4w5t5kntplg6sz2hv6k3uxpxq85vtx56rc4s8q83gr
+          enc: |
+            -----BEGIN AGE ENCRYPTED FILE-----
+            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSBPOFY0dm1URVVHRHJPOENQ
+            ZjE4VVUvVENqWXlZcWZ2WmVTQ1QzZ1IwVlFnCnI1enhTUlVMRkd2dHFpTE9zNkg0
+            Ris3UGFlb05oSjFJMkF2U3NrM3N6THcKLS0tIDZWdzVCSGRKaFBCbFovTzlPQ2lC
+            NGppWEUwT0ozUTJielV3eWhRdVU1YncKGbw+KrkAHbxoqGL0s83ORBcM+ruHNLpp
+            EbT4xhvQ5e0Ni69K5hElmMUXJfazNU9FYhnVzTaQgC8GTWqxfwvtNA==
+            -----END AGE ENCRYPTED FILE-----
+    lastmodified: "2024-11-22T22:14:54Z"
+    mac: ENC[AES256_GCM,data:nUv/tBzTOZMXouO4uYNi7Q3OQWc+Ba7w6eZ8OLdlcFr3RdCerC9unwr/l9PGttP+za8x8Lf6GQUvhdVx4dJy8FwPcunns6gsLTkTIw83cSXmE2FUGRT/JxirI60r5WQVbzm5XZpGe3ayZMItQ5tmCrvnCXyRRJbthF6OYn4ksFs=,iv:/lX5itdXbPuDo9qYTLz0GS6GtbrtHnhNg6OApnvyTPE=,tag:gIzFvyQ6dpg99ZRXocbD9A==,type:str]
+    pgp: []
+    encrypted_regex: ^(values.yaml)$
+    version: 3.9.1
+```
+
+And this file seems to decrypt properly in the kubernetes system:
+
+```{.default}
+[moonpie@cachyos-x8664 authentik]$ kubectl get secrets authentik-secrets -o jsonpath="{.data.values\.yaml}"
+YXV0aGVudGlrOgogIHNlY3JldF9rZXk6ICJQbGVhc2VHZW5lcmF0ZUFTZWN1cmVLZXkiCiAgcG9zdGdyZXNxbDoKICAgIHBhc3N3b3JkOiAiVGhpc0lzTm90QVNlY3VyZVBhc3N3b3JkIgpwb3N0Z3Jlc3FsOgogIGF1dGg6CiAgICBwYXNzd29yZDogIlRoaXNJc05vdEFTZWN1cmVQYXNzd29yZCIK
+[moonpie@cachyos-x8664 authentik]$ kubectl get secrets authentik-secrets -o jsonpath="{.data.values\.yaml}" | base64 -d
+authentik:
+  secret_key: "PleaseGenerateASecureKey"
+  postgresql:
+    password: "ThisIsNotASecurePassword"
+postgresql:
+  auth:
+    password: "ThisIsNotASecurePassword"
+[moonpie@cachyos-x8664 authentik]$
+```
+
+After this, I need to change my original passwords to something more secure.  
 
 ## Static Site
 
@@ -1552,6 +1640,8 @@ Forgejo has a helm chart
 
 I don't think I will be doing rootless, although that was my original plan.
 
+Also, it looks like the forgejo helm chart has quite a bit of configuration options, including `gitea.oauth`, which I can probably use to configure
+
 
 
 # Misc Notes for later on:
@@ -1560,4 +1650,10 @@ I don't think I will be doing rootless, although that was my original plan.
 
 
 [Nvidia container toolkit apt docs](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html#installing-with-apt)
+
+<https://artifacthub.io/packages/helm/openfga/openfga> — Incus uses OpenFGA for authentication.
+
+Openstack: <https://docs.openstack.org/openstack-helm/latest/install/openstack.html>
+
+Automatic dependency updates: <https://docs.renovatebot.com/modules/manager/flux/>
 
