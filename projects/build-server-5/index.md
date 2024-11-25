@@ -1554,7 +1554,26 @@ postgresql:
 [moonpie@cachyos-x8664 authentik]$
 ```
 
-After this, I need to change my original passwords to something more secure.  
+After this, I need to change my original passwords to something more secure. So now, I need to reset the service.
+
+```
+[moonpie@cachyos-x8664 flux-config]$ flux suspend source git flux-system
+► suspending source git flux-system in flux-system namespace
+✔ source git suspended
+[moonpie@cachyos-x8664 flux-config]$ kubectl delete helmreleases.helm.toolkit.fluxcd.io authentik
+helmrelease.helm.toolkit.fluxcd.io "authentik" deleted
+```
+
+Then after this, authentik will undeploy itself, so I can redeploy itself.
+
+```{.default}
+kubectl delete -n default persistentvolumeclaims redis-data-authentik-redis-master-0
+
+kubectl delete -n default persistentvolumeclaims data-authentik-postgresql-0
+
+kubectl delete -n persistentvolumes <persistenvoluem1/2 here>
+```
+
 
 ## Static Site
 
