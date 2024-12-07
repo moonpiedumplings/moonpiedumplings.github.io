@@ -1574,6 +1574,18 @@ kubectl delete -n default persistentvolumeclaims data-authentik-postgresql-0
 kubectl delete -n persistentvolumes <persistenvoluem1/2 here>
 ```
 
+After all of this, authentik is put up again. I created the initial default admin account (which you can do so by going to yoursite.com/if/flow/initial-setup/), and now I need to set up self enrollment. 
+
+I then followed the [authentik docs for setting up invitations](https://docs.goauthentik.io/docs/users-sources/user/invitations).
+
+I got an error, though "No invitation stage is bound to any flow. Invitations will not work as expected." To fix I had to follow steps from a [github issue](https://github.com/goauthentik/authentik/issues/9719#issuecomment-2468981069)
+
+Except it's like this: 
+
+![An image of the authentik invite page. The fields are in the order of "password", "username", and then "password (repeat)](images/invite_bad.png)
+
+I find this mildly annoying, but I also worry that this may hint at future problems. Authentik seems to be a **very** flexible piece of software. 
+
 
 ## Static Site
 
@@ -1660,6 +1672,14 @@ Forgejo has a helm chart
 I don't think I will be doing rootless, although that was my original plan.
 
 Also, it looks like the forgejo helm chart has quite a bit of configuration options, including `gitea.oauth`, which I can probably use to configure
+
+## Openstack
+
+I decided to use [openstack-helm](https://docs.openstack.org/openstack-helm/latest/readme.html) for deployment, due to it's declarative nature. Everything is helm charts, in a [git repo](https://opendev.org/openstack/openstack-helm).
+
+* General parameters: <https://docs.openstack.org/openstack-helm/latest/chart/index.html>
+
+There is a [reddit post](https://www.reddit.com/r/openstack/comments/1g1wt6u/looking_for_feedbacks_on_using_openstackhelm_with/) about using Openstack helm with Gitops deployments, where I mention that searching github for `"kind: HelmRelease" path:*.y*ml "openstack"` gives me examples of openstack deployed using flux.
 
 
 
