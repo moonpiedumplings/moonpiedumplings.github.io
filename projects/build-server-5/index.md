@@ -1681,6 +1681,53 @@ I decided to use [openstack-helm](https://docs.openstack.org/openstack-helm/late
 
 There is a [reddit post](https://www.reddit.com/r/openstack/comments/1g1wt6u/looking_for_feedbacks_on_using_openstackhelm_with/) about using Openstack helm with Gitops deployments, where I mention that searching github for `"kind: HelmRelease" path:*.y*ml "openstack"` gives me examples of openstack deployed using flux.
 
+`kubectl create namespace openstack`
+
+I decided to create a new namepsace for openstack, rather than putting everything in default. With authentik, I saw how it was somewhat difficult to delete all relevant persistent volumes, but deleting all resources of a type in a namespace is easy. Perhaps using the kubernetes "GUI" offered by the kubernetes vscode extension makes things easier.
+
+Firstly: "By default OpenStack-Helm stateful sets expect to find a storage class named general."
+
+```{.yaml filename='openebs-general.yaml'}
+  ---
+  apiVersion: storage.k8s.io/v1
+  kind: StorageClass
+  metadata:
+    name: general
+    namespace: openstack
+    annotations:
+      openebs.io/cas-type: local
+      cas.openebs.io/config: |
+        - name: StorageType
+          value: hostpath
+        - name: BasePath
+          value: /var/openstack/openebs/
+  provisioner: openebs.io/local
+  reclaimPolicy: Retain
+  volumeBindingMode: WaitForFirstConsumer
+```
+
+I then followed the Node Labels, step, but the taint step failed:
+
+```
+[moonpie@lizard flux-config]$ kubectl taint nodes -l 'node-role.kubernetes.io/control-plane' node-role.kubernetes.io/control-plane-
+error: taint "node-role.kubernetes.io/control-plane" not found
+```
+
+I'll just skip it for now.
+
+It took some fiddling, since I am converting the imperative steps but I figured out what to do.
+
+```
+helm upgrade --install rabbitmq openstack-helm-infra/rabbitmq \
+    --namespace=openstack \
+    --set pod.replicas.server=1 \
+    --timeout=600s \
+    $(helm osh get-values-overrides -p ${OVERRIDES_DIR} -c rabbitmq ${FEATURES})
+
+helm osh wait-for-pods openstack
+```
+
+So at this step, rather than running the helm commands, I instead have to go to the [relevant file](https://opendev.org/openstack/openstack-helm-infra/src/branch/master/rabbitmq/values_overrides/2024.2-ubuntu_jammy.yaml) in the overrides directory, and manually add those values to my helmrelease. I also investigated something automatically, like getting values from a url, but it looks more complicated than simply copying values over.
 
 
 # Misc Notes for later on:
