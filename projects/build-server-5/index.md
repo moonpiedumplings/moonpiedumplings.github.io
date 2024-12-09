@@ -1,5 +1,5 @@
 ---
-title: "Kubernetes, GitOps, and FluxCD"
+title: "Build Server 5 — Kubernetes, GitOps, FluxCD"
 description: "Also, apparently Incus supports OIDC"
 date: "2024-9-12"
 categories: [linux, _projects]
@@ -1556,6 +1556,19 @@ postgresql:
 
 After this, I need to change my original passwords to something more secure. So now, I need to reset the service.
 
+Once my passwords are encypted, I can easily view them since they aren't encrypted on the kubernetes cluster, merely base64 encoded.
+
+```{.default}
+[moonpie@cachyos-x8664 flux-config]$ kubectl get secret authentik-secrets -o jsonpath='{.data.values\.yaml}' | base64 -d
+authentik:
+  secret_key: "REDACTED"
+  postgresql:
+    password: "REDACTED"
+postgresql:
+  auth:
+    password: "REDACTED"
+```
+
 ```
 [moonpie@cachyos-x8664 flux-config]$ flux suspend source git flux-system
 ► suspending source git flux-system in flux-system namespace
@@ -1728,6 +1741,17 @@ helm osh wait-for-pods openstack
 ```
 
 So at this step, rather than running the helm commands, I instead have to go to the [relevant file](https://opendev.org/openstack/openstack-helm-infra/src/branch/master/rabbitmq/values_overrides/2024.2-ubuntu_jammy.yaml) in the overrides directory, and manually add those values to my helmrelease. I also investigated something automatically, like getting values from a url, but it looks more complicated than simply copying values over.
+
+### Neutron
+
+Most of openstack will be left alone done sequentially, but neutron will get it's own section. 
+
+[Openstack-helm Neutron Networking docs](https://docs.openstack.org/openstack-helm/latest/devref/networking.html). But this doesn't list how I can set the interface that openstack uses for the networking. 
+
+I also found a very good [example on github](https://github.com/beskar-cloud/beskar-flux/blob/master/apps/g2-oidc/03-openstack/03-openstack.base/06-keystone.yaml) which uses flux and openstack-helm to dpeloy openstack hooked up to OIDC. 
+
+
+I want the 
 
 
 # Misc Notes for later on:
