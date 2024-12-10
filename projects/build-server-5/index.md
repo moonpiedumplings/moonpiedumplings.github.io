@@ -1750,9 +1750,17 @@ Most of openstack will be left alone done sequentially, but neutron will get it'
 
 I also found a very good [example on github](https://github.com/beskar-cloud/beskar-flux/blob/master/apps/g2-oidc/03-openstack/03-openstack.base/06-keystone.yaml) which uses flux and openstack-helm to dpeloy openstack hooked up to OIDC. 
 
+Anyway, the big reason I am worried about neutron's setup, is becaues I have a unique bridging setup. Openstack neutron requires it's own bridge for external networking, but I only have a single physical interface. In a previous version of my openstack deployment, with kolla-ansible, I split the single network interface with the 
 
-I want the 
+However, it looks like openstack-helm [has an option to automatically add a bridge](https://github.com/openstack/openstack-helm/blob/7f82ce2556e283a47f8cc6f6cc3f3d0c9524e22a/doc/source/devref/networking.rst#L292). 
 
+However, it seems like I don't want this setting, becasue it actually [adds a bridge using the ip command](https://github.com/openstack/openstack-helm/blob/7f82ce2556e283a47f8cc6f6cc3f3d0c9524e22a/neutron/templates/bin/_neutron-bagpipe-bgp-init.sh.tpl#L24). I already have a bridge setup, so I don't want this. 
+
+I need to copy the kolla-ansible settings of [mapping neutron_external_interface](https://github.com/openstack/kolla-ansible/blob/4e2af1872da2466843de1fa3ea639f2b79828663/ansible/roles/neutron/templates/linuxbridge_agent.ini.j2#L9) to an external interface, in the helm chart values.
+
+Okay, it looks like [openstack helm has an option to set `physical_interface_mappings`](https://opendev.org/openstack/openstack-helm/src/branch/master/neutron/values.yaml#L2095).
+
+Given that I already have a bridge, I wonder if I can simply use that existing bridge as a linuxbrige? Or should I use the veth trick again?
 
 # Misc Notes for later on:
 
