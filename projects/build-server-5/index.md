@@ -1756,11 +1756,23 @@ However, it looks like openstack-helm [has an option to automatically add a brid
 
 However, it seems like I don't want this setting, becasue it actually [adds a bridge using the ip command](https://github.com/openstack/openstack-helm/blob/7f82ce2556e283a47f8cc6f6cc3f3d0c9524e22a/neutron/templates/bin/_neutron-bagpipe-bgp-init.sh.tpl#L24). I already have a bridge setup, so I don't want this. 
 
-I need to copy the kolla-ansible settings of [mapping neutron_external_interface](https://github.com/openstack/kolla-ansible/blob/4e2af1872da2466843de1fa3ea639f2b79828663/ansible/roles/neutron/templates/linuxbridge_agent.ini.j2#L9) to an external interface, in the helm chart values.
+I need to copy the kolla-ansible settings of [mapping neutron_external_interface](https://github.com/openstack/kolla-ansible/blob/4e2af1872da2466843de1fa3ea639f2b79828663/ansible/roles/neutron/templates/linuxbridge_agent.ini.j2#L9) to an `physical_interface_mappings`, in the helm chart values.
 
 Okay, it looks like [openstack helm has an option to set `physical_interface_mappings`](https://opendev.org/openstack/openstack-helm/src/branch/master/neutron/values.yaml#L2095).
 
-Given that I already have a bridge, I wonder if I can simply use that existing bridge as a linuxbrige? Or should I use the veth trick again?
+Given that I already have a bridge, I wonder if I can simply use that existing bridge as a linuxbridge? Or should I use [the veth trick again])https://moonpiedumplings.github.io/projects/build-server-2/#bridge-veth)
+
+I'm going to do that again, since I know it works and I already have a bridge.
+
+`nmcli con add type veth ifname veth1 con-name veth1 veth.peer eth1` and add `veth1` to cockpit.
+
+And then use `eth1` as my networking interface.
+
+
+## Cinder
+
+I am also worried about openstack-helm cinder, because it seems I cannot deploy it using local storage, I must use ceph. I'm worried about the performance implications of this, but a [reddit comment](https://www.reddit.com/r/ceph/comments/1baofpb/how_bad_is_cephs_performance_on_a_single_node/ku3z0s0/) says that the issue with single node ceph is not performance, but overhead, so I should be good.
+
 
 # Misc Notes for later on:
 
