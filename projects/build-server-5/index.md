@@ -99,7 +99,7 @@ moonpie@thoth:~$
 
 So it looks like I must use an absolute path, and cannot use "~" for relative patths. Or maybe I can use the `$HOME` environment variable.
 
-But I actually don't like this setup. I [uninstalled flux](), and I want to redeploy it, but wish ssh on a different port instead. I want port 22 on this server to be availble for the forgejo ssh service, rather than to be a the administrative ssh service. I'm going to change ssh to port `22022` in order to avoid conflicts with other services.
+But I actually don't like this setup. I uninstalled flux, and I want to redeploy it, but wish ssh on a different port instead. I want port 22 on this server to be availble for the forgejo ssh service, rather than to be a the administrative ssh service. I'm going to change ssh to port `22022` in order to avoid conflicts with other services.
 
 <details><summary>Show install command</summary>
 
@@ -1801,6 +1801,42 @@ Also:
 > First, let’s create a namespace for the OpenStack workloads. The ingress controller must be deployed in the same namespace because OpenStack-Helm charts create service resources pointing to the ingress controller pods which in turn redirect traffic to particular Openstack API pods.
 
 This does not seem to be true. Ingresses are seemingly created properly, but my ingress controller is in the `default` namespace.
+
+
+## A big screwup...
+
+I got this error:
+
+```
+moonpie@cachyos-x8664 flux-config]$ kubectl get -n openstack helmreleases.helm.toolkit.fluxcd.io rook-ceph-operator
+NAME                 AGE   READY   STATUS
+rook-ceph-operator   66s   False   Helm install failed for release openstack/rook-ceph-operator with chart rook-ceph@v1.15.6: Unable to continue with install: CustomResourceDefinition "cephblockpoolradosnamespaces.ceph.rook.io" in namespace "" exists and cannot be imported into the current release: invalid ownership metadata; annotation validation error: key "meta.helm.sh/release-name" must equal "rook-ceph-operator": current value is "rook-ceph"
+```
+
+And I thought "Why don't I just delete all the CRD's so it can start over? Surely, with gitops, it must all redeploy automatically!
+
+So I ran:
+
+```
+kubectl delete -n openstack customresourcedefinitions.apiextensions.k8s.io --all
+```
+
+I foolishly assumed that this would only delete crd's created by resources in the openstack cluster... that was not the case. It deleted ALL my CRD's, and the flux-system GitRepository is now gone.
+
+Firstly, since everything else, secrets, volumes, and so on seems to still be there, I decided to simply reboostrap:
+
+```
+[moonpie@cachyos-x8664 flux-config]$ flux bootstrap git --url ssh://moonpie@moonpiedumpl.ing:22022/home/moonpie/flux-config --branch=main --private-key-file=/home/moonpie/.ssh/moonstack --verbose --timeout=600s
+► cloning branch "main" from Git repository "ssh://moonpie@moonpiedumpl.ing:22022/home/moonpie/flux-config"
+✔ cloned repository
+► generating component manifests
+✔ generated component manifests
+✔ component manifests are up to date
+► installing components in "flux-system" namespace
+✗ timeout waiting for: [CustomResourceDefinition/helmreleases.helm.toolkit.fluxcd.io status: 'Terminating', CustomResourceDefinition/kustomizations.kustomize.toolkit.fluxcd.io status: 'Terminating']
+```
+
+I think I'm gonna have to uninstall and reinstall kubernetes and
 
 
 # Misc Notes for later on:
