@@ -1766,12 +1766,41 @@ I'm going to do that again, since I know it works and I already have a bridge.
 
 `nmcli con add type veth ifname veth1 con-name veth1 veth.peer eth1` and add `veth1` to cockpit.
 
-And then use `eth1` as my networking interface.
+And then use `eth1` as my networking interface. This appears to work, as I can see my networking setup in horizon. 
 
 
 ## Cinder
 
 I am also worried about openstack-helm cinder, because it seems I cannot deploy it using local storage, I must use ceph. I'm worried about the performance implications of this, but a [reddit comment](https://www.reddit.com/r/ceph/comments/1baofpb/how_bad_is_cephs_performance_on_a_single_node/ku3z0s0/) says that the issue with single node ceph is not performance, but overhead, so I should be good.
+
+I'm now getting an error:
+
+```{.default}
+[moonpie@lizard flux-config]$ kubectl get events -n openstack
+LAST SEEN   TYPE      REASON             OBJECT                                    MESSAGE
+96s         Warning   FailedMount        pod/cinder-backup-7599fff8fb-8z22f        MountVolume.SetUp failed for volume "ceph-etc" : configmap "ceph-etc" not found
+5m40s       Warning   FailedMount        pod/cinder-backup-7599fff8fb-8z22f        MountVolume.SetUp failed for volume "ceph-keyring" : secret "cinder-volume-rbd-keyring" not found
+2m56s       Warning   FailedMount        pod/cinder-storage-init-j4c78             MountVolume.SetUp failed for volume "ceph-etc" : configmap "ceph-etc" not found
+96s         Warning   FailedMount        pod/cinder-volume-877748d7d-mvnk4         MountVolume.SetUp failed for volume "ceph-etc" : configmap "ceph-etc" not found
+29m         Normal    JobAlreadyActive   cronjob/cinder-volume-usage-audit         Not starting job because prior execution is running and concurrency policy is Forbid
+100s        Warning   FailedMount        pod/libvirt-libvirt-default-nznv7         MountVolume.SetUp failed for volume "ceph-etc" : configmap "ceph-etc" not found
+5m44s       Warning   FailedMount        pod/libvirt-libvirt-default-nznv7         MountVolume.SetUp failed for volume "ceph-keyring" : secret "pvc-ceph-client-key" not found
+```
+
+Looking at the secrets and the configmaps, there doesn't appear to the `ceph-etc` or `ceph-keyring` secrets. They are not automatically created?
+
+Oops, I forgot the [prerequisites](https://docs.openstack.org/openstack-helm/latest/install/prerequisites.html). You are supposed to install ceph *before* doing all of this. 
+
+
+## SSO/connections
+
+The [prerequisites section](https://docs.openstack.org/openstack-helm/latest/install/prerequisites.html) details how to give the openstack services external domain name access in the MetallLB section.
+
+Also:
+
+> First, let’s create a namespace for the OpenStack workloads. The ingress controller must be deployed in the same namespace because OpenStack-Helm charts create service resources pointing to the ingress controller pods which in turn redirect traffic to particular Openstack API pods.
+
+This does not seem to be true. Ingresses are seemingly created properly, but my ingress controller is in the `default` namespace.
 
 
 # Misc Notes for later on:
