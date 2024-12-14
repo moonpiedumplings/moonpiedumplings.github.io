@@ -1599,6 +1599,17 @@ Except it's like this:
 
 I find this mildly annoying, but I also worry that this may hint at future problems. Authentik seems to be a **very** flexible piece of software. 
 
+Later on, I decided to move authentik to it's own namespace, and replace Issuer with ClusterIssuers.
+
+```
+42m         Normal    WaitingForApproval      certificaterequest/sso-acme-1                               Not signing CertificateRequest until it is Approved
+42m         Normal    IssuerNotFound          certificaterequest/sso-acme-1                               Referenced "Issuer" not found: issuer.cert-manager.io "letsencrypt-prod" not found
+42m         Normal    IssuerNotFound          certificaterequest/sso-acme-1                               Referenced "Issuer" not found: issuer.cert-manager.io "letsencrypt-prod" not found
+42m         Normal    Issuing                 certificate/sso-acme                                        Issuing certificate as Secret does not exist
+```
+
+I have to the annotations from ...
+
 
 ## Static Site
 
@@ -1836,8 +1847,7 @@ Firstly, since everything else, secrets, volumes, and so on seems to still be th
 ✗ timeout waiting for: [CustomResourceDefinition/helmreleases.helm.toolkit.fluxcd.io status: 'Terminating', CustomResourceDefinition/kustomizations.kustomize.toolkit.fluxcd.io status: 'Terminating']
 ```
 
-I think I'm gonna have to uninstall and reinstall kubernetes and
-
+I ended up uninstalling and reinstalling kubernetes. But in the future, I should consider using RKE2's [built in snapshots](https://docs.rke2.io/datastore/backup_restore). 
 
 # Misc Notes for later on:
 
