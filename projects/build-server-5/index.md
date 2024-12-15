@@ -1849,6 +1849,20 @@ Firstly, since everything else, secrets, volumes, and so on seems to still be th
 
 I ended up uninstalling and reinstalling kubernetes. But in the future, I should consider using RKE2's [built in snapshots](https://docs.rke2.io/datastore/backup_restore). 
 
+
+# Nextcloud
+
+Official Nextcloud Community Helm chart:
+
+<https://artifacthub.io/packages/helm/nextcloud/nextcloud>
+
+<https://github.com/nextcloud/helm>
+
+[Discussion about lack of OIDC in the helm chart](https://help.nextcloud.com/t/helm-chart-needs-to-support-oidc-by-default/205162). 
+
+
+
+
 # Misc Notes for later on:
 
 * https://github.com/stakater/Reloader — reload services in kubernetes when configmap or secrets change
