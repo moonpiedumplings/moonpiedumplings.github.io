@@ -1802,6 +1802,12 @@ Looking at the secrets and the configmaps, there doesn't appear to the `ceph-etc
 
 Oops, I forgot the [prerequisites](https://docs.openstack.org/openstack-helm/latest/install/prerequisites.html). You are supposed to install ceph *before* doing all of this. 
 
+Even after fixing this, I still need more work, to fix some things up. Apparantly, in the [example deploy](https://opendev.org/openstack/openstack-helm-infra/src/branch/master/tools/deployment/ceph/ceph-rook.sh), there are some setups that I don't have. For example, it initally crashes due to the ceph toolbox not being created. 
+
+And when I attempt to add those variables to enable the toolbox, it still crashes because [no serviceaccount is created](https://github.com/rook/rook/issues/2329). It seems I should explicitly use a value, rather than allowing for the default. 
+
+The example deploy is mentioned in [a discussion on the openstack mailing lists](https://lists.openstack.org/archives/list/openstack-discuss@lists.openstack.org/thread/QC6LIDCZK4AIQRLIBQVY3AR7PYE7VMAZ/#BTY3N2WTNILHZU2JDFO4UDWGHF3PHDOP)
+
 
 ## SSO/connections
 
