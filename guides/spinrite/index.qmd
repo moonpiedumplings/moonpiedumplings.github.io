@@ -1,0 +1,162 @@
+---
+title: "Creating a spinrite UEFI ISO"
+author: "Jeffrey Fonseca"
+categories: [linux]
+format: 
+  html:
+    toc: true
+    license: "CC BY-SA"
+execute:
+  freeze: true
+draft: true
+---
+
+
+# Overview
+
+* Arch Linux Virtual Machine
+* Install xfce and sddm, start sddm
+* Install git, base-devel, less
+* virt-manager, and qemu-desktop. start virt-manager service
+* Clone penguin eggs and makepkg
+
+
+# Set up virtual machine
+
+* Vagrant
+* `sudo pacman -Syu xfce4 sddm`
+* `sudo systemctl enable --now sddm.service`
+
+Enable autologin:
+
+https://wiki.archlinux.org/title/SDDM#Autologin
+
+* `sudo mkdir /etc/sddm.conf.d`
+* `sudo pacman -Syu nano`
+
+
+```{.ini filename='/etc/sddm.conf.d/autologin.conf'}
+[Autologin]
+User=vagrant
+Session=xfce
+```
+
+
+
+# Using libvirt and virt-manager
+
+* `sudo pacman -Syu virt-manager qemu-desktop`
+    * Select "pipewire-jack" for the provider, it should be 2.
+* Set up libvirt
+    * `sudo usermod -aG libvirt $USER`
+    * `sudo systemctl enable --now libvirtd`
+    * Log out and log in again, or reboot
+* Obtain spinrite image
+    * Either from browser within the arch image `sudo pacman -Syu firefox`
+    * Or from outside, transfering over with ssh. `cat file | vagrant ssh -- cat > filename`
+* Create spinwrite virtual machine
+
+# Using VirtualBox
+
+I encountered an issue where libvirt fails to pass through the ssd, so maybe virtualbox works better.
+
+* Install virtualbox
+    * `sudo pacman -Syu virtualbox virtualbox-host-modules-arch`
+    * `sudo usermod -aG vboxusers $USER`
+
+* Install virtualbox extension pack
+    *  `git clone https://aur.archlinux.org/virtualbox-ext-oracle.git --depth 1`
+    * `cd virtualbox-ext-oracle`
+    * `makepkg -si`
+
+
+* Convert spinrite image to VDI: `VBoxManage convertfromraw spinrite.img spinrite.vdi --format=VDI`
+* Put virtualbox in expert mode
+* Create new virtual machine, with the spinrite.vdi as the hard disk.
+
+
+* Command for autostarting virtualbox configuration?
+
+
+
+# Other Useful Tools
+
+* Gparted, testdisk, photorec
+* Firefox for a browser
+* Mousepad, so I can show text instructions
+
+
+
+# Enable auto starting of virt-manager and instructions
+
+XFCE Autostart:
+
+`virt-manager -c qemu://system --show-domain-editor spinrite`
+
+`mousepad /home/vagrant/Desktop/Instructions`
+
+```{filename='/home/vagrant/Desktop/Instructions'}
+README
+
+1. A virtual machine manager should be autostarted. Firstly, select "Add hardware" at the bottom. You may need to resize the window to see the button. Then add the devices you wish to work with spinrite to the virtual machine. It will probably be either "PCI Host Device", or "USB host device", depending on the connection of the hardware. If those don't work, you can find the disk device name by 
+
+2. Then, start the virtual machine with the start button at the top. Then, from the top menu, "View > Console", will show you the screen of the virtual machine, enabling you to work with spinrite.
+```
+
+
+
+
+# Create penguin-eggs iso
+
+
+* Install penguin-eggs
+    * `sudo pacman -Syu git base-devel`
+    * `git clone https://aur.archlinux.org/penguins-eggs.git --depth 1`
+    * `cd penguin-eggs`
+    * `makepkg -si`
+    * `sudo pacman -Rncs git base-devel`
+    * `sudo pacman -Scc`
+    * `cd && rm -rf penguin-eggs/`
+    * `rm -rf .local/share/pnpm`
+    *  `sudo pacman -Scc`
+* Make the image:
+    * `sudo eggs produce --pendrive --clone --addons adapt`
+    * In case of failure, reboot, `sudo eggs kill`, and try again
+
+
+# Usage process
+
+* 
+
+# Blockers:
+
+* Cannot boot iso, but only in virtual machine: https://github.com/pieroproietti/penguins-eggs/issues/433
+
+* Virt manager refuses to passthrough
+    * Fixed by inputting the disk path as an sda
+
+
+
+# Automatic Version
+
+* Install xorg, virt-manager, qemu-desktop
+    * `sudo pacman -Syu enlightenment sddm qemu-desktop syslinux`
+    * `sudo systemctl enable --now sddm`
+
+
+* Shell script that gets list of disks (see test.py)
+* Autostart virtual machine
+
+
+```{.default}
+[Desktop Entry]
+Type=Application
+Name=Spinrite
+Exec=/home/vagrant/spinrite.py
+Terminal=true
+```
+
+* Enable autostart in enlightenment settings menu
+
+
+

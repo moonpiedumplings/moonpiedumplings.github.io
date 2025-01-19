@@ -2,6 +2,7 @@
 title: "Eaglercraft via docker-compose"
 date: "2024-11-20"
 categories: [linux, _guides]
+draft: true
 format:
   html:
     code-fold: true

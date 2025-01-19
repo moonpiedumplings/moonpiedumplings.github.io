@@ -397,4 +397,4 @@ This also does not bind ports.
 
 <https://pkgin.net/>
 
-Pkgin is a package manager that can build things from source quickly. It works on multiple BSDs (including Dragonfly), Macos, and Debian Linux. I don't think we'll ever see OpenSolaris but we'll see. 
+Pkgin is a package manager that can manage packages compiled by [pkgsrc](https://www.pkgsrc.org/). It works on multiple BSDs (including Dragonfly), Macos, and Debian Linux. I don't think we'll ever see OpenSolaris but we'll see.
