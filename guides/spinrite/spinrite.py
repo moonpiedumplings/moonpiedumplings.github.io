@@ -15,12 +15,17 @@ threadspercpu = subprocess.check_output("lscpu | grep \"Thread(s) per core\" | a
 memory = subprocess.check_output("free -g | awk '/Mem:/ {print $2}'", shell=True, text=True).replace('\n', '')
 
 
-cmd = f"qemu-system-x86_64 -cpu host -enable-kvm -smp cpus={cpunum},sockets={sockets},threads={threadspercpu} -m {memory - 1 }G"
+cmd = f"qemu-system-x86_64 -cpu host -enable-kvm -smp cpus={cpunum},sockets={sockets},threads={threadspercpu} -m {int(memory) - 1}G"
 
 
-cmd = cmd + "-drive file=spinrite.img,format=raw"
+cmd = cmd + " -drive file=spinrite.img,format=raw"
 
 for disk in disklist:
     cmd = cmd + f" -drive file=/dev/{ disk },format=raw,cache=none,if=virtio "
 
+
+cmd = "xinit /usr/bin/" + cmd + " -- :0 vt$XDG_VTNR"
+
 print(cmd)
+
+subprocess.Popen(cmd, shell=True)
