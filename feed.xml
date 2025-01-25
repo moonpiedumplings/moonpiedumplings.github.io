@@ -9,344 +9,8 @@
 <link>./feed.html</link>
 <atom:link href="./feed.xml" rel="self" type="application/rss+xml"/>
 <description>All posts, intended to be used in an RSS feed. Can be found at feed.xml</description>
-<generator>quarto-1.5.57</generator>
-<lastBuildDate>Wed, 20 Nov 2024 08:00:00 GMT</lastBuildDate>
-<item>
-  <title>Eaglercraft via docker-compose</title>
-  <link>./guides/eaglercraft/</link>
-  <description><![CDATA[ 
-
-
-
-
-<section id="what-is-eaglercraft" class="level1">
-<h1>What is Eaglercraft?</h1>
-<p><a href="https://eaglercraft.com/" class="uri">https://eaglercraft.com/</a></p>
-<p>Source code: <a href="https://git.eaglercraft.rip/eaglercraft/eaglercraft-1.8" class="uri">https://git.eaglercraft.rip/eaglercraft/eaglercraft-1.8</a></p>
-<p>Eaglercraft is an open source Minecraft 1.8.8 client. It works by using TeaVM, a precompiler for Java that outputs Javascript and Webassembly.</p>
-</section>
-<section id="deploying-eaglercraft-server" class="level1">
-<h1>Deploying Eaglercraft server</h1>
-<p><a href="https://git.eaglercraft.rip/eaglercraft/eaglercraft-1.8#making-a-server" class="uri">https://git.eaglercraft.rip/eaglercraft/eaglercraft-1.8#making-a-server</a></p>
-<p>Here is a docker-compose you can use to put eaglercraft up:</p>
-<div class="sourceCode" id="cb1" style="background: #f1f3f5;"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb1-1"><span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">version</span><span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">:</span><span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;"> </span><span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">"3"</span></span>
-<span id="cb1-2"><span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">services</span><span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">:</span></span>
-<span id="cb1-3"><span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">mc</span><span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">:</span></span>
-<span id="cb1-4"><span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">image</span><span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">:</span><span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;"> docker.io/itzg/minecraft-server</span></span>
-<span id="cb1-5"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">    # ports:</span></span>
-<span id="cb1-6"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">    #   - 25565:25565</span></span>
-<span id="cb1-7"><span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">environment</span><span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">:</span></span>
-<span id="cb1-8"><span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">      </span><span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">EULA</span><span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">:</span><span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;"> </span><span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">"TRUE"</span></span>
-<span id="cb1-9"><span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">      </span><span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">TYPE</span><span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">:</span><span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;"> </span><span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">"PAPER"</span></span>
-<span id="cb1-10"><span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">      </span><span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">VERSION</span><span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">:</span><span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;"> </span><span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">"1.8.8"</span></span>
-<span id="cb1-11"><span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">      </span><span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">ONLINE_MODE</span><span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">:</span><span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;"> </span><span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">"FALSE"</span></span>
-<span id="cb1-12"><span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">      </span><span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">USE_NATIVE_TRANSPORT</span><span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">:</span><span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;"> </span><span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">"FALSE"</span></span>
-<span id="cb1-13"><span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">network_mode</span><span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">:</span><span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;"> host</span></span>
-<span id="cb1-14"><span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">tty</span><span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">:</span><span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;"> </span><span class="ch" style="color: #20794D;
-background-color: null;
-font-style: inherit;">true</span></span>
-<span id="cb1-15"><span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">stdin_open</span><span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">:</span><span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;"> </span><span class="ch" style="color: #20794D;
-background-color: null;
-font-style: inherit;">true</span></span>
-<span id="cb1-16"><span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">restart</span><span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">:</span><span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;"> unless-stopped</span></span>
-<span id="cb1-17"><span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">volumes</span><span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">:</span></span>
-<span id="cb1-18"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">      # attach a directory relative to the directory containing this compose file</span></span>
-<span id="cb1-19"><span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">      </span><span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">-</span><span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;"> ./minecraft-data:/data</span></span>
-<span id="cb1-20"><span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">      </span><span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">-</span><span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;"> ./plugins:/plugins</span></span>
-<span id="cb1-21"><span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">proxy</span><span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">:</span></span>
-<span id="cb1-22"><span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">image</span><span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">:</span><span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;"> docker.io/itzg/mc-proxy</span></span>
-<span id="cb1-23"><span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">environment</span><span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">:</span></span>
-<span id="cb1-24"><span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">      </span><span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">TYPE</span><span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">:</span><span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;"> </span><span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">"BUNGEECORD"</span></span>
-<span id="cb1-25"><span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">      </span><span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">BUNGEE_BUILD_ID</span><span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">:</span><span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;"> </span><span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">"1878"</span></span>
-<span id="cb1-26"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">      # BUNGEE_JAR_REVISION: "1"</span></span>
-<span id="cb1-27"><span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">      </span><span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">CFG_MOTD</span><span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">:</span><span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;"> Powered by Docker</span></span>
-<span id="cb1-28"><span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">      </span><span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">REPLACE_ENV_VARIABLES</span><span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">:</span><span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;"> </span><span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">"true"</span></span>
-<span id="cb1-29"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">      # PLUGINS: "https://git.eaglercraft.rip/eaglercraft/eaglercraft-1.8/raw/branch/main/gateway/EaglercraftXBungee/EaglerXBungee-Latest.jar"</span></span>
-<span id="cb1-30"><span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">      </span><span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">PLUGINS</span><span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">:</span><span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;"> </span><span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">"https://git.eaglercraft.rip/eaglercraft/eaglercraft-1.8/raw/commit/6a0a90f4ac7ff617e139de85aa928333845cb5d7/gateway/EaglercraftXBungee/EaglerXBungee-Latest.jar"</span></span>
-<span id="cb1-31"><span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">network_mode</span><span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">:</span><span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;"> host</span></span>
-<span id="cb1-32"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">    # ports:</span></span>
-<span id="cb1-33"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">    #   # - "25565:25577"</span></span>
-<span id="cb1-34"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">    #   - "25577:25577"</span></span>
-<span id="cb1-35"><span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">volumes</span><span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">:</span></span>
-<span id="cb1-36"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">      #- ./config.yml:/config/config.yml</span></span>
-<span id="cb1-37"><span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">      </span><span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">-</span><span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;"> ./proxy-data:/server</span></span></code></pre></div>
-<p>After you put this server up, you first need to connect via a vanilla account and link the account, or you can disable authentication according to the steps in the <a href="https://git.eaglercraft.rip/eaglercraft/eaglercraft-1.8/src/branch/main/README_EAGLERXBUNGEE.md#authserviceyml">eaglercraft documentation</a>.</p>
-
-
-</section>
-
- ]]></description>
-  <category>linux</category>
-  <category>_guides</category>
-  <guid>./guides/eaglercraft/</guid>
-  <pubDate>Wed, 20 Nov 2024 08:00:00 GMT</pubDate>
-</item>
+<generator>quarto-1.6.40</generator>
+<lastBuildDate>Thu, 31 Oct 2024 07:00:00 GMT</lastBuildDate>
 <item>
   <title>Portable executable experiments for CCDC</title>
   <link>./playground/ape-experiments/</link>
@@ -623,7 +287,7 @@ font-style: inherit;"> ./proxy-data:/server</span></span></code></pre></div>
 <section id="pkgin" class="level2">
 <h2 class="anchored" data-anchor-id="pkgin">pkgin</h2>
 <p><a href="https://pkgin.net/" class="uri">https://pkgin.net/</a></p>
-<p>Pkgin is a package manager that can build things from source quickly. It works on multiple BSDs (including Dragonfly), Macos, and Debian Linux. I don’t think we’ll ever see OpenSolaris but we’ll see.</p>
+<p>Pkgin is a package manager that can manage packages compiled by <a href="https://www.pkgsrc.org/">pkgsrc</a>. It works on multiple BSDs (including Dragonfly), Macos, and Debian Linux. I don’t think we’ll ever see OpenSolaris but we’ll see.</p>
 
 
 </section>
@@ -774,7 +438,7 @@ zellij</code></pre>
   <pubDate>Sun, 13 Oct 2024 07:00:00 GMT</pubDate>
 </item>
 <item>
-  <title>Kubernetes, GitOps, and FluxCD</title>
+  <title>Build Server 5 — Kubernetes, GitOps, FluxCD</title>
   <link>./projects/build-server-5/</link>
   <description><![CDATA[ 
 
@@ -839,7 +503,7 @@ zellij</code></pre>
 <span id="cb3-7">► pushing component manifests to "ssh://moonpie@moonpiedumpl.ing:22/home/moonpie/fleet-charts"</span>
 <span id="cb3-8">► installing components in "flux-system" namespace</span></code></pre></div>
 <p>So it looks like I must use an absolute path, and cannot use “~” for relative patths. Or maybe I can use the <code>$HOME</code> environment variable.</p>
-<p>But I actually don’t like this setup. I <a href="">uninstalled flux</a>, and I want to redeploy it, but wish ssh on a different port instead. I want port 22 on this server to be availble for the forgejo ssh service, rather than to be a the administrative ssh service. I’m going to change ssh to port <code>22022</code> in order to avoid conflicts with other services.</p>
+<p>But I actually don’t like this setup. I uninstalled flux, and I want to redeploy it, but wish ssh on a different port instead. I want port 22 on this server to be availble for the forgejo ssh service, rather than to be a the administrative ssh service. I’m going to change ssh to port <code>22022</code> in order to avoid conflicts with other services.</p>
 <details>
 <summary>
 Show install command
@@ -4405,17 +4069,26 @@ font-style: inherit;">3.9.1</span></span></code></pre></div>
 <span id="cb62-10">    password: "ThisIsNotASecurePassword"</span>
 <span id="cb62-11">[moonpie@cachyos-x8664 authentik]$</span></code></pre></div>
 <p>After this, I need to change my original passwords to something more secure. So now, I need to reset the service.</p>
+<p>Once my passwords are encypted, I can easily view them since they aren’t encrypted on the kubernetes cluster, merely base64 encoded.</p>
+<div class="sourceCode" id="cb63" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb63-1">[moonpie@cachyos-x8664 flux-config]$ kubectl get secret authentik-secrets -o jsonpath='{.data.values\.yaml}' | base64 -d</span>
+<span id="cb63-2">authentik:</span>
+<span id="cb63-3">  secret_key: "REDACTED"</span>
+<span id="cb63-4">  postgresql:</span>
+<span id="cb63-5">    password: "REDACTED"</span>
+<span id="cb63-6">postgresql:</span>
+<span id="cb63-7">  auth:</span>
+<span id="cb63-8">    password: "REDACTED"</span></code></pre></div>
 <pre><code>[moonpie@cachyos-x8664 flux-config]$ flux suspend source git flux-system
 ► suspending source git flux-system in flux-system namespace
 ✔ source git suspended
 [moonpie@cachyos-x8664 flux-config]$ kubectl delete helmreleases.helm.toolkit.fluxcd.io authentik
 helmrelease.helm.toolkit.fluxcd.io "authentik" deleted</code></pre>
 <p>Then after this, authentik will undeploy itself, so I can redeploy itself.</p>
-<div class="sourceCode" id="cb64" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb64-1">kubectl delete -n default persistentvolumeclaims redis-data-authentik-redis-master-0</span>
-<span id="cb64-2"></span>
-<span id="cb64-3">kubectl delete -n default persistentvolumeclaims data-authentik-postgresql-0</span>
-<span id="cb64-4"></span>
-<span id="cb64-5">kubectl delete -n persistentvolumes &lt;persistenvoluem1/2 here&gt;</span></code></pre></div>
+<div class="sourceCode" id="cb65" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb65-1">kubectl delete -n default persistentvolumeclaims redis-data-authentik-redis-master-0</span>
+<span id="cb65-2"></span>
+<span id="cb65-3">kubectl delete -n default persistentvolumeclaims data-authentik-postgresql-0</span>
+<span id="cb65-4"></span>
+<span id="cb65-5">kubectl delete -n persistentvolumes &lt;persistenvoluem1/2 here&gt;</span></code></pre></div>
 <p>After all of this, authentik is put up again. I created the initial default admin account (which you can do so by going to yoursite.com/if/flow/initial-setup/), and now I need to set up self enrollment.</p>
 <p>I then followed the <a href="https://docs.goauthentik.io/docs/users-sources/user/invitations">authentik docs for setting up invitations</a>.</p>
 <p>I got an error, though “No invitation stage is bound to any flow. Invitations will not work as expected.” To fix I had to follow steps from a <a href="https://github.com/goauthentik/authentik/issues/9719#issuecomment-2468981069">github issue</a></p>
@@ -4427,6 +4100,12 @@ helmrelease.helm.toolkit.fluxcd.io "authentik" deleted</code></pre>
 </figure>
 </div>
 <p>I find this mildly annoying, but I also worry that this may hint at future problems. Authentik seems to be a <strong>very</strong> flexible piece of software.</p>
+<p>Later on, I decided to move authentik to it’s own namespace, and replace Issuer with ClusterIssuers.</p>
+<pre><code>42m         Normal    WaitingForApproval      certificaterequest/sso-acme-1                               Not signing CertificateRequest until it is Approved
+42m         Normal    IssuerNotFound          certificaterequest/sso-acme-1                               Referenced "Issuer" not found: issuer.cert-manager.io "letsencrypt-prod" not found
+42m         Normal    IssuerNotFound          certificaterequest/sso-acme-1                               Referenced "Issuer" not found: issuer.cert-manager.io "letsencrypt-prod" not found
+42m         Normal    Issuing                 certificate/sso-acme                                        Issuing certificate as Secret does not exist</code></pre>
+<p>I have to the annotations from …</p>
 </section>
 </section>
 <section id="static-site" class="level2">
@@ -4445,10 +4124,10 @@ helmrelease.helm.toolkit.fluxcd.io "authentik" deleted</code></pre>
 </ul>
 <p>Ah, I think I found something that works best: <a href="https://artifacthub.io/packages/helm/bitnami/nginx" class="uri">https://artifacthub.io/packages/helm/bitnami/nginx</a></p>
 <p>It took some effort to figure this one out.</p>
-<div class="sourceCode" id="cb65" style="background: #f1f3f5;"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb65-1"><span class="pp" style="color: #AD0000;
+<div class="sourceCode" id="cb67" style="background: #f1f3f5;"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb67-1"><span class="pp" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">---</span></span>
-<span id="cb65-2"><span class="fu" style="color: #4758AB;
+<span id="cb67-2"><span class="fu" style="color: #4758AB;
 background-color: null;
 font-style: inherit;">apiVersion</span><span class="kw" style="color: #003B4F;
 background-color: null;
@@ -4456,7 +4135,7 @@ font-weight: bold;
 font-style: inherit;">:</span><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;"> source.toolkit.fluxcd.io/v1</span></span>
-<span id="cb65-3"><span class="fu" style="color: #4758AB;
+<span id="cb67-3"><span class="fu" style="color: #4758AB;
 background-color: null;
 font-style: inherit;">kind</span><span class="kw" style="color: #003B4F;
 background-color: null;
@@ -4464,13 +4143,13 @@ font-weight: bold;
 font-style: inherit;">:</span><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;"> HelmRepository</span></span>
-<span id="cb65-4"><span class="fu" style="color: #4758AB;
+<span id="cb67-4"><span class="fu" style="color: #4758AB;
 background-color: null;
 font-style: inherit;">metadata</span><span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">:</span></span>
-<span id="cb65-5"><span class="at" style="color: #657422;
+<span id="cb67-5"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -4480,7 +4159,7 @@ font-weight: bold;
 font-style: inherit;">:</span><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;"> nginx</span></span>
-<span id="cb65-6"><span class="at" style="color: #657422;
+<span id="cb67-6"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -4490,13 +4169,13 @@ font-weight: bold;
 font-style: inherit;">:</span><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;"> default</span></span>
-<span id="cb65-7"><span class="fu" style="color: #4758AB;
+<span id="cb67-7"><span class="fu" style="color: #4758AB;
 background-color: null;
 font-style: inherit;">spec</span><span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">:</span></span>
-<span id="cb65-8"><span class="at" style="color: #657422;
+<span id="cb67-8"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -4506,7 +4185,7 @@ font-weight: bold;
 font-style: inherit;">:</span><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;"> oci</span></span>
-<span id="cb65-9"><span class="at" style="color: #657422;
+<span id="cb67-9"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -4516,7 +4195,7 @@ font-weight: bold;
 font-style: inherit;">:</span><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;"> 5m0s</span></span>
-<span id="cb65-10"><span class="at" style="color: #657422;
+<span id="cb67-10"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -4527,10 +4206,10 @@ font-style: inherit;">:</span><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;"> oci://docker.io/bitnamicharts</span></span></code></pre></div>
 <p>So apparently, when using OCI helm charts, the organization acts as the “repo”, where you get helm charts from.</p>
-<div class="sourceCode" id="cb66" style="background: #f1f3f5;"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb66-1"><span class="pp" style="color: #AD0000;
+<div class="sourceCode" id="cb68" style="background: #f1f3f5;"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb68-1"><span class="pp" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">---</span></span>
-<span id="cb66-2"><span class="fu" style="color: #4758AB;
+<span id="cb68-2"><span class="fu" style="color: #4758AB;
 background-color: null;
 font-style: inherit;">apiVersion</span><span class="kw" style="color: #003B4F;
 background-color: null;
@@ -4538,7 +4217,7 @@ font-weight: bold;
 font-style: inherit;">:</span><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;"> helm.toolkit.fluxcd.io/v2</span></span>
-<span id="cb66-3"><span class="fu" style="color: #4758AB;
+<span id="cb68-3"><span class="fu" style="color: #4758AB;
 background-color: null;
 font-style: inherit;">kind</span><span class="kw" style="color: #003B4F;
 background-color: null;
@@ -4546,13 +4225,13 @@ font-weight: bold;
 font-style: inherit;">:</span><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;"> HelmRelease</span></span>
-<span id="cb66-4"><span class="fu" style="color: #4758AB;
+<span id="cb68-4"><span class="fu" style="color: #4758AB;
 background-color: null;
 font-style: inherit;">metadata</span><span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">:</span></span>
-<span id="cb66-5"><span class="at" style="color: #657422;
+<span id="cb68-5"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -4562,7 +4241,7 @@ font-weight: bold;
 font-style: inherit;">:</span><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;"> nginx</span></span>
-<span id="cb66-6"><span class="at" style="color: #657422;
+<span id="cb68-6"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -4572,13 +4251,13 @@ font-weight: bold;
 font-style: inherit;">:</span><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;"> default</span></span>
-<span id="cb66-7"><span class="fu" style="color: #4758AB;
+<span id="cb68-7"><span class="fu" style="color: #4758AB;
 background-color: null;
 font-style: inherit;">spec</span><span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">:</span></span>
-<span id="cb66-8"><span class="at" style="color: #657422;
+<span id="cb68-8"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -4586,7 +4265,7 @@ font-style: inherit;">chart</span><span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">:</span></span>
-<span id="cb66-9"><span class="at" style="color: #657422;
+<span id="cb68-9"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -4594,7 +4273,7 @@ font-style: inherit;">spec</span><span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">:</span></span>
-<span id="cb66-10"><span class="at" style="color: #657422;
+<span id="cb68-10"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">      </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -4604,7 +4283,7 @@ font-weight: bold;
 font-style: inherit;">:</span><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;"> nginx</span></span>
-<span id="cb66-11"><span class="at" style="color: #657422;
+<span id="cb68-11"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">      </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -4614,7 +4293,7 @@ font-weight: bold;
 font-style: inherit;">:</span><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;"> ChartVersion</span></span>
-<span id="cb66-12"><span class="at" style="color: #657422;
+<span id="cb68-12"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">      </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -4622,7 +4301,7 @@ font-style: inherit;">sourceRef</span><span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">:</span></span>
-<span id="cb66-13"><span class="at" style="color: #657422;
+<span id="cb68-13"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">        </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -4632,7 +4311,7 @@ font-weight: bold;
 font-style: inherit;">:</span><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;"> HelmRepository</span></span>
-<span id="cb66-14"><span class="at" style="color: #657422;
+<span id="cb68-14"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">        </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -4642,7 +4321,7 @@ font-weight: bold;
 font-style: inherit;">:</span><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;"> nginx</span></span>
-<span id="cb66-15"><span class="at" style="color: #657422;
+<span id="cb68-15"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">      </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -4654,7 +4333,7 @@ background-color: null;
 font-style: inherit;"> </span><span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">"18.2.4"</span></span>
-<span id="cb66-16"><span class="at" style="color: #657422;
+<span id="cb68-16"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -4664,7 +4343,7 @@ font-weight: bold;
 font-style: inherit;">:</span><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;"> 1m0s</span></span>
-<span id="cb66-17"><span class="at" style="color: #657422;
+<span id="cb68-17"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -4672,7 +4351,7 @@ font-style: inherit;">values</span><span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">:</span></span>
-<span id="cb66-18"><span class="at" style="color: #657422;
+<span id="cb68-18"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -4680,7 +4359,7 @@ font-style: inherit;">cloneStaticSiteFromGit</span><span class="kw" style="color
 background-color: null;
 font-weight: bold;
 font-style: inherit;">:</span></span>
-<span id="cb66-19"><span class="at" style="color: #657422;
+<span id="cb68-19"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">      </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -4692,7 +4371,7 @@ background-color: null;
 font-style: inherit;"> </span><span class="ch" style="color: #20794D;
 background-color: null;
 font-style: inherit;">true</span></span>
-<span id="cb66-20"><span class="at" style="color: #657422;
+<span id="cb68-20"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">      </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -4702,7 +4381,7 @@ font-weight: bold;
 font-style: inherit;">:</span><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;"> https://github.com/moonpiedumplings/moonpiedumplings.github.io</span></span>
-<span id="cb66-21"><span class="at" style="color: #657422;
+<span id="cb68-21"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">      </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -4712,10 +4391,10 @@ font-weight: bold;
 font-style: inherit;">:</span><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;"> gh-pages</span></span>
-<span id="cb66-22"><span class="co" style="color: #5E5E5E;
+<span id="cb68-22"><span class="co" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;">      # 60 seconds is the default</span></span>
-<span id="cb66-23"><span class="at" style="color: #657422;
+<span id="cb68-23"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">      </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -4727,7 +4406,7 @@ background-color: null;
 font-style: inherit;"> </span><span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">60</span></span>
-<span id="cb66-24"><span class="at" style="color: #657422;
+<span id="cb68-24"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -4735,7 +4414,7 @@ font-style: inherit;">ingress</span><span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">:</span></span>
-<span id="cb66-25"><span class="at" style="color: #657422;
+<span id="cb68-25"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">      </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -4747,7 +4426,7 @@ background-color: null;
 font-style: inherit;"> </span><span class="ch" style="color: #20794D;
 background-color: null;
 font-style: inherit;">true</span></span>
-<span id="cb66-26"><span class="at" style="color: #657422;
+<span id="cb68-26"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">      </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -4757,7 +4436,7 @@ font-weight: bold;
 font-style: inherit;">:</span><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;"> moonpiedumpl.ing</span></span>
-<span id="cb66-27"><span class="at" style="color: #657422;
+<span id="cb68-27"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">      </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -4765,7 +4444,7 @@ font-style: inherit;">annotations</span><span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">:</span></span>
-<span id="cb66-28"><span class="at" style="color: #657422;
+<span id="cb68-28"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">        </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -4777,7 +4456,7 @@ background-color: null;
 font-style: inherit;"> </span><span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">"letsencrypt-staging"</span></span>
-<span id="cb66-29"><span class="at" style="color: #657422;
+<span id="cb68-29"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">        </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -4789,7 +4468,7 @@ background-color: null;
 font-style: inherit;"> </span><span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">"true"</span></span>
-<span id="cb66-30"><span class="at" style="color: #657422;
+<span id="cb68-30"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">      </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -4797,7 +4476,7 @@ font-style: inherit;">tls</span><span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">:</span></span>
-<span id="cb66-31"><span class="at" style="color: #657422;
+<span id="cb68-31"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">        </span><span class="kw" style="color: #003B4F;
 background-color: null;
@@ -4820,7 +4499,7 @@ font-style: inherit;">moonpiedumpl.ing</span><span class="kw" style="color: #003
 background-color: null;
 font-weight: bold;
 font-style: inherit;">]</span></span>
-<span id="cb66-32"><span class="at" style="color: #657422;
+<span id="cb68-32"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">          </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -4848,7 +4527,210 @@ font-style: inherit;"> blog-acme</span></span></code></pre></div>
 <li>General parameters: <a href="https://docs.openstack.org/openstack-helm/latest/chart/index.html" class="uri">https://docs.openstack.org/openstack-helm/latest/chart/index.html</a></li>
 </ul>
 <p>There is a <a href="https://www.reddit.com/r/openstack/comments/1g1wt6u/looking_for_feedbacks_on_using_openstackhelm_with/">reddit post</a> about using Openstack helm with Gitops deployments, where I mention that searching github for <code>"kind: HelmRelease" path:*.y*ml "openstack"</code> gives me examples of openstack deployed using flux.</p>
+<p><code>kubectl create namespace openstack</code></p>
+<p>I decided to create a new namepsace for openstack, rather than putting everything in default. With authentik, I saw how it was somewhat difficult to delete all relevant persistent volumes, but deleting all resources of a type in a namespace is easy. Perhaps using the kubernetes “GUI” offered by the kubernetes vscode extension makes things easier.</p>
+<p>Firstly: “By default OpenStack-Helm stateful sets expect to find a storage class named general.”</p>
+<div class="code-with-filename">
+<div class="code-with-filename-file">
+<pre><strong>openebs-general.yaml</strong></pre>
+</div>
+<div class="sourceCode" id="cb69" data-filename="openebs-general.yaml" style="background: #f1f3f5;"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb69-1"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">  ---</span></span>
+<span id="cb69-2"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">apiVersion</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> storage.k8s.io/v1</span></span>
+<span id="cb69-3"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">kind</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> StorageClass</span></span>
+<span id="cb69-4"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">metadata</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span></span>
+<span id="cb69-5"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">name</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> general</span></span>
+<span id="cb69-6"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">namespace</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> openstack</span></span>
+<span id="cb69-7"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">annotations</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span></span>
+<span id="cb69-8"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">      </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">openebs.io/cas-type</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> local</span></span>
+<span id="cb69-9"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">      cas.openebs.io/config</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">: </span><span class="ch" style="color: #20794D;
+background-color: null;
+font-style: inherit;">|</span></span>
+<span id="cb69-10">        - name: StorageType</span>
+<span id="cb69-11">          value: hostpath</span>
+<span id="cb69-12">        - name: BasePath</span>
+<span id="cb69-13">          value: /var/openstack/openebs/</span>
+<span id="cb69-14"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">provisioner</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> openebs.io/local</span></span>
+<span id="cb69-15"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">reclaimPolicy</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> Retain</span></span>
+<span id="cb69-16"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">volumeBindingMode</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> WaitForFirstConsumer</span></span></code></pre></div>
+</div>
+<p>I then followed the Node Labels, step, but the taint step failed:</p>
+<pre><code>[moonpie@lizard flux-config]$ kubectl taint nodes -l 'node-role.kubernetes.io/control-plane' node-role.kubernetes.io/control-plane-
+error: taint "node-role.kubernetes.io/control-plane" not found</code></pre>
+<p>I’ll just skip it for now.</p>
+<p>It took some fiddling, since I am converting the imperative steps but I figured out what to do.</p>
+<pre><code>helm upgrade --install rabbitmq openstack-helm-infra/rabbitmq \
+    --namespace=openstack \
+    --set pod.replicas.server=1 \
+    --timeout=600s \
+    $(helm osh get-values-overrides -p ${OVERRIDES_DIR} -c rabbitmq ${FEATURES})
+
+helm osh wait-for-pods openstack</code></pre>
+<p>So at this step, rather than running the helm commands, I instead have to go to the <a href="https://opendev.org/openstack/openstack-helm-infra/src/branch/master/rabbitmq/values_overrides/2024.2-ubuntu_jammy.yaml">relevant file</a> in the overrides directory, and manually add those values to my helmrelease. I also investigated something automatically, like getting values from a url, but it looks more complicated than simply copying values over.</p>
+<section id="neutron" class="level3">
+<h3 class="anchored" data-anchor-id="neutron">Neutron</h3>
+<p>Most of openstack will be left alone done sequentially, but neutron will get it’s own section.</p>
+<p><a href="https://docs.openstack.org/openstack-helm/latest/devref/networking.html">Openstack-helm Neutron Networking docs</a>. But this doesn’t list how I can set the interface that openstack uses for the networking.</p>
+<p>I also found a very good <a href="https://github.com/beskar-cloud/beskar-flux/blob/master/apps/g2-oidc/03-openstack/03-openstack.base/06-keystone.yaml">example on github</a> which uses flux and openstack-helm to dpeloy openstack hooked up to OIDC.</p>
+<p>Anyway, the big reason I am worried about neutron’s setup, is becaues I have a unique bridging setup. Openstack neutron requires it’s own bridge for external networking, but I only have a single physical interface. In a previous version of my openstack deployment, with kolla-ansible, I split the single network interface with the</p>
+<p>However, it looks like openstack-helm <a href="https://github.com/openstack/openstack-helm/blob/7f82ce2556e283a47f8cc6f6cc3f3d0c9524e22a/doc/source/devref/networking.rst#L292">has an option to automatically add a bridge</a>.</p>
+<p>However, it seems like I don’t want this setting, becasue it actually <a href="https://github.com/openstack/openstack-helm/blob/7f82ce2556e283a47f8cc6f6cc3f3d0c9524e22a/neutron/templates/bin/_neutron-bagpipe-bgp-init.sh.tpl#L24">adds a bridge using the ip command</a>. I already have a bridge setup, so I don’t want this.</p>
+<p>I need to copy the kolla-ansible settings of <a href="https://github.com/openstack/kolla-ansible/blob/4e2af1872da2466843de1fa3ea639f2b79828663/ansible/roles/neutron/templates/linuxbridge_agent.ini.j2#L9">mapping neutron_external_interface</a> to an <code>physical_interface_mappings</code>, in the helm chart values.</p>
+<p>Okay, it looks like <a href="https://opendev.org/openstack/openstack-helm/src/branch/master/neutron/values.yaml#L2095">openstack helm has an option to set <code>physical_interface_mappings</code></a>.</p>
+<p>Given that I already have a bridge, I wonder if I can simply use that existing bridge as a linuxbridge? Or should I use [the veth trick again])https://moonpiedumplings.github.io/projects/build-server-2/#bridge-veth)</p>
+<p>I’m going to do that again, since I know it works and I already have a bridge.</p>
+<p><code>nmcli con add type veth ifname veth1 con-name veth1 veth.peer eth1</code> and add <code>veth1</code> to cockpit.</p>
+<p>And then use <code>eth1</code> as my networking interface. This appears to work, as I can see my networking setup in horizon.</p>
 </section>
+</section>
+<section id="cinder" class="level2">
+<h2 class="anchored" data-anchor-id="cinder">Cinder</h2>
+<p>I am also worried about openstack-helm cinder, because it seems I cannot deploy it using local storage, I must use ceph. I’m worried about the performance implications of this, but a <a href="https://www.reddit.com/r/ceph/comments/1baofpb/how_bad_is_cephs_performance_on_a_single_node/ku3z0s0/">reddit comment</a> says that the issue with single node ceph is not performance, but overhead, so I should be good.</p>
+<p>I’m now getting an error:</p>
+<div class="sourceCode" id="cb72" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb72-1">[moonpie@lizard flux-config]$ kubectl get events -n openstack</span>
+<span id="cb72-2">LAST SEEN   TYPE      REASON             OBJECT                                    MESSAGE</span>
+<span id="cb72-3">96s         Warning   FailedMount        pod/cinder-backup-7599fff8fb-8z22f        MountVolume.SetUp failed for volume "ceph-etc" : configmap "ceph-etc" not found</span>
+<span id="cb72-4">5m40s       Warning   FailedMount        pod/cinder-backup-7599fff8fb-8z22f        MountVolume.SetUp failed for volume "ceph-keyring" : secret "cinder-volume-rbd-keyring" not found</span>
+<span id="cb72-5">2m56s       Warning   FailedMount        pod/cinder-storage-init-j4c78             MountVolume.SetUp failed for volume "ceph-etc" : configmap "ceph-etc" not found</span>
+<span id="cb72-6">96s         Warning   FailedMount        pod/cinder-volume-877748d7d-mvnk4         MountVolume.SetUp failed for volume "ceph-etc" : configmap "ceph-etc" not found</span>
+<span id="cb72-7">29m         Normal    JobAlreadyActive   cronjob/cinder-volume-usage-audit         Not starting job because prior execution is running and concurrency policy is Forbid</span>
+<span id="cb72-8">100s        Warning   FailedMount        pod/libvirt-libvirt-default-nznv7         MountVolume.SetUp failed for volume "ceph-etc" : configmap "ceph-etc" not found</span>
+<span id="cb72-9">5m44s       Warning   FailedMount        pod/libvirt-libvirt-default-nznv7         MountVolume.SetUp failed for volume "ceph-keyring" : secret "pvc-ceph-client-key" not found</span></code></pre></div>
+<p>Looking at the secrets and the configmaps, there doesn’t appear to the <code>ceph-etc</code> or <code>ceph-keyring</code> secrets. They are not automatically created?</p>
+<p>Oops, I forgot the <a href="https://docs.openstack.org/openstack-helm/latest/install/prerequisites.html">prerequisites</a>. You are supposed to install ceph <em>before</em> doing all of this.</p>
+<p>Even after fixing this, I still need more work, to fix some things up. Apparantly, in the <a href="https://opendev.org/openstack/openstack-helm-infra/src/branch/master/tools/deployment/ceph/ceph-rook.sh">example deploy</a>, there are some setups that I don’t have. For example, it initally crashes due to the ceph toolbox not being created.</p>
+<p>And when I attempt to add those variables to enable the toolbox, it still crashes because <a href="https://github.com/rook/rook/issues/2329">no serviceaccount is created</a>. It seems I should explicitly use a value, rather than allowing for the default.</p>
+<p>The example deploy is mentioned in <a href="https://lists.openstack.org/archives/list/openstack-discuss@lists.openstack.org/thread/QC6LIDCZK4AIQRLIBQVY3AR7PYE7VMAZ/#BTY3N2WTNILHZU2JDFO4UDWGHF3PHDOP">a discussion on the openstack mailing lists</a></p>
+</section>
+<section id="ssoconnections" class="level2">
+<h2 class="anchored" data-anchor-id="ssoconnections">SSO/connections</h2>
+<p>The <a href="https://docs.openstack.org/openstack-helm/latest/install/prerequisites.html">prerequisites section</a> details how to give the openstack services external domain name access in the MetallLB section.</p>
+<p>Also:</p>
+<blockquote class="blockquote">
+<p>First, let’s create a namespace for the OpenStack workloads. The ingress controller must be deployed in the same namespace because OpenStack-Helm charts create service resources pointing to the ingress controller pods which in turn redirect traffic to particular Openstack API pods.</p>
+</blockquote>
+<p>This does not seem to be true. Ingresses are seemingly created properly, but my ingress controller is in the <code>default</code> namespace.</p>
+</section>
+<section id="a-big-screwup" class="level2">
+<h2 class="anchored" data-anchor-id="a-big-screwup">A big screwup…</h2>
+<p>I got this error:</p>
+<pre><code>moonpie@cachyos-x8664 flux-config]$ kubectl get -n openstack helmreleases.helm.toolkit.fluxcd.io rook-ceph-operator
+NAME                 AGE   READY   STATUS
+rook-ceph-operator   66s   False   Helm install failed for release openstack/rook-ceph-operator with chart rook-ceph@v1.15.6: Unable to continue with install: CustomResourceDefinition "cephblockpoolradosnamespaces.ceph.rook.io" in namespace "" exists and cannot be imported into the current release: invalid ownership metadata; annotation validation error: key "meta.helm.sh/release-name" must equal "rook-ceph-operator": current value is "rook-ceph"</code></pre>
+<p>And I thought “Why don’t I just delete all the CRD’s so it can start over? Surely, with gitops, it must all redeploy automatically!</p>
+<p>So I ran:</p>
+<pre><code>kubectl delete -n openstack customresourcedefinitions.apiextensions.k8s.io --all</code></pre>
+<p>I foolishly assumed that this would only delete crd’s created by resources in the openstack cluster… that was not the case. It deleted ALL my CRD’s, and the flux-system GitRepository is now gone.</p>
+<p>Firstly, since everything else, secrets, volumes, and so on seems to still be there, I decided to simply reboostrap:</p>
+<pre><code>[moonpie@cachyos-x8664 flux-config]$ flux bootstrap git --url ssh://moonpie@moonpiedumpl.ing:22022/home/moonpie/flux-config --branch=main --private-key-file=/home/moonpie/.ssh/moonstack --verbose --timeout=600s
+► cloning branch "main" from Git repository "ssh://moonpie@moonpiedumpl.ing:22022/home/moonpie/flux-config"
+✔ cloned repository
+► generating component manifests
+✔ generated component manifests
+✔ component manifests are up to date
+► installing components in "flux-system" namespace
+✗ timeout waiting for: [CustomResourceDefinition/helmreleases.helm.toolkit.fluxcd.io status: 'Terminating', CustomResourceDefinition/kustomizations.kustomize.toolkit.fluxcd.io status: 'Terminating']</code></pre>
+<p>I ended up uninstalling and reinstalling kubernetes. But in the future, I should consider using RKE2’s <a href="https://docs.rke2.io/datastore/backup_restore">built in snapshots</a>.</p>
+</section>
+</section>
+<section id="nextcloud" class="level1">
+<h1>Nextcloud</h1>
+<p>Official Nextcloud Community Helm chart:</p>
+<p><a href="https://artifacthub.io/packages/helm/nextcloud/nextcloud" class="uri">https://artifacthub.io/packages/helm/nextcloud/nextcloud</a></p>
+<p><a href="https://github.com/nextcloud/helm" class="uri">https://github.com/nextcloud/helm</a></p>
+<p><a href="https://help.nextcloud.com/t/helm-chart-needs-to-support-oidc-by-default/205162">Discussion about lack of OIDC in the helm chart</a>.</p>
 </section>
 <section id="misc-notes-for-later-on" class="level1">
 <h1>Misc Notes for later on:</h1>
@@ -5258,7 +5140,7 @@ font-style: inherit;"> blog-acme</span></span></code></pre></div>
 <p>Gain +X +X when X: Idea is some conditional gain strength mechanic</p>
 <p>In general, I want some kind of state based trigger, that can activate every turn.</p>
 <p>When X cards on the field. When X cards in graveyard. X in hand? etc. How to make fair?</p>
-<p>Okay, after watching <a href="https://www.youtube.com/watch?v=HuAkw707oOA">A video about lifedecking</a>, I’ve realized that it’s problematic to incentivize cards in the graveyard, because players want to <em>play</em> their cards, and a strategy which incentivizes sacrifice or something along those lines isn’t really that. But, this problem with lifedecking also applies to <em>any</em> incentive to maintain a “state” of the game. Although an ongoing incentive to maintain a certain boardstate is good to get to, it also incentivies players to <em>keep</em> that board state — which may not be fun. So this will be put on hold for a while, and instead, I will only incentivize <em>actions</em> by the players. Interesting =/= fun to play.</p>
+<p>Okay, after watching <a href="https://www.youtube.com/watch?v=HuAkw707oOA">A video about lifedecking</a>, I’ve realized that it’s problematic to incentivize cards in the graveyard, because players want to <em>play</em> their cards, and a strategy which incentives sacrifice or something along those lines isn’t really that. But, this problem with lifedecking also applies to <em>any</em> incentive to maintain a “state” of the game. Although an ongoing incentive to maintain a certain boardstate is good to get to, it also incentivizes players to <em>keep</em> that board state — which may not be fun. So this will be put on hold for a while, and instead, I will only incentive <em>actions</em> by the players. Interesting =/= fun to play.</p>
 <p>Alternate cost where players can pay other token types. Maybe decreases N or lets them pay base cost. This can be a curse type.</p>
 <p>Tax and Stax: Fundamentally, a tax an opponent can’t pay to do something is like a stax: Some kind of opponent restrictions… actually, I don’t like this. I want a control archetype, but I confused control with stax/tax. Clash Royale manages to have control be a major archetype without s/tax.</p>
 <ul>
@@ -9120,6 +9002,83 @@ print(yeet)</pre>
   <category>_playground</category>
   <guid>./playground/ova-automation/</guid>
   <pubDate>Tue, 20 Feb 2024 08:00:00 GMT</pubDate>
+</item>
+<item>
+  <title>Nice Challenge 3</title>
+  <dc:creator>Jeffrey Fonseca</dc:creator>
+  <link>./writeups/nice-challenge-3/</link>
+  <description><![CDATA[ 
+
+
+
+
+<p>This is for the <a href="https://nice-challenge.com/">NICE</a> challenge. This challenge was significantly harder than the previous challenges, involving being attacked in realtime, and having to write up incident response reports — and if you were too slow, you didn’t get the points.</p>
+<p>This challenge involves doing an incident response, after an active cyberattack.</p>
+<p>After some investigation, I find out that they have <a href="https://en.wikipedia.org/wiki/Snort_%28software%29">snort</a> set up on their pfsense firewall:</p>
+<p>This is my first time using snort, so everything below was figured out by web searches and browsing around the snort interface.</p>
+<p>However, it did not have any rules enabled by default. I checked a few boxes, and then clicked save to download the rules. After, that, I had to go to <code>Snort &gt; Updates</code>, and explicitly tell it to update the ruleset.</p>
+<p>In addition to that, snort did not have any interfaces added. I added all interfaces I thought would be relevant, WAN, PROD, SUBSCRN, and USRCRN, and started them:</p>
+<p><img src="./writeups/nice-challenge-3/images/snortinterfaces.jpeg" class="img-fluid"></p>
+<p>On the machines <code>Joomia</code> (Debian 9), which hosts the production server, and <code>Fileshare</code> (Ubuntu 16.04.3), I installed apache2 modsecurity, which is a simple web application firewall.</p>
+<p><code>sudo apt install libapache2-modsecurity</code></p>
+<p><code>sudo cp /etc/modsecurity/modsecurity.conf-recommended /etc/modsecurity.conf</code></p>
+<p><code>sudo systemctl restart apache2</code></p>
+<section id="the-attacks" class="level1">
+<h1>The Attacks</h1>
+<p><img src="./writeups/nice-challenge-3/images/blocked.jpeg" class="img-fluid"></p>
+<p>I made a mistake, and did not look at the options for packet capturing. I realized after the fact that pfsense/snort does not capture the relevant packets to inspect them by default.</p>
+<p>That traffic probably isn’t malicious, given how I did not receive any checks or failures for the 2 reports I submitted, but rather, only for the later traffic.</p>
+</section>
+<section id="nmap-scan" class="level1">
+<h1>Nmap scan</h1>
+<p>On the other hand, there was a nmap scan, from <code>172.31.2.12</code> at the Prod-Joomia (172.16.10.100)</p>
+<details>
+<summary>
+Show Log
+</summary>
+<div class="sourceCode" id="cb1" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb1-1">[Wed Feb 14 02:30:07.709171 2024] [:error] [pid 1507] [client 172.31.2.12:34403] [client 172.31.2.12] ModSecurity: Warning. Matched phrase "nmap scripting engine" at REQUEST_HEADERS:User-Agent. [file "/usr/share/modsecurity-crs/rules/REQUEST-913-SCANNER-DETECTION.conf"] [line "59"] [id "913100"] [rev "2"] [msg "Found User-Agent associated with security scanner"] [data "Matched Data: nmap scripting engine found within REQUEST_HEADERS:User-Agent: Mozilla/5.0 (compatible; Nmap Scripting Engine; http://nmap.org/book/nse.html)"] [severity "CRITICAL"] [ver "OWASP_CRS/3.0.0"] [maturity "9"] [accuracy "9"] [tag "application-multi"] [tag "language-multi"] [tag "platform-multi"] [tag "attack-reputation-scanner"] [tag "OWASP_CRS/AUTOMATION/SECURITY_SCANNER"] [tag "WASCTC/WASC-21"] [tag "OWASP_TOP_10/A7"] [tag "PCI/6.5.10"] [hostname "172.31.2.2"] [uri "/"] [unique_id "Zcwlr38AAQEAAAXjvToAAAAA"]</span></code></pre></div>
+</details>
+<p>However, I was too late in reporting this one, and this check was reported as late.</p>
+</section>
+<section id="sshd-brute-force" class="level1">
+<h1>SSHD brute force</h1>
+<div class="sourceCode" id="cb2" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb2-1">● ssh.service - OpenBSD Secure Shell server</span>
+<span id="cb2-2">   Loaded: loaded (/lib/systemd/system/ssh.service; enabled; vendor preset: enabled)</span>
+<span id="cb2-3">   Active: active (running) since Wed 2024-02-14 01:39:16 UTC; 1h 28min ago</span>
+<span id="cb2-4"> Main PID: 551 (sshd)</span>
+<span id="cb2-5">    Tasks: 1 (limit: 4915)</span>
+<span id="cb2-6">   CGroup: /system.slice/ssh.service</span>
+<span id="cb2-7">           └─551 /usr/sbin/sshd -D</span>
+<span id="cb2-8"></span>
+<span id="cb2-9">Feb 14 02:49:43 Prod-Joomla sshd[1792]: Failed password for jcortes from 172.31.2.12 port 38181 ssh2</span>
+<span id="cb2-10">Feb 14 02:49:43 Prod-Joomla sshd[1792]: Connection closed by 172.31.2.12 port 38181 [preauth]</span>
+<span id="cb2-11">Feb 14 02:49:43 Prod-Joomla sshd[1794]: pam_unix(sshd:auth): authentication failure; logname= uid=0 euid=0 tty=ssh ruser= rhost=172.31.2.12  user=jcortes</span>
+<span id="cb2-12">Feb 14 02:49:44 Prod-Joomla sshd[1794]: Failed password for jcortes from 172.31.2.12 port 39276 ssh2</span>
+<span id="cb2-13">Feb 14 02:49:44 Prod-Joomla sshd[1794]: Connection closed by 172.31.2.12 port 39276 [preauth]</span>
+<span id="cb2-14">Feb 14 02:49:45 Prod-Joomla sshd[1796]: pam_unix(sshd:auth): authentication failure; logname= uid=0 euid=0 tty=ssh ruser= rhost=172.31.2.12  user=jcortes</span>
+<span id="cb2-15">Feb 14 02:49:47 Prod-Joomla sshd[1796]: Failed password for jcortes from 172.31.2.12 port 40027 ssh2</span>
+<span id="cb2-16">Feb 14 02:49:47 Prod-Joomla sshd[1796]: Connection closed by 172.31.2.12 port 40027 [preauth]</span>
+<span id="cb2-17">Feb 14 02:49:47 Prod-Joomla sshd[1798]: Accepted password for jcortes from 172.31.2.12 port 46478 ssh2</span>
+<span id="cb2-18">Feb 14 02:49:47 Prod-Joomla sshd[1798]: pam_unix(sshd:session): session opened for user jcortes by (uid=0)</span></code></pre></div>
+<p>And these were only the recent logs. Going through <code>journalctl -xeu ssh</code>, there were a LOT more attempts.</p>
+<p>I got lucky though, as the attacker didn’t stay in for long:</p>
+<p><img src="./writeups/nice-challenge-3/images/blocked2.jpeg" class="img-fluid"></p>
+<p>It seems that snort detected and blocked 172.31.2.12 (the default config also kills existing connections), detecting the brute force. In the future, I need to spend less time trying to figure out snort, and more time setting up fail2ban to avoid ssh brute forces.</p>
+</section>
+<section id="attack-3-out-of-time" class="level1">
+<h1>Attack 3 — Out of time</h1>
+<p>I ran out of time:</p>
+<p><img src="./writeups/nice-challenge-3/images/finalchecks.jpeg" class="img-fluid"></p>
+<p>I couldn’t figure out what it was, either.</p>
+
+
+</section>
+
+ ]]></description>
+  <category>linux</category>
+  <category>_writeups</category>
+  <guid>./writeups/nice-challenge-3/</guid>
+  <pubDate>Tue, 13 Feb 2024 08:00:00 GMT</pubDate>
 </item>
 </channel>
 </rss>

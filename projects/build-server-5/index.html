@@ -2,14 +2,14 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.5.57">
+<meta name="generator" content="quarto-1.6.40">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 <meta name="dcterms.date" content="2024-09-12">
 <meta name="description" content="Also, apparently Incus supports OIDC">
 
-<title>Kubernetes, GitOps, and FluxCD – Jeffrey Fonseca</title>
+<title>Build Server 5 — Kubernetes, GitOps, FluxCD – Jeffrey Fonseca</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -71,12 +71,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="../../site_libs/quarto-html/anchor.min.js"></script>
 <link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark.css" rel="prefetch" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-549806ee2085284f45b00abea8c6df48.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-8ea72dc5fed832574809a9c94082fbbb.css" rel="prefetch" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
 <script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../../site_libs/bootstrap/bootstrap-dark.min.css" rel="prefetch" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-04dd6a5ca28aac96903e51a8fbffbcaa.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-052a59ac8b6210046f08f1c5d142d40b.min.css" rel="prefetch" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -184,8 +184,15 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   </ul></li>
   <li><a href="#static-site" id="toc-static-site" class="nav-link" data-scroll-target="#static-site">Static Site</a></li>
   <li><a href="#forgejo" id="toc-forgejo" class="nav-link" data-scroll-target="#forgejo">Forgejo</a></li>
-  <li><a href="#openstack" id="toc-openstack" class="nav-link" data-scroll-target="#openstack">Openstack</a></li>
+  <li><a href="#openstack" id="toc-openstack" class="nav-link" data-scroll-target="#openstack">Openstack</a>
+  <ul class="collapse">
+  <li><a href="#neutron" id="toc-neutron" class="nav-link" data-scroll-target="#neutron">Neutron</a></li>
   </ul></li>
+  <li><a href="#cinder" id="toc-cinder" class="nav-link" data-scroll-target="#cinder">Cinder</a></li>
+  <li><a href="#ssoconnections" id="toc-ssoconnections" class="nav-link" data-scroll-target="#ssoconnections">SSO/connections</a></li>
+  <li><a href="#a-big-screwup" id="toc-a-big-screwup" class="nav-link" data-scroll-target="#a-big-screwup">A big screwup…</a></li>
+  </ul></li>
+  <li><a href="#nextcloud" id="toc-nextcloud" class="nav-link" data-scroll-target="#nextcloud">Nextcloud</a></li>
   <li><a href="#misc-notes-for-later-on" id="toc-misc-notes-for-later-on" class="nav-link" data-scroll-target="#misc-notes-for-later-on">Misc Notes for later on:</a></li>
   </ul>
 </nav>
@@ -195,7 +202,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">Kubernetes, GitOps, and FluxCD</h1>
+<h1 class="title">Build Server 5 — Kubernetes, GitOps, FluxCD</h1>
   <div class="quarto-categories">
     <div class="quarto-category">linux</div>
     <div class="quarto-category">_projects</div>
@@ -285,7 +292,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>► pushing component manifests to "ssh://moonpie@moonpiedumpl.ing:22/home/moonpie/fleet-charts"</span>
 <span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>► installing components in "flux-system" namespace</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>So it looks like I must use an absolute path, and cannot use “~” for relative patths. Or maybe I can use the <code>$HOME</code> environment variable.</p>
-<p>But I actually don’t like this setup. I <a href="">uninstalled flux</a>, and I want to redeploy it, but wish ssh on a different port instead. I want port 22 on this server to be availble for the forgejo ssh service, rather than to be a the administrative ssh service. I’m going to change ssh to port <code>22022</code> in order to avoid conflicts with other services.</p>
+<p>But I actually don’t like this setup. I uninstalled flux, and I want to redeploy it, but wish ssh on a different port instead. I want port 22 on this server to be availble for the forgejo ssh service, rather than to be a the administrative ssh service. I’m going to change ssh to port <code>22022</code> in order to avoid conflicts with other services.</p>
 <details>
 <summary>
 Show install command
@@ -1510,17 +1517,26 @@ kustomization/flux-system       main@sha1:ca8f3c07      False           False   
 <span id="cb62-10"><a href="#cb62-10" aria-hidden="true" tabindex="-1"></a>    password: "ThisIsNotASecurePassword"</span>
 <span id="cb62-11"><a href="#cb62-11" aria-hidden="true" tabindex="-1"></a>[moonpie@cachyos-x8664 authentik]$</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>After this, I need to change my original passwords to something more secure. So now, I need to reset the service.</p>
+<p>Once my passwords are encypted, I can easily view them since they aren’t encrypted on the kubernetes cluster, merely base64 encoded.</p>
+<div class="sourceCode" id="cb63"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb63-1"><a href="#cb63-1" aria-hidden="true" tabindex="-1"></a>[moonpie@cachyos-x8664 flux-config]$ kubectl get secret authentik-secrets -o jsonpath='{.data.values\.yaml}' | base64 -d</span>
+<span id="cb63-2"><a href="#cb63-2" aria-hidden="true" tabindex="-1"></a>authentik:</span>
+<span id="cb63-3"><a href="#cb63-3" aria-hidden="true" tabindex="-1"></a>  secret_key: "REDACTED"</span>
+<span id="cb63-4"><a href="#cb63-4" aria-hidden="true" tabindex="-1"></a>  postgresql:</span>
+<span id="cb63-5"><a href="#cb63-5" aria-hidden="true" tabindex="-1"></a>    password: "REDACTED"</span>
+<span id="cb63-6"><a href="#cb63-6" aria-hidden="true" tabindex="-1"></a>postgresql:</span>
+<span id="cb63-7"><a href="#cb63-7" aria-hidden="true" tabindex="-1"></a>  auth:</span>
+<span id="cb63-8"><a href="#cb63-8" aria-hidden="true" tabindex="-1"></a>    password: "REDACTED"</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <pre><code>[moonpie@cachyos-x8664 flux-config]$ flux suspend source git flux-system
 ► suspending source git flux-system in flux-system namespace
 ✔ source git suspended
 [moonpie@cachyos-x8664 flux-config]$ kubectl delete helmreleases.helm.toolkit.fluxcd.io authentik
 helmrelease.helm.toolkit.fluxcd.io "authentik" deleted</code></pre>
 <p>Then after this, authentik will undeploy itself, so I can redeploy itself.</p>
-<div class="sourceCode" id="cb64"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb64-1"><a href="#cb64-1" aria-hidden="true" tabindex="-1"></a>kubectl delete -n default persistentvolumeclaims redis-data-authentik-redis-master-0</span>
-<span id="cb64-2"><a href="#cb64-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb64-3"><a href="#cb64-3" aria-hidden="true" tabindex="-1"></a>kubectl delete -n default persistentvolumeclaims data-authentik-postgresql-0</span>
-<span id="cb64-4"><a href="#cb64-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb64-5"><a href="#cb64-5" aria-hidden="true" tabindex="-1"></a>kubectl delete -n persistentvolumes &lt;persistenvoluem1/2 here&gt;</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb65"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb65-1"><a href="#cb65-1" aria-hidden="true" tabindex="-1"></a>kubectl delete -n default persistentvolumeclaims redis-data-authentik-redis-master-0</span>
+<span id="cb65-2"><a href="#cb65-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb65-3"><a href="#cb65-3" aria-hidden="true" tabindex="-1"></a>kubectl delete -n default persistentvolumeclaims data-authentik-postgresql-0</span>
+<span id="cb65-4"><a href="#cb65-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb65-5"><a href="#cb65-5" aria-hidden="true" tabindex="-1"></a>kubectl delete -n persistentvolumes &lt;persistenvoluem1/2 here&gt;</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>After all of this, authentik is put up again. I created the initial default admin account (which you can do so by going to yoursite.com/if/flow/initial-setup/), and now I need to set up self enrollment.</p>
 <p>I then followed the <a href="https://docs.goauthentik.io/docs/users-sources/user/invitations">authentik docs for setting up invitations</a>.</p>
 <p>I got an error, though “No invitation stage is bound to any flow. Invitations will not work as expected.” To fix I had to follow steps from a <a href="https://github.com/goauthentik/authentik/issues/9719#issuecomment-2468981069">github issue</a></p>
@@ -1532,6 +1548,12 @@ helmrelease.helm.toolkit.fluxcd.io "authentik" deleted</code></pre>
 </figure>
 </div>
 <p>I find this mildly annoying, but I also worry that this may hint at future problems. Authentik seems to be a <strong>very</strong> flexible piece of software.</p>
+<p>Later on, I decided to move authentik to it’s own namespace, and replace Issuer with ClusterIssuers.</p>
+<pre><code>42m         Normal    WaitingForApproval      certificaterequest/sso-acme-1                               Not signing CertificateRequest until it is Approved
+42m         Normal    IssuerNotFound          certificaterequest/sso-acme-1                               Referenced "Issuer" not found: issuer.cert-manager.io "letsencrypt-prod" not found
+42m         Normal    IssuerNotFound          certificaterequest/sso-acme-1                               Referenced "Issuer" not found: issuer.cert-manager.io "letsencrypt-prod" not found
+42m         Normal    Issuing                 certificate/sso-acme                                        Issuing certificate as Secret does not exist</code></pre>
+<p>I have to the annotations from …</p>
 </section>
 </section>
 <section id="static-site" class="level2">
@@ -1550,49 +1572,49 @@ helmrelease.helm.toolkit.fluxcd.io "authentik" deleted</code></pre>
 </ul>
 <p>Ah, I think I found something that works best: <a href="https://artifacthub.io/packages/helm/bitnami/nginx" class="uri">https://artifacthub.io/packages/helm/bitnami/nginx</a></p>
 <p>It took some effort to figure this one out.</p>
-<div class="sourceCode" id="cb65"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb65-1"><a href="#cb65-1" aria-hidden="true" tabindex="-1"></a><span class="pp">---</span></span>
-<span id="cb65-2"><a href="#cb65-2" aria-hidden="true" tabindex="-1"></a><span class="fu">apiVersion</span><span class="kw">:</span><span class="at"> source.toolkit.fluxcd.io/v1</span></span>
-<span id="cb65-3"><a href="#cb65-3" aria-hidden="true" tabindex="-1"></a><span class="fu">kind</span><span class="kw">:</span><span class="at"> HelmRepository</span></span>
-<span id="cb65-4"><a href="#cb65-4" aria-hidden="true" tabindex="-1"></a><span class="fu">metadata</span><span class="kw">:</span></span>
-<span id="cb65-5"><a href="#cb65-5" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">name</span><span class="kw">:</span><span class="at"> nginx</span></span>
-<span id="cb65-6"><a href="#cb65-6" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">namespace</span><span class="kw">:</span><span class="at"> default</span></span>
-<span id="cb65-7"><a href="#cb65-7" aria-hidden="true" tabindex="-1"></a><span class="fu">spec</span><span class="kw">:</span></span>
-<span id="cb65-8"><a href="#cb65-8" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">type</span><span class="kw">:</span><span class="at"> oci</span></span>
-<span id="cb65-9"><a href="#cb65-9" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">interval</span><span class="kw">:</span><span class="at"> 5m0s</span></span>
-<span id="cb65-10"><a href="#cb65-10" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">url</span><span class="kw">:</span><span class="at"> oci://docker.io/bitnamicharts</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb67"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb67-1"><a href="#cb67-1" aria-hidden="true" tabindex="-1"></a><span class="pp">---</span></span>
+<span id="cb67-2"><a href="#cb67-2" aria-hidden="true" tabindex="-1"></a><span class="fu">apiVersion</span><span class="kw">:</span><span class="at"> source.toolkit.fluxcd.io/v1</span></span>
+<span id="cb67-3"><a href="#cb67-3" aria-hidden="true" tabindex="-1"></a><span class="fu">kind</span><span class="kw">:</span><span class="at"> HelmRepository</span></span>
+<span id="cb67-4"><a href="#cb67-4" aria-hidden="true" tabindex="-1"></a><span class="fu">metadata</span><span class="kw">:</span></span>
+<span id="cb67-5"><a href="#cb67-5" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">name</span><span class="kw">:</span><span class="at"> nginx</span></span>
+<span id="cb67-6"><a href="#cb67-6" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">namespace</span><span class="kw">:</span><span class="at"> default</span></span>
+<span id="cb67-7"><a href="#cb67-7" aria-hidden="true" tabindex="-1"></a><span class="fu">spec</span><span class="kw">:</span></span>
+<span id="cb67-8"><a href="#cb67-8" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">type</span><span class="kw">:</span><span class="at"> oci</span></span>
+<span id="cb67-9"><a href="#cb67-9" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">interval</span><span class="kw">:</span><span class="at"> 5m0s</span></span>
+<span id="cb67-10"><a href="#cb67-10" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">url</span><span class="kw">:</span><span class="at"> oci://docker.io/bitnamicharts</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>So apparently, when using OCI helm charts, the organization acts as the “repo”, where you get helm charts from.</p>
-<div class="sourceCode" id="cb66"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb66-1"><a href="#cb66-1" aria-hidden="true" tabindex="-1"></a><span class="pp">---</span></span>
-<span id="cb66-2"><a href="#cb66-2" aria-hidden="true" tabindex="-1"></a><span class="fu">apiVersion</span><span class="kw">:</span><span class="at"> helm.toolkit.fluxcd.io/v2</span></span>
-<span id="cb66-3"><a href="#cb66-3" aria-hidden="true" tabindex="-1"></a><span class="fu">kind</span><span class="kw">:</span><span class="at"> HelmRelease</span></span>
-<span id="cb66-4"><a href="#cb66-4" aria-hidden="true" tabindex="-1"></a><span class="fu">metadata</span><span class="kw">:</span></span>
-<span id="cb66-5"><a href="#cb66-5" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">name</span><span class="kw">:</span><span class="at"> nginx</span></span>
-<span id="cb66-6"><a href="#cb66-6" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">namespace</span><span class="kw">:</span><span class="at"> default</span></span>
-<span id="cb66-7"><a href="#cb66-7" aria-hidden="true" tabindex="-1"></a><span class="fu">spec</span><span class="kw">:</span></span>
-<span id="cb66-8"><a href="#cb66-8" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">chart</span><span class="kw">:</span></span>
-<span id="cb66-9"><a href="#cb66-9" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">spec</span><span class="kw">:</span></span>
-<span id="cb66-10"><a href="#cb66-10" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">chart</span><span class="kw">:</span><span class="at"> nginx</span></span>
-<span id="cb66-11"><a href="#cb66-11" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">reconcileStrategy</span><span class="kw">:</span><span class="at"> ChartVersion</span></span>
-<span id="cb66-12"><a href="#cb66-12" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">sourceRef</span><span class="kw">:</span></span>
-<span id="cb66-13"><a href="#cb66-13" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">kind</span><span class="kw">:</span><span class="at"> HelmRepository</span></span>
-<span id="cb66-14"><a href="#cb66-14" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">name</span><span class="kw">:</span><span class="at"> nginx</span></span>
-<span id="cb66-15"><a href="#cb66-15" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">version</span><span class="kw">:</span><span class="at"> </span><span class="st">"18.2.4"</span></span>
-<span id="cb66-16"><a href="#cb66-16" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">interval</span><span class="kw">:</span><span class="at"> 1m0s</span></span>
-<span id="cb66-17"><a href="#cb66-17" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">values</span><span class="kw">:</span></span>
-<span id="cb66-18"><a href="#cb66-18" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">cloneStaticSiteFromGit</span><span class="kw">:</span></span>
-<span id="cb66-19"><a href="#cb66-19" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">enabled</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
-<span id="cb66-20"><a href="#cb66-20" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">repository</span><span class="kw">:</span><span class="at"> https://github.com/moonpiedumplings/moonpiedumplings.github.io</span></span>
-<span id="cb66-21"><a href="#cb66-21" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">branch</span><span class="kw">:</span><span class="at"> gh-pages</span></span>
-<span id="cb66-22"><a href="#cb66-22" aria-hidden="true" tabindex="-1"></a><span class="co">      # 60 seconds is the default</span></span>
-<span id="cb66-23"><a href="#cb66-23" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">interval</span><span class="kw">:</span><span class="at"> </span><span class="dv">60</span></span>
-<span id="cb66-24"><a href="#cb66-24" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">ingress</span><span class="kw">:</span></span>
-<span id="cb66-25"><a href="#cb66-25" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">enabled</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
-<span id="cb66-26"><a href="#cb66-26" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">hostname</span><span class="kw">:</span><span class="at"> moonpiedumpl.ing</span></span>
-<span id="cb66-27"><a href="#cb66-27" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">annotations</span><span class="kw">:</span></span>
-<span id="cb66-28"><a href="#cb66-28" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">cert-manager.io/issuer</span><span class="kw">:</span><span class="at"> </span><span class="st">"letsencrypt-staging"</span></span>
-<span id="cb66-29"><a href="#cb66-29" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">acme.cert-manager.io/http01-edit-in-place</span><span class="kw">:</span><span class="at"> </span><span class="st">"true"</span></span>
-<span id="cb66-30"><a href="#cb66-30" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">tls</span><span class="kw">:</span></span>
-<span id="cb66-31"><a href="#cb66-31" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="kw">-</span><span class="at"> </span><span class="fu">hosts</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">moonpiedumpl.ing</span><span class="kw">]</span></span>
-<span id="cb66-32"><a href="#cb66-32" aria-hidden="true" tabindex="-1"></a><span class="at">          </span><span class="fu">secretName</span><span class="kw">:</span><span class="at"> blog-acme</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb68"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb68-1"><a href="#cb68-1" aria-hidden="true" tabindex="-1"></a><span class="pp">---</span></span>
+<span id="cb68-2"><a href="#cb68-2" aria-hidden="true" tabindex="-1"></a><span class="fu">apiVersion</span><span class="kw">:</span><span class="at"> helm.toolkit.fluxcd.io/v2</span></span>
+<span id="cb68-3"><a href="#cb68-3" aria-hidden="true" tabindex="-1"></a><span class="fu">kind</span><span class="kw">:</span><span class="at"> HelmRelease</span></span>
+<span id="cb68-4"><a href="#cb68-4" aria-hidden="true" tabindex="-1"></a><span class="fu">metadata</span><span class="kw">:</span></span>
+<span id="cb68-5"><a href="#cb68-5" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">name</span><span class="kw">:</span><span class="at"> nginx</span></span>
+<span id="cb68-6"><a href="#cb68-6" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">namespace</span><span class="kw">:</span><span class="at"> default</span></span>
+<span id="cb68-7"><a href="#cb68-7" aria-hidden="true" tabindex="-1"></a><span class="fu">spec</span><span class="kw">:</span></span>
+<span id="cb68-8"><a href="#cb68-8" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">chart</span><span class="kw">:</span></span>
+<span id="cb68-9"><a href="#cb68-9" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">spec</span><span class="kw">:</span></span>
+<span id="cb68-10"><a href="#cb68-10" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">chart</span><span class="kw">:</span><span class="at"> nginx</span></span>
+<span id="cb68-11"><a href="#cb68-11" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">reconcileStrategy</span><span class="kw">:</span><span class="at"> ChartVersion</span></span>
+<span id="cb68-12"><a href="#cb68-12" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">sourceRef</span><span class="kw">:</span></span>
+<span id="cb68-13"><a href="#cb68-13" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">kind</span><span class="kw">:</span><span class="at"> HelmRepository</span></span>
+<span id="cb68-14"><a href="#cb68-14" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">name</span><span class="kw">:</span><span class="at"> nginx</span></span>
+<span id="cb68-15"><a href="#cb68-15" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">version</span><span class="kw">:</span><span class="at"> </span><span class="st">"18.2.4"</span></span>
+<span id="cb68-16"><a href="#cb68-16" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">interval</span><span class="kw">:</span><span class="at"> 1m0s</span></span>
+<span id="cb68-17"><a href="#cb68-17" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">values</span><span class="kw">:</span></span>
+<span id="cb68-18"><a href="#cb68-18" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">cloneStaticSiteFromGit</span><span class="kw">:</span></span>
+<span id="cb68-19"><a href="#cb68-19" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">enabled</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb68-20"><a href="#cb68-20" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">repository</span><span class="kw">:</span><span class="at"> https://github.com/moonpiedumplings/moonpiedumplings.github.io</span></span>
+<span id="cb68-21"><a href="#cb68-21" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">branch</span><span class="kw">:</span><span class="at"> gh-pages</span></span>
+<span id="cb68-22"><a href="#cb68-22" aria-hidden="true" tabindex="-1"></a><span class="co">      # 60 seconds is the default</span></span>
+<span id="cb68-23"><a href="#cb68-23" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">interval</span><span class="kw">:</span><span class="at"> </span><span class="dv">60</span></span>
+<span id="cb68-24"><a href="#cb68-24" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">ingress</span><span class="kw">:</span></span>
+<span id="cb68-25"><a href="#cb68-25" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">enabled</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb68-26"><a href="#cb68-26" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">hostname</span><span class="kw">:</span><span class="at"> moonpiedumpl.ing</span></span>
+<span id="cb68-27"><a href="#cb68-27" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">annotations</span><span class="kw">:</span></span>
+<span id="cb68-28"><a href="#cb68-28" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">cert-manager.io/issuer</span><span class="kw">:</span><span class="at"> </span><span class="st">"letsencrypt-staging"</span></span>
+<span id="cb68-29"><a href="#cb68-29" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">acme.cert-manager.io/http01-edit-in-place</span><span class="kw">:</span><span class="at"> </span><span class="st">"true"</span></span>
+<span id="cb68-30"><a href="#cb68-30" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">tls</span><span class="kw">:</span></span>
+<span id="cb68-31"><a href="#cb68-31" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="kw">-</span><span class="at"> </span><span class="fu">hosts</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">moonpiedumpl.ing</span><span class="kw">]</span></span>
+<span id="cb68-32"><a href="#cb68-32" aria-hidden="true" tabindex="-1"></a><span class="at">          </span><span class="fu">secretName</span><span class="kw">:</span><span class="at"> blog-acme</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>And this works, although I’m unhappy that I can’t use a “latest” tag to automatically update to the latest version of the chart.</p>
 <p>Also, the ingress created does not seem to have ssl set up properly. It has cert-manager’s local source, rather than the letsencrypt-staging for a source. But, the site is up on &lt;moonpiedumpl.ing&gt;. This is a lot simpler than some custom CI solution, and I suspect I can simply disable Github’s automatic static site generation from the branch, while still having quarto render my static site to the <code>gh-pages</code> branch.</p>
 <p>This is probably because authentik and the bitnami helm nginx chart use differing values for their ingress configuration.</p>
@@ -1611,7 +1633,115 @@ helmrelease.helm.toolkit.fluxcd.io "authentik" deleted</code></pre>
 <li>General parameters: <a href="https://docs.openstack.org/openstack-helm/latest/chart/index.html" class="uri">https://docs.openstack.org/openstack-helm/latest/chart/index.html</a></li>
 </ul>
 <p>There is a <a href="https://www.reddit.com/r/openstack/comments/1g1wt6u/looking_for_feedbacks_on_using_openstackhelm_with/">reddit post</a> about using Openstack helm with Gitops deployments, where I mention that searching github for <code>"kind: HelmRelease" path:*.y*ml "openstack"</code> gives me examples of openstack deployed using flux.</p>
+<p><code>kubectl create namespace openstack</code></p>
+<p>I decided to create a new namepsace for openstack, rather than putting everything in default. With authentik, I saw how it was somewhat difficult to delete all relevant persistent volumes, but deleting all resources of a type in a namespace is easy. Perhaps using the kubernetes “GUI” offered by the kubernetes vscode extension makes things easier.</p>
+<p>Firstly: “By default OpenStack-Helm stateful sets expect to find a storage class named general.”</p>
+<div class="code-with-filename">
+<div class="code-with-filename-file">
+<pre><strong>openebs-general.yaml</strong></pre>
+</div>
+<div class="sourceCode" id="cb69" data-filename="openebs-general.yaml"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb69-1"><a href="#cb69-1" aria-hidden="true" tabindex="-1"></a><span class="at">  ---</span></span>
+<span id="cb69-2"><a href="#cb69-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">apiVersion</span><span class="kw">:</span><span class="at"> storage.k8s.io/v1</span></span>
+<span id="cb69-3"><a href="#cb69-3" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">kind</span><span class="kw">:</span><span class="at"> StorageClass</span></span>
+<span id="cb69-4"><a href="#cb69-4" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">metadata</span><span class="kw">:</span></span>
+<span id="cb69-5"><a href="#cb69-5" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">name</span><span class="kw">:</span><span class="at"> general</span></span>
+<span id="cb69-6"><a href="#cb69-6" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">namespace</span><span class="kw">:</span><span class="at"> openstack</span></span>
+<span id="cb69-7"><a href="#cb69-7" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">annotations</span><span class="kw">:</span></span>
+<span id="cb69-8"><a href="#cb69-8" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">openebs.io/cas-type</span><span class="kw">:</span><span class="at"> local</span></span>
+<span id="cb69-9"><a href="#cb69-9" aria-hidden="true" tabindex="-1"></a><span class="fu">      cas.openebs.io/config</span><span class="kw">: </span><span class="ch">|</span></span>
+<span id="cb69-10"><a href="#cb69-10" aria-hidden="true" tabindex="-1"></a>        - name: StorageType</span>
+<span id="cb69-11"><a href="#cb69-11" aria-hidden="true" tabindex="-1"></a>          value: hostpath</span>
+<span id="cb69-12"><a href="#cb69-12" aria-hidden="true" tabindex="-1"></a>        - name: BasePath</span>
+<span id="cb69-13"><a href="#cb69-13" aria-hidden="true" tabindex="-1"></a>          value: /var/openstack/openebs/</span>
+<span id="cb69-14"><a href="#cb69-14" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">provisioner</span><span class="kw">:</span><span class="at"> openebs.io/local</span></span>
+<span id="cb69-15"><a href="#cb69-15" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">reclaimPolicy</span><span class="kw">:</span><span class="at"> Retain</span></span>
+<span id="cb69-16"><a href="#cb69-16" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">volumeBindingMode</span><span class="kw">:</span><span class="at"> WaitForFirstConsumer</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>I then followed the Node Labels, step, but the taint step failed:</p>
+<pre><code>[moonpie@lizard flux-config]$ kubectl taint nodes -l 'node-role.kubernetes.io/control-plane' node-role.kubernetes.io/control-plane-
+error: taint "node-role.kubernetes.io/control-plane" not found</code></pre>
+<p>I’ll just skip it for now.</p>
+<p>It took some fiddling, since I am converting the imperative steps but I figured out what to do.</p>
+<pre><code>helm upgrade --install rabbitmq openstack-helm-infra/rabbitmq \
+    --namespace=openstack \
+    --set pod.replicas.server=1 \
+    --timeout=600s \
+    $(helm osh get-values-overrides -p ${OVERRIDES_DIR} -c rabbitmq ${FEATURES})
+
+helm osh wait-for-pods openstack</code></pre>
+<p>So at this step, rather than running the helm commands, I instead have to go to the <a href="https://opendev.org/openstack/openstack-helm-infra/src/branch/master/rabbitmq/values_overrides/2024.2-ubuntu_jammy.yaml">relevant file</a> in the overrides directory, and manually add those values to my helmrelease. I also investigated something automatically, like getting values from a url, but it looks more complicated than simply copying values over.</p>
+<section id="neutron" class="level3">
+<h3 class="anchored" data-anchor-id="neutron">Neutron</h3>
+<p>Most of openstack will be left alone done sequentially, but neutron will get it’s own section.</p>
+<p><a href="https://docs.openstack.org/openstack-helm/latest/devref/networking.html">Openstack-helm Neutron Networking docs</a>. But this doesn’t list how I can set the interface that openstack uses for the networking.</p>
+<p>I also found a very good <a href="https://github.com/beskar-cloud/beskar-flux/blob/master/apps/g2-oidc/03-openstack/03-openstack.base/06-keystone.yaml">example on github</a> which uses flux and openstack-helm to dpeloy openstack hooked up to OIDC.</p>
+<p>Anyway, the big reason I am worried about neutron’s setup, is becaues I have a unique bridging setup. Openstack neutron requires it’s own bridge for external networking, but I only have a single physical interface. In a previous version of my openstack deployment, with kolla-ansible, I split the single network interface with the</p>
+<p>However, it looks like openstack-helm <a href="https://github.com/openstack/openstack-helm/blob/7f82ce2556e283a47f8cc6f6cc3f3d0c9524e22a/doc/source/devref/networking.rst#L292">has an option to automatically add a bridge</a>.</p>
+<p>However, it seems like I don’t want this setting, becasue it actually <a href="https://github.com/openstack/openstack-helm/blob/7f82ce2556e283a47f8cc6f6cc3f3d0c9524e22a/neutron/templates/bin/_neutron-bagpipe-bgp-init.sh.tpl#L24">adds a bridge using the ip command</a>. I already have a bridge setup, so I don’t want this.</p>
+<p>I need to copy the kolla-ansible settings of <a href="https://github.com/openstack/kolla-ansible/blob/4e2af1872da2466843de1fa3ea639f2b79828663/ansible/roles/neutron/templates/linuxbridge_agent.ini.j2#L9">mapping neutron_external_interface</a> to an <code>physical_interface_mappings</code>, in the helm chart values.</p>
+<p>Okay, it looks like <a href="https://opendev.org/openstack/openstack-helm/src/branch/master/neutron/values.yaml#L2095">openstack helm has an option to set <code>physical_interface_mappings</code></a>.</p>
+<p>Given that I already have a bridge, I wonder if I can simply use that existing bridge as a linuxbridge? Or should I use [the veth trick again])https://moonpiedumplings.github.io/projects/build-server-2/#bridge-veth)</p>
+<p>I’m going to do that again, since I know it works and I already have a bridge.</p>
+<p><code>nmcli con add type veth ifname veth1 con-name veth1 veth.peer eth1</code> and add <code>veth1</code> to cockpit.</p>
+<p>And then use <code>eth1</code> as my networking interface. This appears to work, as I can see my networking setup in horizon.</p>
 </section>
+</section>
+<section id="cinder" class="level2">
+<h2 class="anchored" data-anchor-id="cinder">Cinder</h2>
+<p>I am also worried about openstack-helm cinder, because it seems I cannot deploy it using local storage, I must use ceph. I’m worried about the performance implications of this, but a <a href="https://www.reddit.com/r/ceph/comments/1baofpb/how_bad_is_cephs_performance_on_a_single_node/ku3z0s0/">reddit comment</a> says that the issue with single node ceph is not performance, but overhead, so I should be good.</p>
+<p>I’m now getting an error:</p>
+<div class="sourceCode" id="cb72"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb72-1"><a href="#cb72-1" aria-hidden="true" tabindex="-1"></a>[moonpie@lizard flux-config]$ kubectl get events -n openstack</span>
+<span id="cb72-2"><a href="#cb72-2" aria-hidden="true" tabindex="-1"></a>LAST SEEN   TYPE      REASON             OBJECT                                    MESSAGE</span>
+<span id="cb72-3"><a href="#cb72-3" aria-hidden="true" tabindex="-1"></a>96s         Warning   FailedMount        pod/cinder-backup-7599fff8fb-8z22f        MountVolume.SetUp failed for volume "ceph-etc" : configmap "ceph-etc" not found</span>
+<span id="cb72-4"><a href="#cb72-4" aria-hidden="true" tabindex="-1"></a>5m40s       Warning   FailedMount        pod/cinder-backup-7599fff8fb-8z22f        MountVolume.SetUp failed for volume "ceph-keyring" : secret "cinder-volume-rbd-keyring" not found</span>
+<span id="cb72-5"><a href="#cb72-5" aria-hidden="true" tabindex="-1"></a>2m56s       Warning   FailedMount        pod/cinder-storage-init-j4c78             MountVolume.SetUp failed for volume "ceph-etc" : configmap "ceph-etc" not found</span>
+<span id="cb72-6"><a href="#cb72-6" aria-hidden="true" tabindex="-1"></a>96s         Warning   FailedMount        pod/cinder-volume-877748d7d-mvnk4         MountVolume.SetUp failed for volume "ceph-etc" : configmap "ceph-etc" not found</span>
+<span id="cb72-7"><a href="#cb72-7" aria-hidden="true" tabindex="-1"></a>29m         Normal    JobAlreadyActive   cronjob/cinder-volume-usage-audit         Not starting job because prior execution is running and concurrency policy is Forbid</span>
+<span id="cb72-8"><a href="#cb72-8" aria-hidden="true" tabindex="-1"></a>100s        Warning   FailedMount        pod/libvirt-libvirt-default-nznv7         MountVolume.SetUp failed for volume "ceph-etc" : configmap "ceph-etc" not found</span>
+<span id="cb72-9"><a href="#cb72-9" aria-hidden="true" tabindex="-1"></a>5m44s       Warning   FailedMount        pod/libvirt-libvirt-default-nznv7         MountVolume.SetUp failed for volume "ceph-keyring" : secret "pvc-ceph-client-key" not found</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Looking at the secrets and the configmaps, there doesn’t appear to the <code>ceph-etc</code> or <code>ceph-keyring</code> secrets. They are not automatically created?</p>
+<p>Oops, I forgot the <a href="https://docs.openstack.org/openstack-helm/latest/install/prerequisites.html">prerequisites</a>. You are supposed to install ceph <em>before</em> doing all of this.</p>
+<p>Even after fixing this, I still need more work, to fix some things up. Apparantly, in the <a href="https://opendev.org/openstack/openstack-helm-infra/src/branch/master/tools/deployment/ceph/ceph-rook.sh">example deploy</a>, there are some setups that I don’t have. For example, it initally crashes due to the ceph toolbox not being created.</p>
+<p>And when I attempt to add those variables to enable the toolbox, it still crashes because <a href="https://github.com/rook/rook/issues/2329">no serviceaccount is created</a>. It seems I should explicitly use a value, rather than allowing for the default.</p>
+<p>The example deploy is mentioned in <a href="https://lists.openstack.org/archives/list/openstack-discuss@lists.openstack.org/thread/QC6LIDCZK4AIQRLIBQVY3AR7PYE7VMAZ/#BTY3N2WTNILHZU2JDFO4UDWGHF3PHDOP">a discussion on the openstack mailing lists</a></p>
+</section>
+<section id="ssoconnections" class="level2">
+<h2 class="anchored" data-anchor-id="ssoconnections">SSO/connections</h2>
+<p>The <a href="https://docs.openstack.org/openstack-helm/latest/install/prerequisites.html">prerequisites section</a> details how to give the openstack services external domain name access in the MetallLB section.</p>
+<p>Also:</p>
+<blockquote class="blockquote">
+<p>First, let’s create a namespace for the OpenStack workloads. The ingress controller must be deployed in the same namespace because OpenStack-Helm charts create service resources pointing to the ingress controller pods which in turn redirect traffic to particular Openstack API pods.</p>
+</blockquote>
+<p>This does not seem to be true. Ingresses are seemingly created properly, but my ingress controller is in the <code>default</code> namespace.</p>
+</section>
+<section id="a-big-screwup" class="level2">
+<h2 class="anchored" data-anchor-id="a-big-screwup">A big screwup…</h2>
+<p>I got this error:</p>
+<pre><code>moonpie@cachyos-x8664 flux-config]$ kubectl get -n openstack helmreleases.helm.toolkit.fluxcd.io rook-ceph-operator
+NAME                 AGE   READY   STATUS
+rook-ceph-operator   66s   False   Helm install failed for release openstack/rook-ceph-operator with chart rook-ceph@v1.15.6: Unable to continue with install: CustomResourceDefinition "cephblockpoolradosnamespaces.ceph.rook.io" in namespace "" exists and cannot be imported into the current release: invalid ownership metadata; annotation validation error: key "meta.helm.sh/release-name" must equal "rook-ceph-operator": current value is "rook-ceph"</code></pre>
+<p>And I thought “Why don’t I just delete all the CRD’s so it can start over? Surely, with gitops, it must all redeploy automatically!</p>
+<p>So I ran:</p>
+<pre><code>kubectl delete -n openstack customresourcedefinitions.apiextensions.k8s.io --all</code></pre>
+<p>I foolishly assumed that this would only delete crd’s created by resources in the openstack cluster… that was not the case. It deleted ALL my CRD’s, and the flux-system GitRepository is now gone.</p>
+<p>Firstly, since everything else, secrets, volumes, and so on seems to still be there, I decided to simply reboostrap:</p>
+<pre><code>[moonpie@cachyos-x8664 flux-config]$ flux bootstrap git --url ssh://moonpie@moonpiedumpl.ing:22022/home/moonpie/flux-config --branch=main --private-key-file=/home/moonpie/.ssh/moonstack --verbose --timeout=600s
+► cloning branch "main" from Git repository "ssh://moonpie@moonpiedumpl.ing:22022/home/moonpie/flux-config"
+✔ cloned repository
+► generating component manifests
+✔ generated component manifests
+✔ component manifests are up to date
+► installing components in "flux-system" namespace
+✗ timeout waiting for: [CustomResourceDefinition/helmreleases.helm.toolkit.fluxcd.io status: 'Terminating', CustomResourceDefinition/kustomizations.kustomize.toolkit.fluxcd.io status: 'Terminating']</code></pre>
+<p>I ended up uninstalling and reinstalling kubernetes. But in the future, I should consider using RKE2’s <a href="https://docs.rke2.io/datastore/backup_restore">built in snapshots</a>.</p>
+</section>
+</section>
+<section id="nextcloud" class="level1">
+<h1>Nextcloud</h1>
+<p>Official Nextcloud Community Helm chart:</p>
+<p><a href="https://artifacthub.io/packages/helm/nextcloud/nextcloud" class="uri">https://artifacthub.io/packages/helm/nextcloud/nextcloud</a></p>
+<p><a href="https://github.com/nextcloud/helm" class="uri">https://github.com/nextcloud/helm</a></p>
+<p><a href="https://help.nextcloud.com/t/helm-chart-needs-to-support-oidc-by-default/205162">Discussion about lack of OIDC in the helm chart</a>.</p>
 </section>
 <section id="misc-notes-for-later-on" class="level1">
 <h1>Misc Notes for later on:</h1>
@@ -1853,8 +1983,6 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
   });
   clipboard.on('success', onCopySuccess);
   if (window.document.getElementById('quarto-embedded-source-code-modal')) {
-    // For code content inside modals, clipBoardJS needs to be initialized with a container option
-    // TODO: Check when it could be a function (https://github.com/zenorocha/clipboard.js/issues/860)
     const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
       text: getTextToCopy,
       container: window.document.getElementById('quarto-embedded-source-code-modal')
@@ -1965,7 +2093,6 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
       if (window.Quarto?.typesetMath) {
         window.Quarto.typesetMath(note);
       }
-      // TODO in 1.5, we should make sure this works without a callout special case
       if (note.classList.contains("callout")) {
         return note.outerHTML;
       } else {
