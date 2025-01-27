@@ -1,7 +1,7 @@
 ---
 title: "Reinstalling Cachyos"
 date: "2024-6-4"
-categories: [nix, _playground]
+categories: [playground]
 # draft: true
 format:
   html:

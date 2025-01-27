@@ -1,7 +1,7 @@
 ---
 title: "My server part 4 — Kubernetes"
 date: "2024-3-20"
-categories: [linux, _projects]
+categories: [projects]
 # draft: true
 format:
   html:

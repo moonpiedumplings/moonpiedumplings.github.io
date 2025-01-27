@@ -1,7 +1,7 @@
 ---
 title: "KDE 6 — New features"
 date: "2024-3-13"
-categories: [linux, _blog]
+categories: [blog]
 format:
   html:
     code-fold: true

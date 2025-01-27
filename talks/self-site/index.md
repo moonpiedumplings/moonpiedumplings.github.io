@@ -1,7 +1,7 @@
 ---
 title: "Your very own site on GH pages"
 date: "2024-3-25"
-categories: [_talks, quarto]
+categories: [talks]
 format:
   html:
     code-fold: true

@@ -1,7 +1,7 @@
 ---
 title: "Software Projects I follow"
 date: "2024-9-7"
-categories: [_blog, linux]
+categories: [blog]
 # draft: true
 format:
   html:

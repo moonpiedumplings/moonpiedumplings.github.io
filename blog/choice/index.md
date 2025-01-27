@@ -1,7 +1,7 @@
 ---
 title: "Software freedom and why systemd doesn't suck"
 date: "2024-7-20"
-categories: [linux, _blog]
+categories: [blog]
 draft: true
 format:
   html:

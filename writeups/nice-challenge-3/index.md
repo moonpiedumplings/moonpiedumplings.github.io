@@ -2,7 +2,7 @@
 title: "Nice Challenge 3"
 description: "WRCCDC training 3: Attack Incoming"
 date: "2024-2-13"
-categories: [linux, _writeups]
+categories: [writeups]
 author: Jeffrey Fonseca
 execute:
   freeze: auto

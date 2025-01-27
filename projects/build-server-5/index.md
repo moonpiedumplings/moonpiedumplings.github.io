@@ -2,7 +2,7 @@
 title: "Build Server 5 — Kubernetes, GitOps, FluxCD"
 description: "Also, apparently Incus supports OIDC"
 date: "2024-9-12"
-categories: [linux, _projects]
+categories: [projects]
 # draft: true
 format:
   html:

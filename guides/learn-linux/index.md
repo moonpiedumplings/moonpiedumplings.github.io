@@ -1,7 +1,7 @@
 ---
 title: "Free resources to learn various software things"
 date: "2024-4-6"
-categories: [linux, _guides]
+categories: [guides]
 format:
   html:
     code-fold: true
