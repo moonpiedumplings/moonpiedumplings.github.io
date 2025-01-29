@@ -65,6 +65,17 @@ I uninstalled RKE2, but I want to redeploy my services on it again.
 
 I then copied over `/etc/rancher/rke2/rke2.yaml` to `~/.kube/config` on my local machine, in order to configure kubernetes from my local machine.
 
+
+## Dynamic IP Issues
+
+So apparently kubernetes, by default, can't handle dynamic ip addressed. It crashes when I attempt to start it, because my ip address changed. 
+
+At the same time, my [dynamic dns updater](https://hub.docker.com/r/qmcgaw/ddns-updater) stopped working. I think it's because the porkbun API changed, but my container did not update, as I did not have container auto update enabled. (1/28/2025)
+
+So it's clear that dynamic ip/dns must be done from _inside_ kubernetes. But it looks like [rke2/k3s](https://docs.k3s.io/networking/distributed-multicloud?_highlight=dynamic#embedded-k3s-multicloud-solution) doesn't have much support for dynamically changing ip addresses, instead requiring you to manually change it via a command line flag.  [Another stackoverflow post](https://stackoverflow.com/questions/49249712/how-to-make-kubernetes-work-with-dynamic-ip-address) claims that there is no way to do DNS, but a [github issue](https://github.com/kubernetes/kubernetes/pull/62314#discussion_r181482584) says that the function that the stackoverflow post is referencing is not used except beyond generating `.kubeconfigs`. 
+
+
+
 ## FluxCD
 
 Now, I also realized that git can work over ssh. So I have a git repo, called `fleet-charts`, located on my server, which I will access from my laptop via ssh.
