@@ -76,6 +76,8 @@ So it's clear that dynamic ip/dns must be done from _inside_ kubernetes. But it 
 
 
 
+
+
 ## FluxCD
 
 Now, I also realized that git can work over ssh. So I have a git repo, called `fleet-charts`, located on my server, which I will access from my laptop via ssh.
