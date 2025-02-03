@@ -74,8 +74,15 @@ At the same time, my [dynamic dns updater](https://hub.docker.com/r/qmcgaw/ddns-
 
 So it's clear that dynamic ip/dns must be done from _inside_ kubernetes. But it looks like [rke2/k3s](https://docs.k3s.io/networking/distributed-multicloud?_highlight=dynamic#embedded-k3s-multicloud-solution) doesn't have much support for dynamically changing ip addresses, instead requiring you to manually change it via a command line flag.  [Another stackoverflow post](https://stackoverflow.com/questions/49249712/how-to-make-kubernetes-work-with-dynamic-ip-address) claims that there is no way to do DNS, but a [github issue](https://github.com/kubernetes/kubernetes/pull/62314#discussion_r181482584) says that the function that the stackoverflow post is referencing is not used except beyond generating `.kubeconfigs`. 
 
+I also found [1](https://cdcloudlogix.com/ddclient-on-kubernetes/), [2](https://www.lachlanlife.net/posts/2022-11-dynamic-dns/), [3](https://codeburst.io/ddclient-c9a6ac1d8f81) sources on using dynamic DNS, but they all work by assigning having the server behind a router, where the server itself doesn't have dynamic ip address.
 
+However, there is something interesting: My server's main ethernet port retains the same IP addresss it started with. This issue was caused by NetworkManager attempting to give my weird veth setup an ip address, which the rest of services on the server began to think that was the server's main ip address. I am considering simply not handling the fact that Kubernetes cannot handle dynamic ip addresses, since my server seems to get a constant ip address. 
 
+I do, however, have to fix dynamic dns. The issue was that the [dynamic dns updater](https://hub.docker.com/r/qmcgaw/ddns-updater) container did not auto update, and I need to fix that with podman. 
+
+But taking a quick look at the [relevant docs](https://docs.podman.io/en/latest/markdown/podman-auto-update.1.html), it seems like podman only supports auto updates in the background if a systemd quadlet is used. Debian Linux does not have recent enough version of podman to have this feature. 
+
+Wait, I just realized that I don't actually need dynamic DNS. Since my IP address will not change, I can just not bother with this.
 
 
 ## FluxCD
@@ -1820,6 +1827,8 @@ Even after fixing this, I still need more work, to fix some things up. Apparantl
 And when I attempt to add those variables to enable the toolbox, it still crashes because [no serviceaccount is created](https://github.com/rook/rook/issues/2329). It seems I should explicitly use a value, rather than allowing for the default. 
 
 The example deploy is mentioned in [a discussion on the openstack mailing lists](https://lists.openstack.org/archives/list/openstack-discuss@lists.openstack.org/thread/QC6LIDCZK4AIQRLIBQVY3AR7PYE7VMAZ/#BTY3N2WTNILHZU2JDFO4UDWGHF3PHDOP)
+
+
 
 
 ## SSO/connections
