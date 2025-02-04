@@ -1828,6 +1828,19 @@ And when I attempt to add those variables to enable the toolbox, it still crashe
 
 The example deploy is mentioned in [a discussion on the openstack mailing lists](https://lists.openstack.org/archives/list/openstack-discuss@lists.openstack.org/thread/QC6LIDCZK4AIQRLIBQVY3AR7PYE7VMAZ/#BTY3N2WTNILHZU2JDFO4UDWGHF3PHDOP)
 
+Ceph doesn't seem to be starting properly though:
+
+```{.default}
+[moonpie@lizard moonpiedumplings.github.io]$ kubectl get events -n ceph
+LAST SEEN   TYPE      REASON               OBJECT                                 MESSAGE
+4m41s       Warning   FailedMount          pod/rook-ceph-tools-86bc48dfdb-jdsp6   MountVolume.SetUp failed for volume "mon-endpoint-volume" : configmap "rook-ceph-mon-endpoints" not found
+14m         Warning   FailedMount          pod/rook-ceph-tools-86bcb68487-kzwkd   MountVolume.SetUp failed for volume "mon-endpoint-volume" : configmap "rook-ceph-mon-endpoints" not found
+4m41s       Warning   FailedMount          pod/rook-ceph-tools-86bcb68487-kzwkd   MountVolume.SetUp failed for volume "ceph-admin-secret" : secret "rook-ceph-mon" not found
+```
+
+I'm going to attempt to nuke all resources in the `openstack` and `ceph` namespaces.
+
+`kubectl delete -n openstack all --all` and then another for ceph.
 
 
 
