@@ -10,7 +10,89 @@
 <atom:link href="./posts/index.xml" rel="self" type="application/rss+xml"/>
 <description>All posts</description>
 <generator>quarto-1.6.40</generator>
-<lastBuildDate>Thu, 31 Oct 2024 07:00:00 GMT</lastBuildDate>
+<lastBuildDate>Mon, 10 Feb 2025 08:00:00 GMT</lastBuildDate>
+<item>
+  <title>Introduction to Cybersecurity</title>
+  <dc:creator>Jeffrey Fonseca</dc:creator>
+  <link>./talks/intro-cyber/</link>
+  <description><![CDATA[ 
+
+
+
+
+<p>This is a presentation for introducing new people to cybersecurity.</p>
+<p>Below is the same presentation, rendered to html with the slide titles as headers.</p>
+<section id="osi-model-and-our-name" class="level1">
+<h1>OSI Model and Our Name</h1>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="https://blog.joemanna.com/wp-content/uploads/1-tutorial-osi-7-layer-model.gif" class="img-fluid figure-img"></p>
+<figcaption>Image of the 7 OSI layers</figcaption>
+</figure>
+</div>
+</section>
+<section id="cybersecurity-is" class="level1">
+<h1>Cybersecurity is:</h1>
+<ul>
+<li>Methods used to secure systems from malice or human error</li>
+<li>Backups!</li>
+</ul>
+</section>
+<section id="types-of-machines" class="level1">
+<h1>Types of Machines</h1>
+<ul>
+<li>Servers: Run things like web pages or game servers</li>
+<li>Desktops: Machines you normally interact with</li>
+</ul>
+</section>
+<section id="common-methodologies-for-servers" class="level1">
+<h1>Common Methodologies for Servers</h1>
+<ul>
+<li>Limit services in use (attack surface)</li>
+<li>“Harden” services</li>
+<li>“Agent” software, which monitors systems</li>
+</ul>
+</section>
+<section id="methodologies-for-desktops" class="level1">
+<h1>Methodologies for Desktops</h1>
+<ul>
+<li>Restrict downloading of software</li>
+<li>“Agent” software to monitor systems</li>
+<li>Education of users</li>
+</ul>
+</section>
+<section id="operating-systems" class="level1">
+<h1>Operating Systems</h1>
+<ul>
+<li>Windows, Linux, and Mac</li>
+<li>Windows and Mac are common for desktops</li>
+<li>Linux is common for servers</li>
+</ul>
+</section>
+<section id="overthewire-bandit" class="level1">
+<h1>Overthewire Bandit</h1>
+<ul>
+<li><a href="https://overthewire.org/wargames/bandit/" class="uri">https://overthewire.org/wargames/bandit/</a></li>
+<li>Good place to get started for Linux related things</li>
+<li>All answers to the challenges can be found in the built in documentation accessible via the <code>man</code> command.</li>
+</ul>
+</section>
+<section id="web-based-terminals" class="level1">
+<h1>Web Based Terminals:</h1>
+<ul>
+<li><a href="https://shell.segfault.net" class="uri">https://shell.segfault.net</a></li>
+<li><a href="https://sshwifty-demo.nirui.org/" class="uri">https://sshwifty-demo.nirui.org/</a></li>
+<li><a href="https://ssheasy.com/" class="uri">https://ssheasy.com/</a></li>
+</ul>
+
+
+</section>
+
+<div id="quarto-appendix" class="default"><section class="quarto-appendix-contents" id="quarto-reuse"><h2 class="anchored quarto-appendix-heading">Reuse</h2><div class="quarto-appendix-contents"><div><a rel="license" href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a></div></div></section></div> ]]></description>
+  <category>talks</category>
+  <guid>./talks/intro-cyber/</guid>
+  <pubDate>Mon, 10 Feb 2025 08:00:00 GMT</pubDate>
+</item>
 <item>
   <title>Portable executable experiments for CCDC</title>
   <link>./playground/ape-experiments/</link>
@@ -9051,81 +9133,6 @@ print(yeet)</pre>
   <guid>./playground/ova-automation/</guid>
   <pubDate>Tue, 20 Feb 2024 08:00:00 GMT</pubDate>
 </item>
-<item>
-  <title>Nice Challenge 3</title>
-  <dc:creator>Jeffrey Fonseca</dc:creator>
-  <link>./writeups/nice-challenge-3/</link>
-  <description><![CDATA[ 
-
-
-
-
-<p>This is for the <a href="https://nice-challenge.com/">NICE</a> challenge. This challenge was significantly harder than the previous challenges, involving being attacked in realtime, and having to write up incident response reports — and if you were too slow, you didn’t get the points.</p>
-<p>This challenge involves doing an incident response, after an active cyberattack.</p>
-<p>After some investigation, I find out that they have <a href="https://en.wikipedia.org/wiki/Snort_%28software%29">snort</a> set up on their pfsense firewall:</p>
-<p>This is my first time using snort, so everything below was figured out by web searches and browsing around the snort interface.</p>
-<p>However, it did not have any rules enabled by default. I checked a few boxes, and then clicked save to download the rules. After, that, I had to go to <code>Snort &gt; Updates</code>, and explicitly tell it to update the ruleset.</p>
-<p>In addition to that, snort did not have any interfaces added. I added all interfaces I thought would be relevant, WAN, PROD, SUBSCRN, and USRCRN, and started them:</p>
-<p><img src="./writeups/nice-challenge-3/images/snortinterfaces.jpeg" class="img-fluid"></p>
-<p>On the machines <code>Joomia</code> (Debian 9), which hosts the production server, and <code>Fileshare</code> (Ubuntu 16.04.3), I installed apache2 modsecurity, which is a simple web application firewall.</p>
-<p><code>sudo apt install libapache2-modsecurity</code></p>
-<p><code>sudo cp /etc/modsecurity/modsecurity.conf-recommended /etc/modsecurity.conf</code></p>
-<p><code>sudo systemctl restart apache2</code></p>
-<section id="the-attacks" class="level1">
-<h1>The Attacks</h1>
-<p><img src="./writeups/nice-challenge-3/images/blocked.jpeg" class="img-fluid"></p>
-<p>I made a mistake, and did not look at the options for packet capturing. I realized after the fact that pfsense/snort does not capture the relevant packets to inspect them by default.</p>
-<p>That traffic probably isn’t malicious, given how I did not receive any checks or failures for the 2 reports I submitted, but rather, only for the later traffic.</p>
-</section>
-<section id="nmap-scan" class="level1">
-<h1>Nmap scan</h1>
-<p>On the other hand, there was a nmap scan, from <code>172.31.2.12</code> at the Prod-Joomia (172.16.10.100)</p>
-<details>
-<summary>
-Show Log
-</summary>
-<div class="sourceCode" id="cb1" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb1-1">[Wed Feb 14 02:30:07.709171 2024] [:error] [pid 1507] [client 172.31.2.12:34403] [client 172.31.2.12] ModSecurity: Warning. Matched phrase "nmap scripting engine" at REQUEST_HEADERS:User-Agent. [file "/usr/share/modsecurity-crs/rules/REQUEST-913-SCANNER-DETECTION.conf"] [line "59"] [id "913100"] [rev "2"] [msg "Found User-Agent associated with security scanner"] [data "Matched Data: nmap scripting engine found within REQUEST_HEADERS:User-Agent: Mozilla/5.0 (compatible; Nmap Scripting Engine; http://nmap.org/book/nse.html)"] [severity "CRITICAL"] [ver "OWASP_CRS/3.0.0"] [maturity "9"] [accuracy "9"] [tag "application-multi"] [tag "language-multi"] [tag "platform-multi"] [tag "attack-reputation-scanner"] [tag "OWASP_CRS/AUTOMATION/SECURITY_SCANNER"] [tag "WASCTC/WASC-21"] [tag "OWASP_TOP_10/A7"] [tag "PCI/6.5.10"] [hostname "172.31.2.2"] [uri "/"] [unique_id "Zcwlr38AAQEAAAXjvToAAAAA"]</span></code></pre></div>
-</details>
-<p>However, I was too late in reporting this one, and this check was reported as late.</p>
-</section>
-<section id="sshd-brute-force" class="level1">
-<h1>SSHD brute force</h1>
-<div class="sourceCode" id="cb2" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb2-1">● ssh.service - OpenBSD Secure Shell server</span>
-<span id="cb2-2">   Loaded: loaded (/lib/systemd/system/ssh.service; enabled; vendor preset: enabled)</span>
-<span id="cb2-3">   Active: active (running) since Wed 2024-02-14 01:39:16 UTC; 1h 28min ago</span>
-<span id="cb2-4"> Main PID: 551 (sshd)</span>
-<span id="cb2-5">    Tasks: 1 (limit: 4915)</span>
-<span id="cb2-6">   CGroup: /system.slice/ssh.service</span>
-<span id="cb2-7">           └─551 /usr/sbin/sshd -D</span>
-<span id="cb2-8"></span>
-<span id="cb2-9">Feb 14 02:49:43 Prod-Joomla sshd[1792]: Failed password for jcortes from 172.31.2.12 port 38181 ssh2</span>
-<span id="cb2-10">Feb 14 02:49:43 Prod-Joomla sshd[1792]: Connection closed by 172.31.2.12 port 38181 [preauth]</span>
-<span id="cb2-11">Feb 14 02:49:43 Prod-Joomla sshd[1794]: pam_unix(sshd:auth): authentication failure; logname= uid=0 euid=0 tty=ssh ruser= rhost=172.31.2.12  user=jcortes</span>
-<span id="cb2-12">Feb 14 02:49:44 Prod-Joomla sshd[1794]: Failed password for jcortes from 172.31.2.12 port 39276 ssh2</span>
-<span id="cb2-13">Feb 14 02:49:44 Prod-Joomla sshd[1794]: Connection closed by 172.31.2.12 port 39276 [preauth]</span>
-<span id="cb2-14">Feb 14 02:49:45 Prod-Joomla sshd[1796]: pam_unix(sshd:auth): authentication failure; logname= uid=0 euid=0 tty=ssh ruser= rhost=172.31.2.12  user=jcortes</span>
-<span id="cb2-15">Feb 14 02:49:47 Prod-Joomla sshd[1796]: Failed password for jcortes from 172.31.2.12 port 40027 ssh2</span>
-<span id="cb2-16">Feb 14 02:49:47 Prod-Joomla sshd[1796]: Connection closed by 172.31.2.12 port 40027 [preauth]</span>
-<span id="cb2-17">Feb 14 02:49:47 Prod-Joomla sshd[1798]: Accepted password for jcortes from 172.31.2.12 port 46478 ssh2</span>
-<span id="cb2-18">Feb 14 02:49:47 Prod-Joomla sshd[1798]: pam_unix(sshd:session): session opened for user jcortes by (uid=0)</span></code></pre></div>
-<p>And these were only the recent logs. Going through <code>journalctl -xeu ssh</code>, there were a LOT more attempts.</p>
-<p>I got lucky though, as the attacker didn’t stay in for long:</p>
-<p><img src="./writeups/nice-challenge-3/images/blocked2.jpeg" class="img-fluid"></p>
-<p>It seems that snort detected and blocked 172.31.2.12 (the default config also kills existing connections), detecting the brute force. In the future, I need to spend less time trying to figure out snort, and more time setting up fail2ban to avoid ssh brute forces.</p>
-</section>
-<section id="attack-3-out-of-time" class="level1">
-<h1>Attack 3 — Out of time</h1>
-<p>I ran out of time:</p>
-<p><img src="./writeups/nice-challenge-3/images/finalchecks.jpeg" class="img-fluid"></p>
-<p>I couldn’t figure out what it was, either.</p>
-
-
-</section>
-
- ]]></description>
-  <category>writeups</category>
-  <guid>./writeups/nice-challenge-3/</guid>
-  <pubDate>Tue, 13 Feb 2024 08:00:00 GMT</pubDate>
-</item>
 </channel>
 </rss>
+rss>
