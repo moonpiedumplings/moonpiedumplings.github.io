@@ -171,6 +171,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#testing-incus" id="toc-testing-incus" class="nav-link" data-scroll-target="#testing-incus">Testing Incus</a></li>
   <li><a href="#rke2-try-2" id="toc-rke2-try-2" class="nav-link" data-scroll-target="#rke2-try-2">RKE2 Try 2</a>
   <ul class="collapse">
+  <li><a href="#dynamic-ip-issues" id="toc-dynamic-ip-issues" class="nav-link" data-scroll-target="#dynamic-ip-issues">Dynamic IP Issues</a></li>
   <li><a href="#fluxcd" id="toc-fluxcd" class="nav-link" data-scroll-target="#fluxcd">FluxCD</a></li>
   <li><a href="#reverse-proxy-traefik-then-nginx" id="toc-reverse-proxy-traefik-then-nginx" class="nav-link" data-scroll-target="#reverse-proxy-traefik-then-nginx">Reverse Proxy (Traefik, then Nginx)</a>
   <ul class="collapse">
@@ -270,6 +271,17 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p><a href="https://docs.rke2.io/install/quickstart">Quick start guide</a></p>
 <p><code>curl -sfL https://get.rke2.io | sudo sh -</code> (for some reason it crashed and didn’t start when I ran it in a root machinectl session)</p>
 <p>I then copied over <code>/etc/rancher/rke2/rke2.yaml</code> to <code>~/.kube/config</code> on my local machine, in order to configure kubernetes from my local machine.</p>
+<section id="dynamic-ip-issues" class="level2">
+<h2 class="anchored" data-anchor-id="dynamic-ip-issues">Dynamic IP Issues</h2>
+<p>So apparently kubernetes, by default, can’t handle dynamic ip addressed. It crashes when I attempt to start it, because my ip address changed.</p>
+<p>At the same time, my <a href="https://hub.docker.com/r/qmcgaw/ddns-updater">dynamic dns updater</a> stopped working. I think it’s because the porkbun API changed, but my container did not update, as I did not have container auto update enabled. (1/28/2025)</p>
+<p>So it’s clear that dynamic ip/dns must be done from <em>inside</em> kubernetes. But it looks like <a href="https://docs.k3s.io/networking/distributed-multicloud?_highlight=dynamic#embedded-k3s-multicloud-solution">rke2/k3s</a> doesn’t have much support for dynamically changing ip addresses, instead requiring you to manually change it via a command line flag. <a href="https://stackoverflow.com/questions/49249712/how-to-make-kubernetes-work-with-dynamic-ip-address">Another stackoverflow post</a> claims that there is no way to do DNS, but a <a href="https://github.com/kubernetes/kubernetes/pull/62314#discussion_r181482584">github issue</a> says that the function that the stackoverflow post is referencing is not used except beyond generating <code>.kubeconfigs</code>.</p>
+<p>I also found <a href="https://cdcloudlogix.com/ddclient-on-kubernetes/">1</a>, <a href="https://www.lachlanlife.net/posts/2022-11-dynamic-dns/">2</a>, <a href="https://codeburst.io/ddclient-c9a6ac1d8f81">3</a> sources on using dynamic DNS, but they all work by assigning having the server behind a router, where the server itself doesn’t have dynamic ip address.</p>
+<p>However, there is something interesting: My server’s main ethernet port retains the same IP addresss it started with. This issue was caused by NetworkManager attempting to give my weird veth setup an ip address, which the rest of services on the server began to think that was the server’s main ip address. I am considering simply not handling the fact that Kubernetes cannot handle dynamic ip addresses, since my server seems to get a constant ip address.</p>
+<p>I do, however, have to fix dynamic dns. The issue was that the <a href="https://hub.docker.com/r/qmcgaw/ddns-updater">dynamic dns updater</a> container did not auto update, and I need to fix that with podman.</p>
+<p>But taking a quick look at the <a href="https://docs.podman.io/en/latest/markdown/podman-auto-update.1.html">relevant docs</a>, it seems like podman only supports auto updates in the background if a systemd quadlet is used. Debian Linux does not have recent enough version of podman to have this feature.</p>
+<p>Wait, I just realized that I don’t actually need dynamic DNS. Since my IP address will not change, I can just not bother with this.</p>
+</section>
 <section id="fluxcd" class="level2">
 <h2 class="anchored" data-anchor-id="fluxcd">FluxCD</h2>
 <p>Now, I also realized that git can work over ssh. So I have a git repo, called <code>fleet-charts</code>, located on my server, which I will access from my laptop via ssh.</p>
@@ -447,10 +459,10 @@ Flux suspend/resume resources
 <div class="code-with-filename-file">
 <pre><strong>/etc/rancher/rke2/config.yaml</strong></pre>
 </div>
-<div class="sourceCode" id="cb12" data-filename="/etc/rancher/rke2/config.yaml"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="at">            </span><span class="fu">disable</span><span class="kw">:</span></span>
-<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="co">              # Yeah so apparently this was kind of important. </span></span>
-<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="co">              # - rke2-coredns</span></span>
-<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="at">              </span><span class="kw">-</span><span class="at"> rke2-ingress-nginx</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb12" data-filename="/etc/rancher/rke2/config.yaml"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="fu">disable</span><span class="kw">:</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="co">  # Yeah so apparently this was kind of important. </span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="co">  # - rke2-coredns</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> rke2-ingress-nginx</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>And with this, flux bootstrap works properly:</p>
 <div class="sourceCode" id="cb13"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>[moonpie@lizard vscode]$ flux bootstrap git --url ssh://moonpie@moonpiedumpl.ing:22022/home/moonpie/flux-config --branch=main --private-key-file=/home/moonpie/.ssh/moonstack --verbose --insecure-skip-tls-verify</span>
@@ -1703,6 +1715,48 @@ helm osh wait-for-pods openstack</code></pre>
 <p>Even after fixing this, I still need more work, to fix some things up. Apparantly, in the <a href="https://opendev.org/openstack/openstack-helm-infra/src/branch/master/tools/deployment/ceph/ceph-rook.sh">example deploy</a>, there are some setups that I don’t have. For example, it initally crashes due to the ceph toolbox not being created.</p>
 <p>And when I attempt to add those variables to enable the toolbox, it still crashes because <a href="https://github.com/rook/rook/issues/2329">no serviceaccount is created</a>. It seems I should explicitly use a value, rather than allowing for the default.</p>
 <p>The example deploy is mentioned in <a href="https://lists.openstack.org/archives/list/openstack-discuss@lists.openstack.org/thread/QC6LIDCZK4AIQRLIBQVY3AR7PYE7VMAZ/#BTY3N2WTNILHZU2JDFO4UDWGHF3PHDOP">a discussion on the openstack mailing lists</a></p>
+<p>Ceph doesn’t seem to be starting properly though:</p>
+<div class="sourceCode" id="cb73"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb73-1"><a href="#cb73-1" aria-hidden="true" tabindex="-1"></a>[moonpie@lizard moonpiedumplings.github.io]$ kubectl get events -n ceph</span>
+<span id="cb73-2"><a href="#cb73-2" aria-hidden="true" tabindex="-1"></a>LAST SEEN   TYPE      REASON               OBJECT                                 MESSAGE</span>
+<span id="cb73-3"><a href="#cb73-3" aria-hidden="true" tabindex="-1"></a>4m41s       Warning   FailedMount          pod/rook-ceph-tools-86bc48dfdb-jdsp6   MountVolume.SetUp failed for volume "mon-endpoint-volume" : configmap "rook-ceph-mon-endpoints" not found</span>
+<span id="cb73-4"><a href="#cb73-4" aria-hidden="true" tabindex="-1"></a>14m         Warning   FailedMount          pod/rook-ceph-tools-86bcb68487-kzwkd   MountVolume.SetUp failed for volume "mon-endpoint-volume" : configmap "rook-ceph-mon-endpoints" not found</span>
+<span id="cb73-5"><a href="#cb73-5" aria-hidden="true" tabindex="-1"></a>4m41s       Warning   FailedMount          pod/rook-ceph-tools-86bcb68487-kzwkd   MountVolume.SetUp failed for volume "ceph-admin-secret" : secret "rook-ceph-mon" not found</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>I’m going to attempt to nuke all resources in the <code>openstack</code> and <code>ceph</code> namespaces.</p>
+<p><code>kubectl delete -n openstack all --all</code> and then another for ceph.</p>
+<div class="sourceCode" id="cb74"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb74-1"><a href="#cb74-1" aria-hidden="true" tabindex="-1"></a>NAMESPACE   NAME   DATADIRHOSTPATH   MONCOUNT   AGE     PHASE         MESSAGE                                                                                                                     HEALTH   EXTERNAL   FSID</span>
+<span id="cb74-2"><a href="#cb74-2" aria-hidden="true" tabindex="-1"></a>rook-ceph   ceph   /var/lib/rook     3          3d17h   Progressing   failed to perform validation before cluster creation: cannot start 3 mons on 1 node(s) when allowMultiplePerNode is false</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Oh. Ceph wants 3 nodes by default, but I only give it one.</p>
+<div class="sourceCode" id="cb75"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb75-1"><a href="#cb75-1" aria-hidden="true" tabindex="-1"></a>---</span>
+<span id="cb75-2"><a href="#cb75-2" aria-hidden="true" tabindex="-1"></a>apiVersion: helm.toolkit.fluxcd.io/v2</span>
+<span id="cb75-3"><a href="#cb75-3" aria-hidden="true" tabindex="-1"></a>kind: HelmRelease</span>
+<span id="cb75-4"><a href="#cb75-4" aria-hidden="true" tabindex="-1"></a>metadata:</span>
+<span id="cb75-5"><a href="#cb75-5" aria-hidden="true" tabindex="-1"></a>  name: rook-ceph-cluster</span>
+<span id="cb75-6"><a href="#cb75-6" aria-hidden="true" tabindex="-1"></a>  namespace: rook-ceph</span>
+<span id="cb75-7"><a href="#cb75-7" aria-hidden="true" tabindex="-1"></a>spec:</span>
+<span id="cb75-8"><a href="#cb75-8" aria-hidden="true" tabindex="-1"></a>  chart:</span>
+<span id="cb75-9"><a href="#cb75-9" aria-hidden="true" tabindex="-1"></a>    spec:</span>
+<span id="cb75-10"><a href="#cb75-10" aria-hidden="true" tabindex="-1"></a>      chart: rook-ceph-cluster</span>
+<span id="cb75-11"><a href="#cb75-11" aria-hidden="true" tabindex="-1"></a>      reconcileStrategy: ChartVersion</span>
+<span id="cb75-12"><a href="#cb75-12" aria-hidden="true" tabindex="-1"></a>      version: "v1.16.2"</span>
+<span id="cb75-13"><a href="#cb75-13" aria-hidden="true" tabindex="-1"></a>      sourceRef:</span>
+<span id="cb75-14"><a href="#cb75-14" aria-hidden="true" tabindex="-1"></a>        kind: HelmRepository</span>
+<span id="cb75-15"><a href="#cb75-15" aria-hidden="true" tabindex="-1"></a>        name: rook</span>
+<span id="cb75-16"><a href="#cb75-16" aria-hidden="true" tabindex="-1"></a>  interval: 1m0s</span>
+<span id="cb75-17"><a href="#cb75-17" aria-hidden="true" tabindex="-1"></a>  values:</span>
+<span id="cb75-18"><a href="#cb75-18" aria-hidden="true" tabindex="-1"></a>    operatorNamespace: rook-ceph</span>
+<span id="cb75-19"><a href="#cb75-19" aria-hidden="true" tabindex="-1"></a>    toolbox:</span>
+<span id="cb75-20"><a href="#cb75-20" aria-hidden="true" tabindex="-1"></a>      enabled: true</span>
+<span id="cb75-21"><a href="#cb75-21" aria-hidden="true" tabindex="-1"></a>    clusterName: ceph</span>
+<span id="cb75-22"><a href="#cb75-22" aria-hidden="true" tabindex="-1"></a>    cephClusterSpec:</span>
+<span id="cb75-23"><a href="#cb75-23" aria-hidden="true" tabindex="-1"></a>        Mgr:</span>
+<span id="cb75-24"><a href="#cb75-24" aria-hidden="true" tabindex="-1"></a>          Count: 1</span>
+<span id="cb75-25"><a href="#cb75-25" aria-hidden="true" tabindex="-1"></a>        Mon:</span>
+<span id="cb75-26"><a href="#cb75-26" aria-hidden="true" tabindex="-1"></a>          Count: 1</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>With this, the reconcile succeeds. But it still fails to set up, and it appears that the ceph cluster does not get deleted. Even when I attempt to use <code>kubectl delete</code> to delete the resource, it just hangs indefinitely.</p>
+<div class="sourceCode" id="cb76"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb76-1"><a href="#cb76-1" aria-hidden="true" tabindex="-1"></a>[moonpie@cachyos-x8664 ~]$ kubectl delete --force -n rook-ceph cephclusters.ceph.rook.io ceph</span>
+<span id="cb76-2"><a href="#cb76-2" aria-hidden="true" tabindex="-1"></a>Warning: Immediate deletion does not wait for confirmation that the running resource has been terminated. The resource may continue to run on the cluster indefinitely.</span>
+<span id="cb76-3"><a href="#cb76-3" aria-hidden="true" tabindex="-1"></a>cephcluster.ceph.rook.io "ceph" force deleted</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>I am deeply frustrated. Isn’t the point</p>
 </section>
 <section id="ssoconnections" class="level2">
 <h2 class="anchored" data-anchor-id="ssoconnections">SSO/connections</h2>

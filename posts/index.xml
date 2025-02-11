@@ -396,6 +396,8 @@ zellij</code></pre>
 <h1>Functions</h1>
 <p>Below are some of the functions I use commmonly, but really, you can use anything from python and the sympy library.</p>
 <p>For most functions, the form is something like <code>function(arguments)</code> with the arguments in parenthesis. <em>Some</em> natural lanugage works in Sympy Beta, but it’s better to just use the python syntax.</p>
+<section id="calculus" class="level2">
+<h2 class="anchored" data-anchor-id="calculus">Calculus</h2>
 <p><a href="https://docs.sympy.org/latest/modules/integrals/integrals.html">integrate()</a> — also, if you use this function with sympy gamma, it will give you the step by step solution! Most of the time. It sometimes fails, either because sympy can’t figure it out or due to rate limits.</p>
 <p>For example, the partial fractions decomposition step-by-step solutions don’t often show up on Sympy Gamma, and are somewhat obfuscated on Sympy Beta. Sympy Beta often offers multiple solutions as well, with some of them not being partial fraction decomposition. I think the Sympy manual integrate function doesn’t have an explicit rule to do partial fractions decomposition.</p>
 <p><img src="./guides/sympy/images/partsterm1.jpeg" class="img-fluid"> <img src="./guides/sympy/images/partsterm2.jpeg" class="img-fluid"></p>
@@ -411,6 +413,16 @@ zellij</code></pre>
 <p><code>help(function)</code> — this function shows you the documentation of any function. This is a built in function into python.</p>
 <p>There are many, many more functions, and they can be found on the <a href="https://docs.sympy.org/latest/index.html">sympy documentation</a>.</p>
 </section>
+</section>
+<section id="linear-algebra" class="level1">
+<h1>Linear Algebra</h1>
+<p>Firstly, these matrix operations only seem to work on <a href="https://sympy-beta.vercel.app/">Sympy Beta</a>.</p>
+<p><code>Matrix([[0, 0, 0], [0, 0, 0]])</code> creates a matrix with 2 rows and 3 columns.</p>
+<p>This can be used in other functions, like <code>rref</code>, to get the reduced row echelon form.</p>
+<p><code>Matrix.rref(Matrix([[1, 1, 1], [1, 2, 3], [1, 2, 4]]))</code></p>
+<p>You can even solve for abitrary constants using <code>a</code>, <code>b</code>, and <code>c</code></p>
+<p><img src="./guides/sympy/images/matrixrref.jpeg" class="img-fluid"></p>
+</section>
 <section id="keywords-and-variables" class="level1">
 <h1>Keywords and Variables</h1>
 <p>It’s not like a normal calculator. Sympy is a Python library, meaning everything is designed to be code first. Since it isn’t really good practice to put special symbols like “π” in code, there are alternative, purely text values that you can use to refer to the value of pi, infinity, or <em>e</em>.</p>
@@ -418,13 +430,17 @@ zellij</code></pre>
 <p><code>E</code> = <em>e</em>. It should be noted that lowercase e does not work.</p>
 <p><code>pi</code> = π. The classic pi, 3.1415…</p>
 </section>
-<section id="other-resources-for-learning-calculus-independently" class="level1">
-<h1>Other resources for learning Calculus independently:</h1>
-<p>I really like:</p>
+<section id="other-resources-for-learning-math-independently" class="level1">
+<h1>Other resources for learning math independently:</h1>
+<p>For Calculus, I really like:</p>
 <ul>
 <li><a href="https://en.wikibooks.org/wiki/Calculus">Wikibooks — Calculus</a></li>
 <li><a href="https://tutorial.math.lamar.edu/">Paul’s Math Notes</a></li>
 <li>Openstax’s Calulcus Textbooks, <a href="https://openstax.org/details/books/calculus-volume-1">Volume 1</a>, <a href="https://openstax.org/details/books/calculus-volume-2">Volume 2</a>, and <a href="https://openstax.org/details/books/calculus-volume-3">Volume 3</a>. Also, <a href="https://math.libretexts.org/Bookshelves/Calculus/Calculus_(OpenStax)">Full book on libretexts</a></li>
+</ul>
+<p>For Linear Algebra:</p>
+<ul>
+<li><a href="https://math.libretexts.org/Bookshelves/Linear_Algebra/A_First_Course_in_Linear_Algebra_(Kuttler)">A First Course in Linear Algebra (Libretexts)</a></li>
 </ul>
 
 
@@ -480,6 +496,17 @@ zellij</code></pre>
 <p><a href="https://docs.rke2.io/install/quickstart">Quick start guide</a></p>
 <p><code>curl -sfL https://get.rke2.io | sudo sh -</code> (for some reason it crashed and didn’t start when I ran it in a root machinectl session)</p>
 <p>I then copied over <code>/etc/rancher/rke2/rke2.yaml</code> to <code>~/.kube/config</code> on my local machine, in order to configure kubernetes from my local machine.</p>
+<section id="dynamic-ip-issues" class="level2">
+<h2 class="anchored" data-anchor-id="dynamic-ip-issues">Dynamic IP Issues</h2>
+<p>So apparently kubernetes, by default, can’t handle dynamic ip addressed. It crashes when I attempt to start it, because my ip address changed.</p>
+<p>At the same time, my <a href="https://hub.docker.com/r/qmcgaw/ddns-updater">dynamic dns updater</a> stopped working. I think it’s because the porkbun API changed, but my container did not update, as I did not have container auto update enabled. (1/28/2025)</p>
+<p>So it’s clear that dynamic ip/dns must be done from <em>inside</em> kubernetes. But it looks like <a href="https://docs.k3s.io/networking/distributed-multicloud?_highlight=dynamic#embedded-k3s-multicloud-solution">rke2/k3s</a> doesn’t have much support for dynamically changing ip addresses, instead requiring you to manually change it via a command line flag. <a href="https://stackoverflow.com/questions/49249712/how-to-make-kubernetes-work-with-dynamic-ip-address">Another stackoverflow post</a> claims that there is no way to do DNS, but a <a href="https://github.com/kubernetes/kubernetes/pull/62314#discussion_r181482584">github issue</a> says that the function that the stackoverflow post is referencing is not used except beyond generating <code>.kubeconfigs</code>.</p>
+<p>I also found <a href="https://cdcloudlogix.com/ddclient-on-kubernetes/">1</a>, <a href="https://www.lachlanlife.net/posts/2022-11-dynamic-dns/">2</a>, <a href="https://codeburst.io/ddclient-c9a6ac1d8f81">3</a> sources on using dynamic DNS, but they all work by assigning having the server behind a router, where the server itself doesn’t have dynamic ip address.</p>
+<p>However, there is something interesting: My server’s main ethernet port retains the same IP addresss it started with. This issue was caused by NetworkManager attempting to give my weird veth setup an ip address, which the rest of services on the server began to think that was the server’s main ip address. I am considering simply not handling the fact that Kubernetes cannot handle dynamic ip addresses, since my server seems to get a constant ip address.</p>
+<p>I do, however, have to fix dynamic dns. The issue was that the <a href="https://hub.docker.com/r/qmcgaw/ddns-updater">dynamic dns updater</a> container did not auto update, and I need to fix that with podman.</p>
+<p>But taking a quick look at the <a href="https://docs.podman.io/en/latest/markdown/podman-auto-update.1.html">relevant docs</a>, it seems like podman only supports auto updates in the background if a systemd quadlet is used. Debian Linux does not have recent enough version of podman to have this feature.</p>
+<p>Wait, I just realized that I don’t actually need dynamic DNS. Since my IP address will not change, I can just not bother with this.</p>
+</section>
 <section id="fluxcd" class="level2">
 <h2 class="anchored" data-anchor-id="fluxcd">FluxCD</h2>
 <p>Now, I also realized that git can work over ssh. So I have a git repo, called <code>fleet-charts</code>, located on my server, which I will access from my laptop via ssh.</p>
@@ -676,9 +703,7 @@ font-style: inherit;"> rke2-ingress-nginx</span></span></code></pre></div>
 <div class="code-with-filename-file">
 <pre><strong>/etc/rancher/rke2/config.yaml</strong></pre>
 </div>
-<div class="sourceCode" id="cb12" data-filename="/etc/rancher/rke2/config.yaml" style="background: #f1f3f5;"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb12-1"><span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">            </span><span class="fu" style="color: #4758AB;
+<div class="sourceCode" id="cb12" data-filename="/etc/rancher/rke2/config.yaml" style="background: #f1f3f5;"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb12-1"><span class="fu" style="color: #4758AB;
 background-color: null;
 font-style: inherit;">disable</span><span class="kw" style="color: #003B4F;
 background-color: null;
@@ -686,13 +711,13 @@ font-weight: bold;
 font-style: inherit;">:</span></span>
 <span id="cb12-2"><span class="co" style="color: #5E5E5E;
 background-color: null;
-font-style: inherit;">              # Yeah so apparently this was kind of important. </span></span>
+font-style: inherit;">  # Yeah so apparently this was kind of important. </span></span>
 <span id="cb12-3"><span class="co" style="color: #5E5E5E;
 background-color: null;
-font-style: inherit;">              # - rke2-coredns</span></span>
+font-style: inherit;">  # - rke2-coredns</span></span>
 <span id="cb12-4"><span class="at" style="color: #657422;
 background-color: null;
-font-style: inherit;">              </span><span class="kw" style="color: #003B4F;
+font-style: inherit;">  </span><span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">-</span><span class="at" style="color: #657422;
@@ -4691,6 +4716,48 @@ helm osh wait-for-pods openstack</code></pre>
 <p>Even after fixing this, I still need more work, to fix some things up. Apparantly, in the <a href="https://opendev.org/openstack/openstack-helm-infra/src/branch/master/tools/deployment/ceph/ceph-rook.sh">example deploy</a>, there are some setups that I don’t have. For example, it initally crashes due to the ceph toolbox not being created.</p>
 <p>And when I attempt to add those variables to enable the toolbox, it still crashes because <a href="https://github.com/rook/rook/issues/2329">no serviceaccount is created</a>. It seems I should explicitly use a value, rather than allowing for the default.</p>
 <p>The example deploy is mentioned in <a href="https://lists.openstack.org/archives/list/openstack-discuss@lists.openstack.org/thread/QC6LIDCZK4AIQRLIBQVY3AR7PYE7VMAZ/#BTY3N2WTNILHZU2JDFO4UDWGHF3PHDOP">a discussion on the openstack mailing lists</a></p>
+<p>Ceph doesn’t seem to be starting properly though:</p>
+<div class="sourceCode" id="cb73" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb73-1">[moonpie@lizard moonpiedumplings.github.io]$ kubectl get events -n ceph</span>
+<span id="cb73-2">LAST SEEN   TYPE      REASON               OBJECT                                 MESSAGE</span>
+<span id="cb73-3">4m41s       Warning   FailedMount          pod/rook-ceph-tools-86bc48dfdb-jdsp6   MountVolume.SetUp failed for volume "mon-endpoint-volume" : configmap "rook-ceph-mon-endpoints" not found</span>
+<span id="cb73-4">14m         Warning   FailedMount          pod/rook-ceph-tools-86bcb68487-kzwkd   MountVolume.SetUp failed for volume "mon-endpoint-volume" : configmap "rook-ceph-mon-endpoints" not found</span>
+<span id="cb73-5">4m41s       Warning   FailedMount          pod/rook-ceph-tools-86bcb68487-kzwkd   MountVolume.SetUp failed for volume "ceph-admin-secret" : secret "rook-ceph-mon" not found</span></code></pre></div>
+<p>I’m going to attempt to nuke all resources in the <code>openstack</code> and <code>ceph</code> namespaces.</p>
+<p><code>kubectl delete -n openstack all --all</code> and then another for ceph.</p>
+<div class="sourceCode" id="cb74" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb74-1">NAMESPACE   NAME   DATADIRHOSTPATH   MONCOUNT   AGE     PHASE         MESSAGE                                                                                                                     HEALTH   EXTERNAL   FSID</span>
+<span id="cb74-2">rook-ceph   ceph   /var/lib/rook     3          3d17h   Progressing   failed to perform validation before cluster creation: cannot start 3 mons on 1 node(s) when allowMultiplePerNode is false</span></code></pre></div>
+<p>Oh. Ceph wants 3 nodes by default, but I only give it one.</p>
+<div class="sourceCode" id="cb75" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb75-1">---</span>
+<span id="cb75-2">apiVersion: helm.toolkit.fluxcd.io/v2</span>
+<span id="cb75-3">kind: HelmRelease</span>
+<span id="cb75-4">metadata:</span>
+<span id="cb75-5">  name: rook-ceph-cluster</span>
+<span id="cb75-6">  namespace: rook-ceph</span>
+<span id="cb75-7">spec:</span>
+<span id="cb75-8">  chart:</span>
+<span id="cb75-9">    spec:</span>
+<span id="cb75-10">      chart: rook-ceph-cluster</span>
+<span id="cb75-11">      reconcileStrategy: ChartVersion</span>
+<span id="cb75-12">      version: "v1.16.2"</span>
+<span id="cb75-13">      sourceRef:</span>
+<span id="cb75-14">        kind: HelmRepository</span>
+<span id="cb75-15">        name: rook</span>
+<span id="cb75-16">  interval: 1m0s</span>
+<span id="cb75-17">  values:</span>
+<span id="cb75-18">    operatorNamespace: rook-ceph</span>
+<span id="cb75-19">    toolbox:</span>
+<span id="cb75-20">      enabled: true</span>
+<span id="cb75-21">    clusterName: ceph</span>
+<span id="cb75-22">    cephClusterSpec:</span>
+<span id="cb75-23">        Mgr:</span>
+<span id="cb75-24">          Count: 1</span>
+<span id="cb75-25">        Mon:</span>
+<span id="cb75-26">          Count: 1</span></code></pre></div>
+<p>With this, the reconcile succeeds. But it still fails to set up, and it appears that the ceph cluster does not get deleted. Even when I attempt to use <code>kubectl delete</code> to delete the resource, it just hangs indefinitely.</p>
+<div class="sourceCode" id="cb76" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb76-1">[moonpie@cachyos-x8664 ~]$ kubectl delete --force -n rook-ceph cephclusters.ceph.rook.io ceph</span>
+<span id="cb76-2">Warning: Immediate deletion does not wait for confirmation that the running resource has been terminated. The resource may continue to run on the cluster indefinitely.</span>
+<span id="cb76-3">cephcluster.ceph.rook.io "ceph" force deleted</span></code></pre></div>
+<p>I am deeply frustrated. Isn’t the point</p>
 </section>
 <section id="ssoconnections" class="level2">
 <h2 class="anchored" data-anchor-id="ssoconnections">SSO/connections</h2>
