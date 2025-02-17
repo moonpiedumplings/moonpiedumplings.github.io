@@ -1748,15 +1748,27 @@ helm osh wait-for-pods openstack</code></pre>
 <span id="cb75-20"><a href="#cb75-20" aria-hidden="true" tabindex="-1"></a>      enabled: true</span>
 <span id="cb75-21"><a href="#cb75-21" aria-hidden="true" tabindex="-1"></a>    clusterName: ceph</span>
 <span id="cb75-22"><a href="#cb75-22" aria-hidden="true" tabindex="-1"></a>    cephClusterSpec:</span>
-<span id="cb75-23"><a href="#cb75-23" aria-hidden="true" tabindex="-1"></a>        Mgr:</span>
-<span id="cb75-24"><a href="#cb75-24" aria-hidden="true" tabindex="-1"></a>          Count: 1</span>
-<span id="cb75-25"><a href="#cb75-25" aria-hidden="true" tabindex="-1"></a>        Mon:</span>
-<span id="cb75-26"><a href="#cb75-26" aria-hidden="true" tabindex="-1"></a>          Count: 1</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb75-23"><a href="#cb75-23" aria-hidden="true" tabindex="-1"></a>      Mgr:</span>
+<span id="cb75-24"><a href="#cb75-24" aria-hidden="true" tabindex="-1"></a>        Count: 1</span>
+<span id="cb75-25"><a href="#cb75-25" aria-hidden="true" tabindex="-1"></a>      Mon:</span>
+<span id="cb75-26"><a href="#cb75-26" aria-hidden="true" tabindex="-1"></a>        Count: 1</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>With this, the reconcile succeeds. But it still fails to set up, and it appears that the ceph cluster does not get deleted. Even when I attempt to use <code>kubectl delete</code> to delete the resource, it just hangs indefinitely.</p>
 <div class="sourceCode" id="cb76"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb76-1"><a href="#cb76-1" aria-hidden="true" tabindex="-1"></a>[moonpie@cachyos-x8664 ~]$ kubectl delete --force -n rook-ceph cephclusters.ceph.rook.io ceph</span>
 <span id="cb76-2"><a href="#cb76-2" aria-hidden="true" tabindex="-1"></a>Warning: Immediate deletion does not wait for confirmation that the running resource has been terminated. The resource may continue to run on the cluster indefinitely.</span>
 <span id="cb76-3"><a href="#cb76-3" aria-hidden="true" tabindex="-1"></a>cephcluster.ceph.rook.io "ceph" force deleted</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>I am deeply frustrated. Isn’t the point</p>
+<p>It appears that lots of stuff is created, but isn’t properly deleted.</p>
+<p><code>kubectl api-resources --verbs=list --namespaced -o name | xargs -n 1 kubectl get --show-kind --ignore-not-found -n rook-ceph</code> lists <em>all</em> resources, rather than just one that kubectl usually shows.</p>
+<p><a href="https://rook.io/docs/rook/latest/Storage-Configuration/ceph-teardown/">Rook-Ceph cleanup/deletion steps.</a></p>
+<div class="sourceCode" id="cb77"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb77-1"><a href="#cb77-1" aria-hidden="true" tabindex="-1"></a>kubectl describe -n rook-ceph cephclusters.ceph.rook.io ceph</span>
+<span id="cb77-2"><a href="#cb77-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb77-3"><a href="#cb77-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb77-4"><a href="#cb77-4" aria-hidden="true" tabindex="-1"></a>92s (x4075 over 11h)       Warning   ReconcileFailed      CephCluster/ceph                         failed to reconcile CephCluster "rook-ceph/ceph". CephCluster "rook-ceph/ceph" will not be deleted until all dependents are removed: CephFilesystem: [ceph-filesystem], CephFilesystemSubVolumeGroup: [ceph-filesystem-csi], CephObjectStore: [ceph-objectstore]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Also, to delete the cluster properly, it has to have the dependents deleted.</p>
+<p>After fixing this, I get another error:</p>
+<pre><code> ----     ------           ----  ----                          -------
+  Warning  ReconcileFailed  76s   rook-ceph-cluster-controller  failed to reconcile CephCluster "rook-ceph/ceph". failed to reconcile cluster "ceph": failed to configure local ceph cluster: failed the ceph version check: failed to complete ceph version job: failed to run CmdReporter rook-ceph-detect-version successfully. failed waiting for results ConfigMap rook-ceph-detect-version. timed out waiting for results ConfigMap</code></pre>
+<p>So it looks like the rook ceph is not starting, meaning no mons/endpoints are started, leading to cascading failures in the rest of the system. I think the problem is that I don’t have a persistent volume that can offer block storage devices available, nor have I configured the ceph cluster to do this.</p>
+<p><a href="https://rook.io/docs/rook/v1.16/CRDs/Cluster/pvc-cluster/">Ceph with K8s PVs</a>. <a href="https://openebs.io/docs/user-guides/local-storage-user-guide/local-pv-lvm/advanced-operations/lvm-raw-block-volume">And thankfully, openebs has docs on provisioning a raw block storageclass</a>.</p>
 </section>
 <section id="ssoconnections" class="level2">
 <h2 class="anchored" data-anchor-id="ssoconnections">SSO/connections</h2>
