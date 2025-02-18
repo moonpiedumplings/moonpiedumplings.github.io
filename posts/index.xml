@@ -10,7 +10,172 @@
 <atom:link href="./posts/index.xml" rel="self" type="application/rss+xml"/>
 <description>All posts</description>
 <generator>quarto-1.6.40</generator>
-<lastBuildDate>Sat, 15 Feb 2025 08:00:00 GMT</lastBuildDate>
+<lastBuildDate>Tue, 18 Feb 2025 08:00:00 GMT</lastBuildDate>
+<item>
+  <title>Logging solutions for CCDC</title>
+  <link>./playground/ccdc-logs/</link>
+  <description><![CDATA[ 
+
+
+
+
+<section id="intro" class="level1">
+<h1>Intro</h1>
+<p>At Cal State Northridge, I am part of a team that participates in the <a href="https://wrccdc.org/">wrccdc</a> cybersecurity competiion. It’s a blue team competition, that involves securing machines, but also writing “incident responses” when machines are hacked.</p>
+<p>In order to write a good incident response, you need, at minimum, the timestamp, what was done, the user, and the ip address. If you do write a good incident response, then you can get up to half of the points you lost from getting hacked back.</p>
+<p>In order to collect and save this information, we need some kind of logging solution, that we can search and extract data from.</p>
+</section>
+<section id="promising-options" class="level1">
+<h1>Promising Options</h1>
+<p>https://datalust.co/pricing https://github.com/librenms/docker#syslog-ng-container https://corelight.com/ https://en.wikipedia.org/wiki/Zeek https://malcolm.fyi/ https://docs.zeek.org/en/master/about.html#what-is-zeek https://github.com/aquasecurity/tracee https://learn.microsoft.com/en-us/sysinternals/downloads/procmon</p>
+</section>
+<section id="central-logging-server" class="level1">
+<h1>Central Logging Server</h1>
+<p>Firstly, we need some kind of central logging server. I really like options like <a href="https://graylog.org/">graylog</a>, or even better is <a href="https://wazuh.com">wazuh</a>, which is a full “Endpoint Defense System” (EDR), which collects data with a security focus and lets you search it.</p>
+<p>However, both of those options have a big downside, which is that the underlying software they use, Elasticsearch, Logtash, and Kibana (ELK stack) are very resource intensive, and somewhat unsuitable for every competition machine.</p>
+<section id="zinc" class="level2">
+<h2 class="anchored" data-anchor-id="zinc">Zinc</h2>
+<p><a href="https://github.com/zincsearch/zincsearch">Zinc</a> is the most promising option. It is a super lightweight version of Elasticsearch and Kibana, and boasts a compatible API (although I think we won’t need that right now).</p>
+<p>The <a href="https://zincsearch-docs.zinc.dev/">documentation</a> is excellent, and deployment is easy:</p>
+<p>From the <a href="https://zincsearch-docs.zinc.dev/quickstart/">quickstart</a></p>
+<pre><code>docker run -v /full/path/of/data:/data -e ZINC_DATA_PATH="/data" -p 4080:4080 \
+    -e ZINC_FIRST_ADMIN_USER=admin -e ZINC_FIRST_ADMIN_PASSWORD=Complexpass#123 \
+    --name zincsearch public.ecr.aws/zinclabs/zincsearch:latest</code></pre>
+<p>Another important thing is <a href="https://zincsearch-docs.zinc.dev/ingestion/">log ingestion</a>. Although I don’t recognize most of the options there, I do recognize <a href="https://www.syslog-ng.com/community/b/blog/posts/another-use-for-the-syslog-ng-elasticsearch-http-destination-zinc">syslog</a>, which is a general protocol for forwarding logs around. However, this setup seems to require syslog-ng 2.32 or newer, which is <a href="https://repology.org/project/syslog-ng/versions">not available on all operating systems</a>.</p>
+<p>Perhaps this software could be used in combination with fluentd, which can intake <a href="https://docs.fluentd.org/input/syslog">syslog</a> and output it to an <a href="https://docs.fluentd.org/output/elasticsearch">elasticsearch</a> source.</p>
+<details>
+<summary>
+Expand/Collapse Testing
+</summary>
+<p>I spun up a podman container with:</p>
+<div class="sourceCode" id="cb2" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb2-1">podman run -it --rm -p 4080:4080 -e ZINC_FIRST_ADMIN_USER=admin -e ZINC_FIRST_ADMIN_PASSWORD=password public.ecr.aws/zinclabs/zincsearch:latest</span></code></pre></div>
+<p>And it was up instantly:</p>
+<p><img src="./playground/ccdc-logs/images/zincsearch.jpg" class="img-fluid"></p>
+</details>
+</section>
+<section id="openobserve" class="level2">
+<h2 class="anchored" data-anchor-id="openobserve">OpenObserve</h2>
+<p><a href="https://openobserve.ai/">Openobsever</a> is similar to Zinc, a lightweight alterntive to an Elasticsearch. It also seems to be able to <a href="https://openobserve.ai/docs/ingestion/logs/syslog/">ingest syslogs directly</a>.</p>
+<p>They also seem to have a <a href="https://openobserve.ai/docs/quickstart/#__tabbed_1_3">docker quickstart</a>.</p>
+<details>
+<summary>
+Expand/Collapse testing
+</summary>
+<div class="sourceCode" id="cb3" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb3-1">podman run -e ZO_DATA_DIR="/data" -p 5080:5080 -e ZO_ROOT_USER_EMAIL="root@example.com" -e ZO_ROOT_USER_PASSWORD="password" docker.io/openobserve/openobserve:latest</span></code></pre></div>
+<p>Similar to Zinc (I think they’re by the same people), it comes up very quickly.</p>
+<p><img src="./playground/ccdc-logs/images/openobserver.jpg" class="img-fluid"></p>
+<p>It also seems to come with script which I can run on Linux or Windows machines, that will install an agent to ingest logs.</p>
+<p>I spun up a debian vagrant machine as a test, so I can run the command.</p>
+<div class="sourceCode" id="cb4" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb4-1">curl -O https://raw.githubusercontent.com/openobserve/agents/main/linux/install.sh &amp;&amp; chmod +x install.sh &amp;&amp; sudo ./install.sh http://192.168.121.1:5080/api/default/ cm9vdEBleGFtcGxlLmNvbTpzWlAyMXF1VFpCQmFpa3hp</span></code></pre></div>
+<p>Although I love the ease of install, the search interface is unintuitive, and it doesn’t seem to log anything other than this one bit about the logging process itself</p>
+<p><img src="./playground/ccdc-logs/images/openobserverlogs.jpg" class="img-fluid"></p>
+<p>Well, there also seems to be a “default” cateogry, which informs me of apt upgrades but not much else.</p>
+<p>I attempted to install SysmonForLinux, but the logs that generates don’t seem to be forwarded by default. It seems like the OpenObserve agent catches journald and apt logs, but not actual syslogs.</p>
+</details>
+</section>
+<section id="loki" class="level2">
+<h2 class="anchored" data-anchor-id="loki">Loki</h2>
+<p><a href="https://grafana.com/oss/loki/">Loki</a>, by grafana, is a another log aggregator. But it seems to be a bit bigger and more complex than what we want.</p>
+</section>
+</section>
+<section id="windows" class="level1">
+<h1>Windows</h1>
+<section id="collection" class="level2">
+<h2 class="anchored" data-anchor-id="collection">Collection</h2>
+<section id="sysmon" class="level3">
+<h3 class="anchored" data-anchor-id="sysmon">Sysmon</h3>
+<p><a href="https://learn.microsoft.com/en-us/sysinternals/downloads/sysmon">Sysmon</a> is a popular solution for process monitoring on Windows. It is very useful, and very powerful as is, but I would like some kind of way to forward logs to a Security Information and Event Management (SIEM) solution in the future.</p>
+</section>
+</section>
+<section id="forwarding" class="level2">
+<h2 class="anchored" data-anchor-id="forwarding">Forwarding</h2>
+<section id="fluentd" class="level3">
+<h3 class="anchored" data-anchor-id="fluentd">Fluentd</h3>
+<p><a href="https://docs.fluentd.org/input/windows_eventlog">Fluentd</a> is a software for collecting and forwarding logs, and it seems to be able to collect the Windows event logs. However, I don’t know how useful that kind of log is, and I don’t know if Sysmon counts as that type of log.</p>
+</section>
+<section id="windows-syslog" class="level3">
+<h3 class="anchored" data-anchor-id="windows-syslog">Windows Syslog</h3>
+<p><a href="https://www.winsyslog.com">winsyslog</a>, by the developers of rsyslog.</p>
+</section>
+</section>
+</section>
+<section id="linux" class="level1">
+<h1>Linux</h1>
+<section id="collection-1" class="level2">
+<h2 class="anchored" data-anchor-id="collection-1">Collection</h2>
+<p>With Linux, there are two ways to do log collection that are superior: Hooking into the kernel and listening to syscalls/file interactions, or epbf which can do something similar. Other, polling based solutions for logging, may not work because they may be too slow and miss events, and they may not offer the performance we need.</p>
+<section id="falco" class="level3">
+<h3 class="anchored" data-anchor-id="falco">Falco</h3>
+<p><a href="https://falco.org/">Falco</a> is a security solution that works by collecting logs and forwarding them</p>
+<p>What I really like about Falco, is the fact that it can be <a href="https://falco.org/docs/setup/container/">deployed as a container</a>, yet it still hooks into the host system and collects logs.</p>
+<div class="sourceCode" id="cb5" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb5-1">docker pull falcosecurity/falco:latest</span>
+<span id="cb5-2">docker run --rm -it \</span>
+<span id="cb5-3">           --privileged \</span>
+<span id="cb5-4">           -v /var/run/docker.sock:/host/var/run/docker.sock \</span>
+<span id="cb5-5">           -v /proc:/host/proc:ro \</span>
+<span id="cb5-6">           -v /etc:/host/etc:ro \</span>
+<span id="cb5-7">           falcosecurity/falco:latest</span></code></pre></div>
+<p>In addition to that, it can forward it’s collected logs to <a href="https://falco.org/docs/concepts/outputs/forwarding/">elasticsearch, zincsearch, or syslog</a>.</p>
+</section>
+<section id="sysmonforlinux" class="level3">
+<h3 class="anchored" data-anchor-id="sysmonforlinux">SysmonForLinux</h3>
+<p><a href="https://github.com/microsoft/SysmonForLinux">SysmonForLinux</a> is a (now) Microsoft project that brings sysmon to Linux. It also seems to output to syslog by default.</p>
+<details>
+<summary>
+Expand/Collapse Testing
+</summary>
+<p>Installing it was simple, I followed the <a href="https://github.com/microsoft/SysmonForLinux/blob/main/INSTALL.md">install instructions for Debian 12</a>.</p>
+<p>Then, I started the service.</p>
+<p>To view the syslogs, I can use:</p>
+<div class="sourceCode" id="cb6" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb6-1">cat /var/log/syslog | /opt/sysmon/sysmonLogView | less</span></code></pre></div>
+<p>Although sadly, it does not seem to inform me of ssh processes, it does give quite a bit of information, mainly about processes being started and stopped. Here is a sample:</p>
+<div class="sourceCode" id="cb7" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb7-1">Event SYSMONEVENT_CREATE_PROCESS</span>
+<span id="cb7-2">        RuleName: -</span>
+<span id="cb7-3">        UtcTime: 2025-02-18 19:59:41.656</span>
+<span id="cb7-4">        ProcessGuid: {5304214a-e6ad-67b4-a5e6-724d9e550000}</span>
+<span id="cb7-5">        ProcessId: 2701</span>
+<span id="cb7-6">        Image: /opt/sysmon/sysmonLogView</span>
+<span id="cb7-7">        FileVersion: -</span>
+<span id="cb7-8">        Description: -</span>
+<span id="cb7-9">        Product: -</span>
+<span id="cb7-10">        Company: -</span>
+<span id="cb7-11">        OriginalFileName: -</span>
+<span id="cb7-12">        CommandLine: /opt/sysmon/sysmonLogView</span>
+<span id="cb7-13">        CurrentDirectory: /var/log</span>
+<span id="cb7-14">        User: root</span>
+<span id="cb7-15">        LogonGuid: {5304214a-0000-0000-0000-000001000000}</span>
+<span id="cb7-16">        LogonId: 0</span>
+<span id="cb7-17">        TerminalSessionId: 5</span>
+<span id="cb7-18">        IntegrityLevel: no level</span>
+<span id="cb7-19">        Hashes: SHA256=ac099d5fd9305b8c68f247415aebc56d35af953ede6782856b8e1c206efaad87</span>
+<span id="cb7-20">        ParentProcessGuid: {00000000-0000-0000-0000-000000000000}</span>
+<span id="cb7-21">        ParentProcessId: 1713</span>
+<span id="cb7-22">        ParentImage: -</span>
+<span id="cb7-23">        ParentCommandLine: -</span>
+<span id="cb7-24">        ParentUser: -</span></code></pre></div>
+</details>
+</section>
+</section>
+<section id="forwarding-1" class="level2">
+<h2 class="anchored" data-anchor-id="forwarding-1">Forwarding</h2>
+<section id="fluentd-1" class="level3">
+<h3 class="anchored" data-anchor-id="fluentd-1">Fluentd</h3>
+<p><a href="https://docs.fluentd.org/input/syslog">Fluentd</a> seems to support syslog collection.</p>
+</section>
+<section id="rsyslog" class="level3">
+<h3 class="anchored" data-anchor-id="rsyslog">Rsyslog</h3>
+<p><a href="https://en.wikipedia.org/wiki/Rsyslog">Rsyslog</a> uses the syslog protocol to forward logs around. However, not all software supports ingesting syslogs.</p>
+
+
+</section>
+</section>
+</section>
+
+ ]]></description>
+  <category>playgrounds</category>
+  <guid>./playground/ccdc-logs/</guid>
+  <pubDate>Tue, 18 Feb 2025 08:00:00 GMT</pubDate>
+</item>
 <item>
   <title>Free resources to learn various things</title>
   <link>./guides/learn-linux/</link>
@@ -9160,105 +9325,6 @@ print(yeet)</pre>
   <category>playground</category>
   <guid>./playground/interactive-python-tutorial/</guid>
   <pubDate>Mon, 11 Mar 2024 07:00:00 GMT</pubDate>
-</item>
-<item>
-  <title>Automatically provisioning VMs from OVAs</title>
-  <link>./playground/ova-automation/</link>
-  <description><![CDATA[ 
-
-
-
-
-<section id="probably-wont-continue-this-moving-to-playground" class="level1">
-<h1>Probably won’t continue this / Moving to Playground</h1>
-<p>(see the “Goals and Context” section for more context)</p>
-<p>Wasabi, head of black (operations and deployment) team sent out a message, after the first qualifiers:</p>
-<p><img src="./playground/ova-automation/images/wasabi-message.jpeg" class="img-fluid"></p>
-<blockquote class="blockquote">
-<p>I can’t remember, but you guys only recently started playing I believe I had a conversation with other schools on this.. But there’s a huge separation from teams in terms of practice</p>
-</blockquote>
-<blockquote class="blockquote">
-<p>So my recommendation to all the new teams and all the teams who struggled this year. Don’t use https://archive.wrccdc.org/images/ except as reference. Take our environment and topology and build it yourselves. Spend the time to learn and help each other learn how systems work and how to troubleshoot things. This will help you a ton. The teams in the top do this. If your one of the teams not making it forward please feel free to send me a message for advice and use Q&amp;A channel to get help from Ops / Red / White team for your off season. We are happy to help and excited to see you back next year!</p>
-</blockquote>
-<p>My original goal of this project was to be able to quickly recreate WRCCDC environments, so we could run mock competitions, since currently we were setting them up manually.</p>
-<p>But even the 3 or 4 mocks we ran didn’t help us. Ater actually <em>doing</em> first real competition, I agree with Wasabi on this.</p>
-<p>So I don’t think this project is worth continuing. It would be better having people recreating the competition environments, and really <em>using</em> Linux, Windows Server, and the various firewalls so we have an understanding of how they work.</p>
-<p>So yeah. The work is still valuable, it just doesn’t get to stay in the “projects” section of my blog — the difference between “playground” and “projects” is not topics, but rather the commmitment I have to them. Projects I will see to either the end, or until I hit significant failure that I can’t overcome. The content in playground, I am free to give up on it at any point, for any reason, and because of that, many of the miniprojects in there are incomplete.</p>
-</section>
-<section id="goals-and-context" class="level1">
-<h1>Goals and Context</h1>
-<p>I am currently participating on the cybersercurity team of Cal State Northridge, for a competition called CCDC.</p>
-<p>For more information:</p>
-<p>Nationals: <a href="https://www.nationalccdc.org/" class="uri">https://www.nationalccdc.org/</a></p>
-<p>And our region, the Western Region: <a href="https://wrccdc.org/" class="uri">https://wrccdc.org/</a></p>
-<p>Essentially, we are asked given a bunch of really insecure virtual machines, and asked to secure and administrate them, while being attacked by red team.</p>
-<p>Although Nationals does not post the old images they have used in the past, our region, does.</p>
-<p>WRCCDC Archive: <a href="https://archive.wrccdc.org/" class="uri">https://archive.wrccdc.org/</a></p>
-<p>Currently, our team is doing mock competitions by downloading these images, manually importing them into esxi, or proxmox, and then adjusting networking in each virtual machine, by hand.</p>
-<p>This is unacceptable.</p>
-<p>An easier way, is rather than manually changing networking configuration in each virtual machine, the virtual machine managers (proxmox and esxi, currently) could be configured to have the same network as the competition, removing the hassle of changing this.</p>
-<p>In addition to that, manually importing virtual machines is also unacceptable.</p>
-<p>With the existence of modern automation tools, like terraform, there must be a better way to do this.</p>
-<p>Currently, I’m using vagrant to automate the upping of individual images, for testing. However, vagrant isn’t really ideal for this, because I would have to convert OVA files to “vagrant boxes” first, which don’t support every vagrant provider.</p>
-<p>It would probably be better to import the images, and then use terraform to up it automatically. The advantage of this, to me, is that it is more provider agnostic. By seperating the pieces that handle the image management, and the pieces that handle control of the hypervisor platform, it’s easier to port things to new platforms.</p>
-</section>
-<section id="work" class="level1">
-<h1>Work</h1>
-<section id="proxmox" class="level2">
-<h2 class="anchored" data-anchor-id="proxmox">Proxmox</h2>
-<p>I’ve created a folder with a shell.nix and a Vagrantfile, in order to automate the creation of a proxmox virtual machine. It’s located inside this git repo, and by extension, <a href="./proxmox/">this static site</a>.</p>
-<p>Docs to import OVA files on proxmox: <a href="https://pve.proxmox.com/wiki/Migration_of_servers_to_Proxmox_VE#Importing" class="uri">https://pve.proxmox.com/wiki/Migration_of_servers_to_Proxmox_VE#Importing</a></p>
-<p>After some testing with that, <code>importovf</code> isn’t too good, because it imports the virtual machine metadata, without any of the actual data. So things we don’t really need to store, like how many vcpu’s or memory, or the network, but none of the actual disk data.</p>
-<p>You have to run <code>qm importdisk</code> (an alias for <code>qm disk import</code>)</p>
-<p>So after extracting the ova, you have to extract the vmdk (it’s gzipped), and then it would be something like:</p>
-<p><code>qm importdisk numberhere image.vmdk --format qcow2|vmware</code></p>
-<p>The manpage for qm says that –format specifies the target format, so I’m assuming it’s the format to convert to.</p>
-</section>
-<section id="lxdincus" class="level2">
-<h2 class="anchored" data-anchor-id="lxdincus">LXD/Incus</h2>
-<p>LXD is a “containervisor”, capable of managing both lxc containers and qemu-kvm virtual machinwees.</p>
-<p>For this usecase, I only need it’s hypervisor management capibilities, but I also want to the automation capabilities that it may offer, since that seems to be an often criticized lacking feature of proxmox.</p>
-<p>I also tried out incus. I put together <a href="./vms/provisioners/debincus.yml">an ansible playbook</a> to install incus on debian.</p>
-<p>However, I am having trouble with their official web ui. Authentication is certificate based, so it asks for me to import a browser certificate… not fun.</p>
-<p>I am going to collect and test multiple alternatives:</p>
-<ul>
-<li>Offical Canonical One</li>
-<li><a href="https://lxdware.com/">LXDWare</a></li>
-<li><a href="https://github.com/AdaptiveScale/lxdui" class="uri">https://github.com/AdaptiveScale/lxdui</a></li>
-<li><a href="https://github.com/PenningLabs/lxconsole" class="uri">https://github.com/PenningLabs/lxconsole</a> still in beta, according to the readme</li>
-</ul>
-<p>I tried lxdware, but when I tried to add a remote, and connect it to the incus daemon, it I get an error “Remote host connection is not trusted”.</p>
-<p>I do some investiagting.</p>
-<div class="sourceCode" id="cb1" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb1-1">root@f6ded1cb73d7:/# incus remote add 192.168.121.103</span>
-<span id="cb1-2">Generating a client certificate. This may take a minute...</span>
-<span id="cb1-3">Certificate fingerprint: 7cf0d7d12fed498811e485d8dec4655012873876e9f45e15974cfdb9a8fd810a</span>
-<span id="cb1-4">ok (y/n/[fingerprint])? y</span>
-<span id="cb1-5">Trust token for 192.168.121.103: eyJjbGllbnRfbmFtZSI6ImluY3VzLXVpLTE5Mi4xNjguMTIxLjEwMy5jcnQiLCJmaW5nZXJwcmludCI6IjdjZjBkN2QxMmZlZDQ5ODgxMWU0ODVkOGRlYzQ2NTUwMTI4NzM4NzZlOWY0NWUxNTk3NGNmZGI5YThmZDgxMGEiLCJhZGRyZXNzZXMiOlsiMTkyLjE2OC4xMjEuMTAzOjg0NDMiXSwic2VjcmV0IjoiMjRjNWNjZjkzZTgzMTBmNGRlMzAwMTgyOTc0YWE4Nzg1MDAxMTkzZWQ3NTEyYTk0ZjlmZGRkZWQwMzBkNWJkZSIsImV4cGlyZXNfYXQiOiIwMDAxLTAxLTAxVDAwOjAwOjAwWiJ9</span>
-<span id="cb1-6">Client certificate now trusted by server: 192.168.121.103</span></code></pre></div>
-<div class="sourceCode" id="cb2" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb2-1">root@d90da14b48e9:/# lxc remote add 192.168.121.103</span>
-<span id="cb2-2">Admin password (or token) for 192.168.121.103:</span>
-<span id="cb2-3">Error: not authorized</span></code></pre></div>
-<p>In short, it seems like the api is not compatible, since using the lxc client fails, but the incus client succeeds.</p>
-<p>Luckily, I got incus working. In addition to the normal steps, I had to run <a href="https://discuss.linuxcontainers.org/t/incus-ui-install-error-using-token-not-authorized/18822/2"><code>incus config trust add-certificate certficatefile.crt</code></a></p>
-<p>Testing, I was able to download a debian image, and put it up.</p>
-<p>Incus looks very promising, because it also comes with a <a href="https://registry.terraform.io/providers/lxc/incus/latest/docs/resources/instance">terraform provider</a></p>
-<p>Incus also provides docs on <a href="https://linuxcontainers.org/incus/docs/main/howto/server_migrate_lxd/">migrating machines</a> (<a href="https://documentation.ubuntu.com/lxd/en/latest/migration/">canonical lxd version</a>)</p>
-<p>On that page, it recommends using virt-v2v, which has support for importing from <a href="https://libguestfs.org/virt-v2v-input-vmware.1.html">vmware ova’s</a></p>
-<p>(It seems it requires a newer version of <a href="https://libguestfs.org/virt-v2v.1.html">virt-v2v</a>, and <a href="https://github.com/rwmjones/rhsrvany">rhsrvany</a>, which only debian sid and ubuntu 23 package both right now.)</p>
-<p>Once you use that tool, you can use incus-migrate to interactively or programmaticly import the raw disk images as incus images.</p>
-<p>So that’s pretty promising. But what about networking? For a replica of the competition environment, we will need to have firewalls (vyos, pfsense, etc) and to my understanding, that is essentially having a virtual machine act as a bridge. How can I do that on LXD/Incus?</p>
-<p>It seems to be possible. Here are some guides I found:</p>
-<p><a href="https://www.cloudwizard.nl/build-your-own-windows-cloud-with-lxd/" class="uri">https://www.cloudwizard.nl/build-your-own-windows-cloud-with-lxd/</a></p>
-<p><a href="https://forum.netgate.com/topic/154906/how-to-install-pfsense-on-lxc-vm-qemu" class="uri">https://forum.netgate.com/topic/154906/how-to-install-pfsense-on-lxc-vm-qemu</a></p>
-
-
-</section>
-</section>
-
- ]]></description>
-  <category>playground</category>
-  <guid>./playground/ova-automation/</guid>
-  <pubDate>Tue, 20 Feb 2024 08:00:00 GMT</pubDate>
 </item>
 </channel>
 </rss>
