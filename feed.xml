@@ -10,7 +10,89 @@
 <atom:link href="./feed.xml" rel="self" type="application/rss+xml"/>
 <description>All posts, intended to be used in an RSS feed. Can be found at feed.xml</description>
 <generator>quarto-1.6.40</generator>
-<lastBuildDate>Tue, 18 Feb 2025 08:00:00 GMT</lastBuildDate>
+<lastBuildDate>Sat, 22 Feb 2025 08:00:00 GMT</lastBuildDate>
+<item>
+  <title>Alternatives to Dockerhub</title>
+  <link>./blog/docker-registry/</link>
+  <description><![CDATA[ 
+
+
+
+
+<p>Recently, <a href="https://docs.docker.com/docker-hub/usage/">Docker Hub</a>, is setting up rate limit. Unauthenticated users will be limited to 10 pulls per hour, and authenticated users will be limited to 100 pulls per hour.</p>
+<p>This could cause issues with setups like CGNAT, and is a very arbitrary image</p>
+<p>So, I looked for some alternatives.</p>
+<section id="other-public-registries" class="level1">
+<h1>Other Public Registries</h1>
+<details>
+<summary>
+Why not a self hosted registry and building our own containers?
+</summary>
+<p>Most people don’t care about these, instead opting for local builds and registries, but for the <a href="https://wrccdc.org/">CCDC</a> competition, there will be a firewall with an allowlist. It’s easier to ask for a container registry to be unblocked, because container builds will get from so many different websites. In addition to that, we are not allowed to use anything that requires a login, and I do not know if that applies to Docker Hub.</p>
+</details>
+<section id="general-repos" class="level2">
+<h2 class="anchored" data-anchor-id="general-repos">General Repos</h2>
+<ul>
+<li>Google’s public registry and mirror of dockerhub
+<ul>
+<li>Located at <code>mirror.gcr.io</code></li>
+<li><a href="https://cloud.google.com/artifact-registry/docs">Docs online</a></li>
+<li>Because it’s a mirror of Docker Hub, images available here can be searched there</li>
+</ul></li>
+<li>AWS ECR public registry
+<ul>
+<li>Has docker official containers and more, but is not a mirror of dockerhub</li>
+<li>Located at <code>public.ecr.aws</code></li>
+<li>Can be searched at <a href="https://gallery.ecr.aws/" class="uri">https://gallery.ecr.aws/</a></li>
+</ul></li>
+<li>Github container registry
+<ul>
+<li>Often where containers are built via CI/CD systems</li>
+<li>Located at <code>ghcr.io</code></li>
+<li>Does not appear to be searchable</li>
+</ul></li>
+</ul>
+</section>
+<section id="specialized-repos" class="level2">
+<h2 class="anchored" data-anchor-id="specialized-repos">Specialized Repos</h2>
+<ul>
+<li>Linuxserver.io
+<ul>
+<li>Services specifically designed for homelabbing</li>
+<li>Located at <code>lscr.io</code></li>
+<li>Searchable at <a href="https://www.linuxserver.io/our-images" class="uri">https://www.linuxserver.io/our-images</a></li>
+</ul></li>
+</ul>
+</section>
+</section>
+<section id="local-registries" class="level1">
+<h1>Local Registries</h1>
+<p>Most likely, this would also include running your own build system.</p>
+<ul>
+<li><a href="https://hub.docker.com/_/registry">Official Docker Registry</a></li>
+<li><a href="https://github.com/project-zot/zot">Zot</a></li>
+<li><a href="https://github.com/distribution/distribution">Distribution</a></li>
+<li><a href="https://goharbor.io/docs/2.12.0/administration/configure-proxy-cache/">Harbor</a></li>
+</ul>
+</section>
+<section id="build-systems" class="level1">
+<h1>Build Systems</h1>
+<ul>
+<li><a href="https://github.com/moby/buildkit">Buildkit</a></li>
+<li><a href="https://github.com/project-stacker/stacker">Stacker</a>
+<ul>
+<li>Recommended by <a href="https://zotregistry.dev/v2.1.2/articles/building-ci-cd-pipeline/?">Zot</a> to build a full CI/CD pipeline</li>
+</ul></li>
+</ul>
+
+
+</section>
+
+ ]]></description>
+  <category>blog</category>
+  <guid>./blog/docker-registry/</guid>
+  <pubDate>Sat, 22 Feb 2025 08:00:00 GMT</pubDate>
+</item>
 <item>
   <title>Logging solutions for CCDC</title>
   <link>./playground/ccdc-logs/</link>
@@ -72,6 +154,12 @@ Expand/Collapse testing
 <p>Well, there also seems to be a “default” cateogry, which informs me of apt upgrades but not much else.</p>
 <p>I attempted to install SysmonForLinux, but the logs that generates don’t seem to be forwarded by default. It seems like the OpenObserve agent catches journald and apt logs, but not actual syslogs.</p>
 </details>
+</section>
+<section id="signoz" class="level2">
+<h2 class="anchored" data-anchor-id="signoz">Signoz</h2>
+<p><a href="https://signoz.io/docs/">Signoz</a> is another FOSS central logging service.</p>
+<p>It can <a href="https://signoz.io/docs/userguide/collecting_syslogs/">collect syslogs</a></p>
+<p>It looks to have a much more usable search interface.</p>
 </section>
 <section id="loki" class="level2">
 <h2 class="anchored" data-anchor-id="loki">Loki</h2>
@@ -5244,6 +5332,11 @@ helm osh wait-for-pods openstack</code></pre>
   Warning  ReconcileFailed  76s   rook-ceph-cluster-controller  failed to reconcile CephCluster "rook-ceph/ceph". failed to reconcile cluster "ceph": failed to configure local ceph cluster: failed the ceph version check: failed to complete ceph version job: failed to run CmdReporter rook-ceph-detect-version successfully. failed waiting for results ConfigMap rook-ceph-detect-version. timed out waiting for results ConfigMap</code></pre>
 <p>So it looks like the rook ceph is not starting, meaning no mons/endpoints are started, leading to cascading failures in the rest of the system. I think the problem is that I don’t have a persistent volume that can offer block storage devices available, nor have I configured the ceph cluster to do this.</p>
 <p><a href="https://rook.io/docs/rook/v1.16/CRDs/Cluster/pvc-cluster/">Ceph with K8s PVs</a>. <a href="https://openebs.io/docs/user-guides/local-storage-user-guide/local-pv-lvm/advanced-operations/lvm-raw-block-volume">And thankfully, openebs has docs on provisioning a raw block storageclass</a>.</p>
+<p>No, it doesn’t seem to be that. Perhaps my issue is that I am attempting to create a ceph “cluster” on a single node. I found a <a href="https://www.rusinov.ie/en/posts/2020/setting-up-single-node-ceph-cluster-for-kubernetes/">relevant blogpost</a> (<a href="https://web.archive.org/web/20230201154957/https://www.rusinov.ie/en/posts/2020/setting-up-single-node-ceph-cluster-for-kubernetes/">archive</a>) about this.</p>
+<p>Here’s <a href="https://medium.com/@satheesh.mohandass/installing-rook-ceph-for-persistent-storage-on-single-node-openshift-c1102a8ced40">another blog post</a>. There is also an <a href="https://rook.io/docs/rook/latest-release/Getting-Started/example-configurations/#cluster-crd">offical test cluster</a>.</p>
+<p>I attempted to deploy the test cluster:</p>
+<div class="sourceCode" id="cb79" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb79-1">kubectl apply -f https://raw.githubusercontent.com/rook/rook/refs/heads/release-1.16/deploy/examples/cluster-test.yaml</span></code></pre></div>
+<p>And… nothing seems to happen. No pods being created. No deployments being done. Nothing.</p>
 </section>
 <section id="ssoconnections" class="level2">
 <h2 class="anchored" data-anchor-id="ssoconnections">SSO/connections</h2>
@@ -5292,6 +5385,7 @@ rook-ceph-operator   66s   False   Helm install failed for release openstack/roo
 <p><a href="https://artifacthub.io/packages/helm/openfga/openfga" class="uri">https://artifacthub.io/packages/helm/openfga/openfga</a> — Incus uses OpenFGA for authentication.</p>
 <p>Openstack: <a href="https://docs.openstack.org/openstack-helm/latest/install/openstack.html" class="uri">https://docs.openstack.org/openstack-helm/latest/install/openstack.html</a></p>
 <p>Automatic dependency updates: <a href="https://docs.renovatebot.com/modules/manager/flux/" class="uri">https://docs.renovatebot.com/modules/manager/flux/</a></p>
+<p><a href="https://github.com/substratusai/kubeai" class="uri">https://github.com/substratusai/kubeai</a> — Reallly easy deployment of LLM’s.</p>
 
 
 </section>
@@ -9223,108 +9317,6 @@ DO NOT CHANGE ANY PASSWORDS</code></pre>
   <category>blog</category>
   <guid>./blog/kde-6/</guid>
   <pubDate>Wed, 13 Mar 2024 07:00:00 GMT</pubDate>
-</item>
-<item>
-  <title>Experiments with Running python in the browser</title>
-  <link>./playground/interactive-python-tutorial/</link>
-  <description><![CDATA[ 
-<script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.46.0/min/vs/loader.js"></script>
-<script type="module" id="qpyodide-monaco-editor-init">
-
-  // Configure the Monaco Editor's loader
-  require.config({
-    paths: {
-      'vs': 'https://cdn.jsdelivr.net/npm/monaco-editor@0.46.0/min/vs'
-    }
-  });
-</script>
-
-
-
-
-<section id="original" class="level1">
-<h1>Original</h1>
-<p>I started on this on 2023-5-22, and paused it since nothing interesting came out of it.</p>
-<p>My goal is an in browser python editor I can embed into a blog. I want to create a sort of interactive python tutorial.</p>
-<p>Code is ran client side, so don’t try to crash any server or anything like that.</p>
-</section>
-<section id="recent-updates" class="level1">
-<h1>Recent updates</h1>
-<p>There was a new quarto extension, enabling you to embed pyodide python code blocks in documents: https://github.com/coatless-quarto/pyodide</p>
-<div id="qpyodide-insertion-location-1"></div>
-<noscript>Please enable JavaScript to experience the dynamic code cell content on this page.</noscript>
-<p>This works, but the blocks don’t show up properly. In addition to that, the input function doesn’t work.</p>
-<p>But still, if I want to do a simple python tutorial, this would be pretty doable. In addition to that, I could also do block posts about other interesting things in python.</p>
-</section>
-<section id="older-work-below" class="level1 page-columns page-full">
-<h1>Older work below</h1>
-<p>This might not render, since many of it is raw html elements.</p>
-<p>Lots of rot happened since I first played with this, and I disabled all of this stuff since it doesn’t load, and instead prevents the newer work from loading.</p>
-<div class="col fragment" data-fragment-index="2" style="height: min(30vw, 60vh); margin: min(1vw, 2vh)">
-                        <python-editor contenteditable="true" theme="dark" code="elements = [39,12,18,85,72,10,2,18]
-
-print('Unsorted list is\n', elements)
-
-# Sort the list (with bubblesort)
-for n in range(len(elements)-1, 0, -1):
-  for i in range(n):
-    if elements[i] > elements[i+1]:
-      elements[i], elements[i+1] = elements[i+1], elements[i]
-
-print('\nSorted list is\n', elements)">
-                    </python-editor></div>
-<p>Awww, the input function doesn’t seem to work.</p>
-<p>Shift + enter/return to evaluate code of the below.</p>
-<py-repl></py-repl>
-<p>This kinda works, but also has issues. Input fucntion still doesn’t work.</p>
-<p>Shift + enter/return to evaluate below. Or double click.</p>
-<pyprez-editor>
-   import numpy as np
-   np.random.rand(5)
-</pyprez-editor>
-<p>This is cool, but the code isn’t editable. It just resets itself for some reason.</p>
-<p>Maybe this will work?</p>
-<div class="column-body-outset">
-<div id="livecodes-p6y2nroaetk" data-height="500">
-  <span>Open the project <a href="https://livecodes.io/?x=id/sigh8eg62zv" target="_blank">Untitled Project</a> in <a href="https://livecodes.io/" target="_blank">LiveCodes</a></span>
-</div>
-
-<script src="https://livecodes.io/sdk/livecodes.umd.js"></script>
-<script>
-  const options = {
-    appUrl: 'https://dev.livecodes.io/',
-    params: {
-      autoupdate: false,
-      console: "full"
-      },
-    "config": {
-      "tools": {
-        "status": "full"
-      }
-    },
-    "import": "id/sigh8eg62zv",
-    "loading": "eager"
-  };
-  livecodes.createPlayground("#livecodes-p6y2nroaetk", options);
-</script>
-<div class="livecodes" style="height: 300px; border: 1px solid black; border-radius: 5px;" data-options="{appUrl: &quot;https://dev.livecodes.io/&quot;,params: {autoupdate: false, console: &quot;full&quot;},&quot;config&quot;:{&quot;activeEditor&quot;:&quot;script&quot;,&quot;tools&quot;:{&quot;status&quot;:&quot;full&quot;}},&quot;loading&quot;:&quot;eager&quot;}">
-<pre data-lang="html"></pre>
-<pre data-lang="css"></pre>
-<pre data-lang="pyodide">yeet = input("test")
-
-print(yeet)</pre>
-</div>
-<script defer="" src="https://livecodes.io/sdk/livecodes.umd.js" data-prefill=""></script>
-
-</div>
-
-
-</section>
-
- ]]></description>
-  <category>playground</category>
-  <guid>./playground/interactive-python-tutorial/</guid>
-  <pubDate>Mon, 11 Mar 2024 07:00:00 GMT</pubDate>
 </item>
 </channel>
 </rss>

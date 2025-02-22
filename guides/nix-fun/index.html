@@ -173,6 +173,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#connecting-your-github-account-to-git-from-the-terminal" id="toc-connecting-your-github-account-to-git-from-the-terminal" class="nav-link" data-scroll-target="#connecting-your-github-account-to-git-from-the-terminal">Connecting your github account to git from the terminal</a></li>
   <li><a href="#deleting-sensitive-detail-or-large-binary-files-from-a-git-repo" id="toc-deleting-sensitive-detail-or-large-binary-files-from-a-git-repo" class="nav-link" data-scroll-target="#deleting-sensitive-detail-or-large-binary-files-from-a-git-repo">Deleting sensitive detail, or large binary files from a git repo</a></li>
   <li><a href="#renaming-flash-drives" id="toc-renaming-flash-drives" class="nav-link" data-scroll-target="#renaming-flash-drives">Renaming flash drives</a></li>
+  <li><a href="#restic-backups" id="toc-restic-backups" class="nav-link" data-scroll-target="#restic-backups">Restic Backups</a></li>
   <li><a href="#installing-packages" id="toc-installing-packages" class="nav-link" data-scroll-target="#installing-packages">Installing packages</a></li>
   </ul></li>
   </ul>
@@ -291,6 +292,15 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>Then:</p>
 <p><code>sudo extfatlabel &lt;device&gt; &lt;new label&gt;</code></p>
 <p>You can see the device with the lsblk tool, which lists all attached drives.</p>
+</section>
+<section id="restic-backups" class="level2">
+<h2 class="anchored" data-anchor-id="restic-backups">Restic Backups</h2>
+<p>I use Nix on a live usb becasue of how easily it can get utilities I need, in combination with usb tethering.</p>
+<p><code>nix-shell -p restic</code></p>
+<p><code>restic init --repo /srv/restic-repo</code> This creates a “repository” to where things will be backed up.</p>
+<p><code>restic -r /srv/restic-repo --verbose backup ~/work</code> this backs up the “work” directory to the repo</p>
+<p><code>restic -r /srv/restic-repo restore latest:path/in/repo --target ~/work2</code> this restores a the latest snapshot to the work2 directory</p>
+<p>Well after some testing, this is horrifically broken. Permissions don’t work. File owners are wrong. I am frustrated with how difficult it is to back up my mone directory.</p>
 </section>
 <section id="installing-packages" class="level2">
 <h2 class="anchored" data-anchor-id="installing-packages">Installing packages</h2>

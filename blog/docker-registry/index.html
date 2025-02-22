@@ -6,9 +6,10 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
-<meta name="dcterms.date" content="2025-02-18">
+<meta name="dcterms.date" content="2025-02-22">
+<meta name="description" content="I love this thing">
 
-<title>Logging solutions for CCDC – Jeffrey Fonseca</title>
+<title>Alternatives to Dockerhub – Jeffrey Fonseca</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -20,40 +21,6 @@ ul.task-list li input[type="checkbox"] {
   width: 0.8em;
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
-}
-/* CSS for syntax highlighting */
-pre > code.sourceCode { white-space: pre; position: relative; }
-pre > code.sourceCode > span { line-height: 1.25; }
-pre > code.sourceCode > span:empty { height: 1.2em; }
-.sourceCode { overflow: visible; }
-code.sourceCode > span { color: inherit; text-decoration: inherit; }
-div.sourceCode { margin: 1em 0; }
-pre.sourceCode { margin: 0; }
-@media screen {
-div.sourceCode { overflow: auto; }
-}
-@media print {
-pre > code.sourceCode { white-space: pre-wrap; }
-pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
-}
-pre.numberSource code
-  { counter-reset: source-line 0; }
-pre.numberSource code > span
-  { position: relative; left: -4em; counter-increment: source-line; }
-pre.numberSource code > span > a:first-child::before
-  { content: counter(source-line);
-    position: relative; left: -1em; text-align: right; vertical-align: baseline;
-    border: none; display: inline-block;
-    -webkit-touch-callout: none; -webkit-user-select: none;
-    -khtml-user-select: none; -moz-user-select: none;
-    -ms-user-select: none; user-select: none;
-    padding: 0 4px; width: 4em;
-  }
-pre.numberSource { margin-left: 3em;  padding-left: 4px; }
-div.sourceCode
-  {   }
-@media screen {
-pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
 }
 </style>
 
@@ -74,8 +41,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-8ea72dc5fed832574809a9c94082fbbb.css" rel="prefetch" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
 <script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../site_libs/bootstrap/bootstrap-501ae5d2bfb14740b56a5ecf9e3f2c2f.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../../site_libs/bootstrap/bootstrap-dark-575000a5b946a8a66cc25bc2335809c8.min.css" rel="prefetch" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-04dd6a5ca28aac96903e51a8fbffbcaa.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-052a59ac8b6210046f08f1c5d142d40b.min.css" rel="prefetch" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -161,40 +128,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#intro" id="toc-intro" class="nav-link active" data-scroll-target="#intro">Intro</a></li>
-  <li><a href="#promising-options" id="toc-promising-options" class="nav-link" data-scroll-target="#promising-options">Promising Options</a></li>
-  <li><a href="#central-logging-server" id="toc-central-logging-server" class="nav-link" data-scroll-target="#central-logging-server">Central Logging Server</a>
+  <li><a href="#other-public-registries" id="toc-other-public-registries" class="nav-link active" data-scroll-target="#other-public-registries">Other Public Registries</a>
   <ul class="collapse">
-  <li><a href="#zinc" id="toc-zinc" class="nav-link" data-scroll-target="#zinc">Zinc</a></li>
-  <li><a href="#openobserve" id="toc-openobserve" class="nav-link" data-scroll-target="#openobserve">OpenObserve</a></li>
-  <li><a href="#signoz" id="toc-signoz" class="nav-link" data-scroll-target="#signoz">Signoz</a></li>
-  <li><a href="#loki" id="toc-loki" class="nav-link" data-scroll-target="#loki">Loki</a></li>
+  <li><a href="#general-repos" id="toc-general-repos" class="nav-link" data-scroll-target="#general-repos">General Repos</a></li>
+  <li><a href="#specialized-repos" id="toc-specialized-repos" class="nav-link" data-scroll-target="#specialized-repos">Specialized Repos</a></li>
   </ul></li>
-  <li><a href="#windows" id="toc-windows" class="nav-link" data-scroll-target="#windows">Windows</a>
-  <ul class="collapse">
-  <li><a href="#collection" id="toc-collection" class="nav-link" data-scroll-target="#collection">Collection</a>
-  <ul class="collapse">
-  <li><a href="#sysmon" id="toc-sysmon" class="nav-link" data-scroll-target="#sysmon">Sysmon</a></li>
-  </ul></li>
-  <li><a href="#forwarding" id="toc-forwarding" class="nav-link" data-scroll-target="#forwarding">Forwarding</a>
-  <ul class="collapse">
-  <li><a href="#fluentd" id="toc-fluentd" class="nav-link" data-scroll-target="#fluentd">Fluentd</a></li>
-  <li><a href="#windows-syslog" id="toc-windows-syslog" class="nav-link" data-scroll-target="#windows-syslog">Windows Syslog</a></li>
-  </ul></li>
-  </ul></li>
-  <li><a href="#linux" id="toc-linux" class="nav-link" data-scroll-target="#linux">Linux</a>
-  <ul class="collapse">
-  <li><a href="#collection-1" id="toc-collection-1" class="nav-link" data-scroll-target="#collection-1">Collection</a>
-  <ul class="collapse">
-  <li><a href="#falco" id="toc-falco" class="nav-link" data-scroll-target="#falco">Falco</a></li>
-  <li><a href="#sysmonforlinux" id="toc-sysmonforlinux" class="nav-link" data-scroll-target="#sysmonforlinux">SysmonForLinux</a></li>
-  </ul></li>
-  <li><a href="#forwarding-1" id="toc-forwarding-1" class="nav-link" data-scroll-target="#forwarding-1">Forwarding</a>
-  <ul class="collapse">
-  <li><a href="#fluentd-1" id="toc-fluentd-1" class="nav-link" data-scroll-target="#fluentd-1">Fluentd</a></li>
-  <li><a href="#rsyslog" id="toc-rsyslog" class="nav-link" data-scroll-target="#rsyslog">Rsyslog</a></li>
-  </ul></li>
-  </ul></li>
+  <li><a href="#local-registries" id="toc-local-registries" class="nav-link" data-scroll-target="#local-registries">Local Registries</a></li>
+  <li><a href="#build-systems" id="toc-build-systems" class="nav-link" data-scroll-target="#build-systems">Build Systems</a></li>
   </ul>
 </nav>
     </div>
@@ -203,12 +143,17 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">Logging solutions for CCDC</h1>
+<h1 class="title">Alternatives to Dockerhub</h1>
   <div class="quarto-categories">
-    <div class="quarto-category">playgrounds</div>
+    <div class="quarto-category">blog</div>
   </div>
   </div>
 
+<div>
+  <div class="description">
+    I love this thing
+  </div>
+</div>
 
 
 <div class="quarto-title-meta">
@@ -217,7 +162,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <div>
     <div class="quarto-title-meta-heading">Published</div>
     <div class="quarto-title-meta-contents">
-      <p class="date">February 18, 2025</p>
+      <p class="date">February 22, 2025</p>
     </div>
   </div>
   
@@ -229,162 +174,73 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </header>
 
 
-<section id="intro" class="level1">
-<h1>Intro</h1>
-<p>At Cal State Northridge, I am part of a team that participates in the <a href="https://wrccdc.org/">wrccdc</a> cybersecurity competiion. It’s a blue team competition, that involves securing machines, but also writing “incident responses” when machines are hacked.</p>
-<p>In order to write a good incident response, you need, at minimum, the timestamp, what was done, the user, and the ip address. If you do write a good incident response, then you can get up to half of the points you lost from getting hacked back.</p>
-<p>In order to collect and save this information, we need some kind of logging solution, that we can search and extract data from.</p>
-</section>
-<section id="promising-options" class="level1">
-<h1>Promising Options</h1>
-<p>https://datalust.co/pricing https://github.com/librenms/docker#syslog-ng-container https://corelight.com/ https://en.wikipedia.org/wiki/Zeek https://malcolm.fyi/ https://docs.zeek.org/en/master/about.html#what-is-zeek https://github.com/aquasecurity/tracee https://learn.microsoft.com/en-us/sysinternals/downloads/procmon</p>
-</section>
-<section id="central-logging-server" class="level1">
-<h1>Central Logging Server</h1>
-<p>Firstly, we need some kind of central logging server. I really like options like <a href="https://graylog.org/">graylog</a>, or even better is <a href="https://wazuh.com">wazuh</a>, which is a full “Endpoint Defense System” (EDR), which collects data with a security focus and lets you search it.</p>
-<p>However, both of those options have a big downside, which is that the underlying software they use, Elasticsearch, Logtash, and Kibana (ELK stack) are very resource intensive, and somewhat unsuitable for every competition machine.</p>
-<section id="zinc" class="level2">
-<h2 class="anchored" data-anchor-id="zinc">Zinc</h2>
-<p><a href="https://github.com/zincsearch/zincsearch">Zinc</a> is the most promising option. It is a super lightweight version of Elasticsearch and Kibana, and boasts a compatible API (although I think we won’t need that right now).</p>
-<p>The <a href="https://zincsearch-docs.zinc.dev/">documentation</a> is excellent, and deployment is easy:</p>
-<p>From the <a href="https://zincsearch-docs.zinc.dev/quickstart/">quickstart</a></p>
-<pre><code>docker run -v /full/path/of/data:/data -e ZINC_DATA_PATH="/data" -p 4080:4080 \
-    -e ZINC_FIRST_ADMIN_USER=admin -e ZINC_FIRST_ADMIN_PASSWORD=Complexpass#123 \
-    --name zincsearch public.ecr.aws/zinclabs/zincsearch:latest</code></pre>
-<p>Another important thing is <a href="https://zincsearch-docs.zinc.dev/ingestion/">log ingestion</a>. Although I don’t recognize most of the options there, I do recognize <a href="https://www.syslog-ng.com/community/b/blog/posts/another-use-for-the-syslog-ng-elasticsearch-http-destination-zinc">syslog</a>, which is a general protocol for forwarding logs around. However, this setup seems to require syslog-ng 2.32 or newer, which is <a href="https://repology.org/project/syslog-ng/versions">not available on all operating systems</a>.</p>
-<p>Perhaps this software could be used in combination with fluentd, which can intake <a href="https://docs.fluentd.org/input/syslog">syslog</a> and output it to an <a href="https://docs.fluentd.org/output/elasticsearch">elasticsearch</a> source.</p>
+<p>Recently, <a href="https://docs.docker.com/docker-hub/usage/">Docker Hub</a>, is setting up rate limit. Unauthenticated users will be limited to 10 pulls per hour, and authenticated users will be limited to 100 pulls per hour.</p>
+<p>This could cause issues with setups like CGNAT, and is a very arbitrary image</p>
+<p>So, I looked for some alternatives.</p>
+<section id="other-public-registries" class="level1">
+<h1>Other Public Registries</h1>
 <details>
 <summary>
-Expand/Collapse Testing
+Why not a self hosted registry and building our own containers?
 </summary>
-<p>I spun up a podman container with:</p>
-<div class="sourceCode" id="cb2"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>podman run -it --rm -p 4080:4080 -e ZINC_FIRST_ADMIN_USER=admin -e ZINC_FIRST_ADMIN_PASSWORD=password public.ecr.aws/zinclabs/zincsearch:latest</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>And it was up instantly:</p>
-<p><img src="images/zincsearch.jpg" class="img-fluid"></p>
+<p>Most people don’t care about these, instead opting for local builds and registries, but for the <a href="https://wrccdc.org/">CCDC</a> competition, there will be a firewall with an allowlist. It’s easier to ask for a container registry to be unblocked, because container builds will get from so many different websites. In addition to that, we are not allowed to use anything that requires a login, and I do not know if that applies to Docker Hub.</p>
 </details>
+<section id="general-repos" class="level2">
+<h2 class="anchored" data-anchor-id="general-repos">General Repos</h2>
+<ul>
+<li>Google’s public registry and mirror of dockerhub
+<ul>
+<li>Located at <code>mirror.gcr.io</code></li>
+<li><a href="https://cloud.google.com/artifact-registry/docs">Docs online</a></li>
+<li>Because it’s a mirror of Docker Hub, images available here can be searched there</li>
+</ul></li>
+<li>AWS ECR public registry
+<ul>
+<li>Has docker official containers and more, but is not a mirror of dockerhub</li>
+<li>Located at <code>public.ecr.aws</code></li>
+<li>Can be searched at <a href="https://gallery.ecr.aws/" class="uri">https://gallery.ecr.aws/</a></li>
+</ul></li>
+<li>Github container registry
+<ul>
+<li>Often where containers are built via CI/CD systems</li>
+<li>Located at <code>ghcr.io</code></li>
+<li>Does not appear to be searchable</li>
+</ul></li>
+</ul>
 </section>
-<section id="openobserve" class="level2">
-<h2 class="anchored" data-anchor-id="openobserve">OpenObserve</h2>
-<p><a href="https://openobserve.ai/">Openobsever</a> is similar to Zinc, a lightweight alterntive to an Elasticsearch. It also seems to be able to <a href="https://openobserve.ai/docs/ingestion/logs/syslog/">ingest syslogs directly</a>.</p>
-<p>They also seem to have a <a href="https://openobserve.ai/docs/quickstart/#__tabbed_1_3">docker quickstart</a>.</p>
-<details>
-<summary>
-Expand/Collapse testing
-</summary>
-<div class="sourceCode" id="cb3"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>podman run -e ZO_DATA_DIR="/data" -p 5080:5080 -e ZO_ROOT_USER_EMAIL="root@example.com" -e ZO_ROOT_USER_PASSWORD="password" docker.io/openobserve/openobserve:latest</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>Similar to Zinc (I think they’re by the same people), it comes up very quickly.</p>
-<p><img src="images/openobserver.jpg" class="img-fluid"></p>
-<p>It also seems to come with script which I can run on Linux or Windows machines, that will install an agent to ingest logs.</p>
-<p>I spun up a debian vagrant machine as a test, so I can run the command.</p>
-<div class="sourceCode" id="cb4"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>curl -O https://raw.githubusercontent.com/openobserve/agents/main/linux/install.sh &amp;&amp; chmod +x install.sh &amp;&amp; sudo ./install.sh http://192.168.121.1:5080/api/default/ cm9vdEBleGFtcGxlLmNvbTpzWlAyMXF1VFpCQmFpa3hp</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>Although I love the ease of install, the search interface is unintuitive, and it doesn’t seem to log anything other than this one bit about the logging process itself</p>
-<p><img src="images/openobserverlogs.jpg" class="img-fluid"></p>
-<p>Well, there also seems to be a “default” cateogry, which informs me of apt upgrades but not much else.</p>
-<p>I attempted to install SysmonForLinux, but the logs that generates don’t seem to be forwarded by default. It seems like the OpenObserve agent catches journald and apt logs, but not actual syslogs.</p>
-</details>
-</section>
-<section id="signoz" class="level2">
-<h2 class="anchored" data-anchor-id="signoz">Signoz</h2>
-<p><a href="https://signoz.io/docs/">Signoz</a> is another FOSS central logging service.</p>
-<p>It can <a href="https://signoz.io/docs/userguide/collecting_syslogs/">collect syslogs</a></p>
-<p>It looks to have a much more usable search interface.</p>
-</section>
-<section id="loki" class="level2">
-<h2 class="anchored" data-anchor-id="loki">Loki</h2>
-<p><a href="https://grafana.com/oss/loki/">Loki</a>, by grafana, is a another log aggregator. But it seems to be a bit bigger and more complex than what we want.</p>
-</section>
-</section>
-<section id="windows" class="level1">
-<h1>Windows</h1>
-<section id="collection" class="level2">
-<h2 class="anchored" data-anchor-id="collection">Collection</h2>
-<section id="sysmon" class="level3">
-<h3 class="anchored" data-anchor-id="sysmon">Sysmon</h3>
-<p><a href="https://learn.microsoft.com/en-us/sysinternals/downloads/sysmon">Sysmon</a> is a popular solution for process monitoring on Windows. It is very useful, and very powerful as is, but I would like some kind of way to forward logs to a Security Information and Event Management (SIEM) solution in the future.</p>
+<section id="specialized-repos" class="level2">
+<h2 class="anchored" data-anchor-id="specialized-repos">Specialized Repos</h2>
+<ul>
+<li>Linuxserver.io
+<ul>
+<li>Services specifically designed for homelabbing</li>
+<li>Located at <code>lscr.io</code></li>
+<li>Searchable at <a href="https://www.linuxserver.io/our-images" class="uri">https://www.linuxserver.io/our-images</a></li>
+</ul></li>
+</ul>
 </section>
 </section>
-<section id="forwarding" class="level2">
-<h2 class="anchored" data-anchor-id="forwarding">Forwarding</h2>
-<section id="fluentd" class="level3">
-<h3 class="anchored" data-anchor-id="fluentd">Fluentd</h3>
-<p><a href="https://docs.fluentd.org/input/windows_eventlog">Fluentd</a> is a software for collecting and forwarding logs, and it seems to be able to collect the Windows event logs. However, I don’t know how useful that kind of log is, and I don’t know if Sysmon counts as that type of log.</p>
+<section id="local-registries" class="level1">
+<h1>Local Registries</h1>
+<p>Most likely, this would also include running your own build system.</p>
+<ul>
+<li><a href="https://hub.docker.com/_/registry">Official Docker Registry</a></li>
+<li><a href="https://github.com/project-zot/zot">Zot</a></li>
+<li><a href="https://github.com/distribution/distribution">Distribution</a></li>
+<li><a href="https://goharbor.io/docs/2.12.0/administration/configure-proxy-cache/">Harbor</a></li>
+</ul>
 </section>
-<section id="windows-syslog" class="level3">
-<h3 class="anchored" data-anchor-id="windows-syslog">Windows Syslog</h3>
-<p><a href="https://www.winsyslog.com">winsyslog</a>, by the developers of rsyslog.</p>
-</section>
-</section>
-</section>
-<section id="linux" class="level1">
-<h1>Linux</h1>
-<section id="collection-1" class="level2">
-<h2 class="anchored" data-anchor-id="collection-1">Collection</h2>
-<p>With Linux, there are two ways to do log collection that are superior: Hooking into the kernel and listening to syscalls/file interactions, or epbf which can do something similar. Other, polling based solutions for logging, may not work because they may be too slow and miss events, and they may not offer the performance we need.</p>
-<section id="falco" class="level3">
-<h3 class="anchored" data-anchor-id="falco">Falco</h3>
-<p><a href="https://falco.org/">Falco</a> is a security solution that works by collecting logs and forwarding them</p>
-<p>What I really like about Falco, is the fact that it can be <a href="https://falco.org/docs/setup/container/">deployed as a container</a>, yet it still hooks into the host system and collects logs.</p>
-<div class="sourceCode" id="cb5"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>docker pull falcosecurity/falco:latest</span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>docker run --rm -it \</span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>           --privileged \</span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>           -v /var/run/docker.sock:/host/var/run/docker.sock \</span>
-<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>           -v /proc:/host/proc:ro \</span>
-<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>           -v /etc:/host/etc:ro \</span>
-<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>           falcosecurity/falco:latest</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>In addition to that, it can forward it’s collected logs to <a href="https://falco.org/docs/concepts/outputs/forwarding/">elasticsearch, zincsearch, or syslog</a>.</p>
-</section>
-<section id="sysmonforlinux" class="level3">
-<h3 class="anchored" data-anchor-id="sysmonforlinux">SysmonForLinux</h3>
-<p><a href="https://github.com/microsoft/SysmonForLinux">SysmonForLinux</a> is a (now) Microsoft project that brings sysmon to Linux. It also seems to output to syslog by default.</p>
-<details>
-<summary>
-Expand/Collapse Testing
-</summary>
-<p>Installing it was simple, I followed the <a href="https://github.com/microsoft/SysmonForLinux/blob/main/INSTALL.md">install instructions for Debian 12</a>.</p>
-<p>Then, I started the service.</p>
-<p>To view the syslogs, I can use:</p>
-<div class="sourceCode" id="cb6"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>cat /var/log/syslog | /opt/sysmon/sysmonLogView | less</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>Although sadly, it does not seem to inform me of ssh processes, it does give quite a bit of information, mainly about processes being started and stopped. Here is a sample:</p>
-<div class="sourceCode" id="cb7"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>Event SYSMONEVENT_CREATE_PROCESS</span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>        RuleName: -</span>
-<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>        UtcTime: 2025-02-18 19:59:41.656</span>
-<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>        ProcessGuid: {5304214a-e6ad-67b4-a5e6-724d9e550000}</span>
-<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>        ProcessId: 2701</span>
-<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>        Image: /opt/sysmon/sysmonLogView</span>
-<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>        FileVersion: -</span>
-<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>        Description: -</span>
-<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>        Product: -</span>
-<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>        Company: -</span>
-<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>        OriginalFileName: -</span>
-<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>        CommandLine: /opt/sysmon/sysmonLogView</span>
-<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>        CurrentDirectory: /var/log</span>
-<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>        User: root</span>
-<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a>        LogonGuid: {5304214a-0000-0000-0000-000001000000}</span>
-<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a>        LogonId: 0</span>
-<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a>        TerminalSessionId: 5</span>
-<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a>        IntegrityLevel: no level</span>
-<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a>        Hashes: SHA256=ac099d5fd9305b8c68f247415aebc56d35af953ede6782856b8e1c206efaad87</span>
-<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a>        ParentProcessGuid: {00000000-0000-0000-0000-000000000000}</span>
-<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a>        ParentProcessId: 1713</span>
-<span id="cb7-22"><a href="#cb7-22" aria-hidden="true" tabindex="-1"></a>        ParentImage: -</span>
-<span id="cb7-23"><a href="#cb7-23" aria-hidden="true" tabindex="-1"></a>        ParentCommandLine: -</span>
-<span id="cb7-24"><a href="#cb7-24" aria-hidden="true" tabindex="-1"></a>        ParentUser: -</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
-</section>
-</section>
-<section id="forwarding-1" class="level2">
-<h2 class="anchored" data-anchor-id="forwarding-1">Forwarding</h2>
-<section id="fluentd-1" class="level3">
-<h3 class="anchored" data-anchor-id="fluentd-1">Fluentd</h3>
-<p><a href="https://docs.fluentd.org/input/syslog">Fluentd</a> seems to support syslog collection.</p>
-</section>
-<section id="rsyslog" class="level3">
-<h3 class="anchored" data-anchor-id="rsyslog">Rsyslog</h3>
-<p><a href="https://en.wikipedia.org/wiki/Rsyslog">Rsyslog</a> uses the syslog protocol to forward logs around. However, not all software supports ingesting syslogs.</p>
+<section id="build-systems" class="level1">
+<h1>Build Systems</h1>
+<ul>
+<li><a href="https://github.com/moby/buildkit">Buildkit</a></li>
+<li><a href="https://github.com/project-stacker/stacker">Stacker</a>
+<ul>
+<li>Recommended by <a href="https://zotregistry.dev/v2.1.2/articles/building-ci-cd-pipeline/?">Zot</a> to build a full CI/CD pipeline</li>
+</ul></li>
+</ul>
 
 
-</section>
-</section>
 </section>
 
 </main> <!-- /main -->

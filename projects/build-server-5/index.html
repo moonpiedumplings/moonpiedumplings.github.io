@@ -1769,6 +1769,11 @@ helm osh wait-for-pods openstack</code></pre>
   Warning  ReconcileFailed  76s   rook-ceph-cluster-controller  failed to reconcile CephCluster "rook-ceph/ceph". failed to reconcile cluster "ceph": failed to configure local ceph cluster: failed the ceph version check: failed to complete ceph version job: failed to run CmdReporter rook-ceph-detect-version successfully. failed waiting for results ConfigMap rook-ceph-detect-version. timed out waiting for results ConfigMap</code></pre>
 <p>So it looks like the rook ceph is not starting, meaning no mons/endpoints are started, leading to cascading failures in the rest of the system. I think the problem is that I don’t have a persistent volume that can offer block storage devices available, nor have I configured the ceph cluster to do this.</p>
 <p><a href="https://rook.io/docs/rook/v1.16/CRDs/Cluster/pvc-cluster/">Ceph with K8s PVs</a>. <a href="https://openebs.io/docs/user-guides/local-storage-user-guide/local-pv-lvm/advanced-operations/lvm-raw-block-volume">And thankfully, openebs has docs on provisioning a raw block storageclass</a>.</p>
+<p>No, it doesn’t seem to be that. Perhaps my issue is that I am attempting to create a ceph “cluster” on a single node. I found a <a href="https://www.rusinov.ie/en/posts/2020/setting-up-single-node-ceph-cluster-for-kubernetes/">relevant blogpost</a> (<a href="https://web.archive.org/web/20230201154957/https://www.rusinov.ie/en/posts/2020/setting-up-single-node-ceph-cluster-for-kubernetes/">archive</a>) about this.</p>
+<p>Here’s <a href="https://medium.com/@satheesh.mohandass/installing-rook-ceph-for-persistent-storage-on-single-node-openshift-c1102a8ced40">another blog post</a>. There is also an <a href="https://rook.io/docs/rook/latest-release/Getting-Started/example-configurations/#cluster-crd">offical test cluster</a>.</p>
+<p>I attempted to deploy the test cluster:</p>
+<div class="sourceCode" id="cb79"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb79-1"><a href="#cb79-1" aria-hidden="true" tabindex="-1"></a>kubectl apply -f https://raw.githubusercontent.com/rook/rook/refs/heads/release-1.16/deploy/examples/cluster-test.yaml</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>And… nothing seems to happen. No pods being created. No deployments being done. Nothing.</p>
 </section>
 <section id="ssoconnections" class="level2">
 <h2 class="anchored" data-anchor-id="ssoconnections">SSO/connections</h2>
@@ -1817,6 +1822,7 @@ rook-ceph-operator   66s   False   Helm install failed for release openstack/roo
 <p><a href="https://artifacthub.io/packages/helm/openfga/openfga" class="uri">https://artifacthub.io/packages/helm/openfga/openfga</a> — Incus uses OpenFGA for authentication.</p>
 <p>Openstack: <a href="https://docs.openstack.org/openstack-helm/latest/install/openstack.html" class="uri">https://docs.openstack.org/openstack-helm/latest/install/openstack.html</a></p>
 <p>Automatic dependency updates: <a href="https://docs.renovatebot.com/modules/manager/flux/" class="uri">https://docs.renovatebot.com/modules/manager/flux/</a></p>
+<p><a href="https://github.com/substratusai/kubeai" class="uri">https://github.com/substratusai/kubeai</a> — Reallly easy deployment of LLM’s.</p>
 
 
 </section>
