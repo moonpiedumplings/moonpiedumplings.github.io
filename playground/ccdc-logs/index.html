@@ -271,16 +271,20 @@ Expand/Collapse Testing
 <summary>
 Expand/Collapse testing
 </summary>
-<div class="sourceCode" id="cb3"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>podman run -e ZO_DATA_DIR="/data" -p 5080:5080 -e ZO_ROOT_USER_EMAIL="root@example.com" -e ZO_ROOT_USER_PASSWORD="password" docker.io/openobserve/openobserve:latest</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb3"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>podman run -e ZO_DATA_DIR="/data" --network=host -e ZO_ROOT_USER_EMAIL="root@example.com" -e ZO_ROOT_USER_PASSWORD="password" docker.io/openobserve/openobserve:latest</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Similar to Zinc (I think they’re by the same people), it comes up very quickly.</p>
 <p><img src="images/openobserver.jpg" class="img-fluid"></p>
 <p>It also seems to come with script which I can run on Linux or Windows machines, that will install an agent to ingest logs.</p>
 <p>I spun up a debian vagrant machine as a test, so I can run the command.</p>
 <div class="sourceCode" id="cb4"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>curl -O https://raw.githubusercontent.com/openobserve/agents/main/linux/install.sh &amp;&amp; chmod +x install.sh &amp;&amp; sudo ./install.sh http://192.168.121.1:5080/api/default/ cm9vdEBleGFtcGxlLmNvbTpzWlAyMXF1VFpCQmFpa3hp</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>Although I love the ease of install, the search interface is unintuitive, and it doesn’t seem to log anything other than this one bit about the logging process itself</p>
+<p>Although I love the ease of install, the search interface is unintuitive, and it doesn’t seem to log anything other than this one bit about the logging process itself.</p>
 <p><img src="images/openobserverlogs.jpg" class="img-fluid"></p>
 <p>Well, there also seems to be a “default” cateogry, which informs me of apt upgrades but not much else.</p>
 <p>I attempted to install SysmonForLinux, but the logs that generates don’t seem to be forwarded by default. It seems like the OpenObserve agent catches journald and apt logs, but not actual syslogs.</p>
+<p>I can forward syslogs though, <a href="https://openobserve.ai/docs/ingestion/logs/syslog/">by having openobserve act as a syslog server</a></p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>apt install rsyslog</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p><a href="https://wiki.archlinux.org/title/Rsyslog#journald's_syslog-forward_feature">Forward journald messages to syslog</a>, and then I could <a href="https://www.rsyslog.com/sending-messages-to-a-remote-syslog-server/">forward syslog messages to a remote server using rsyslog</a>.</p>
+<p>And for a brief period, logs were working, but then they deleted themselves and I can no longer search for them. The issue seems to be somehow related to SysmonForLinux, because after disabling that, it works.</p>
 </details>
 </section>
 <section id="signoz" class="level2">
@@ -324,13 +328,13 @@ Expand/Collapse testing
 <h3 class="anchored" data-anchor-id="falco">Falco</h3>
 <p><a href="https://falco.org/">Falco</a> is a security solution that works by collecting logs and forwarding them</p>
 <p>What I really like about Falco, is the fact that it can be <a href="https://falco.org/docs/setup/container/">deployed as a container</a>, yet it still hooks into the host system and collects logs.</p>
-<div class="sourceCode" id="cb5"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>docker pull falcosecurity/falco:latest</span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>docker run --rm -it \</span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>           --privileged \</span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>           -v /var/run/docker.sock:/host/var/run/docker.sock \</span>
-<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>           -v /proc:/host/proc:ro \</span>
-<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>           -v /etc:/host/etc:ro \</span>
-<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>           falcosecurity/falco:latest</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb6"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>docker pull falcosecurity/falco:latest</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>docker run --rm -it \</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>           --privileged \</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>           -v /var/run/docker.sock:/host/var/run/docker.sock \</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>           -v /proc:/host/proc:ro \</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>           -v /etc:/host/etc:ro \</span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>           falcosecurity/falco:latest</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>In addition to that, it can forward it’s collected logs to <a href="https://falco.org/docs/concepts/outputs/forwarding/">elasticsearch, zincsearch, or syslog</a>.</p>
 </section>
 <section id="sysmonforlinux" class="level3">
@@ -343,32 +347,32 @@ Expand/Collapse Testing
 <p>Installing it was simple, I followed the <a href="https://github.com/microsoft/SysmonForLinux/blob/main/INSTALL.md">install instructions for Debian 12</a>.</p>
 <p>Then, I started the service.</p>
 <p>To view the syslogs, I can use:</p>
-<div class="sourceCode" id="cb6"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>cat /var/log/syslog | /opt/sysmon/sysmonLogView | less</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb7"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>cat /var/log/syslog | /opt/sysmon/sysmonLogView | less</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Although sadly, it does not seem to inform me of ssh processes, it does give quite a bit of information, mainly about processes being started and stopped. Here is a sample:</p>
-<div class="sourceCode" id="cb7"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>Event SYSMONEVENT_CREATE_PROCESS</span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>        RuleName: -</span>
-<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>        UtcTime: 2025-02-18 19:59:41.656</span>
-<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>        ProcessGuid: {5304214a-e6ad-67b4-a5e6-724d9e550000}</span>
-<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>        ProcessId: 2701</span>
-<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>        Image: /opt/sysmon/sysmonLogView</span>
-<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>        FileVersion: -</span>
-<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>        Description: -</span>
-<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>        Product: -</span>
-<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>        Company: -</span>
-<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>        OriginalFileName: -</span>
-<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>        CommandLine: /opt/sysmon/sysmonLogView</span>
-<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>        CurrentDirectory: /var/log</span>
-<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>        User: root</span>
-<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a>        LogonGuid: {5304214a-0000-0000-0000-000001000000}</span>
-<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a>        LogonId: 0</span>
-<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a>        TerminalSessionId: 5</span>
-<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a>        IntegrityLevel: no level</span>
-<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a>        Hashes: SHA256=ac099d5fd9305b8c68f247415aebc56d35af953ede6782856b8e1c206efaad87</span>
-<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a>        ParentProcessGuid: {00000000-0000-0000-0000-000000000000}</span>
-<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a>        ParentProcessId: 1713</span>
-<span id="cb7-22"><a href="#cb7-22" aria-hidden="true" tabindex="-1"></a>        ParentImage: -</span>
-<span id="cb7-23"><a href="#cb7-23" aria-hidden="true" tabindex="-1"></a>        ParentCommandLine: -</span>
-<span id="cb7-24"><a href="#cb7-24" aria-hidden="true" tabindex="-1"></a>        ParentUser: -</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb8"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>Event SYSMONEVENT_CREATE_PROCESS</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>        RuleName: -</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>        UtcTime: 2025-02-18 19:59:41.656</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>        ProcessGuid: {5304214a-e6ad-67b4-a5e6-724d9e550000}</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>        ProcessId: 2701</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>        Image: /opt/sysmon/sysmonLogView</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>        FileVersion: -</span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>        Description: -</span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>        Product: -</span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>        Company: -</span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>        OriginalFileName: -</span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>        CommandLine: /opt/sysmon/sysmonLogView</span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>        CurrentDirectory: /var/log</span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>        User: root</span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a>        LogonGuid: {5304214a-0000-0000-0000-000001000000}</span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a>        LogonId: 0</span>
+<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a>        TerminalSessionId: 5</span>
+<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a>        IntegrityLevel: no level</span>
+<span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a>        Hashes: SHA256=ac099d5fd9305b8c68f247415aebc56d35af953ede6782856b8e1c206efaad87</span>
+<span id="cb8-20"><a href="#cb8-20" aria-hidden="true" tabindex="-1"></a>        ParentProcessGuid: {00000000-0000-0000-0000-000000000000}</span>
+<span id="cb8-21"><a href="#cb8-21" aria-hidden="true" tabindex="-1"></a>        ParentProcessId: 1713</span>
+<span id="cb8-22"><a href="#cb8-22" aria-hidden="true" tabindex="-1"></a>        ParentImage: -</span>
+<span id="cb8-23"><a href="#cb8-23" aria-hidden="true" tabindex="-1"></a>        ParentCommandLine: -</span>
+<span id="cb8-24"><a href="#cb8-24" aria-hidden="true" tabindex="-1"></a>        ParentUser: -</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </section>
 </section>
