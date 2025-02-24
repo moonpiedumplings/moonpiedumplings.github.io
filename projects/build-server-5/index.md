@@ -299,10 +299,10 @@ Okay, it appears that flux is having trouble accessing my git repo. I found a [r
 So:
 
 ```{.yaml filename='/etc/rancher/rke2/config.yaml'}
-            disable:
-              # Yeah so apparently this was kind of important. 
-              # - rke2-coredns
-              - rke2-ingress-nginx
+disable:
+  # Yeah so apparently this was kind of important. 
+  # - rke2-coredns
+  - rke2-ingress-nginx
 ```
 
 And with this, flux bootstrap works properly:
@@ -1843,6 +1843,90 @@ I'm going to attempt to nuke all resources in the `openstack` and `ceph` namespa
 `kubectl delete -n openstack all --all` and then another for ceph.
 
 
+```{.default}
+NAMESPACE   NAME   DATADIRHOSTPATH   MONCOUNT   AGE     PHASE         MESSAGE                                                                                                                     HEALTH   EXTERNAL   FSID
+rook-ceph   ceph   /var/lib/rook     3          3d17h   Progressing   failed to perform validation before cluster creation: cannot start 3 mons on 1 node(s) when allowMultiplePerNode is false
+```
+
+Oh. Ceph wants 3 nodes by default, but I only give it one. 
+
+```{.default}
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: rook-ceph-cluster
+  namespace: rook-ceph
+spec:
+  chart:
+    spec:
+      chart: rook-ceph-cluster
+      reconcileStrategy: ChartVersion
+      version: "v1.16.2"
+      sourceRef:
+        kind: HelmRepository
+        name: rook
+  interval: 1m0s
+  values:
+    operatorNamespace: rook-ceph
+    toolbox:
+      enabled: true
+    clusterName: ceph
+    cephClusterSpec:
+      Mgr:
+        Count: 1
+      Mon:
+        Count: 1
+```
+
+With this, the reconcile succeeds. But it still fails to set up, and it appears that the ceph cluster does not get deleted. Even when I attempt to use `kubectl delete` to delete the resource, it just hangs indefinitely. 
+
+```{.default}
+[moonpie@cachyos-x8664 ~]$ kubectl delete --force -n rook-ceph cephclusters.ceph.rook.io ceph
+Warning: Immediate deletion does not wait for confirmation that the running resource has been terminated. The resource may continue to run on the cluster indefinitely.
+cephcluster.ceph.rook.io "ceph" force deleted
+```
+
+It appears that lots of stuff is created, but isn't properly deleted.
+
+`kubectl api-resources --verbs=list --namespaced -o name | xargs -n 1 kubectl get --show-kind --ignore-not-found -n rook-ceph` lists *all* resources, rather than just one that kubectl usually shows.
+
+[Rook-Ceph cleanup/deletion steps.](https://rook.io/docs/rook/latest/Storage-Configuration/ceph-teardown/)
+
+```{.default}
+kubectl describe -n rook-ceph cephclusters.ceph.rook.io ceph
+
+
+92s (x4075 over 11h)       Warning   ReconcileFailed      CephCluster/ceph                         failed to reconcile CephCluster "rook-ceph/ceph". CephCluster "rook-ceph/ceph" will not be deleted until all dependents are removed: CephFilesystem: [ceph-filesystem], CephFilesystemSubVolumeGroup: [ceph-filesystem-csi], CephObjectStore: [ceph-objectstore]
+```
+Also, to delete the cluster properly, it has to have the dependents deleted. 
+
+After fixing this, I get another error:
+
+```
+ ----     ------           ----  ----                          -------
+  Warning  ReconcileFailed  76s   rook-ceph-cluster-controller  failed to reconcile CephCluster "rook-ceph/ceph". failed to reconcile cluster "ceph": failed to configure local ceph cluster: failed the ceph version check: failed to complete ceph version job: failed to run CmdReporter rook-ceph-detect-version successfully. failed waiting for results ConfigMap rook-ceph-detect-version. timed out waiting for results ConfigMap
+```
+
+So it looks like the rook ceph is not starting, meaning no mons/endpoints are started, leading to cascading failures in the rest of the system. I think the problem is that I don't have a persistent volume that can offer block storage devices available, nor have I configured the ceph cluster to do this. 
+
+[Ceph with K8s PVs](https://rook.io/docs/rook/v1.16/CRDs/Cluster/pvc-cluster/). [And thankfully, openebs has docs on provisioning a raw block storageclass](https://openebs.io/docs/user-guides/local-storage-user-guide/local-pv-lvm/advanced-operations/lvm-raw-block-volume). 
+
+No, it doesn't seem to be that. Perhaps my issue is that I am attempting to create a ceph "cluster" on a single node. I found a [relevant blogpost](https://www.rusinov.ie/en/posts/2020/setting-up-single-node-ceph-cluster-for-kubernetes/) ([archive](https://web.archive.org/web/20230201154957/https://www.rusinov.ie/en/posts/2020/setting-up-single-node-ceph-cluster-for-kubernetes/)) about this.
+
+Here's [another blog post](https://medium.com/@satheesh.mohandass/installing-rook-ceph-for-persistent-storage-on-single-node-openshift-c1102a8ced40). There is also an [offical test cluster](https://rook.io/docs/rook/latest-release/Getting-Started/example-configurations/#cluster-crd). 
+
+I attempted to deploy the test cluster:
+
+```{.default}
+kubectl apply -f https://raw.githubusercontent.com/rook/rook/refs/heads/release-1.16/deploy/examples/cluster-test.yaml
+```
+
+And... nothing seems to happen. No pods being created. No deployments being done. Nothing.
+
+
+
+
 
 ## SSO/connections
 
@@ -1916,4 +2000,6 @@ Official Nextcloud Community Helm chart:
 Openstack: <https://docs.openstack.org/openstack-helm/latest/install/openstack.html>
 
 Automatic dependency updates: <https://docs.renovatebot.com/modules/manager/flux/>
+
+<https://github.com/substratusai/kubeai> — Reallly easy deployment of LLM's. 
 

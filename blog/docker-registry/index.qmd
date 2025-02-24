@@ -1,0 +1,65 @@
+---
+title: "Alternatives to Dockerhub"
+description: "I love this thing"
+date: "2025-2-22"
+categories: [blog]
+execute:
+  freeze: auto
+---
+
+
+Recently, [Docker Hub](https://docs.docker.com/docker-hub/usage/), is setting up rate limit. Unauthenticated users will be limited to 10 pulls per hour, and authenticated users will be limited to 100 pulls per hour. 
+
+This could cause issues with setups like CGNAT, and is a very arbitrary image
+
+So, I looked for some alternatives.
+
+
+# Other Public Registries
+
+<details><summary>Why not a self hosted registry and building our own containers?</summary>
+
+Most people don't care about these, instead opting for local builds and registries, but for the [CCDC](https://wrccdc.org/) competition, there will be a firewall with an allowlist. It's easier to ask for a container registry to be unblocked, because container builds will get from so many different websites. In addition to that, we are not allowed to use anything that requires a login, and I do not know if that applies to Docker Hub.
+
+</details>
+
+## General Repos
+
+* Google's public registry and mirror of dockerhub
+    * Located at `mirror.gcr.io`
+    * [Docs online](https://cloud.google.com/artifact-registry/docs)
+    * Because it's a mirror of Docker Hub, images available here can be searched there
+* AWS ECR public registry
+    * Has docker official containers and more, but is not a mirror of dockerhub
+    * Located at `public.ecr.aws`
+    * Can be searched at <https://gallery.ecr.aws/>
+* Github container registry
+    * Often where containers are built via CI/CD systems
+    * Located at `ghcr.io`
+    * Does not appear to be searchable
+
+## Specialized Repos
+
+* Linuxserver.io
+    * Services specifically designed for homelabbing
+    * Located at `lscr.io`
+    * Searchable at <https://www.linuxserver.io/our-images>
+
+
+# Local Registries
+
+Most likely, this would also include running your own build system.
+
+* [Official Docker Registry](https://hub.docker.com/_/registry)
+* [Zot](https://github.com/project-zot/zot)
+* [Distribution](https://github.com/distribution/distribution)
+* [Harbor](https://goharbor.io/docs/2.12.0/administration/configure-proxy-cache/)
+
+
+# Build Systems
+
+* [Buildkit](https://github.com/moby/buildkit)
+* [Stacker](https://github.com/project-stacker/stacker)
+    * Recommended by [Zot](https://zotregistry.dev/v2.1.2/articles/building-ci-cd-pipeline/?) to build a full CI/CD pipeline
+
+

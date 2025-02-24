@@ -141,6 +141,20 @@ Then:
 
 You can see the device with the lsblk tool, which lists all attached drives. 
 
+## Restic Backups
+
+I use Nix on a live usb becasue of how easily it can get utilities I need, in combination with usb tethering.
+
+`nix-shell -p restic`
+
+`restic init --repo /srv/restic-repo` This creates a "repository" to where things will be backed up. 
+
+`restic -r /srv/restic-repo --verbose backup ~/work` this backs up the "work" directory to the repo
+
+`restic -r /srv/restic-repo restore latest:path/in/repo --target ~/work2` this restores a the latest snapshot to the work2 directory
+
+Well after some testing, this is horrifically broken. Permissions don't work. File owners are wrong. I am frustrated with how difficult it is to back up my mone directory.
+
 
 ## Installing packages
 

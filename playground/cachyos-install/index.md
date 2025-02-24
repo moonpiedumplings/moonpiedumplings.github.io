@@ -8,6 +8,7 @@ format:
     code-fold: true
     code-summary: "Show the code"
     code-block-background: true
+    code-overflow: wrap
 execute:
   freeze: auto
 ---
@@ -66,7 +67,7 @@ HOOKS=(base systemd autodetect microcode modconf kms keyboard sd-vconsole block 
 
 However, this still wouldn't boot, and I couldn't figure out why. 
 
-Figured it out: https://wiki.archlinux.org/title/Dm-crypt/System_configuration#Using_systemd-cryptsetup-generator
+Figured it out: <https://wiki.archlinux.org/title/Dm-crypt/System_configuration#Using_systemd-cryptsetup-generator>
 
 By copying `/etc/crypttab` to `/etc/crypttab.initramfs`, it will be copied over the the initramfs, enabling the systemd based initramfs to read a version of the `crypttab` configuration file stored in the initramfs. 
 
