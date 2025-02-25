@@ -1,5 +1,5 @@
 ---
-title: "Your very own site on GH pages"
+title: "Your very own site on GitHub Pages"
 date: "2025-2-25"
 categories: [talks]
 format:
