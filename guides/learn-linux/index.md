@@ -295,3 +295,13 @@ https://cryptohack.org/
 https://www.youtube.com/watch?v=iqSMRO78UD0&list=PLUl4u3cNGP61EZllk7zwgvPbI4kbnKhWz
 
 </details>
+
+# Chess
+
+[Lichess](https://lichess.org) — an open source, chess website with many resources to learn chess such as puzzles that guide you through the basics or "studies" that guide openenings.
+
+* [Basics](https://lichess.org/learn)
+* [Opening Studies](https://lichess.org/study)
+
+[Blindfold tactics](https://listudy.org/en/features/blind-tactics) — Very, very good for practicing calculation. 
+
