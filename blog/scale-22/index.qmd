@@ -1,0 +1,215 @@
+---
+title: "SCaLE 22x, Day 1"
+description: ""
+date: "2025-6-25"
+categories: [blog]
+execute:
+  freeze: false
+---
+
+
+# Scale 22
+
+This is my second time going to the [so cal linux expo](https://socallinuxexpo.org/), AKA SCaLE. It's very exciting, and this time I will take notes of the things I see.
+
+The big things I am excited for is:
+
+* Nix (PlanetNix)
+* Kubernetes (Cloud Native Days and DevopsDaysLA)
+    * There used to be Kubecon but not this year, instead it's Cloud Native Days.
+* Openstack (Openinfra days is here, they weren't here last time)
+* Friends! (I met many people from LA and near Pasadena, and I am excited to see them here as well)
+
+
+# OpenInfra Days
+
+I went to the first meeting, and was immediately introduced to an interesting software — [genestack](https://docs.rackspacecloud.com/genestack-components/). Unlike openstack helm, it doesn't seem to *require* rook ceph, despite being a kubernetes deployment, which makes it very appealing. Currently, I am attempting to deploy Openstack on my single Kubernetes server, using FluxCD and Openstack-helm, but I am encountering a blockage because ceph doesn't like being deployed on a single node.
+
+Interesting software/product list:
+
+* [Genestack](https://github.com/rackerlabs/genestack) — Openstack on/alongside K8s.
+* [Zconverter](https://www.zconverter.com/) ­— Migrations of Vmware to Openstack
+* [Kata-containers](https://github.com/kata-containers/kata-containers/) — Container runtime that uses a virtual machine for more security/isolation
+    * Similar project mentioned: Confidential containers
+* [StarlingX](https://www.starlingx.io/)
+    * Linux, Debian, Kubernetes, Openstack, seems to be a Linux distro, they offer an ISO.
+    * "Enhanced Networking" — ipv6, dual stack support, now available
+
+
+# PlanetNix
+
+Interesting software/product list:
+
+* [Flox](https://flox.dev/) — Flox uses nix packages, but aims to be a more user friendly abstraction layer
+* [NativeLink/local-remote-execution](https://github.com/TraceMachina/nativelink/tree/main/local-remote-execution)
+    * Somewhere in here is code that converts a nix shell/env from a flake to a docker container
+
+
+# Embedded Programming Workshop
+
+I saw an embedded programming workshop, running during lunch when the Openstack stuff and Nix stuff was put on holds. 
+
+Firstly, I got a free board! One of [these](https://www.amazon.com/STM32-Nucleo-Development-STM32F446RE-NUCLEO-F446RE/dp/B01I8XLEM8). It doesn't run an operating system, so the presenter referred to it as "bare metal C"
+
+Tools needed: `gcc stlink stlink-gui stlink-tool stm32loader stm32flash`
+* Eclipse, C extension, STM extension which can be found [here](https://www.openstm32.org)
+
+Setup:  Chown the /dev/ttyACM0 to be owned by your user. 
+
+Compilation: `gcc 
+
+Misc Notes
+
+* Text files are different between all three operating systems because Microsoft, Linux, and Apple decided to store the end of line/newline character as either a carriage return, line feed, or both. This was due to an earlier device which needed to use both a carriage return and a line feed in order to avoid physical issues with ink smudging.
+* uart library is used for C programming with embedded devices.
+* Polling is needed since device can be sent to the serial faster than it can be worked with
+    * Polling is a simple algorithm: Ask if device is ready, then send character (or do the thing)
+    * Mostly a waste of time, but is very simple
+* Interrupt: Alternative, more efficient than polling
+    * a signal that "interrupts" the 
+    * Device raises interrupt line, CPU halts normal flow and calls interrupt function, which is an actual function
+    * ARM devices save state of machine before interrupt function, which means you don't have to do it manually
+    * USART2_IRQHandler: interrupt function
+
+I had to leave early, but the author of this talk, Steve Oualline, seems very interesting. He has a [book published by no starch press](https://nostarch.com/bare-metal-c), Bare Metal C, which is about embedded C programming.
+
+He also has some [free books](http://www.oualline.com/books.free/free-books.html) and other resources on his website.
+
+
+# SunSecCon
+
+## OSINT for Cybersecurity and Hackers
+
+This is another presentation, done by \[REDACTED\], and ███ █████████. Given the topic at hand, and the way that \[REDACTED\] mentioned trying to scrub her name from the internet, I thought it would be appropriate to redact the presenters' names. They are easy to find though, consider it an introduction into the world of OSINT.
+
+Both presenters are red team, \[REDACTED\] is the "people side" and ███ is the "tech side". \[REDACTED\] views it as not just a set of steps, but a thought process.
+
+Search Engines:
+
+* Different search engines give different results (what's dogpile?)
+* Different browsers give different results
+* Different... internet connections?
+* Search engines can index content that is supposed to be walled and even make it accessible'
+* Search yourself! Forwards, backwards, etc.
+* 4 or 5 different ways to write phone numbers. International means even more methods. Search every kind in order to get lucky.
+* Email addresses. What if targets use the same username across email addresses and platforms
+* Usernames: Divide up, mix around
+* Dates: Can also be written in a million different ways
+* United States is the only country to put the month first (lmao)
+
+Sockpuppets:
+
+* Called "identities" in the investigation world
+    * datafakegenerator.com, fake name generator, platforms to help creation of sockpuppet accounts
+* Select mildly popular real name. 
+    * ███: Select names that were popular for a generation and manipulate your accounts to look older/younger
+* Sometimes government agency members aren't permitted to create a sockpuppet account with a real person's name. A way around this is via other usernames.
+* Do not use a real person's image, it's tracable, especially if the image is from a public source
+    * <https://ThisPersonDoesNotExist.com>, <https://Generated.Photos/Human-Generator>, SnapChat, ChatGPT/AI image generators. <https://huggingface.co/black-forest-labs> (flux I think?). Other Stable Diffusion, Hugging Face models.
+    * <https://www.synthesia.io/tools/talking-head-video-maker> — Generates talking vidoes of your head or another person's head. 
+    * Burner app. Other deepfakes
+    * Same the screenshot to a thumbdrive, named as something simple, to ensure no computer metadata is traced
+
+Staying Private/Anonymous:
+
+* Virtual machines
+    * ███: Build a virtual machine dedicated to a specific task. Change the background to something with a ton of identifying info, so you know who "this person" is.
+    * ███: Make a virtual machine to play with AI. GPT4ALL. Airgapped AI can be used in locked down environments.
+    * ███: I have a VM just for taxes. 
+* Private Browser: Private browser doesn't cache anything. Not always malicious stuff, sometimes it's just porn lmao.
+* [Tails](https://tails.net/)! Made by Tor, portable, amnesiac operating system that keeps the user anonymous. Can be put on a thumbdrive.
+* VPN, needed on every device.
+    * \[REDACTED\] uses HidemyAss, because of 270 given locations. Lets her pretend to be from other locations. Also lets her get into geolocked/blocked resources.
+    * ███ has a similar usecase, pretend to be from a usecase while searching for companies and organizations.
+* Virtual credit cards: Privacy.com
+* Phone numbers
+    * Gmail: Free google voice, which can be used to get burner numbers.
+    * "Burner App" — turns your phone into a burner phone
+    * Iphones have an update where you can record calls — but only legal in one party states.
+    * <https://callhippo.com/international-phone-number/> — International VOIP phone number
+    * "Call Voice Changer — IntCall" — Voice Changer, \[REDACTED\] needed one to sound like a man.
+
+Security Advice:
+
+* "Don't click" ­— Open a browser and log into the account instead.  
+
+Finding People:
+
+* Facial Recognition
+    * <https://pimeyes.com> — 30 USD / Month
+    * Facecheck.ID — This one will find images that match but are blurry. Only accepts payment via crypto.
+    * Yandex, Russian Search engine, does an excellent job of object recognition
+* Phone numbers
+    * <https://spydialer.com> : US based site that lets you call someone's number, but it will show someone else's number, and it will get the voicemail message. 
+* User info lookup
+    * <https://www.melissa.com/> — Site designed to clean personal data... but can also be used to find personal information.
+        * Cheaper to search in the first month of usage. Gives many credits for free as a sign up bonus.
+        * Global Lookups are very useful.
+    * <https://FastPeopleSearch.com> — \[REDACTED\]'s favorite one. Free. 
+    * <https://TruePeopleSearch.com> — Similar to above, perhaps owned by the same company. \[REDACTED\] says it didn't give her as much.
+* Google Earth: 
+    * ███ likes Google Earth. Story: Hiker gets lost, and then he sends images of where he is. Then some guy who has mastered the art of figuring out where movies are shot, and then uses Google Earth to figure out exactly where the hiker got lost. 
+* Tweetdeck
+    * Now requires X (formerly known as twitter) pro, can search a ton of old tweets.
+    * Let's you follow someone without following them. Sometimes younger people think that @ 'ing people is private.
+    * Can "archive" deleted tweets.
+    * Can do advanced search, filter by location, use booleans, etc. Can also search by emoji.
+* Google alerts:
+    * Weekly report of new stuff that would come up in a google alert
+
+Finding Devices:
+
+* <https://shodan.io> — Search engine for the entire internet
+    * I prefer [zoomeye](https://www.zoomeye.ai/) because they give more free stuff.
+* Nmap, OpenVAS, etc.
+
+Dark Web Indexes/Search Engines:
+
+* Dark Blue Intelligence — Dark web scraper that you can search
+    * Can get a demo as long as you're with a company
+* Dark Owl, less user friendly than above though
+* <https://www.skopenow.com/>
+    * Scrapes _everything_, including the dark web.
+    * Will give a 7 day trial if you tell them you were in \[REDACTED\]'s OSINT training.
+
+
+AI:
+
+* "Write this better"
+* AI hallucinates, so \[REDACTED\] must verify that it's output is accurate.
+* Deepfakes are concerning. There was a zoom call, with 6 "people" who where deepfakes and scammers managed to get half a million dollars from a Hong Kong company.
+
+
+# Notes from Friends
+
+Nix can become nigthmarish to update on Mac OS, due to the system level changes that Mac makes: <https://zenn.dev/kawarimidoll/scraps/3d71b16d1bb7e3>. 
+
+Best large language model for coding: qwen2.5-32b-instruct. "On par with gpt-02-mini".
+
+A backend developer would be expected to deploy things and debug containers in kubernetes, or at least understand how their application will run in a k8s environment. Don't have to be experts. For backend, frontend, not really.
+
+[mailu](https://mailu.io/2024.06/) helm/docker based email deployment.
+
+To get an ASN, you can simply create a company and then apply for it?!
+
+Apparently, infinite recursion can occur as an error in Nix.
+
+
+# Food Blog
+
+People keep telling me I should start one. So here's a mini food blog.
+
+So the first day, the first place I went to, for lunch, was [Art Lunch](https://www.facebook.com/artlunchusa)
+
+I had the Pastrami Sandwich
+
+![](images/art_lunch.jpg)
+
+It was very good, and filling, too. At $14, it was a bit pricy though.
+
+The next place I went to, dinner (Thursday 3/6/25), was an Italian place, Bucca di Bepppo.
+
+This place was a family restaurant, so all the portions were sized for multiple people. I shared Lasagna, Chicken Parmesan, garlic sticks, and Gorgonzola salad with 11 other people. 
+
+Overall, it was excellent.
+

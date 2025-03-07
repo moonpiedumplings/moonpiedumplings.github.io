@@ -153,6 +153,13 @@ https://wellarchitectedlabs.com/security/
 
 [Missing Semester](https://missing.csail.mit.edu/2020/version-control/)
 
+[Set of tutorials from Lemmy](https://programming.dev/post/26285997)
+
+<https://learngitbranching.js.org/> ­— Interactive, browser based game to learn git
+
+<https://ohmygit.org/> — Computer game to learn git
+
+[Pro Git book](https://git-scm.com/book/en/v2)
 
 # Computer Science
 
