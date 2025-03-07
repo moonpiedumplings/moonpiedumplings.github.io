@@ -10,7 +10,247 @@
 <atom:link href="./posts/index.xml" rel="self" type="application/rss+xml"/>
 <description>All posts</description>
 <generator>quarto-1.6.40</generator>
-<lastBuildDate>Tue, 25 Feb 2025 08:00:00 GMT</lastBuildDate>
+<lastBuildDate>Wed, 25 Jun 2025 07:00:00 GMT</lastBuildDate>
+<item>
+  <title>SCaLE 22x, Day 1</title>
+  <link>./blog/scale-22/</link>
+  <description><![CDATA[ 
+
+
+
+
+<section id="scale-22" class="level1">
+<h1>Scale 22</h1>
+<p>This is my second time going to the <a href="https://socallinuxexpo.org/">so cal linux expo</a>, AKA SCaLE. It’s very exciting, and this time I will take notes of the things I see.</p>
+<p>The big things I am excited for is:</p>
+<ul>
+<li>Nix (PlanetNix)</li>
+<li>Kubernetes (Cloud Native Days and DevopsDaysLA)
+<ul>
+<li>There used to be Kubecon but not this year, instead it’s Cloud Native Days.</li>
+</ul></li>
+<li>Openstack (Openinfra days is here, they weren’t here last time)</li>
+<li>Friends! (I met many people from LA and near Pasadena, and I am excited to see them here as well)</li>
+</ul>
+</section>
+<section id="openinfra-days" class="level1">
+<h1>OpenInfra Days</h1>
+<p>I went to the first meeting, and was immediately introduced to an interesting software — <a href="https://docs.rackspacecloud.com/genestack-components/">genestack</a>. Unlike openstack helm, it doesn’t seem to <em>require</em> rook ceph, despite being a kubernetes deployment, which makes it very appealing. Currently, I am attempting to deploy Openstack on my single Kubernetes server, using FluxCD and Openstack-helm, but I am encountering a blockage because ceph doesn’t like being deployed on a single node.</p>
+<p>Interesting software/product list:</p>
+<ul>
+<li><a href="https://github.com/rackerlabs/genestack">Genestack</a> — Openstack on/alongside K8s.</li>
+<li><a href="https://www.zconverter.com/">Zconverter</a> ­— Migrations of Vmware to Openstack</li>
+<li><a href="https://github.com/kata-containers/kata-containers/">Kata-containers</a> — Container runtime that uses a virtual machine for more security/isolation
+<ul>
+<li>Similar project mentioned: Confidential containers</li>
+</ul></li>
+<li><a href="https://www.starlingx.io/">StarlingX</a>
+<ul>
+<li>Linux, Debian, Kubernetes, Openstack, seems to be a Linux distro, they offer an ISO.</li>
+<li>“Enhanced Networking” — ipv6, dual stack support, now available</li>
+</ul></li>
+</ul>
+</section>
+<section id="planetnix" class="level1">
+<h1>PlanetNix</h1>
+<p>Interesting software/product list:</p>
+<ul>
+<li><a href="https://flox.dev/">Flox</a> — Flox uses nix packages, but aims to be a more user friendly abstraction layer</li>
+<li><a href="https://github.com/TraceMachina/nativelink/tree/main/local-remote-execution">NativeLink/local-remote-execution</a>
+<ul>
+<li>Somewhere in here is code that converts a nix shell/env from a flake to a docker container</li>
+</ul></li>
+</ul>
+</section>
+<section id="embedded-programming-workshop" class="level1">
+<h1>Embedded Programming Workshop</h1>
+<p>I saw an embedded programming workshop, running during lunch when the Openstack stuff and Nix stuff was put on holds.</p>
+<p>Firstly, I got a free board! One of <a href="https://www.amazon.com/STM32-Nucleo-Development-STM32F446RE-NUCLEO-F446RE/dp/B01I8XLEM8">these</a>. It doesn’t run an operating system, so the presenter referred to it as “bare metal C”</p>
+<p>Tools needed: <code>gcc stlink stlink-gui stlink-tool stm32loader stm32flash</code> * Eclipse, C extension, STM extension which can be found <a href="https://www.openstm32.org">here</a></p>
+<p>Setup: Chown the /dev/ttyACM0 to be owned by your user.</p>
+<p>Compilation: `gcc</p>
+<p>Misc Notes</p>
+<ul>
+<li>Text files are different between all three operating systems because Microsoft, Linux, and Apple decided to store the end of line/newline character as either a carriage return, line feed, or both. This was due to an earlier device which needed to use both a carriage return and a line feed in order to avoid physical issues with ink smudging.</li>
+<li>uart library is used for C programming with embedded devices.</li>
+<li>Polling is needed since device can be sent to the serial faster than it can be worked with
+<ul>
+<li>Polling is a simple algorithm: Ask if device is ready, then send character (or do the thing)</li>
+<li>Mostly a waste of time, but is very simple</li>
+</ul></li>
+<li>Interrupt: Alternative, more efficient than polling
+<ul>
+<li>a signal that “interrupts” the</li>
+<li>Device raises interrupt line, CPU halts normal flow and calls interrupt function, which is an actual function</li>
+<li>ARM devices save state of machine before interrupt function, which means you don’t have to do it manually</li>
+<li>USART2_IRQHandler: interrupt function</li>
+</ul></li>
+</ul>
+<p>I had to leave early, but the author of this talk, Steve Oualline, seems very interesting. He has a <a href="https://nostarch.com/bare-metal-c">book published by no starch press</a>, Bare Metal C, which is about embedded C programming.</p>
+<p>He also has some <a href="http://www.oualline.com/books.free/free-books.html">free books</a> and other resources on his website.</p>
+</section>
+<section id="sunseccon" class="level1">
+<h1>SunSecCon</h1>
+<section id="osint-for-cybersecurity-and-hackers" class="level2">
+<h2 class="anchored" data-anchor-id="osint-for-cybersecurity-and-hackers">OSINT for Cybersecurity and Hackers</h2>
+<p>This is another presentation, done by [REDACTED], and ███ █████████. Given the topic at hand, and the way that [REDACTED] mentioned trying to scrub her name from the internet, I thought it would be appropriate to redact the presenters’ names. They are easy to find though, consider it an introduction into the world of OSINT.</p>
+<p>Both presenters are red team, [REDACTED] is the “people side” and ███ is the “tech side”. [REDACTED] views it as not just a set of steps, but a thought process.</p>
+<p>Search Engines:</p>
+<ul>
+<li>Different search engines give different results (what’s dogpile?)</li>
+<li>Different browsers give different results</li>
+<li>Different… internet connections?</li>
+<li>Search engines can index content that is supposed to be walled and even make it accessible’</li>
+<li>Search yourself! Forwards, backwards, etc.</li>
+<li>4 or 5 different ways to write phone numbers. International means even more methods. Search every kind in order to get lucky.</li>
+<li>Email addresses. What if targets use the same username across email addresses and platforms</li>
+<li>Usernames: Divide up, mix around</li>
+<li>Dates: Can also be written in a million different ways</li>
+<li>United States is the only country to put the month first (lmao)</li>
+</ul>
+<p>Sockpuppets:</p>
+<ul>
+<li>Called “identities” in the investigation world
+<ul>
+<li>datafakegenerator.com, fake name generator, platforms to help creation of sockpuppet accounts</li>
+</ul></li>
+<li>Select mildly popular real name.
+<ul>
+<li>███: Select names that were popular for a generation and manipulate your accounts to look older/younger</li>
+</ul></li>
+<li>Sometimes government agency members aren’t permitted to create a sockpuppet account with a real person’s name. A way around this is via other usernames.</li>
+<li>Do not use a real person’s image, it’s tracable, especially if the image is from a public source
+<ul>
+<li><a href="https://ThisPersonDoesNotExist.com" class="uri">https://ThisPersonDoesNotExist.com</a>, <a href="https://Generated.Photos/Human-Generator" class="uri">https://Generated.Photos/Human-Generator</a>, SnapChat, ChatGPT/AI image generators. <a href="https://huggingface.co/black-forest-labs" class="uri">https://huggingface.co/black-forest-labs</a> (flux I think?). Other Stable Diffusion, Hugging Face models.</li>
+<li><a href="https://www.synthesia.io/tools/talking-head-video-maker" class="uri">https://www.synthesia.io/tools/talking-head-video-maker</a> — Generates talking vidoes of your head or another person’s head.</li>
+<li>Burner app. Other deepfakes</li>
+<li>Same the screenshot to a thumbdrive, named as something simple, to ensure no computer metadata is traced</li>
+</ul></li>
+</ul>
+<p>Staying Private/Anonymous:</p>
+<ul>
+<li>Virtual machines
+<ul>
+<li>███: Build a virtual machine dedicated to a specific task. Change the background to something with a ton of identifying info, so you know who “this person” is.</li>
+<li>███: Make a virtual machine to play with AI. GPT4ALL. Airgapped AI can be used in locked down environments.</li>
+<li>███: I have a VM just for taxes.</li>
+</ul></li>
+<li>Private Browser: Private browser doesn’t cache anything. Not always malicious stuff, sometimes it’s just porn lmao.</li>
+<li><a href="https://tails.net/">Tails</a>! Made by Tor, portable, amnesiac operating system that keeps the user anonymous. Can be put on a thumbdrive.</li>
+<li>VPN, needed on every device.
+<ul>
+<li>[REDACTED] uses HidemyAss, because of 270 given locations. Lets her pretend to be from other locations. Also lets her get into geolocked/blocked resources.</li>
+<li>███ has a similar usecase, pretend to be from a usecase while searching for companies and organizations.</li>
+</ul></li>
+<li>Virtual credit cards: Privacy.com</li>
+<li>Phone numbers
+<ul>
+<li>Gmail: Free google voice, which can be used to get burner numbers.</li>
+<li>“Burner App” — turns your phone into a burner phone</li>
+<li>Iphones have an update where you can record calls — but only legal in one party states.</li>
+<li><a href="https://callhippo.com/international-phone-number/" class="uri">https://callhippo.com/international-phone-number/</a> — International VOIP phone number</li>
+<li>“Call Voice Changer — IntCall” — Voice Changer, [REDACTED] needed one to sound like a man.</li>
+</ul></li>
+</ul>
+<p>Security Advice:</p>
+<ul>
+<li>“Don’t click” ­— Open a browser and log into the account instead.</li>
+</ul>
+<p>Finding People:</p>
+<ul>
+<li>Facial Recognition
+<ul>
+<li><a href="https://pimeyes.com" class="uri">https://pimeyes.com</a> — 30 USD / Month</li>
+<li>Facecheck.ID — This one will find images that match but are blurry. Only accepts payment via crypto.</li>
+<li>Yandex, Russian Search engine, does an excellent job of object recognition</li>
+</ul></li>
+<li>Phone numbers
+<ul>
+<li><a href="https://spydialer.com" class="uri">https://spydialer.com</a> : US based site that lets you call someone’s number, but it will show someone else’s number, and it will get the voicemail message.</li>
+</ul></li>
+<li>User info lookup
+<ul>
+<li><a href="https://www.melissa.com/" class="uri">https://www.melissa.com/</a> — Site designed to clean personal data… but can also be used to find personal information.
+<ul>
+<li>Cheaper to search in the first month of usage. Gives many credits for free as a sign up bonus.</li>
+<li>Global Lookups are very useful.</li>
+</ul></li>
+<li><a href="https://FastPeopleSearch.com" class="uri">https://FastPeopleSearch.com</a> — [REDACTED]’s favorite one. Free.</li>
+<li><a href="https://TruePeopleSearch.com" class="uri">https://TruePeopleSearch.com</a> — Similar to above, perhaps owned by the same company. [REDACTED] says it didn’t give her as much.</li>
+</ul></li>
+<li>Google Earth:
+<ul>
+<li>███ likes Google Earth. Story: Hiker gets lost, and then he sends images of where he is. Then some guy who has mastered the art of figuring out where movies are shot, and then uses Google Earth to figure out exactly where the hiker got lost.</li>
+</ul></li>
+<li>Tweetdeck
+<ul>
+<li>Now requires X (formerly known as twitter) pro, can search a ton of old tweets.</li>
+<li>Let’s you follow someone without following them. Sometimes younger people think that @ ’ing people is private.</li>
+<li>Can “archive” deleted tweets.</li>
+<li>Can do advanced search, filter by location, use booleans, etc. Can also search by emoji.</li>
+</ul></li>
+<li>Google alerts:
+<ul>
+<li>Weekly report of new stuff that would come up in a google alert</li>
+</ul></li>
+</ul>
+<p>Finding Devices:</p>
+<ul>
+<li><a href="https://shodan.io" class="uri">https://shodan.io</a> — Search engine for the entire internet
+<ul>
+<li>I prefer <a href="https://www.zoomeye.ai/">zoomeye</a> because they give more free stuff.</li>
+</ul></li>
+<li>Nmap, OpenVAS, etc.</li>
+</ul>
+<p>Dark Web Indexes/Search Engines:</p>
+<ul>
+<li>Dark Blue Intelligence — Dark web scraper that you can search
+<ul>
+<li>Can get a demo as long as you’re with a company</li>
+</ul></li>
+<li>Dark Owl, less user friendly than above though</li>
+<li><a href="https://www.skopenow.com/" class="uri">https://www.skopenow.com/</a>
+<ul>
+<li>Scrapes <em>everything</em>, including the dark web.</li>
+<li>Will give a 7 day trial if you tell them you were in [REDACTED]’s OSINT training.</li>
+</ul></li>
+</ul>
+<p>AI:</p>
+<ul>
+<li>“Write this better”</li>
+<li>AI hallucinates, so [REDACTED] must verify that it’s output is accurate.</li>
+<li>Deepfakes are concerning. There was a zoom call, with 6 “people” who where deepfakes and scammers managed to get half a million dollars from a Hong Kong company.</li>
+</ul>
+</section>
+</section>
+<section id="notes-from-friends" class="level1">
+<h1>Notes from Friends</h1>
+<p>Nix can become nigthmarish to update on Mac OS, due to the system level changes that Mac makes: <a href="https://zenn.dev/kawarimidoll/scraps/3d71b16d1bb7e3" class="uri">https://zenn.dev/kawarimidoll/scraps/3d71b16d1bb7e3</a>.</p>
+<p>Best large language model for coding: qwen2.5-32b-instruct. “On par with gpt-02-mini”.</p>
+<p>A backend developer would be expected to deploy things and debug containers in kubernetes, or at least understand how their application will run in a k8s environment. Don’t have to be experts. For backend, frontend, not really.</p>
+<p><a href="https://mailu.io/2024.06/">mailu</a> helm/docker based email deployment.</p>
+<p>To get an ASN, you can simply create a company and then apply for it?!</p>
+<p>Apparently, infinite recursion can occur as an error in Nix.</p>
+</section>
+<section id="food-blog" class="level1">
+<h1>Food Blog</h1>
+<p>People keep telling me I should start one. So here’s a mini food blog.</p>
+<p>So the first day, the first place I went to, for lunch, was <a href="https://www.facebook.com/artlunchusa">Art Lunch</a></p>
+<p>I had the Pastrami Sandwich</p>
+<p><img src="./blog/scale-22/images/art_lunch.jpg" class="img-fluid"></p>
+<p>It was very good, and filling, too. At $14, it was a bit pricy though.</p>
+<p>The next place I went to, dinner (Thursday 3/6/25), was an Italian place, Bucca di Bepppo.</p>
+<p>This place was a family restaurant, so all the portions were sized for multiple people. I shared Lasagna, Chicken Parmesan, garlic sticks, and Gorgonzola salad with 11 other people.</p>
+<p>Overall, it was excellent.</p>
+
+
+</section>
+
+ ]]></description>
+  <category>blog</category>
+  <guid>./blog/scale-22/</guid>
+  <pubDate>Wed, 25 Jun 2025 07:00:00 GMT</pubDate>
+</item>
 <item>
   <title>Your very own site on GitHub Pages</title>
   <link>./talks/self-site/</link>
@@ -592,6 +832,10 @@ Expand/Collapse Testing
 <li>Data structure oriented guide to git. It starts at explaining what an object is, rather than how the command line works. I like this guide of git more than many other guides I’ve seen, although it’s still missing things (yes, git does a snapshot of the repo’s state at every point, as seperate objects, but it deduplicates data between those objects).</li>
 </ul>
 <p><a href="https://missing.csail.mit.edu/2020/version-control/">Missing Semester</a></p>
+<p><a href="https://programming.dev/post/26285997">Set of tutorials from Lemmy</a></p>
+<p><a href="https://learngitbranching.js.org/" class="uri">https://learngitbranching.js.org/</a> ­— Interactive, browser based game to learn git</p>
+<p><a href="https://ohmygit.org/" class="uri">https://ohmygit.org/</a> — Computer game to learn git</p>
+<p><a href="https://git-scm.com/book/en/v2">Pro Git book</a></p>
 </section>
 <section id="computer-science" class="level1">
 <h1>Computer Science</h1>
@@ -9460,64 +9704,6 @@ DO NOT CHANGE ANY PASSWORDS</code></pre>
   <category>projects</category>
   <guid>./projects/build-server-4/</guid>
   <pubDate>Wed, 20 Mar 2024 07:00:00 GMT</pubDate>
-</item>
-<item>
-  <title>KDE 6 — New features</title>
-  <link>./blog/kde-6/</link>
-  <description><![CDATA[ 
-
-
-
-
-<p>KDE 6 is released, and it comes with quite a few new features.</p>
-<section id="smoothing-out-the-wayland-migration" class="level1">
-<h1>Smoothing out the Wayland migration</h1>
-<p>In addition to the other things mentioned, KDE 6 also comes with some new security and privacy features.</p>
-<p><img src="./blog/kde-6/images/legacyx11apps.jpg" class="img-fluid"></p>
-<p>KDE 6 now adds a new settings panel where users can configure if X11 apps can read global inputs.</p>
-<p>For context, the Linux desktop used to be built on top of this software called <a href="https://en.wikipedia.org/wiki/X_Window_System">X11</a>. X11 worked, but it had some pretty severe flaws, the two main one’s being code rot, and security.</p>
-<p>Code rot is self explanatory. X11 was first built in 1984. It’s been a while since it was made, and it has a lot of old code. The project is so big and complex, that it’s nearly impossible to add significant features to it.</p>
-<p>The other problem is security. By default, X11 lets running apps have basically absolute control over the other graphical interface. They can “view” the whole screen, read all keypresses, and insert, or modify keypresses.</p>
-<p><a href="https://en.wikipedia.org/wiki/Wayland_(protocol)">Wayland</a>, is the newer replacement, although it is technically just a protocol, a definition, as opposed to an actual piece of software. Different pieces of software choose to implement this protocol, with KDE being one of them.</p>
-<p>One of the issues people have with Wayland, is that, by design, it doesn’t allow all apps to read everything on the screen. This breaks things like screen sharing, with native Discord (although sharing your screen to Discord running in Firefox works).</p>
-<p>It also breaks push-to-talk on Discord, since that uses a global hotkey. The above setting allows users to temporarily restore that functionality, at the cost of desktop security. , since Discord hasn’t developed it for native wayland yet.</p>
-<p>Another issue people have with Wayland is problems with Nvidia. Due to Nvidia’s insistence on proprietary drivers and their own standards, it’s been very difficult ot get Wayland support on Nvidia. However, KDE comes with some big changes as, I can finally use Nvidia + Wayland on my larger laptop!</p>
-</section>
-<section id="obs" class="level1">
-<h1>OBS</h1>
-<p>One features I’ve been waiting on, which I think will only end up coming in Wayland, is the ability to share some windows, but not all. I experimented with some of the new features of OBS, but they don’t do quite what I want.</p>
-<p>For example, with OBS and pipewire, I noticed I can select multiple windows from the “Window Share” source:</p>
-<p><img src="./blog/kde-6/images/obswindowsshare.jpg" class="img-fluid"></p>
-<p>Except it doesn’t actually work. Instead, it just puts one of the windows on top, and none of the others.</p>
-<p>I tried an alternative to this:</p>
-<p><img src="./blog/kde-6/images/virtualoutput.jpg" class="img-fluid"></p>
-<p>But it doesn’t do quite what I want. It creates a literal virtual monitor, including the ability to change settings to things like “unify outputs”, or “extend outputs”.</p>
-<p>What I really want is the ability to share only a single <a href="https://kde.org/announcements/4/4.5.0/plasma/">kde workspace</a>.</p>
-<p>OBS had an option to share a KDE plasma workspace, but it doesn’t work like what I want. Instead of just sharing a single workspace, it turns all monitors into a single input source. If I switch workspaces, then the screen video switches as well.</p>
-</section>
-<section id="drawing-tablets" class="level1">
-<h1>Drawing Tablets</h1>
-<p>KDE 6 finally makes support for drawing tablets first class. You can now configure drawing tablets directly from the settings menu.</p>
-<p><img src="./blog/kde-6/images/drawingtablets.jpg" class="img-fluid"></p>
-<p>So all the buttons, but also another, more important feature I need: mapping the drawing tablet to a smaller portion of the screen.</p>
-<p>I typically take notes with <a href="https://xournalpp.github.io">xournal++</a>, but I struggle because my handwriting is large and sloppy, especially when I am trying to take notes more quickly. From my testing, this feature is amazing, since it makes it easier to write, and read what I’ve wrote afterwards.</p>
-</section>
-<section id="bugs" class="level1">
-<h1>Bugs</h1>
-<p>So far, I’ve encountered two crashes with KDE, after like a week of usage, which is pretty good from what I hear, compared to other people.</p>
-<p>To recover from a crash, I just switch to a TTY, and/or use a terminal, and then run:</p>
-<div class="sourceCode" id="cb1" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb1-1">systemctl --user restart plasma-plasmallshell</span></code></pre></div>
-<p>This only works on systemd, however. Since Plasma-5.25, <a href="https://wiki.archlinux.org/title/KDE#systemd_startup">KDE consisting of systemd user services has been the default method</a></p>
-<p>On non systemd distros, what I’ve heard works is:</p>
-<div class="sourceCode" id="cb2" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb2-1">killall plasmashell &amp;&amp; kstart5 plasmashell</span></code></pre></div>
-
-
-</section>
-
- ]]></description>
-  <category>blog</category>
-  <guid>./blog/kde-6/</guid>
-  <pubDate>Wed, 13 Mar 2024 07:00:00 GMT</pubDate>
 </item>
 </channel>
 </rss>

@@ -2,13 +2,13 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.5.24">
+<meta name="generator" content="quarto-1.6.40">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
-<meta name="dcterms.date" content="2024-02-15">
+<meta name="dcterms.date" content="2025-06-25">
 
-<title>Jeffrey Fonseca – A comparision of hypervisors/platforms</title>
+<title>SCaLE 22x, Day 1 – Jeffrey Fonseca</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -36,12 +36,12 @@ ul.task-list li input[type="checkbox"] {
 <script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="../../site_libs/quarto-html/anchor.min.js"></script>
 <link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark.css" rel="prefetch" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-549806ee2085284f45b00abea8c6df48.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-8ea72dc5fed832574809a9c94082fbbb.css" rel="prefetch" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
 <script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../../site_libs/bootstrap/bootstrap-dark.min.css" rel="prefetch" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-04dd6a5ca28aac96903e51a8fbffbcaa.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-052a59ac8b6210046f08f1c5d142d40b.min.css" rel="prefetch" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -71,7 +71,6 @@ ul.task-list li input[type="checkbox"] {
 }</script>
 
 
-<link rel="stylesheet" href="../../styles.css">
 </head>
 
 <body class="nav-fixed">
@@ -86,37 +85,26 @@ ul.task-list li input[type="checkbox"] {
     </a>
   </div>
             <div id="quarto-search" class="" title="Search"></div>
-          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
   <span class="navbar-toggler-icon"></span>
 </button>
           <div class="collapse navbar-collapse" id="navbarCollapse">
             <ul class="navbar-nav navbar-nav-scroll me-auto">
   <li class="nav-item">
-    <a class="nav-link" href="../../projects/index.html"> 
-<span class="menu-text">Projects</span></a>
+    <a class="nav-link" href="../../posts/index.html"> 
+<span class="menu-text">Posts</span></a>
   </li>  
   <li class="nav-item">
-    <a class="nav-link" href="../../blog/index.html"> 
-<span class="menu-text">Blog</span></a>
-  </li>  
-  <li class="nav-item">
-    <a class="nav-link" href="../../playground/index.html"> 
-<span class="menu-text">Playground</span></a>
-  </li>  
-  <li class="nav-item">
-    <a class="nav-link" href="../../guides/index.html"> 
-<span class="menu-text">Guides</span></a>
-  </li>  
-  <li class="nav-item">
-    <a class="nav-link" href="../../talks/index.html"> 
-<span class="menu-text">Talks</span></a>
-  </li>  
-  <li class="nav-item">
-    <a class="nav-link" href="../../writeups/index.html"> 
-<span class="menu-text">Writeups</span></a>
+    <a class="nav-link" href="../../resume/index.html"> 
+<span class="menu-text">Resume</span></a>
   </li>  
 </ul>
             <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item compact">
+    <a class="nav-link" href="../../../feed.xml"> <i class="bi bi-rss" role="img">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
   <li class="nav-item compact">
     <a class="nav-link" href="https://github.com/moonpiedumplings"> <i class="bi bi-github" role="img">
 </i> 
@@ -139,15 +127,16 @@ ul.task-list li input[type="checkbox"] {
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#intro" id="toc-intro" class="nav-link active" data-scroll-target="#intro">Intro</a></li>
-  <li><a href="#desktop-vs-hci-vs-selfhosted-cloud" id="toc-desktop-vs-hci-vs-selfhosted-cloud" class="nav-link" data-scroll-target="#desktop-vs-hci-vs-selfhosted-cloud">Desktop vs HCI vs (Selfhosted) Cloud</a></li>
-  <li><a href="#desktop-hypervisors-comparison" id="toc-desktop-hypervisors-comparison" class="nav-link" data-scroll-target="#desktop-hypervisors-comparison">Desktop Hypervisors comparison</a></li>
-  <li><a href="#hciclouds" id="toc-hciclouds" class="nav-link" data-scroll-target="#hciclouds">HCI/Clouds</a></li>
-  <li><a href="#appliance-vs-hackable-hypervisor-platforms" id="toc-appliance-vs-hackable-hypervisor-platforms" class="nav-link" data-scroll-target="#appliance-vs-hackable-hypervisor-platforms">“Appliance” vs “Hackable” hypervisor platforms</a>
-  <ul>
-  <li><a href="#automatibility" id="toc-automatibility" class="nav-link" data-scroll-target="#automatibility">Automatibility</a></li>
+  <li><a href="#scale-22" id="toc-scale-22" class="nav-link active" data-scroll-target="#scale-22">Scale 22</a></li>
+  <li><a href="#openinfra-days" id="toc-openinfra-days" class="nav-link" data-scroll-target="#openinfra-days">OpenInfra Days</a></li>
+  <li><a href="#planetnix" id="toc-planetnix" class="nav-link" data-scroll-target="#planetnix">PlanetNix</a></li>
+  <li><a href="#embedded-programming-workshop" id="toc-embedded-programming-workshop" class="nav-link" data-scroll-target="#embedded-programming-workshop">Embedded Programming Workshop</a></li>
+  <li><a href="#sunseccon" id="toc-sunseccon" class="nav-link" data-scroll-target="#sunseccon">SunSecCon</a>
+  <ul class="collapse">
+  <li><a href="#osint-for-cybersecurity-and-hackers" id="toc-osint-for-cybersecurity-and-hackers" class="nav-link" data-scroll-target="#osint-for-cybersecurity-and-hackers">OSINT for Cybersecurity and Hackers</a></li>
   </ul></li>
-  <li><a href="#performance" id="toc-performance" class="nav-link" data-scroll-target="#performance">Performance</a></li>
+  <li><a href="#notes-from-friends" id="toc-notes-from-friends" class="nav-link" data-scroll-target="#notes-from-friends">Notes from Friends</a></li>
+  <li><a href="#food-blog" id="toc-food-blog" class="nav-link" data-scroll-target="#food-blog">Food Blog</a></li>
   </ul>
 </nav>
     </div>
@@ -156,9 +145,9 @@ ul.task-list li input[type="checkbox"] {
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">A comparision of hypervisors/platforms</h1>
+<h1 class="title">SCaLE 22x, Day 1</h1>
   <div class="quarto-categories">
-    <div class="quarto-category">linux</div>
+    <div class="quarto-category">blog</div>
   </div>
   </div>
 
@@ -170,7 +159,7 @@ ul.task-list li input[type="checkbox"] {
     <div>
     <div class="quarto-title-meta-heading">Published</div>
     <div class="quarto-title-meta-contents">
-      <p class="date">February 15, 2024</p>
+      <p class="date">June 25, 2025</p>
     </div>
   </div>
   
@@ -182,102 +171,229 @@ ul.task-list li input[type="checkbox"] {
 </header>
 
 
-<p>Currently incomplete, this won’t render in the blog posts part until it is complete.</p>
-<section id="intro" class="level1">
-<h1>Intro</h1>
-<p>Virtualization is an extremely important part of modern server infrastructure, in addition to virtual machine’s other uses as a test bed, portable environments, or even a gaming host.</p>
-<p>Naturally, there exist a myriad of ways to virtualize, many platforms with different purposes, features, prices (time is a cost as well), and so on.</p>
-<p><a href="https://en.wikipedia.org/wiki/Comparison_of_platform_virtualization_software">Wikipedia has a comparison of “platform virtualization,”</a> which is brief overview of every almost every type of virtualization, including the management platforms, including containers/container platforms and other <a href="https://en.wikipedia.org/wiki/OS-level_virtualization">operating system level virtualization</a></p>
-<p>I won’t cover everything, because it’s a <strong>lot</strong>, but I’ve tried out many of the relevant virtual machine managers and I thought I would share my thoughts on the one’s I have experience with, most of which are the more popular options out there.</p>
-<p>I was also prompted to do so by the changes to VMware’s liscensing, so I’ve heard many people are searching for alternatives. However, this article still uses ESXi as an example, to compare to other platforms like vSphere or non VMware products.</p>
-</section>
-<section id="desktop-vs-hci-vs-selfhosted-cloud" class="level1">
-<h1>Desktop vs HCI vs (Selfhosted) Cloud</h1>
-<p>VMWare desktop literally has <em>desktop</em> in the name, making it’s usecase pretty clear. Desktop virtualization platforms are things like VMWare Desktop, or VirtualBox which are aimed at your single computer seeking to emulate one or more machines.</p>
-<p>One difference between desktop hypervisors and the other options, is that VMWare and VirtualBox are <a href="https://en.wikipedia.org/wiki/Hypervisor#Classification">type 2 hypervisors</a>. This means that they will perform significantly worse than type 1 hyperviors, and in general, your “desktop” hypervisors sacrifice performance for convience.</p>
-<p>There also exists libvirt + virt-manager, or hyper-v as a desktop hypervisor, which are type 1 hypervisors, but they aren’t as popular.</p>
-<p><a href="https://en.wikipedia.org/wiki/Hyper-converged_infrastructure">Hyperconverged infrastructure</a> (HCI) is the modern server management paradigm where, rather than having multiple servers, each dedicated to something (firewall, storage, compute, etc), every machine plays every role. This is done by converting servers into a virtualization cluster, where resources such as compute, storage, and network interfaces can be pooled and shared across machines.</p>
-<p>A common example of HCI I see is, rather than having a physical firewall, a firewall OS will be installed on a virtual machine, and the network layout will be entirely virtual, with connections done between virtual machines. I’ve seen this setup on esxi/vsphere or proxmox.</p>
-<p><a href="https://en.wikipedia.org/wiki/Cloud_computing">Cloud computing</a>, according to the Wikipedia definition, is the instant access to resources, in a multi user system. It has different <a href="https://en.wikipedia.org/wiki/Cloud_computing#Deployment_models">deployment models</a>, but I will be focusing on self hosted private/public clouds in this article, and referring to them as “selfhosted clouds”.</p>
-<p>In practice, I find that what seperates a self hosted cloud from an HCI platform is multi-tenancy (multiple users or organizations), and automatibility. A public/private cloud should be set up in a way that users can request resources, within limits (to prevent a single user from DOS-ing your cloud by asking for all resources), and also the ability for those users to automate provisioning resources (i.e.&nbsp;creating virtual machines), or setting up those resources (i.e.&nbsp;configuring virtual machines).</p>
-<p>Although not every HCI is a selfhosted cloud, every selfhosted cloud is an HCI platform.</p>
-<p>Of course, this line is very blurry. Technically, VMware vSphere supports multi-tenancy, and can be automated… but for some reason it doesn’t seem to be a popular choice for a private cloud (probably the price). Rather than a binary, it would be better to look at it like a spectrum, where on one end is things like openstack, which is like your own personal AWS, even able to do things like databases as a service, and on the other end there is VMware ESXI, where the automation is locked behind the price of vSphere.</p>
-</section>
-<section id="desktop-hypervisors-comparison" class="level1">
-<h1>Desktop Hypervisors comparison</h1>
-<p>Here’s a list:</p>
+<section id="scale-22" class="level1">
+<h1>Scale 22</h1>
+<p>This is my second time going to the <a href="https://socallinuxexpo.org/">so cal linux expo</a>, AKA SCaLE. It’s very exciting, and this time I will take notes of the things I see.</p>
+<p>The big things I am excited for is:</p>
 <ul>
-<li>Virt-manager (libvirt)</li>
-<li>VMware Player (or Workstation)</li>
-<li>VirtualBox</li>
-<li>Hyper-V</li>
-</ul>
-<p>“Why don’t you use Virt-Manager?” I asked a Fedora Linux user, who was using VMware workstation as a desktop hypervisor.</p>
-<p>The reason: software defined networking. Only VMware Workstation (or player?) gives you the ability to create somewhat complex networking configurations from a grpahical interface, like having a firewall virtual machine be the entry point to a network. Although possible, if you have a good understanding of Linux networking and the Linux command line, convinience is often a reason why people choose one product over another.</p>
-<p><a href="https://www.VirtualBox.org/manual/ch06.html">VirtualBox’s networking</a> on Linux is also lacking. There is no way to have what you can have with VMware (both) or Libvirt, where you have a virtual network and your host has full access to that virtual network. Rather, with VirtualBox, you’re 3 options are:</p>
+<li>Nix (PlanetNix)</li>
+<li>Kubernetes (Cloud Native Days and DevopsDaysLA)
 <ul>
-<li>Forward ports from guest to host</li>
-<li>Host-Only networking: add a second adapter in addition to the original virtual ethernet, which can interface with the host.</li>
-<li>Bridged networking: Virtual machine connects to the same network the host is connected to, on ethernet this works fine, but on wireless</li>
+<li>There used to be Kubecon but not this year, instead it’s Cloud Native Days.</li>
+</ul></li>
+<li>Openstack (Openinfra days is here, they weren’t here last time)</li>
+<li>Friends! (I met many people from LA and near Pasadena, and I am excited to see them here as well)</li>
 </ul>
-<p>But, VirtualBox is not without it’s advantages. <a href="https://en.wikipedia.org/wiki/Vagrant_(software)">Vagrant</a> is a software to automatically create and provision virtual machines. They selected VirtualBox as their main provider (virtual machine plaform) because it was cross platform and free, compared to other options. The <a href="https://developer.hashicorp.com/vagrant/docs/providers/default">official docs for the default provider</a> mention this.</p>
-<p>Most <a href="https://app.vagrantup.com/boxes/search">vagrant boxes</a> are distributed at least as a VirtualBox machine, often only via VirtualBox. Vagrant supports other providers, but VirtualBox is overwhelmingly the most popular one.</p>
-<p>Vagrant isn’t the only case of this, however. For some reason, Nixos, a Linux based operating system distributes a <a href="https://nixos.org/download#nixos-virtualbox">VirtualBox demo machine</a>, but not one for any other platform, which always struck me as odd, considering that the popular, most supported choice of hypervisor on Linux is qemu-kvm.</p>
-<p>And that brings me to the the final desktop hypervisor I have personally used: qemu-kvm and frontends.</p>
-<p>In particular, I usually use libvirt, a daemon which manages qemu-kvm.</p>
-<p>I use virt-manager, which is a GUI frontend to libvirt. the core benefit of libvirt as opposed to alternatives, is performance.</p>
-<p>KVM is a type 1 hypervisor, as opposed to VMware Workstation/Player, or VirtualBox, which are both type 2. Type 1 hypervisors</p>
 </section>
-<section id="hciclouds" class="level1">
-<h1>HCI/Clouds</h1>
-<p>These are roughly ordered from less private cloud features, to a fully featured private cloud. This doesn’t include everything, just what I’ve looked at/worked with.</p>
+<section id="openinfra-days" class="level1">
+<h1>OpenInfra Days</h1>
+<p>I went to the first meeting, and was immediately introduced to an interesting software — <a href="https://docs.rackspacecloud.com/genestack-components/">genestack</a>. Unlike openstack helm, it doesn’t seem to <em>require</em> rook ceph, despite being a kubernetes deployment, which makes it very appealing. Currently, I am attempting to deploy Openstack on my single Kubernetes server, using FluxCD and Openstack-helm, but I am encountering a blockage because ceph doesn’t like being deployed on a single node.</p>
+<p>Interesting software/product list:</p>
 <ul>
-<li>VMware ESXi</li>
-<li>Proxmox</li>
-<li>LXD</li>
-<li>OpenSuse Harvester</li>
-<li>XCP-NG + Xen Orchestra</li>
-<li>VMware vSphere</li>
-<li>Openstack</li>
+<li><a href="https://github.com/rackerlabs/genestack">Genestack</a> — Openstack on/alongside K8s.</li>
+<li><a href="https://www.zconverter.com/">Zconverter</a> ­— Migrations of Vmware to Openstack</li>
+<li><a href="https://github.com/kata-containers/kata-containers/">Kata-containers</a> — Container runtime that uses a virtual machine for more security/isolation
+<ul>
+<li>Similar project mentioned: Confidential containers</li>
+</ul></li>
+<li><a href="https://www.starlingx.io/">StarlingX</a>
+<ul>
+<li>Linux, Debian, Kubernetes, Openstack, seems to be a Linux distro, they offer an ISO.</li>
+<li>“Enhanced Networking” — ipv6, dual stack support, now available</li>
+</ul></li>
 </ul>
-<p>This is a non exhaustive list.</p>
 </section>
-<section id="appliance-vs-hackable-hypervisor-platforms" class="level1">
-<h1>“Appliance” vs “Hackable” hypervisor platforms</h1>
-<p>In a <a href="https://www.reddit.com/r/homelab/comments/12j0rry/my_personal_impressions_on_proxmox_vs_xcpng/">reddit post</a>, they compared proxmox and xcp-ng, and one criticism that they had of xcp was that it wasn’t “hackable”.</p>
-<p>For some context, desktop/consumer oriented Nvidia GPU’s are often artifically restriced from the ability to divide the GPU up among virtual machines, instead, you can only do all or nothing passthrough.</p>
-<p>But with some custom drivers, and software hacks, it’s possible to unlock “virtual gpu” (vGPU), and split the GPU among multiple virtual machines.</p>
-<p>Proxmox, being just Debian Linux under the hood is very easy to modify, and vGPU is one popular hack people do.</p>
-<p>A developer/advocate for xcp-ng replied saying that <a href="https://www.reddit.com/r/homelab/comments/12j0rry/my_personal_impressions_on_proxmox_vs_xcpng/jfyygkx/">xcp-ng is not meant to be modified, but rather an “appliance”</a></p>
-<p>This is a crucial concept in software overall, the difference between something that “just works” and something you can modify.</p>
-<p>I had a similar issue with xcp-ng, where I wanted to create a cluster out of many x86_64 Mac Mini’s, but the Linux kernel did not have their wifi drivers. I had a lot of trouble installing wifi drivers, since they weren’t even packaged for the RHEL that xcp-ng uses under the hood, and it was very painful to even find that that XCP-NG was RHEL based, since that wasn’t documented anywhere.</p>
-<p>Appliance type softwares are what “just works”. VMWare ESXi/vSphere are more on the appliance side, although there don’t seem to be as many complains about it being too simple.</p>
-<p>On the opposite end, is openstack. Openstack is often criticized for being not a HCI platform, but rather a kludge of python code, tying together other forms of virtualized compute (libvirt, vSphere) or virtualized networking. Openstack is not one piece, but rather many components, like compute and networking are seperate components. There do exist platforms which automate the install, like <a href="https://docs.openstack.org/kolla-ansible/latest/">kolla-ansible</a>, which uses ansible to deploy the openstack components to docker containers, but openstack still encounters some of the same problems caused by it’s <em>hackability</em>. Openstack is far from an appliance, a “just works” application, which makes it unsuited for every usecase.</p>
-<p>For an organization seeking to do openstack, what I’ve seen is they’ll have a full-time team of engineers, equipped to make changes to openstack’s python base, or low if need be. Although a team of engineers may not be worth it, openstack enables a single team of engineers to manage 100,000+ machines, which can be highly cost effective.</p>
-<section id="automatibility" class="level2">
-<h2 class="anchored" data-anchor-id="automatibility">Automatibility</h2>
-<p>How easy is it to automatically create virtual machines? Is there any way to automatically configure virtual machines?</p>
-<p>These questions are important to users of these platforms. Typically, automation is done through some kind of API, which is accessed remotely by tools like Terraform.</p>
-<p>This is probably one of the crucial differences between VMware ESXi, and vSphere. vSphere, the paid version, has an API, and therefore can be automated. ESXi, doesn’t.</p>
-<p>For proxmox, there are two terraform providers. <a href="https://registry.terraform.io/providers/Telmate/proxmox/latest/docs">one of them</a> is pretty barebones, you can create a cloud-init disk, an lxc container, or a virtual machine, and that’s it. A common complaint of proxmox is that automation featuers are lacking, and in this example, you cannot create networks.</p>
-<p>There is another Terraform provider however, which <a href="https://registry.terraform.io/providers/bpg/proxmox/latest/docs/resources/virtual_environment_network_linux_bridge">seems to be able to create networks</a>, but both seem to be missing the ability to manage clustering.</p>
-<p>Proxmox also has a <a href="https://www.pulumi.com/registry/packages/proxmoxve/api-docs/network/">pulumi provider</a>, but that is lacking as well, unable to create virtual networks at all, only configure Proxmox’s firewall.</p>
-<p>An interesting coincidence, I recently came across <a href="https://programming.dev/post/10169968">a Lemmy post discussing this</a>, where <a href="https://programming.dev/comment/7478899">one user</a> mentions that they attempted to wrtie their own terraform provider, but eventually gave up. <a href="https://programming.dev/comment/7478238">Another user</a> talks about having to use ssh to finish up what the Terraform is unable to do, passing an iGPU through to a container.</p>
-<p>Compared this to the <a href="https://registry.terraform.io/providers/lxc/incus/latest/docs/resources">terraform provider for lxd/incus</a>, where, in addition to vms/lxc containers, you can configure virtual networks, volumes, snapshots, even load balancing… but no clustering.</p>
-<p>On the even more exteme end, <a href="https://registry.terraform.io/providers/terraform-provider-openstack/openstack/latest/docs">the terraform provider for openstack</a> lets you configure nearly every component of openstack, from VM’s, to networks, to load balancing. It even lets you spin up databases as a service (<a href="https://www.reddit.com/r/openstack/comments/1aluqnz/does_anyone_use_trove_module_to_provide_dbaas/">although people say that those are more trouble than they are worth to get running</a>).</p>
+<section id="planetnix" class="level1">
+<h1>PlanetNix</h1>
+<p>Interesting software/product list:</p>
+<ul>
+<li><a href="https://flox.dev/">Flox</a> — Flox uses nix packages, but aims to be a more user friendly abstraction layer</li>
+<li><a href="https://github.com/TraceMachina/nativelink/tree/main/local-remote-execution">NativeLink/local-remote-execution</a>
+<ul>
+<li>Somewhere in here is code that converts a nix shell/env from a flake to a docker container</li>
+</ul></li>
+</ul>
+</section>
+<section id="embedded-programming-workshop" class="level1">
+<h1>Embedded Programming Workshop</h1>
+<p>I saw an embedded programming workshop, running during lunch when the Openstack stuff and Nix stuff was put on holds.</p>
+<p>Firstly, I got a free board! One of <a href="https://www.amazon.com/STM32-Nucleo-Development-STM32F446RE-NUCLEO-F446RE/dp/B01I8XLEM8">these</a>. It doesn’t run an operating system, so the presenter referred to it as “bare metal C”</p>
+<p>Tools needed: <code>gcc stlink stlink-gui stlink-tool stm32loader stm32flash</code> * Eclipse, C extension, STM extension which can be found <a href="https://www.openstm32.org">here</a></p>
+<p>Setup: Chown the /dev/ttyACM0 to be owned by your user.</p>
+<p>Compilation: `gcc</p>
+<p>Misc Notes</p>
+<ul>
+<li>Text files are different between all three operating systems because Microsoft, Linux, and Apple decided to store the end of line/newline character as either a carriage return, line feed, or both. This was due to an earlier device which needed to use both a carriage return and a line feed in order to avoid physical issues with ink smudging.</li>
+<li>uart library is used for C programming with embedded devices.</li>
+<li>Polling is needed since device can be sent to the serial faster than it can be worked with
+<ul>
+<li>Polling is a simple algorithm: Ask if device is ready, then send character (or do the thing)</li>
+<li>Mostly a waste of time, but is very simple</li>
+</ul></li>
+<li>Interrupt: Alternative, more efficient than polling
+<ul>
+<li>a signal that “interrupts” the</li>
+<li>Device raises interrupt line, CPU halts normal flow and calls interrupt function, which is an actual function</li>
+<li>ARM devices save state of machine before interrupt function, which means you don’t have to do it manually</li>
+<li>USART2_IRQHandler: interrupt function</li>
+</ul></li>
+</ul>
+<p>I had to leave early, but the author of this talk, Steve Oualline, seems very interesting. He has a <a href="https://nostarch.com/bare-metal-c">book published by no starch press</a>, Bare Metal C, which is about embedded C programming.</p>
+<p>He also has some <a href="http://www.oualline.com/books.free/free-books.html">free books</a> and other resources on his website.</p>
+</section>
+<section id="sunseccon" class="level1">
+<h1>SunSecCon</h1>
+<section id="osint-for-cybersecurity-and-hackers" class="level2">
+<h2 class="anchored" data-anchor-id="osint-for-cybersecurity-and-hackers">OSINT for Cybersecurity and Hackers</h2>
+<p>This is another presentation, done by [REDACTED], and ███ █████████. Given the topic at hand, and the way that [REDACTED] mentioned trying to scrub her name from the internet, I thought it would be appropriate to redact the presenters’ names. They are easy to find though, consider it an introduction into the world of OSINT.</p>
+<p>Both presenters are red team, [REDACTED] is the “people side” and ███ is the “tech side”. [REDACTED] views it as not just a set of steps, but a thought process.</p>
+<p>Search Engines:</p>
+<ul>
+<li>Different search engines give different results (what’s dogpile?)</li>
+<li>Different browsers give different results</li>
+<li>Different… internet connections?</li>
+<li>Search engines can index content that is supposed to be walled and even make it accessible’</li>
+<li>Search yourself! Forwards, backwards, etc.</li>
+<li>4 or 5 different ways to write phone numbers. International means even more methods. Search every kind in order to get lucky.</li>
+<li>Email addresses. What if targets use the same username across email addresses and platforms</li>
+<li>Usernames: Divide up, mix around</li>
+<li>Dates: Can also be written in a million different ways</li>
+<li>United States is the only country to put the month first (lmao)</li>
+</ul>
+<p>Sockpuppets:</p>
+<ul>
+<li>Called “identities” in the investigation world
+<ul>
+<li>datafakegenerator.com, fake name generator, platforms to help creation of sockpuppet accounts</li>
+</ul></li>
+<li>Select mildly popular real name.
+<ul>
+<li>███: Select names that were popular for a generation and manipulate your accounts to look older/younger</li>
+</ul></li>
+<li>Sometimes government agency members aren’t permitted to create a sockpuppet account with a real person’s name. A way around this is via other usernames.</li>
+<li>Do not use a real person’s image, it’s tracable, especially if the image is from a public source
+<ul>
+<li><a href="https://ThisPersonDoesNotExist.com" class="uri">https://ThisPersonDoesNotExist.com</a>, <a href="https://Generated.Photos/Human-Generator" class="uri">https://Generated.Photos/Human-Generator</a>, SnapChat, ChatGPT/AI image generators. <a href="https://huggingface.co/black-forest-labs" class="uri">https://huggingface.co/black-forest-labs</a> (flux I think?). Other Stable Diffusion, Hugging Face models.</li>
+<li><a href="https://www.synthesia.io/tools/talking-head-video-maker" class="uri">https://www.synthesia.io/tools/talking-head-video-maker</a> — Generates talking vidoes of your head or another person’s head.</li>
+<li>Burner app. Other deepfakes</li>
+<li>Same the screenshot to a thumbdrive, named as something simple, to ensure no computer metadata is traced</li>
+</ul></li>
+</ul>
+<p>Staying Private/Anonymous:</p>
+<ul>
+<li>Virtual machines
+<ul>
+<li>███: Build a virtual machine dedicated to a specific task. Change the background to something with a ton of identifying info, so you know who “this person” is.</li>
+<li>███: Make a virtual machine to play with AI. GPT4ALL. Airgapped AI can be used in locked down environments.</li>
+<li>███: I have a VM just for taxes.</li>
+</ul></li>
+<li>Private Browser: Private browser doesn’t cache anything. Not always malicious stuff, sometimes it’s just porn lmao.</li>
+<li><a href="https://tails.net/">Tails</a>! Made by Tor, portable, amnesiac operating system that keeps the user anonymous. Can be put on a thumbdrive.</li>
+<li>VPN, needed on every device.
+<ul>
+<li>[REDACTED] uses HidemyAss, because of 270 given locations. Lets her pretend to be from other locations. Also lets her get into geolocked/blocked resources.</li>
+<li>███ has a similar usecase, pretend to be from a usecase while searching for companies and organizations.</li>
+</ul></li>
+<li>Virtual credit cards: Privacy.com</li>
+<li>Phone numbers
+<ul>
+<li>Gmail: Free google voice, which can be used to get burner numbers.</li>
+<li>“Burner App” — turns your phone into a burner phone</li>
+<li>Iphones have an update where you can record calls — but only legal in one party states.</li>
+<li><a href="https://callhippo.com/international-phone-number/" class="uri">https://callhippo.com/international-phone-number/</a> — International VOIP phone number</li>
+<li>“Call Voice Changer — IntCall” — Voice Changer, [REDACTED] needed one to sound like a man.</li>
+</ul></li>
+</ul>
+<p>Security Advice:</p>
+<ul>
+<li>“Don’t click” ­— Open a browser and log into the account instead.</li>
+</ul>
+<p>Finding People:</p>
+<ul>
+<li>Facial Recognition
+<ul>
+<li><a href="https://pimeyes.com" class="uri">https://pimeyes.com</a> — 30 USD / Month</li>
+<li>Facecheck.ID — This one will find images that match but are blurry. Only accepts payment via crypto.</li>
+<li>Yandex, Russian Search engine, does an excellent job of object recognition</li>
+</ul></li>
+<li>Phone numbers
+<ul>
+<li><a href="https://spydialer.com" class="uri">https://spydialer.com</a> : US based site that lets you call someone’s number, but it will show someone else’s number, and it will get the voicemail message.</li>
+</ul></li>
+<li>User info lookup
+<ul>
+<li><a href="https://www.melissa.com/" class="uri">https://www.melissa.com/</a> — Site designed to clean personal data… but can also be used to find personal information.
+<ul>
+<li>Cheaper to search in the first month of usage. Gives many credits for free as a sign up bonus.</li>
+<li>Global Lookups are very useful.</li>
+</ul></li>
+<li><a href="https://FastPeopleSearch.com" class="uri">https://FastPeopleSearch.com</a> — [REDACTED]’s favorite one. Free.</li>
+<li><a href="https://TruePeopleSearch.com" class="uri">https://TruePeopleSearch.com</a> — Similar to above, perhaps owned by the same company. [REDACTED] says it didn’t give her as much.</li>
+</ul></li>
+<li>Google Earth:
+<ul>
+<li>███ likes Google Earth. Story: Hiker gets lost, and then he sends images of where he is. Then some guy who has mastered the art of figuring out where movies are shot, and then uses Google Earth to figure out exactly where the hiker got lost.</li>
+</ul></li>
+<li>Tweetdeck
+<ul>
+<li>Now requires X (formerly known as twitter) pro, can search a ton of old tweets.</li>
+<li>Let’s you follow someone without following them. Sometimes younger people think that @ ’ing people is private.</li>
+<li>Can “archive” deleted tweets.</li>
+<li>Can do advanced search, filter by location, use booleans, etc. Can also search by emoji.</li>
+</ul></li>
+<li>Google alerts:
+<ul>
+<li>Weekly report of new stuff that would come up in a google alert</li>
+</ul></li>
+</ul>
+<p>Finding Devices:</p>
+<ul>
+<li><a href="https://shodan.io" class="uri">https://shodan.io</a> — Search engine for the entire internet
+<ul>
+<li>I prefer <a href="https://www.zoomeye.ai/">zoomeye</a> because they give more free stuff.</li>
+</ul></li>
+<li>Nmap, OpenVAS, etc.</li>
+</ul>
+<p>Dark Web Indexes/Search Engines:</p>
+<ul>
+<li>Dark Blue Intelligence — Dark web scraper that you can search
+<ul>
+<li>Can get a demo as long as you’re with a company</li>
+</ul></li>
+<li>Dark Owl, less user friendly than above though</li>
+<li><a href="https://www.skopenow.com/" class="uri">https://www.skopenow.com/</a>
+<ul>
+<li>Scrapes <em>everything</em>, including the dark web.</li>
+<li>Will give a 7 day trial if you tell them you were in [REDACTED]’s OSINT training.</li>
+</ul></li>
+</ul>
+<p>AI:</p>
+<ul>
+<li>“Write this better”</li>
+<li>AI hallucinates, so [REDACTED] must verify that it’s output is accurate.</li>
+<li>Deepfakes are concerning. There was a zoom call, with 6 “people” who where deepfakes and scammers managed to get half a million dollars from a Hong Kong company.</li>
+</ul>
 </section>
 </section>
-<section id="performance" class="level1">
-<h1>Performance</h1>
-<p>What’s performance like?</p>
-<p>Here are some relevant performance articles</p>
-<p>LXC vs Hypervisors: <a href="https://link.springer.com/chapter/10.1007/978-3-030-74402-1_12" class="uri">https://link.springer.com/chapter/10.1007/978-3-030-74402-1_12</a></p>
-<p>Xen vs KVM and overheads: <a href="https://sites.cc.gatech.edu/systems/projects/Elba/pub/JackLiBigdata13.pdf" class="uri">https://sites.cc.gatech.edu/systems/projects/Elba/pub/JackLiBigdata13.pdf</a></p>
-<p>Performance of several platforms: <a href="https://link.springer.com/chapter/10.1007/978-3-319-91186-1_16" class="uri">https://link.springer.com/chapter/10.1007/978-3-319-91186-1_16</a></p>
-<p>Comparision of desktop hypervisors: <a href="https://link.springer.com/chapter/10.1007/978-3-030-74402-1_12" class="uri">https://link.springer.com/chapter/10.1007/978-3-030-74402-1_12</a></p>
-<p>Four hypervisor comparison: <a href="https://ieeexplore.ieee.org/abstract/document/6572995" class="uri">https://ieeexplore.ieee.org/abstract/document/6572995</a></p>
-<p>Docker vs Native vs Xen: <a href="https://ieeexplore.ieee.org/abstract/document/8248375" class="uri">https://ieeexplore.ieee.org/abstract/document/8248375</a></p>
-<p>Hypervisors vs Lightweight virtualization: <a href="https://ieeexplore.ieee.org/abstract/document/7092949" class="uri">https://ieeexplore.ieee.org/abstract/document/7092949</a></p>
+<section id="notes-from-friends" class="level1">
+<h1>Notes from Friends</h1>
+<p>Nix can become nigthmarish to update on Mac OS, due to the system level changes that Mac makes: <a href="https://zenn.dev/kawarimidoll/scraps/3d71b16d1bb7e3" class="uri">https://zenn.dev/kawarimidoll/scraps/3d71b16d1bb7e3</a>.</p>
+<p>Best large language model for coding: qwen2.5-32b-instruct. “On par with gpt-02-mini”.</p>
+<p>A backend developer would be expected to deploy things and debug containers in kubernetes, or at least understand how their application will run in a k8s environment. Don’t have to be experts. For backend, frontend, not really.</p>
+<p><a href="https://mailu.io/2024.06/">mailu</a> helm/docker based email deployment.</p>
+<p>To get an ASN, you can simply create a company and then apply for it?!</p>
+<p>Apparently, infinite recursion can occur as an error in Nix.</p>
+</section>
+<section id="food-blog" class="level1">
+<h1>Food Blog</h1>
+<p>People keep telling me I should start one. So here’s a mini food blog.</p>
+<p>So the first day, the first place I went to, for lunch, was <a href="https://www.facebook.com/artlunchusa">Art Lunch</a></p>
+<p>I had the Pastrami Sandwich</p>
+<p><img src="images/art_lunch.jpg" class="img-fluid"></p>
+<p>It was very good, and filling, too. At $14, it was a bit pricy though.</p>
+<p>The next place I went to, dinner (Thursday 3/6/25), was an Italian place, Bucca di Bepppo.</p>
+<p>This place was a family restaurant, so all the portions were sized for multiple people. I shared Lasagna, Chicken Parmesan, garlic sticks, and Gorgonzola salad with 11 other people.</p>
+<p>Overall, it was excellent.</p>
 
 
 </section>
@@ -462,18 +578,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
     }
     return false;
   }
-  const clipboard = new window.ClipboardJS('.code-copy-button', {
-    text: function(trigger) {
-      const codeEl = trigger.previousElementSibling.cloneNode(true);
-      for (const childEl of codeEl.children) {
-        if (isCodeAnnotation(childEl)) {
-          childEl.remove();
-        }
-      }
-      return codeEl.innerText;
-    }
-  });
-  clipboard.on('success', function(e) {
+  const onCopySuccess = function(e) {
     // button target
     const button = e.trigger;
     // don't keep focus
@@ -505,10 +610,30 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
     }, 1000);
     // clear code selection
     e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
   });
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
     var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
     var mailtoRegex = new RegExp(/^mailto:/);
-      var filterRegex = new RegExp("https:\/\/moonpiedumplings\.github\.io");
+      var filterRegex = new RegExp("\.");
     var isInternal = (href) => {
         return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
     }
@@ -610,7 +735,6 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
       if (window.Quarto?.typesetMath) {
         window.Quarto.typesetMath(note);
       }
-      // TODO in 1.5, we should make sure this works without a callout special case
       if (note.classList.contains("callout")) {
         return note.outerHTML;
       } else {
