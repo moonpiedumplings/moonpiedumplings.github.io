@@ -1,5 +1,5 @@
 ---
-title: "SCaLE 22x, Day 1"
+title: "SCaLE 22x, Day 1 and 2"
 description: ""
 date: "2025-3-25"
 categories: [blog]
@@ -34,15 +34,34 @@ Interesting software/product list:
 * [StarlingX](https://www.starlingx.io/)
     * Linux, Debian, Kubernetes, Openstack, seems to be a Linux distro, they offer an ISO.
     * "Enhanced Networking" — ipv6, dual stack support, now available
+* [vJailbreak](https://github.com/platform9/vjailbreak) — automatic migrations from vmware to openstack.
+    * Doesn't appear to be live, minimal downtime
+* Free educational/research clouds:
+    * <https://cloudlab.us>, <https://chameleoncloud.readthedocs.io/en/latest/contents.html>,  Jetstream2
 
 
 # PlanetNix
+
+According to the Flox intro presenter, there is a blog about getting Nix to run on Windows.
+
+## Tvix / Replit
+
+Replit used to use nix, and then they switched to the tvix implementation of the nix daemon. Unlike Nix, it uses a content addressable store, leading to massive storage savings when deduplication. They compressed their database from 6 terabytes to 1.2 terabytes. Incremental updates don't take as much space, and it's much cehaper overall.
+
+![](images/tvix_savings.jpg)
+
+## Eelco Dostra's Configurable flakes:
+
+<https://determinate.systems/posts/flake-schemas/>
+
+Flakes don't support passing of command line arguments, Eelco has a solution. This solution maintains benefits of nix, like hermeticity, caching, and discoverability.
 
 Interesting software/product list:
 
 * [Flox](https://flox.dev/) — Flox uses nix packages, but aims to be a more user friendly abstraction layer
 * [NativeLink/local-remote-execution](https://github.com/TraceMachina/nativelink/tree/main/local-remote-execution)
     * Somewhere in here is code that converts a nix shell/env from a flake to a docker container
+* Tvix, an alternate implementation of the nix store
 
 
 # Embedded Programming Workshop
@@ -56,7 +75,7 @@ Tools needed: `gcc stlink stlink-gui stlink-tool stm32loader stm32flash`
 
 Setup:  Chown the /dev/ttyACM0 to be owned by your user. 
 
-Compilation: `gcc 
+Compilation: `gcc something`
 
 Misc Notes
 
@@ -74,6 +93,10 @@ Misc Notes
 I had to leave early, but the author of this talk, Steve Oualline, seems very interesting. He has a [book published by no starch press](https://nostarch.com/bare-metal-c), Bare Metal C, which is about embedded C programming.
 
 He also has some [free books](http://www.oualline.com/books.free/free-books.html) and other resources on his website.
+
+Here's the device I received, the STM32:
+
+![](images/stm32.jpg)
 
 
 # SunSecCon
@@ -179,6 +202,134 @@ AI:
 * AI hallucinates, so \[REDACTED\] must verify that it's output is accurate.
 * Deepfakes are concerning. There was a zoom call, with 6 "people" who where deepfakes and scammers managed to get half a million dollars from a Hong Kong company.
 
+# Cloud Native Con
+
+## Kubernetes and the Dragons in Linux Kernel vs. Userspace Tools
+
+"Computers, operating systems, networks are a hot mess. They’re barely manageable, even if you know a decent amount about what you’re doing. Nine out of ten software engineers agree: it’s a miracle anything works at all."
+
+<https://fasterthanli.me/articles/i-want-off-mr-golangs-wild-ride>
+
+Kernel abstractions:
+
+* Kernel abstracts hardware
+* Netfilter which has iptables or nftables on it
+* Kernel has modules, that can be compiled into or not out of the kernel
+
+Userspace tooling configures kernel level things:
+
+* Iptables tool command line tool can configure nftables or iptables which configure netfilter
+* Sometimes this causes issues
+
+Kubernetes system components must cross the background into kernelspace:
+
+* CNI's may need to manage  iptables rules
+* GPUs, CSIs, Meshes
+
+Iptables
+
+* Used by many kubernetes components: kuber-proxy, CNI's, NPC's
+* Pre-container era tool, designed so that there is only one iptables setup on the system
+* The command line tool can configure the legacy iptables, or nftables
+* Every component must use either iptables or nftables, otherwise networking will break.
+    * K8s community has [wrappers](https://github.com/kubernetes-sigs/iptables-wrappers) that detect the mode. Not bulletproof, though, but usually works
+
+Iptables Rules
+
+* Read ALL rules, do changes, and then write them back
+* No pratcile way to manage individual rules
+
+Iptables versions
+
+* Rules are stored and executed on kernel level
+* But the host and containers can have different versions
+* Different versions can interpret the rules differently
+* v1.8.7 seems to lack the marking feature, meaning it could bug iptables by a later version into dropping ALL packets rather than just marked ones
+    * Presenter had so much *fun* debugging that one
+
+"I have not seen any attempts at keepign the *in kernel* ruleset compatible to older versions of iptables-nft" — Phil Sutter (kernel netfilter dev).
+
+* Basically they don't treat the above issue as a bug. Lmao.
+* Presenter defends this, arguing that it makes sense because it's a pre-container tool, and is not designed to handle multiple instances of it running on your system
+
+Iptables must be the same version everywhere:
+
+* Hosts, kube-proxy, CNI, mesh
+    * So this must be why using a firewall with kubernetes is not recommended. It's unlike a stable release distro will have a firewall that uses the same version of iptables
+* Can you really pin all the versions?
+* k0s began to pin, and vendor iptables into the k0s binary itself. 
+    * Cannot override host operating system, but they try
+
+Moving away from iptables:
+
+* Legacy iptables is getting less popular, because of read-all, write all setup
+    * Still default in some spots, like kube-proxy
+* Nftables and eBPF on the rise
+    * Nftables lets you modify a single rule alone
+
+Ipset:
+
+* Efficient management of sets of addresses
+* Quick lookups for iptables rules
+* Stored "in kernel" as hashes, bitmaps, etc
+* *Also* a pre-containers era tool
+
+Ipsets can be managed by multiple components (again):
+
+* 6.2 kernel added a new "bitmask" parameter, which older ipset versions cannot cope with
+* Now the ipset version matters, but also the kernel version
+* Version must be pinned across networking pieces: kube-proxy, CNI's, mesh, NCP, etc
+    * k0s can pin all the kubernetes images. But it cannot pin the host.
+* Mismatch can cause via OS packages or kernel version updating
+
+Modprobe:
+
+* Userspace tool to load/unload kernel modules
+* Handles depenencies
+* Pre containers era tool
+
+Kernel modules:
+
+* Compiled as a ".ko", kernel object
+* Distributed as compressed, and modprobe decompresses when unloading
+    * Can be compressed via multiple algorithms
+    * The modprobe in a container might not always support the compression algo used on the host. Debian 12 kmod supports ZSTD and XZ, but what if host uses GZ, and the container is Debian 12? Then kernel module loading in the container will fail
+* CNIs, CSIs, etc, *might* need to load modules, so they mount /lib, /sys, etc
+    * CNI might need contracts, CSI might need filesystem, GPU stuff, etc
+    * Usually not relevant though
+* Audience member: "Are there CNI's which load modules? Sounds scary?"
+
+Debugging:
+
+* Iptables case caused ALL networking to go down — no ssh access to machine
+* Very unfamilier errors
+* Super low level stuff
+
+How presenter debugged:
+
+* They ran k0s in containers, since all their testing was based on this
+* Read kernel code... a lot of it.
+* They could docker exec, even if the networking goes down
+* Trial and error to discover issue
+
+Fixes:
+
+* No easy fix
+* k0s pins versions of kubernetes components
+* Test EVERYTHING before rolling out to prod
+
+# DevopsDayLA
+
+So apparently, DevopsDay LA has a regular meetup, every two months, on Thursday in Santa Monica.
+
+Interesting software/products:
+* <https://runme.dev> — Interactive markdown notebooks for devops
+
+![](images/thankyoudevopsers.jpg)
+
+This is funny, but it should be noted that DevOps as a career as a lot of remote jobs. 
+
+
 
 # Notes from Friends
 
@@ -190,14 +341,77 @@ A backend developer would be expected to deploy things and debug containers in k
 
 [mailu](https://mailu.io/2024.06/) helm/docker based email deployment.
 
-To get an ASN, you can simply create a company and then apply for it?!
+To get an ASN, you can simply create a company and then apply for it, but the organization responsible for giving them out has ran out of them.
 
 Apparently, infinite recursion can occur as an error in Nix.
 
+CubeFS is a good alternative to ceph or longhorn for a Kubernetes distribution filesystem.
+
+Github class is good for teaching with an environment, but it is getting more bugs and is collapsing.
+
+National Science Foundation, has Research Experiences for Undergraduates (REU). According to someone, they also offer money for various other research initiatives.
+
+Jean Kims book, phoenix project. Recommended to me when I talked about DevOps philosophy.
+
+Ditherit.com
+
+https://www.recurse.com
+
+Take a break during jobs
+
+Linbit, open source block storage
+
+Hackathons sometimes involve shark tank style pitches.
+
+ID tech teaching platform
+
+# Job Board
+
+There is a literal job baord at SCaLE, a literal whiteboard where companies mention they are hiring or people state that they are looking for a job.
+
+![](images/jobboard1.jpg)
+
+![](images/jobboard2.jpg)
+
+
+# Exhibition Hall
+
+There was some fun stuff in the exhibition hall.
+
+There was lots of ARM stuff.
+
+![](images/macminiarm.jpg)
+
+Like this Mac Mini running Arm and Asahi Linux, where they were installing games from steam during the exhibition hall.
+
+
+Interesting software/products/stuff:
+
+* <https://coder.dev>
+* FastX
+    * Virtual Desktop Infrastructure offering Linux machines
+    * educational licenses are cheaper, apparently all of cal state had a license
+* <lpi.org/clubs> — The Linux professional Institute has notes on 
+    * Ieee acm curriculum for bachelors in computer science or comp engineering, but don't say what software or hardware, so you can pick
+* <https://www.codeday.org/>
+    * Computing talent initiative, sign people up for this
+
+
+# Loot!
+
+I got a lot:
+
+![](images/loot_far.jpg)
+
+![](images/loot_topview.jpg)
+
+I will do a detailed sorting and breakdown of what I got later.
 
 # Food Blog
 
 People keep telling me I should start one. So here's a mini food blog.
+
+Day 1:s
 
 So the first day, the first place I went to, for lunch, was [Art Lunch](https://www.facebook.com/artlunchusa)
 
@@ -207,9 +421,25 @@ I had the Pastrami Sandwich
 
 It was very good, and filling, too. At $14, it was a bit pricy though.
 
+
 The next place I went to, dinner (Thursday 3/6/25), was an Italian place, Bucca di Bepppo.
 
 This place was a family restaurant, so all the portions were sized for multiple people. I shared Lasagna, Chicken Parmesan, garlic sticks, and Gorgonzola salad with 11 other people. 
 
 Overall, it was excellent.
 
+Day 2:
+
+For breakfast, it was again a cream cheese bagel and an apple danish.
+
+For lunch, the Pasadena Convention center provided food as part of the DevopsDay LA open spaces. It was pretty good too, and it was free.
+
+![](images/turkeysandwich.jpg)
+
+I also got some of Tony's dark chocolate from the Arm booth:
+
+![](images/darkchocolate.jpg)
+
+It was pretty good, 70% dark. It was hard to break pieces off so I could eat or share them though. I only ate half off it, and threw the rest away, it was a really big bar and I couldn't eat all of it.
+
+For dinner I had an extra one of the sandwiches mentioned above, which a friend had given to me and I saved it so I could eat it later.
