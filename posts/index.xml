@@ -10,9 +10,9 @@
 <atom:link href="./posts/index.xml" rel="self" type="application/rss+xml"/>
 <description>All posts</description>
 <generator>quarto-1.6.40</generator>
-<lastBuildDate>Thu, 06 Mar 2025 08:00:00 GMT</lastBuildDate>
+<lastBuildDate>Tue, 25 Mar 2025 07:00:00 GMT</lastBuildDate>
 <item>
-  <title>SCaLE 22x, Day 1</title>
+  <title>SCaLE 22x, Day 1 and 2</title>
   <link>./blog/scale-22/</link>
   <description><![CDATA[ 
 
@@ -35,7 +35,7 @@
 </section>
 <section id="openinfra-days" class="level1">
 <h1>OpenInfra Days</h1>
-<p>I went to the first meeting, and was immediately introduced to an interesting software — <a href="https://docs.rackspacecloud.com/genestack-components/">genestack</a>. Unlike openstack helm, it doesn’t seem to <em>require</em> rook ceph, despite being a kubernetes deployment, which makes it very appealing. Currently, I am attempting to deploy Openstack on my single Kubernetes server, using FluxCD and Openstack-helm·, but I am encountering a blockage because ceph doesn’t like being deployed on a single node.</p>
+<p>I went to the first meeting, and was immediately introduced to an interesting software — <a href="https://docs.rackspacecloud.com/genestack-components/">genestack</a>. Unlike openstack helm, it doesn’t seem to <em>require</em> rook ceph, despite being a kubernetes deployment, which makes it very appealing. Currently, I am attempting to deploy Openstack on my single Kubernetes server, using FluxCD and Openstack-helm, but I am encountering a blockage because ceph doesn’t like being deployed on a single node.</p>
 <p>Interesting software/product list:</p>
 <ul>
 <li><a href="https://github.com/rackerlabs/genestack">Genestack</a> — Openstack on/alongside K8s.</li>
@@ -49,10 +49,28 @@
 <li>Linux, Debian, Kubernetes, Openstack, seems to be a Linux distro, they offer an ISO.</li>
 <li>“Enhanced Networking” — ipv6, dual stack support, now available</li>
 </ul></li>
+<li><a href="https://github.com/platform9/vjailbreak">vJailbreak</a> — automatic migrations from vmware to openstack.
+<ul>
+<li>Doesn’t appear to be live, minimal downtime</li>
+</ul></li>
+<li>Free educational/research clouds:
+<ul>
+<li><a href="https://cloudlab.us" class="uri">https://cloudlab.us</a>, <a href="https://chameleoncloud.readthedocs.io/en/latest/contents.html" class="uri">https://chameleoncloud.readthedocs.io/en/latest/contents.html</a>, Jetstream2</li>
+</ul></li>
 </ul>
 </section>
 <section id="planetnix" class="level1">
 <h1>PlanetNix</h1>
+<p>According to the Flox intro presenter, there is a blog about getting Nix to run on Windows.</p>
+<section id="tvix-replit" class="level2">
+<h2 class="anchored" data-anchor-id="tvix-replit">Tvix / Replit</h2>
+<p>Replit used to use nix, and then they switched to the tvix implementation of the nix daemon. Unlike Nix, it uses a content addressable store, leading to massive storage savings when deduplication. They compressed their database from 6 terabytes to 1.2 terabytes. Incremental updates don’t take as much space, and it’s much cehaper overall.</p>
+<p><img src="./blog/scale-22/images/tvix_savings.jpg" class="img-fluid"></p>
+</section>
+<section id="eelco-dostras-configurable-flakes" class="level2">
+<h2 class="anchored" data-anchor-id="eelco-dostras-configurable-flakes">Eelco Dostra’s Configurable flakes:</h2>
+<p><a href="https://determinate.systems/posts/flake-schemas/" class="uri">https://determinate.systems/posts/flake-schemas/</a></p>
+<p>Flakes don’t support passing of command line arguments, Eelco has a solution. This solution maintains benefits of nix, like hermeticity, caching, and discoverability.</p>
 <p>Interesting software/product list:</p>
 <ul>
 <li><a href="https://flox.dev/">Flox</a> — Flox uses nix packages, but aims to be a more user friendly abstraction layer</li>
@@ -60,7 +78,9 @@
 <ul>
 <li>Somewhere in here is code that converts a nix shell/env from a flake to a docker container</li>
 </ul></li>
+<li>Tvix, an alternate implementation of the nix store</li>
 </ul>
+</section>
 </section>
 <section id="embedded-programming-workshop" class="level1">
 <h1>Embedded Programming Workshop</h1>
@@ -68,7 +88,7 @@
 <p>Firstly, I got a free board! One of <a href="https://www.amazon.com/STM32-Nucleo-Development-STM32F446RE-NUCLEO-F446RE/dp/B01I8XLEM8">these</a>. It doesn’t run an operating system, so the presenter referred to it as “bare metal C”</p>
 <p>Tools needed: <code>gcc stlink stlink-gui stlink-tool stm32loader stm32flash</code> * Eclipse, C extension, STM extension which can be found <a href="https://www.openstm32.org">here</a></p>
 <p>Setup: Chown the /dev/ttyACM0 to be owned by your user.</p>
-<p>Compilation: `gcc</p>
+<p>Compilation: <code>gcc something</code></p>
 <p>Misc Notes</p>
 <ul>
 <li>Text files are different between all three operating systems because Microsoft, Linux, and Apple decided to store the end of line/newline character as either a carriage return, line feed, or both. This was due to an earlier device which needed to use both a carriage return and a line feed in order to avoid physical issues with ink smudging.</li>
@@ -88,6 +108,8 @@
 </ul>
 <p>I had to leave early, but the author of this talk, Steve Oualline, seems very interesting. He has a <a href="https://nostarch.com/bare-metal-c">book published by no starch press</a>, Bare Metal C, which is about embedded C programming.</p>
 <p>He also has some <a href="http://www.oualline.com/books.free/free-books.html">free books</a> and other resources on his website.</p>
+<p>Here’s the device I received, the STM32:</p>
+<p><img src="./blog/scale-22/images/stm32.jpg" class="img-fluid"></p>
 </section>
 <section id="sunseccon" class="level1">
 <h1>SunSecCon</h1>
@@ -223,18 +245,207 @@
 </ul>
 </section>
 </section>
+<section id="cloud-native-con" class="level1">
+<h1>Cloud Native Con</h1>
+<section id="kubernetes-and-the-dragons-in-linux-kernel-vs.-userspace-tools" class="level2">
+<h2 class="anchored" data-anchor-id="kubernetes-and-the-dragons-in-linux-kernel-vs.-userspace-tools">Kubernetes and the Dragons in Linux Kernel vs.&nbsp;Userspace Tools</h2>
+<p>“Computers, operating systems, networks are a hot mess. They’re barely manageable, even if you know a decent amount about what you’re doing. Nine out of ten software engineers agree: it’s a miracle anything works at all.”</p>
+<p><a href="https://fasterthanli.me/articles/i-want-off-mr-golangs-wild-ride" class="uri">https://fasterthanli.me/articles/i-want-off-mr-golangs-wild-ride</a></p>
+<p>Kernel abstractions:</p>
+<ul>
+<li>Kernel abstracts hardware</li>
+<li>Netfilter which has iptables or nftables on it</li>
+<li>Kernel has modules, that can be compiled into or not out of the kernel</li>
+</ul>
+<p>Userspace tooling configures kernel level things:</p>
+<ul>
+<li>Iptables tool command line tool can configure nftables or iptables which configure netfilter</li>
+<li>Sometimes this causes issues</li>
+</ul>
+<p>Kubernetes system components must cross the background into kernelspace:</p>
+<ul>
+<li>CNI’s may need to manage iptables rules</li>
+<li>GPUs, CSIs, Meshes</li>
+</ul>
+<p>Iptables</p>
+<ul>
+<li>Used by many kubernetes components: kuber-proxy, CNI’s, NPC’s</li>
+<li>Pre-container era tool, designed so that there is only one iptables setup on the system</li>
+<li>The command line tool can configure the legacy iptables, or nftables</li>
+<li>Every component must use either iptables or nftables, otherwise networking will break.
+<ul>
+<li>K8s community has <a href="https://github.com/kubernetes-sigs/iptables-wrappers">wrappers</a> that detect the mode. Not bulletproof, though, but usually works</li>
+</ul></li>
+</ul>
+<p>Iptables Rules</p>
+<ul>
+<li>Read ALL rules, do changes, and then write them back</li>
+<li>No pratcile way to manage individual rules</li>
+</ul>
+<p>Iptables versions</p>
+<ul>
+<li>Rules are stored and executed on kernel level</li>
+<li>But the host and containers can have different versions</li>
+<li>Different versions can interpret the rules differently</li>
+<li>v1.8.7 seems to lack the marking feature, meaning it could bug iptables by a later version into dropping ALL packets rather than just marked ones
+<ul>
+<li>Presenter had so much <em>fun</em> debugging that one</li>
+</ul></li>
+</ul>
+<p>“I have not seen any attempts at keepign the <em>in kernel</em> ruleset compatible to older versions of iptables-nft” — Phil Sutter (kernel netfilter dev).</p>
+<ul>
+<li>Basically they don’t treat the above issue as a bug. Lmao.</li>
+<li>Presenter defends this, arguing that it makes sense because it’s a pre-container tool, and is not designed to handle multiple instances of it running on your system</li>
+</ul>
+<p>Iptables must be the same version everywhere:</p>
+<ul>
+<li>Hosts, kube-proxy, CNI, mesh
+<ul>
+<li>So this must be why using a firewall with kubernetes is not recommended. It’s unlike a stable release distro will have a firewall that uses the same version of iptables</li>
+</ul></li>
+<li>Can you really pin all the versions?</li>
+<li>k0s began to pin, and vendor iptables into the k0s binary itself.
+<ul>
+<li>Cannot override host operating system, but they try</li>
+</ul></li>
+</ul>
+<p>Moving away from iptables:</p>
+<ul>
+<li>Legacy iptables is getting less popular, because of read-all, write all setup
+<ul>
+<li>Still default in some spots, like kube-proxy</li>
+</ul></li>
+<li>Nftables and eBPF on the rise
+<ul>
+<li>Nftables lets you modify a single rule alone</li>
+</ul></li>
+</ul>
+<p>Ipset:</p>
+<ul>
+<li>Efficient management of sets of addresses</li>
+<li>Quick lookups for iptables rules</li>
+<li>Stored “in kernel” as hashes, bitmaps, etc</li>
+<li><em>Also</em> a pre-containers era tool</li>
+</ul>
+<p>Ipsets can be managed by multiple components (again):</p>
+<ul>
+<li>6.2 kernel added a new “bitmask” parameter, which older ipset versions cannot cope with</li>
+<li>Now the ipset version matters, but also the kernel version</li>
+<li>Version must be pinned across networking pieces: kube-proxy, CNI’s, mesh, NCP, etc
+<ul>
+<li>k0s can pin all the kubernetes images. But it cannot pin the host.</li>
+</ul></li>
+<li>Mismatch can cause via OS packages or kernel version updating</li>
+</ul>
+<p>Modprobe:</p>
+<ul>
+<li>Userspace tool to load/unload kernel modules</li>
+<li>Handles depenencies</li>
+<li>Pre containers era tool</li>
+</ul>
+<p>Kernel modules:</p>
+<ul>
+<li>Compiled as a “.ko”, kernel object</li>
+<li>Distributed as compressed, and modprobe decompresses when unloading
+<ul>
+<li>Can be compressed via multiple algorithms</li>
+<li>The modprobe in a container might not always support the compression algo used on the host. Debian 12 kmod supports ZSTD and XZ, but what if host uses GZ, and the container is Debian 12? Then kernel module loading in the container will fail</li>
+</ul></li>
+<li>CNIs, CSIs, etc, <em>might</em> need to load modules, so they mount /lib, /sys, etc
+<ul>
+<li>CNI might need contracts, CSI might need filesystem, GPU stuff, etc</li>
+<li>Usually not relevant though</li>
+</ul></li>
+<li>Audience member: “Are there CNI’s which load modules? Sounds scary?”</li>
+</ul>
+<p>Debugging:</p>
+<ul>
+<li>Iptables case caused ALL networking to go down — no ssh access to machine</li>
+<li>Very unfamilier errors</li>
+<li>Super low level stuff</li>
+</ul>
+<p>How presenter debugged:</p>
+<ul>
+<li>They ran k0s in containers, since all their testing was based on this</li>
+<li>Read kernel code… a lot of it.</li>
+<li>They could docker exec, even if the networking goes down</li>
+<li>Trial and error to discover issue</li>
+</ul>
+<p>Fixes:</p>
+<ul>
+<li>No easy fix</li>
+<li>k0s pins versions of kubernetes components</li>
+<li>Test EVERYTHING before rolling out to prod</li>
+</ul>
+</section>
+</section>
+<section id="devopsdayla" class="level1">
+<h1>DevopsDayLA</h1>
+<p>So apparently, DevopsDay LA has a regular meetup, every two months, on Thursday in Santa Monica.</p>
+<p>Interesting software/products: * <a href="https://runme.dev" class="uri">https://runme.dev</a> — Interactive markdown notebooks for devops</p>
+<p><img src="./blog/scale-22/images/thankyoudevopsers.jpg" class="img-fluid"></p>
+<p>This is funny, but it should be noted that DevOps as a career as a lot of remote jobs.</p>
+</section>
 <section id="notes-from-friends" class="level1">
 <h1>Notes from Friends</h1>
 <p>Nix can become nigthmarish to update on Mac OS, due to the system level changes that Mac makes: <a href="https://zenn.dev/kawarimidoll/scraps/3d71b16d1bb7e3" class="uri">https://zenn.dev/kawarimidoll/scraps/3d71b16d1bb7e3</a>.</p>
 <p>Best large language model for coding: qwen2.5-32b-instruct. “On par with gpt-02-mini”.</p>
 <p>A backend developer would be expected to deploy things and debug containers in kubernetes, or at least understand how their application will run in a k8s environment. Don’t have to be experts. For backend, frontend, not really.</p>
 <p><a href="https://mailu.io/2024.06/">mailu</a> helm/docker based email deployment.</p>
-<p>To get an ASN, you can simply create a company and then apply for it?!</p>
+<p>To get an ASN, you can simply create a company and then apply for it, but the organization responsible for giving them out has ran out of them.</p>
 <p>Apparently, infinite recursion can occur as an error in Nix.</p>
+<p>CubeFS is a good alternative to ceph or longhorn for a Kubernetes distribution filesystem.</p>
+<p>Github class is good for teaching with an environment, but it is getting more bugs and is collapsing.</p>
+<p>National Science Foundation, has Research Experiences for Undergraduates (REU). According to someone, they also offer money for various other research initiatives.</p>
+<p>Jean Kims book, phoenix project. Recommended to me when I talked about DevOps philosophy.</p>
+<p>Ditherit.com</p>
+<p>https://www.recurse.com</p>
+<p>Take a break during jobs</p>
+<p>Linbit, open source block storage</p>
+<p>Hackathons sometimes involve shark tank style pitches.</p>
+<p>ID tech teaching platform</p>
+</section>
+<section id="job-board" class="level1">
+<h1>Job Board</h1>
+<p>There is a literal job baord at SCaLE, a literal whiteboard where companies mention they are hiring or people state that they are looking for a job.</p>
+<p><img src="./blog/scale-22/images/jobboard1.jpg" class="img-fluid"></p>
+<p><img src="./blog/scale-22/images/jobboard2.jpg" class="img-fluid"></p>
+</section>
+<section id="exhibition-hall" class="level1">
+<h1>Exhibition Hall</h1>
+<p>There was some fun stuff in the exhibition hall.</p>
+<p>There was lots of ARM stuff.</p>
+<p><img src="./blog/scale-22/images/macminiarm.jpg" class="img-fluid"></p>
+<p>Like this Mac Mini running Arm and Asahi Linux, where they were installing games from steam during the exhibition hall.</p>
+<p>Interesting software/products/stuff:</p>
+<ul>
+<li><a href="https://coder.dev" class="uri">https://coder.dev</a></li>
+<li>FastX
+<ul>
+<li>Virtual Desktop Infrastructure offering Linux machines</li>
+<li>educational licenses are cheaper, apparently all of cal state had a license</li>
+</ul></li>
+<li>&lt;lpi.org/clubs&gt; — The Linux professional Institute has notes on
+<ul>
+<li>Ieee acm curriculum for bachelors in computer science or comp engineering, but don’t say what software or hardware, so you can pick</li>
+</ul></li>
+<li><a href="https://www.codeday.org/" class="uri">https://www.codeday.org/</a>
+<ul>
+<li>Computing talent initiative, sign people up for this</li>
+</ul></li>
+</ul>
+</section>
+<section id="loot" class="level1">
+<h1>Loot!</h1>
+<p>I got a lot:</p>
+<p><img src="./blog/scale-22/images/loot_far.jpg" class="img-fluid"></p>
+<p><img src="./blog/scale-22/images/loot_topview.jpg" class="img-fluid"></p>
+<p>I will do a detailed sorting and breakdown of what I got later.</p>
 </section>
 <section id="food-blog" class="level1">
 <h1>Food Blog</h1>
 <p>People keep telling me I should start one. So here’s a mini food blog.</p>
+<p>Day 1:s</p>
 <p>So the first day, the first place I went to, for lunch, was <a href="https://www.facebook.com/artlunchusa">Art Lunch</a></p>
 <p>I had the Pastrami Sandwich</p>
 <p><img src="./blog/scale-22/images/art_lunch.jpg" class="img-fluid"></p>
@@ -242,6 +453,14 @@
 <p>The next place I went to, dinner (Thursday 3/6/25), was an Italian place, Bucca di Bepppo.</p>
 <p>This place was a family restaurant, so all the portions were sized for multiple people. I shared Lasagna, Chicken Parmesan, garlic sticks, and Gorgonzola salad with 11 other people.</p>
 <p>Overall, it was excellent.</p>
+<p>Day 2:</p>
+<p>For breakfast, it was again a cream cheese bagel and an apple danish.</p>
+<p>For lunch, the Pasadena Convention center provided food as part of the DevopsDay LA open spaces. It was pretty good too, and it was free.</p>
+<p><img src="./blog/scale-22/images/turkeysandwich.jpg" class="img-fluid"></p>
+<p>I also got some of Tony’s dark chocolate from the Arm booth:</p>
+<p><img src="./blog/scale-22/images/darkchocolate.jpg" class="img-fluid"></p>
+<p>It was pretty good, 70% dark. It was hard to break pieces off so I could eat or share them though. I only ate half off it, and threw the rest away, it was a really big bar and I couldn’t eat all of it.</p>
+<p>For dinner I had an extra one of the sandwiches mentioned above, which a friend had given to me and I saved it so I could eat it later.</p>
 
 
 </section>
@@ -249,7 +468,7 @@
  ]]></description>
   <category>blog</category>
   <guid>./blog/scale-22/</guid>
-  <pubDate>Thu, 06 Mar 2025 08:00:00 GMT</pubDate>
+  <pubDate>Tue, 25 Mar 2025 07:00:00 GMT</pubDate>
 </item>
 <item>
   <title>Your very own site on GitHub Pages</title>
