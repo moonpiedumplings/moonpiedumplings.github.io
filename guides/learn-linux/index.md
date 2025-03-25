@@ -30,6 +30,15 @@ I also like resources maintained by some kind of organization, either the offici
 
 - OverTheWire Bandit is a bit different from the other resources on this list. When I first used it, both personally and as a teaching tool, I was frustrated, because some of the commands it makes you use, will probably never show up in a real world usecase. I was frustrated with it's "trickyness", but I now realize the point of overthewire isn't to teach commands, but to teach reading the manual. The answer to every challenge they give can be found in [manpages](https://en.wikipedia.org/wiki/Man_page), the built in Linux documentation.
 
+[Linux Professional Institute Free resources](https://learning.lpi.org/en/learning-materials/learning-materials/)
+
+* The free books they give out for the LPIC-1 and LPIC-2 exam are some of the best books I've seen in terms of teaching Linux. 
+
+[Linux Foundation Free Training](https://training.linuxfoundation.org/resources/?_sft_content_type=free-course)
+
+* Their [Intro to Linux](https://training.linuxfoundation.org/training/introduction-to-linux/) seems to be good
+* <https://www.cncf.io/training/courses/?_sfm_lf_course_free=1>
+
 [Terminus](https://web.mit.edu/mprat/Public/web/Terminus/Web/main.html) — A linux tutorial in the style of a text based rpg. 
 
 [Linux Survival](https://linuxsurvival.com/linux-tutorial-introduction/)
@@ -259,6 +268,8 @@ Below is stuff I don't like as much:
 
 
 # Hacking
+
+<https://github.com/Adamkadaban/CTFs> — Mega list of CTF's and the like to get started. 
 
 <details><summary>Expand/Collapse</sumamry>
 

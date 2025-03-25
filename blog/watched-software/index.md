@@ -48,7 +48,11 @@ Multi user Full Featured:
 * <https://github.com/pwncollege/dojo>
   - Is an addon to <https://docs.ctfd.io/docs/overview/>, but adds web workspaces and more.
   - [ctfd has SSO support](https://docs.ctfd.io/docs/settings/single-sign-on/#oauth) 
-
+* <https://coder.com/> 
+  * Open source, self hostable
+* <https://github.com/opencloudplay>
+* FastX — offers student discounts, according to the person at the booth at the So Cal Linux Expo.
+* <https://github.com/giongto35/cloud-morph>
 
 Single User full featured: 
 

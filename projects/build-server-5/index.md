@@ -1800,7 +1800,7 @@ I'm going to do that again, since I know it works and I already have a bridge.
 And then use `eth1` as my networking interface. This appears to work, as I can see my networking setup in horizon. 
 
 
-## Cinder
+### Cinder
 
 I am also worried about openstack-helm cinder, because it seems I cannot deploy it using local storage, I must use ceph. I'm worried about the performance implications of this, but a [reddit comment](https://www.reddit.com/r/ceph/comments/1baofpb/how_bad_is_cephs_performance_on_a_single_node/ku3z0s0/) says that the issue with single node ceph is not performance, but overhead, so I should be good.
 
@@ -1922,11 +1922,50 @@ I attempted to deploy the test cluster:
 kubectl apply -f https://raw.githubusercontent.com/rook/rook/refs/heads/release-1.16/deploy/examples/cluster-test.yaml
 ```
 
-And... nothing seems to happen. No pods being created. No deployments being done. Nothing.
+And... nothing seems to happen. No pods being created. No deployments being done. Nothing. It's partially because I didn't clean up properly. According to [another blog post](https://brettweir.com/blog/remove-rook-from-cluster/) you have to edit the finalizers on the ceph storage resources (cephblockpool, etc), and set them to null in order for them to get deleted.
 
 
 
+So I recently went to [scale](../../blog/scale-22/) and:
 
+> I went to the first meeting, and was immediately introduced to an interesting software — [genestack](https://docs.rackspacecloud.com/genestack-components/). Unlike openstack helm, it doesn't seem to *require* rook ceph, despite being a kubernetes deployment, which makes it very appealing. Currently, I am attempting to deploy Openstack on my single Kubernetes server, using FluxCD and Openstack-helm, but I am encountering a blockage because ceph doesn't like being deployed on a single node.
+
+I am looking into the [genestack](https://github.com/rackerlabs/genestack/) code to figure out how they did it, but haven't spotted much yet, except for:
+
+```{.yaml filename='cinder-values.yml'}
+storage: lvm
+```
+
+It seems to be possible to set this value to something other than the "ceph" it is set to in the official openstack-helm repo... but there is no documentation on this. Looking at the code of glance, however:
+
+```{.yaml filename='glance-values.yaml'}
+# limitations under the License.
+# Default values for glance.
+# This is a YAML-formatted file.
+# Declare name/value pairs to be passed into your templates.
+# name: value
+
+# radosgw, rbd, swift or pvc
+---
+storage: swift
+```
+
+So maybe there is some kind of standardized interface, which people can select storage options for openstack? But I don't see anything like that in the code for Openstack-Helm Cinder.
+
+I should also take a look at StarlingX, since that also seems to be able to do a single node ceph install. 
+
+```{.default}
+Mgr:
+    Allow Multiple Per Node:  false
+    Count:                    2
+Mon:
+  Allow Multiple Per Node:  false
+  Count: 3
+```
+
+It seems that my attempts to change the number of monitors and managers to one is failing. Actually, upon further inspection, it seems to initially have the number correct, but then later changes it to be wrong. 
+
+Note for the future: Rook Operator and Rook ceph cluster helm charts don't seem to sync versions with the actual ceph software. 
 
 ## SSO/connections
 
