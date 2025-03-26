@@ -188,8 +188,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#openstack" id="toc-openstack" class="nav-link" data-scroll-target="#openstack">Openstack</a>
   <ul class="collapse">
   <li><a href="#neutron" id="toc-neutron" class="nav-link" data-scroll-target="#neutron">Neutron</a></li>
-  </ul></li>
   <li><a href="#cinder" id="toc-cinder" class="nav-link" data-scroll-target="#cinder">Cinder</a></li>
+  </ul></li>
   <li><a href="#ssoconnections" id="toc-ssoconnections" class="nav-link" data-scroll-target="#ssoconnections">SSO/connections</a></li>
   <li><a href="#a-big-screwup" id="toc-a-big-screwup" class="nav-link" data-scroll-target="#a-big-screwup">A big screwup…</a></li>
   </ul></li>
@@ -1696,9 +1696,8 @@ helm osh wait-for-pods openstack</code></pre>
 <p><code>nmcli con add type veth ifname veth1 con-name veth1 veth.peer eth1</code> and add <code>veth1</code> to cockpit.</p>
 <p>And then use <code>eth1</code> as my networking interface. This appears to work, as I can see my networking setup in horizon.</p>
 </section>
-</section>
-<section id="cinder" class="level2">
-<h2 class="anchored" data-anchor-id="cinder">Cinder</h2>
+<section id="cinder" class="level3">
+<h3 class="anchored" data-anchor-id="cinder">Cinder</h3>
 <p>I am also worried about openstack-helm cinder, because it seems I cannot deploy it using local storage, I must use ceph. I’m worried about the performance implications of this, but a <a href="https://www.reddit.com/r/ceph/comments/1baofpb/how_bad_is_cephs_performance_on_a_single_node/ku3z0s0/">reddit comment</a> says that the issue with single node ceph is not performance, but overhead, so I should be good.</p>
 <p>I’m now getting an error:</p>
 <div class="sourceCode" id="cb72"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb72-1"><a href="#cb72-1" aria-hidden="true" tabindex="-1"></a>[moonpie@lizard flux-config]$ kubectl get events -n openstack</span>
@@ -1773,7 +1772,44 @@ helm osh wait-for-pods openstack</code></pre>
 <p>Here’s <a href="https://medium.com/@satheesh.mohandass/installing-rook-ceph-for-persistent-storage-on-single-node-openshift-c1102a8ced40">another blog post</a>. There is also an <a href="https://rook.io/docs/rook/latest-release/Getting-Started/example-configurations/#cluster-crd">offical test cluster</a>.</p>
 <p>I attempted to deploy the test cluster:</p>
 <div class="sourceCode" id="cb79"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb79-1"><a href="#cb79-1" aria-hidden="true" tabindex="-1"></a>kubectl apply -f https://raw.githubusercontent.com/rook/rook/refs/heads/release-1.16/deploy/examples/cluster-test.yaml</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>And… nothing seems to happen. No pods being created. No deployments being done. Nothing.</p>
+<p>And… nothing seems to happen. No pods being created. No deployments being done. Nothing. It’s partially because I didn’t clean up properly. According to <a href="https://brettweir.com/blog/remove-rook-from-cluster/">another blog post</a> you have to edit the finalizers on the ceph storage resources (cephblockpool, etc), and set them to null in order for them to get deleted.</p>
+<p>So I recently went to <a href="../../blog/scale-22/">scale</a> and:</p>
+<blockquote class="blockquote">
+<p>I went to the first meeting, and was immediately introduced to an interesting software — <a href="https://docs.rackspacecloud.com/genestack-components/">genestack</a>. Unlike openstack helm, it doesn’t seem to <em>require</em> rook ceph, despite being a kubernetes deployment, which makes it very appealing. Currently, I am attempting to deploy Openstack on my single Kubernetes server, using FluxCD and Openstack-helm, but I am encountering a blockage because ceph doesn’t like being deployed on a single node.</p>
+</blockquote>
+<p>I am looking into the <a href="https://github.com/rackerlabs/genestack/">genestack</a> code to figure out how they did it, but haven’t spotted much yet, except for:</p>
+<div class="code-with-filename">
+<div class="code-with-filename-file">
+<pre><strong>cinder-values.yml</strong></pre>
+</div>
+<div class="sourceCode" id="cb80" data-filename="cinder-values.yml"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb80-1"><a href="#cb80-1" aria-hidden="true" tabindex="-1"></a><span class="fu">storage</span><span class="kw">:</span><span class="at"> lvm</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>It seems to be possible to set this value to something other than the “ceph” it is set to in the official openstack-helm repo… but there is no documentation on this. Looking at the code of glance, however:</p>
+<div class="code-with-filename">
+<div class="code-with-filename-file">
+<pre><strong>glance-values.yaml</strong></pre>
+</div>
+<div class="sourceCode" id="cb81" data-filename="glance-values.yaml"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb81-1"><a href="#cb81-1" aria-hidden="true" tabindex="-1"></a><span class="co"># limitations under the License.</span></span>
+<span id="cb81-2"><a href="#cb81-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Default values for glance.</span></span>
+<span id="cb81-3"><a href="#cb81-3" aria-hidden="true" tabindex="-1"></a><span class="co"># This is a YAML-formatted file.</span></span>
+<span id="cb81-4"><a href="#cb81-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Declare name/value pairs to be passed into your templates.</span></span>
+<span id="cb81-5"><a href="#cb81-5" aria-hidden="true" tabindex="-1"></a><span class="co"># name: value</span></span>
+<span id="cb81-6"><a href="#cb81-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb81-7"><a href="#cb81-7" aria-hidden="true" tabindex="-1"></a><span class="co"># radosgw, rbd, swift or pvc</span></span>
+<span id="cb81-8"><a href="#cb81-8" aria-hidden="true" tabindex="-1"></a><span class="pp">---</span></span>
+<span id="cb81-9"><a href="#cb81-9" aria-hidden="true" tabindex="-1"></a><span class="fu">storage</span><span class="kw">:</span><span class="at"> swift</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>So maybe there is some kind of standardized interface, which people can select storage options for openstack? But I don’t see anything like that in the code for Openstack-Helm Cinder.</p>
+<p>I should also take a look at StarlingX, since that also seems to be able to do a single node ceph install.</p>
+<div class="sourceCode" id="cb82"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb82-1"><a href="#cb82-1" aria-hidden="true" tabindex="-1"></a>Mgr:</span>
+<span id="cb82-2"><a href="#cb82-2" aria-hidden="true" tabindex="-1"></a>    Allow Multiple Per Node:  false</span>
+<span id="cb82-3"><a href="#cb82-3" aria-hidden="true" tabindex="-1"></a>    Count:                    2</span>
+<span id="cb82-4"><a href="#cb82-4" aria-hidden="true" tabindex="-1"></a>Mon:</span>
+<span id="cb82-5"><a href="#cb82-5" aria-hidden="true" tabindex="-1"></a>  Allow Multiple Per Node:  false</span>
+<span id="cb82-6"><a href="#cb82-6" aria-hidden="true" tabindex="-1"></a>  Count: 3</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>It seems that my attempts to change the number of monitors and managers to one is failing. Actually, upon further inspection, it seems to initially have the number correct, but then later changes it to be wrong.</p>
+<p>Note for the future: Rook Operator and Rook ceph cluster helm charts don’t seem to sync versions with the actual ceph software.</p>
+</section>
 </section>
 <section id="ssoconnections" class="level2">
 <h2 class="anchored" data-anchor-id="ssoconnections">SSO/connections</h2>
