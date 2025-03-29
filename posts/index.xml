@@ -9,8 +9,196 @@
 <link>./posts/</link>
 <atom:link href="./posts/index.xml" rel="self" type="application/rss+xml"/>
 <description>All posts</description>
-<generator>quarto-1.6.40</generator>
-<lastBuildDate>Mon, 10 Mar 2025 07:00:00 GMT</lastBuildDate>
+<generator>quarto-1.6.42</generator>
+<lastBuildDate>Fri, 28 Mar 2025 07:00:00 GMT</lastBuildDate>
+<item>
+  <title>WRCCDC Regionals Writeup</title>
+  <link>./writeups/wrccdc/</link>
+  <description><![CDATA[ 
+
+
+
+
+<p>This is a writeup for the WRCCDC regionals. As some context, <a href="https://wrccdc.org/">WRCCDC</a> is a cybersecurity competition that involves managing an environment that is a simulation of a real company, while being hit by a cyberattack from competition organizers referred to as “red teamers”.</p>
+<p>It’s stressful. It’s chaotic. But it’s great fun.</p>
+<p>Vocab glossary (but I won’t cover non-competition specific stuff):</p>
+<ul>
+<li>Scoring engine: Software that automatically connects, and authenticates to scored services, and “scores” them for being up</li>
+<li>Scored service: A service that is being checked by the scoring engine — not all services are.</li>
+<li>Injects: Writeups of tasks we are assigned to do</li>
+<li>Teams: Subsets of the competition organizers, volunteers responsible for making the game work
+<ul>
+<li>Red Team: <strong>Competition Organizers</strong> who pretend to be cyberattackers by slowly infiltrating machines they could instantly down but choose not to</li>
+<li>Orange Team: Pretends to be organizers</li>
+<li>White Team: Grades Injects</li>
+<li>Black (Ops/Operations) Team: Sets up the environment</li>
+<li>Gold Team: Organizional duties</li>
+</ul></li>
+<li>Team packet: Document noting down the topology, some scored services, and rules of the competition.</li>
+<li>Incident responses: Documents noting down how a cyberattack happened, affected services and data, and mitigation steps.</li>
+</ul>
+<p>I began with two nmap scans of the entire environment, to see what was on the network.</p>
+<p>I firstly logged into the <em>laptop</em> with the hostname “Bishop41”. The machine ran something <a href="https://winuxos.com/">Winux</a>, which is essentially Ubuntu with KDE, heavily themed to look like Windows. There was also <a href="https://linuxfx.org/">LinuxFX</a>, which was something similar. I liked them at first, I thought they were cool Windows clones that I could give to my mother so I could help her escape Windows, without her noticing, but the KDE UI kept crashing.</p>
+<p>Thankfully, I have experience from my personal laptop:</p>
+<p><code>systemctl --user restart plasma-plasmashell</code> (without sudo). The jokes is that KDE “<em>Krashes</em>” a lot.</p>
+<p>Bishop41 had some malware on it that was fairly easy to find… but I didn’t find the later bits until after I had to do the presentation. The presentation: <a href="./kitty_presentation">presentation html link</a></p>
+<p>Of course, I elaborated on the points in the presentation, since the slides are somewhat information sparse. For example, I broke down how the reverse shell worked, pointing to the bits of the python code that bound to a port, or ran the bash process.</p>
+<p>And, I was also wrong about the reverse shell not being running. It was <code>:(</code>. I later found that there was a cronjob, either added by red teamers or black teamers</p>
+<p>There was also another piece of dangerous software I missed, a web service that had an interface to submit python code that would run on the machine. Not quite malware, but it wasn’t a scored service. I removed it, as it was serving on port 80, which interfered when I attempted to up the <code>apache2</code> service.</p>
+<p>I also did a later presentation on a software, <a href="https://arkime.com/">Arkime</a>. I did not manage to get it deployed, and my presentation overview was very short. However, after my presentation, they asked me many questions about PCAP’s, encryption, and other network analysis things, and I answered them pretty well. At the mixer that night, the person who quizzed me complimented me and told me that they were searching for specific keywordss for the</p>
+<p>We had trouble with docker on the Scully machine, it would time out when attempting to pull images.</p>
+<section id="for-future-ccdc" class="level1">
+<h1>For Future CCDC</h1>
+<section id="issues-we-struggled-with" class="level2">
+<h2 class="anchored" data-anchor-id="issues-we-struggled-with">Issues We Struggled With</h2>
+<ul>
+<li>Not enough machines in the main workstation area. We started with 3 and pushed it up to 5 on day 1, but we still struggled.</li>
+<li>I counted about 39 machines… Too many machines to manage, too little workstations
+<ul>
+<li>Automation solutions are needed</li>
+</ul></li>
+</ul>
+</section>
+<section id="preparation-methodology-adjustments" class="level2">
+<h2 class="anchored" data-anchor-id="preparation-methodology-adjustments">Preparation Methodology Adjustments</h2>
+<ul>
+<li>People need to learn scripting
+<ul>
+<li>Python for Linux</li>
+<li>Powershell for Windows</li>
+<li>People need to be able to write/edit scripts on the spot</li>
+</ul></li>
+<li>People need to drill the fundamentals. Overall lack of experience that can be fixed.
+<ul>
+<li>Set up stuff and tear it down.</li>
+<li>Kubernetes interaction/ how to change certificate used to authenticate</li>
+<li>docker-compose vs with space instead</li>
+<li>DNS/proxy access to the environments</li>
+<li>Be able to handle never before seen software thrown at us. Either rare stuff, or custom CCDC stuff.</li>
+</ul></li>
+<li>People are gonna need to specialize. I wanted to avoid this. But I can’t see a way around this. There isn’t enough time for every person to learn every software, as much as that’s what I want to do to prepare them for the real world</li>
+</ul>
+</section>
+<section id="things-to-prepare" class="level2">
+<h2 class="anchored" data-anchor-id="things-to-prepare">Things to Prepare</h2>
+<ul>
+<li>Printouts
+<ul>
+<li>Ascii cheatsheet: Yeah. But we did actually need it for decoding the special signals being sent.</li>
+<li>Documentation? Create our own team book/cheatsheets?</li>
+<li><a href="https://wizardzines.com/">Julia Evans</a> cheatsheets would have helped a lot.</li>
+<li>Pacman Rosetta</li>
+<li>Other misc, UPDATED cheatsheets</li>
+<li>Simpler passwords for our password sheets, or possibly cryptpad spreadsheet</li>
+</ul></li>
+<li>Physical Books
+<ul>
+<li>Unix handbook, or the LPIC books are really good for physical books documenting Linux.</li>
+</ul></li>
+<li>Custom Linux ISO that’s really small, possibly doesn’t need network, and has automatic install. This way we don’t need to click through the Debian installer.</li>
+<li>Quarto and formatting:
+<ul>
+<li>I threw together something quick using Nix to install quarto to make an html revealjs presentation and it worked <em>really well</em>.</li>
+<li>Do we <em>need</em> themed templates for docs? Quarto’s default dark is lame but extremely simple to use, vs custom document templates for every competition.
+<ul>
+<li>Or <a href="https://quarto.org/docs/authoring/brand.html">quarto brand.yml</a> for branding/templates</li>
+</ul></li>
+<li>Templates for presentations, injects.</li>
+<li><code>embed-resources: true</code> to create self contained quarto revealjs and html. <a href="https://quarto.org/docs/output-formats/html-basics.html#self-contained">See docs</a></li>
+</ul></li>
+<li>Nmap scans in multiple output formats — including <strong>markdown tables</strong> of multiple kinds (service as table, machines as table, etc). Or as CSV’s.</li>
+<li>SIEM solution…
+<ul>
+<li>Some way to log network connections for incident responses</li>
+</ul></li>
+<li>Automate group policy — No more lockouts</li>
+<li>Become able to consistently fix problems caused by red team on the Windows machines.</li>
+<li>Learn the inject naming scheme.</li>
+<li>Airgap ready: Part of our environment was airgapped. How do we set up services without google?
+<ul>
+<li>Physical docs, paper/books</li>
+<li>Small, portable, transferable services</li>
+</ul></li>
+<li>Some way of organizing work for easy handoff
+<ul>
+<li>The machines had virtual desktops but I didn’t use them (they didn’t show up on LinuxFX/Winux)</li>
+</ul></li>
+<li>Automated granular backups
+<ul>
+<li>Deduplication</li>
+<li>Just config, or data as well</li>
+</ul></li>
+<li>Use CIS benchmarks instead of Microsoft Docs when docs are bad</li>
+</ul>
+</section>
+<section id="preduring-comp" class="level2">
+<h2 class="anchored" data-anchor-id="preduring-comp">Pre/During Comp</h2>
+<ul>
+<li>Stop assuming instructions are perfect.
+<ul>
+<li>Every team packet has had at least one thing incorrect. A machine not existing but documented, vice versa, changed ip addresses, etc</li>
+<li>The proxy didn’t work because the instructions weren’t perfect. Eventually we requested help from Black Team and they did but we can experiment more with instructions on our own.</li>
+<li>No hate to Ops Team. But it’s a complex competition and that means things will go wrong. We just gotta adapt.</li>
+</ul></li>
+<li>Cryptpad: We could have and should have used a public instance for injects that needed collaboration
+<ul>
+<li>And cryptpad has a kanban board for task organization</li>
+<li>Possibly password sheet as well</li>
+</ul></li>
+<li>Reuse injects if they reuse machines</li>
+<li>Backup admin accounts on the machines. Could probably be automated.</li>
+<li>Clipboard manager… please</li>
+<li>I misspelled the password when writing it down…
+<ul>
+<li>We should have brought the other sheet, having multiple people write the passwowrd down.</li>
+<li>Have physical backups and redundancies as well?</li>
+</ul></li>
+</ul>
+</section>
+</section>
+<section id="notes" class="level1">
+<h1>Notes</h1>
+<ul>
+<li>Open internet acccess
+<ul>
+<li>Proxy was not forced</li>
+<li>Chatgpt, perplexity were unblocked</li>
+</ul></li>
+<li>Red Team did not delete <code>/var/syslog</code> even though they cleaned journalctl</li>
+<li>Arkime wants elasticsearch/opensearch</li>
+</ul>
+</section>
+<section id="off-topic" class="level1">
+<h1>Off-Topic</h1>
+<section id="to-do-miscfunny" class="level2">
+<h2 class="anchored" data-anchor-id="to-do-miscfunny">To Do Misc/Funny</h2>
+<p>(To do stuff that isn’t as important or relevant) * CCDC playlist: Since we had internet access, we should have put some bops on * Get the model of Coastline’s college presentation windows machine — I love it’s form factor, it’s quite small * I should write my lowercase l in such a way where it’s clear what they are</p>
+</section>
+<section id="notes-misc" class="level2">
+<h2 class="anchored" data-anchor-id="notes-misc">Notes Misc</h2>
+<ul>
+<li>The HP Elitedesk 800 G1 and G6 don’t seem to have the small form factor I expected <code>:(</code> (They were the desktops in the classified area of the competition)</li>
+<li>Datto brand device, running Debian 12 was a “magic box” used for Black Team. But I really liked the form factor of that device, it was quite small, like a NUC.</li>
+</ul>
+</section>
+<section id="personalleadership-notes" class="level2">
+<h2 class="anchored" data-anchor-id="personalleadership-notes">Personal/Leadership Notes</h2>
+<ul>
+<li>Encourage hypothesis/testing in a learning environment, rather than giving answers
+<ul>
+<li>Watched a Black Teamer do it excellently</li>
+</ul></li>
+</ul>
+
+
+</section>
+</section>
+
+ ]]></description>
+  <category>writeups</category>
+  <guid>./writeups/wrccdc/</guid>
+  <pubDate>Fri, 28 Mar 2025 07:00:00 GMT</pubDate>
+</item>
 <item>
   <title>SCaLE 22x: All 4 days</title>
   <link>./blog/scale-22/</link>
@@ -1814,6 +2002,7 @@ Expand/Collapse
 <section id="hacking" class="level1">
 <h1>Hacking</h1>
 <p><a href="https://github.com/Adamkadaban/CTFs" class="uri">https://github.com/Adamkadaban/CTFs</a> — Mega list of CTF’s and the like to get started.</p>
+<p><a href="https://www.vulnhub.com/entry/kioptrix-level-1-1,22/" class="uri">https://www.vulnhub.com/entry/kioptrix-level-1-1,22/</a> — Intro box to Vulnhub. In general, that site has many vulnerable virtual machines for learning penetration testing.</p>
 <details>
 <summary>
 <p>Expand/Collapse</p>
@@ -10403,305 +10592,6 @@ DO NOT CHANGE ANY PASSWORDS</code></pre>
   <category>writeups</category>
   <guid>./writeups/nice-challenge-4/</guid>
   <pubDate>Sat, 20 Apr 2024 07:00:00 GMT</pubDate>
-</item>
-<item>
-  <title>My server part 4 — Kubernetes</title>
-  <link>./projects/build-server-4/</link>
-  <description><![CDATA[ 
-
-
-
-
-<section id="why-the-switch" class="level1">
-<h1>Why the switch?</h1>
-<p>I was working on configuring rootless podman via ansible, but I had trouble because the tooling was incomplete. Ansible is a suboptiomal way to manage containers, and rootless podman can’t manage its own services.</p>
-<p>For the whole journey, see the <a href="../build-server-3/#systemd-integration">previous post</a></p>
-<p>So yeah. I’ve decided to switch to Kubernetes, because Kubernetes can manage it’s own services, and be rootless. The configuration-as-code landscape for Kubernetes, is much, much better than podman, and I will get many more options. For example, I can use <a href="">helm</a>, which is somewhat like a package manager for kubernetes, to install apps. Both Caddy and Authentik offer helm packages. Using the offered packages is probably less work than converting a docker compose to a podman container.</p>
-</section>
-<section id="rootless-kubernetes" class="level1">
-<h1>Rootless (?) Kubernetes</h1>
-<section id="user-namespaces" class="level2">
-<h2 class="anchored" data-anchor-id="user-namespaces">User Namespaces</h2>
-<p>Just like how Linux has “distributions”, or bundles of software that build on top of the Linux kernels, Kubernetes has distros. I want rootless Kubernetes,</p>
-<p>I started by looking at <a href="https://k3s.io/">k3s</a>, the version of kubernetes I have experience with. However, there appear to be some <a href="https://docs.k3s.io/advanced#known-issues-with-rootless-mode">caveats with rootless mode</a>… including not being able to run a multi node cluster.</p>
-<p>There is an article related to Kubernetes rootless containers: <a href="https://rootlesscontaine.rs/getting-started/kubernetes/" class="uri">https://rootlesscontaine.rs/getting-started/kubernetes/</a></p>
-<p>And what I see is… not promising. I don’t really desire to do run <code>kind</code> or <code>minikube</code>, because they are stripped down compared to more feature-full Kubernetes distros like <code>k3s</code></p>
-<p>Minikube, from that list above, is promising, but it is designed for development/testing, and <a href="https://github.com/kubernetes/minikube/issues/94">doesn’t support a multi-machine multi node setup</a></p>
-<p>Kind has a similar usecase, and limitation. Despite how easy it is to do rootless on them, that makes them unsuitable for me.</p>
-<p>Okay, I seem to have misunderstood what &lt;rootlesscontaine.rs&gt; want, as compared to what I want. That site documents how to run all the kubernetes components, as rootless using a user namespace. What I want, is using user namespaces to isolate pods.</p>
-<p>Kubernetes seems to support this natively: <a href="https://kubernetes.io/docs/tasks/configure-pod-container/user-namespaces/" class="uri">https://kubernetes.io/docs/tasks/configure-pod-container/user-namespaces/</a></p>
-<p>To enable user namespaces, all you need to do is set <code>hostUsers: false</code> in your kubernetes yaml… except, how can I override this for an existing helm chart?</p>
-</section>
-<section id="package-managerhelm" class="level2">
-<h2 class="anchored" data-anchor-id="package-managerhelm">Package Manager/Helm</h2>
-<p>Helm is very nice. However, from what I’ve heard, it is difficult to modify repackaged charts. This is especially concerning to me, because I intend to run all of my containers within user namespaces, and many helm charts don’t provide this. In order to run prepackaged apps in user namespaces, I need to modify existing helm charts.</p>
-<p><a href="https://helm.sh/docs/intro/using_helm/#customizing-the-chart-before-installing" class="uri">https://helm.sh/docs/intro/using_helm/#customizing-the-chart-before-installing</a></p>
-<p>Helm has docs on customizing the chart before installing.</p>
-<p>There exist some package repositores (similar to dockerhub) for helm:</p>
-<ul>
-<li><a href="https://artifacthub.io/" class="uri">https://artifacthub.io/</a>
-<ul>
-<li>Helm charts, package</li>
-</ul></li>
-<li><a href="https://operatorhub.io/" class="uri">https://operatorhub.io/</a>
-<ul>
-<li>Not helm, rather kubernetes yaml managed by a lifecycle manager</li>
-<li>Packages “operators”, like this <a href="https://operatorhub.io/operator/rook-ceph">rook/ceph</a></li>
-<li>Appeals to me less than artifacthub</li>
-</ul></li>
-</ul>
-</section>
-<section id="kubernetes-distro" class="level2">
-<h2 class="anchored" data-anchor-id="kubernetes-distro">Kubernetes Distro</h2>
-<p>Here is a <a href="https://landscape.cncf.io/?group=certified-partners-and-providers">list on the CNCF website</a></p>
-<p>I see three main options available to me:</p>
-<ul>
-<li><a href="https://kubespray.io/#/">Kubespray</a> (ansible)</li>
-<li><a href="https://k3s.io/">K3s</a>&gt;</li>
-<li><a href="https://docs.rke2.io/">RKE2</a></li>
-<li>k0s
-<ul>
-<li><a href="https://docs.k0sproject.io/stable/examples/ansible-playbook/">Has an ansible playbook</a></li>
-</ul></li>
-<li><a href="https://kurl.sh/">kurl</a>
-<ul>
-<li>Custom kubernetes installer, including things like storage</li>
-<li>Supports rook, but I don’t know if it is rook + ceph</li>
-<li>doesn’t seem to have anywhere near as much activity as I expect it to have… no CI/CD, Longhorn is deprecated</li>
-</ul></li>
-<li><a href="https://github.com/darxkies/k8s-tew">Kubernetes the Easier Way</a>
-<ul>
-<li>Comes with a <a href="https://darxkies.github.io/k8s-tew/_build/html/features.html">plethora of features</a>
-<ul>
-<li>including nginx + letsencrypt, helm, ceph, metallb, prometheus/grafana</li>
-<li>Very appealing, many features</li>
-</ul></li>
-</ul></li>
-</ul>
-<p>I don’t really want to opt for manual installation, or anything that’s too complex for too little gains.</p>
-<p>Kubespray appeals to me since it’s ansible, and it would be cool to manage the kubernetes cluster installation and the services from the same spot — but it got ruled out:</p>
-<p>From <a href="https://github.com/kubernetes-sigs/kubespray?tab=readme-ov-file#container-runtime-notes">the README</a></p>
-<blockquote class="blockquote">
-<p>Supported Docker versions are 18.09, 19.03, 20.10, 23.0 and 24.0. The recommended Docker version is 24.0. Kubelet might break on docker’s non-standard version numbering (it no longer uses semantic versioning). To ensure auto-updates don’t break your cluster look into e.g.&nbsp;the YUM versionlock plugin or apt pin</p>
-</blockquote>
-<p>It seems as kubespray deploys kubernetes by installing docker, and then deploying kubespray in docker. Although this is a neat decision, I cannot use docker at all, becuause I intend to deploy openstack using <a href="https://docs.openstack.org/kolla-ansible/latest/">kolla-ansible</a>, which also uses docker. From my testing, the openstack deployment completely destroys docker’s networking, so I probably can’t use both at once.</p>
-<p>In addition to that, kubespray completely <a href="https://github.com/search?q=repo%3Akubernetes-sigs%2Fkubespray%20%22podman%22&amp;type=code">uninstalls podman</a>, meaning I can’t use podman as a provider for kubespray either.</p>
-<p>I found an <a href="https://github.com/rancherfederal/rke2-ansible">ansible role</a> to deploy RKE2, but it seems that it just deploys vanilla RKE2, with none of the goodies that I am searching for like a load balancer or external storage.</p>
-<p>I also found something similer for <a href="https://github.com/k3s-io/k3s-ansible">k3s, an ansible role</a> to deploy a “vanilla” kubernetes cluster. However, at the bottom, they mention <a href="https://github.com/k3s-io/k3s-ansible?tab=readme-ov-file#need-more-features">some other ansible roles</a> to deploy a more than vanilla k3s cluster.</p>
-<p>I found a <a href="https://www.reddit.com/r/kubernetes/comments/1c09jfz/i_opensourced_today_my_fully_automated_k3s/">reddit post</a> where someone open sourced their own <a href="https://github.com/axivo/k3s-cluster">ansible playbook</a> — Only 22 days ago (as of the time of writing this), and it’s quite comprehensive. It comes with Argocd, Cilium, Longhorn, Prometheus, Cloudfare Let’s Encrypt certificates with cert-manager, and more.</p>
-<p>I looks very appealing to me, despite the fact that it seems to be opinionated, and designed for personal use. In addition to that, they are simply using ansible’s helm modules to deploy stuff — what would be different from me doing that, with my own deployment choices?</p>
-</section>
-<section id="distributed-storage" class="level2">
-<h2 class="anchored" data-anchor-id="distributed-storage">Distributed (?) Storage</h2>
-<p>Eventually, I do plan to scale up, and that requires a distributed storage solution. I see two main options:</p>
-<ul>
-<li>Ceph</li>
-<li>Longhorn (SUSE)
-<ul>
-<li><a href="https://artifacthub.io/packages/helm/longhorn/longhorn">Artifacthub</a></li>
-</ul></li>
-<li><a href="https://artifacthub.io/packages/helm/seaweedfs-csi-driver/seaweedfs-csi-driver">SeaweedFS</a></li>
-<li><a href="https://github.com/kadalu/kadalu">Kadalu (GlusterFS)</a>
-<ul>
-<li>Helm chart?</li>
-</ul></li>
-<li><a href="https://github.com/rancher/local-path-provisioner">local-path-provisioner</a> (SUSE)
-<ul>
-<li>An enhancement to Kubernete’s builtin ability to handle local storage paths, by SUSE</li>
-<li>maybe this is optimal, since I have just a one node cluster?</li>
-</ul></li>
-</ul>
-<p>Longhorn appeals to me, because if I choose to use other Suse products like rancher, then they probably integrate.</p>
-<p>But now, I’ve chosen to opt for FluxCD to manage my cluster rather than Longhorn. Because of this, I will probably opt for Ceph.</p>
-<p>I see a few options to deploy Ceph:</p>
-<ul>
-<li><a href="https://artifacthub.io/packages/helm/rook/rook-ceph" class="uri">https://artifacthub.io/packages/helm/rook/rook-ceph</a>
-<ul>
-<li>Has a <a href="https://artifacthub.io/packages/helm/rook/rook-ceph?modal=security-report&amp;section=vulnerabilities&amp;image=rook%2Fceph%3Av1.14.3&amp;target=Python">severe security vulnerability reported</a>, but is it really that bad?</li>
-</ul></li>
-<li>CSI (link later)</li>
-</ul>
-<p>I don’t understand what a CSI is and how it compares to the Rook ceph operator.</p>
-<p>However, it seems I’m running into another issue: It’s <a href="https://www.reddit.com/r/kubernetes/comments/hyvclw/how_to_run_rookceph_on_one_node/">difficult to run rook-ceph</a> on a single node. There are also other complaints about performance with ceph — the big complaint is that ceph uses up a lot of CPU relative to other distributed storage, but I wasn’t worrying about that. However, I’ve seen multiple claims that ceph requires high end hardware — SSD’s, which I don’t have. (Right now I have just one hard drive).</p>
-<p><a href="https://github.com/longhorn/longhorn/discussions/5737">Longhorn has a similar issue</a> — at least it seems usable on only one node, but the recommendation is to have at least 3 nodes.</p>
-<p>Local-path-provisioner is probably what I’m going to use, because I think it is built into k3s (and by extension, RKE2), by default.</p>
-</section>
-<section id="gitops-software" class="level2">
-<h2 class="anchored" data-anchor-id="gitops-software">Gitops Software</h2>
-<p><a href="https://en.wikipedia.org/wiki/DevOps#GitOps">Gitops</a> is a principle of software deployment, where the deployment infrastructure, services, and configuration, are stored in git — hence the name, Git Operations.</p>
-<p>There are several ways to do Gitops on Kubernetes, but the core challenge I am encountering, is that some Gitops software must be deployed to Kubernetes in order to manage the cluster, but you cannot use that software to deploy itself.</p>
-<p>What likely happens is that after you deploy the software to the cluster, then it records itself and adds itself to the state, but I have to ensure this works properly.</p>
-<p>Or maybe the GitOps software stays outside the configuration, eternally untracked, but still self updating?</p>
-<p>I still haven’t selected a GitOps software, but I am looking at:</p>
-<ul>
-<li>ArgoCD</li>
-<li>FluxCD
-<ul>
-<li><a href="https://fluxcd.io/flux/get-started/">Simple enough to bootsrap</a></li>
-<li>bootstraps itself from Github repo</li>
-</ul></li>
-<li>Fleet (made by SUSE, just like k3s, RKE2, rancher, and longhorn)</li>
-</ul>
-<p>After thinking about it, I can’t find a way to deploy a cluster and the CI/CD software at once, in such a way that it provisions itself. Many deployment methods simply abstract deploying the CI/CD software afterwards.</p>
-<p>It’s probably best to not rely on abstractions since this is my first time really deploying Kubernetes, instead, I will just have to accept that the Kubernetes deployment will not be stored as code.</p>
-<p>I found something interesting:</p>
-<ul>
-<li><a href="https://github.com/farcaller/nixhelm" class="uri">https://github.com/farcaller/nixhelm</a></li>
-<li><a href="https://github.com/farcaller/nixdockertag" class="uri">https://github.com/farcaller/nixdockertag</a></li>
-</ul>
-<p>Mentioned in a Lemmy comment, it takes helm charts, and is able to convert them to a format that can be consumed by ArgoCD, using Nix.</p>
-<p>Okay, but after more research, I’ve settled on Flux. It seems very easy to bootstrap, and to use <a href="https://fluxcd.io/flux/guides/helmreleases/">helm charts</a> with it. I don’t really need a GUI or multitenancy like ArgoCD provides, or the integrations that Fleet (probably) provides.</p>
-<p>Flux seems “lightweight”. It reads from a Git repo, and applies and reconciles state. In addition to that, it can bootstrap itself. Although, I think I will end up running into a funny catch-22 when I decide to move away from github to a self hosted forgejo, on the kubernetes cluster, everything will be fine… probably.</p>
-<p>Maybe I could have a seperate git server, and that stores the Kubernetes state? Flux seems to support <a href="https://fluxcd.io/flux/cmd/flux_bootstrap_git/">bootstrapping from any git repo</a>.</p>
-<p>A few recommendations on the internet seem to suggest that I should have bootstrap flux from something external to the cluster, rather than from inside the cluster.</p>
-</section>
-<section id="misc-addonsdeployment" class="level2">
-<h2 class="anchored" data-anchor-id="misc-addonsdeployment">Misc Addons/Deployment</h2>
-<ul>
-<li><p>Monitoring: <a href="https://artifacthub.io/packages/helm/prometheus-community/kube-prometheus-stack?modal=install">kube-prometheus-helm-stack</a></p></li>
-<li><p>Secrets:</p>
-<ul>
-<li>: <a href="https://github.com/getsops/sops" class="uri">https://github.com/getsops/sops</a>
-<ul>
-<li>Basically ansible vault, very appealing</li>
-</ul></li>
-<li>: <a href="https://external-secrets.io/latest/" class="uri">https://external-secrets.io/latest/</a>
-<ul>
-<li>Seems catch-22y, I need an existing external service to manage secrets… but I suppose it is called external secrets</li>
-</ul></li>
-</ul></li>
-<li><p>Ingress</p>
-<ul>
-<li>Nginx ingress… but how do I get SSL with this setup?</li>
-<li>Traefik ingress (has <a href="https://www.eff.org/deeplinks/2024/03/should-caddy-and-traefik-replace-certbot">automatic https</a>)</li>
-<li>Caddy: <a href="https://github.com/caddyserver/ingress" class="uri">https://github.com/caddyserver/ingress</a> — WIP software…</li>
-</ul></li>
-</ul>
-<p>I need a simple git ssh for bootstrapping flux from.</p>
-<ul>
-<li><a href="https://github.com/chrisnharvey/simple-git-server" class="uri">https://github.com/chrisnharvey/simple-git-server</a>
-<ul>
-<li>Seems unmaintained</li>
-</ul></li>
-<li>Apparently you can just use ssh as a git server</li>
-</ul>
-</section>
-</section>
-<section id="services" class="level1">
-<h1>Services</h1>
-<section id="authentik" class="level2">
-<h2 class="anchored" data-anchor-id="authentik">Authentik</h2>
-<p>Authentik provides <a href="https://docs.goauthentik.io/docs/installation/kubernetes">documentation on a Kubernetes deployment</a>, along with a Helm chart.</p>
-</section>
-<section id="forgejo" class="level2">
-<h2 class="anchored" data-anchor-id="forgejo">Forgejo</h2>
-<p>Forgejo has a helm chart: <a href="https://codeberg.org/forgejo-contrib/forgejo-helm" class="uri">https://codeberg.org/forgejo-contrib/forgejo-helm</a></p>
-<p>Unlike authentik, forgejo’s helm chart also seems to have some <a href="https://codeberg.org/forgejo-contrib/forgejo-helm#rootless-defaults">support for rootless/user namespaces</a>.</p>
-<p>I also want static sites, and here are some of the options I’ve found:</p>
-<ul>
-<li><a href="https://git.gay/gitgay/pages-server" class="uri">https://git.gay/gitgay/pages-server</a></li>
-<li><a href="https://forgejo.org/docs/latest/developer/static-pages/" class="uri">https://forgejo.org/docs/latest/developer/static-pages/</a></li>
-</ul>
-</section>
-<section id="nextcloud" class="level2">
-<h2 class="anchored" data-anchor-id="nextcloud">Nextcloud</h2>
-<p>There is an existing <a href="https://nextcloud.github.io/helm/">helm chart for nextcloud</a>: <a href="https://github.com/nextcloud/helm" class="uri">https://github.com/nextcloud/helm</a></p>
-<p>However, it says in the above, that it is community maintained, and not truly official.</p>
-<p>Going to the <a href="https://portal.nextcloud.com/article/Scalability/Deployment-recommendations/Large-Organizations-and-Service-Providers">nextcloud official docs for larger scale deployment recommendations</a>… and it’s paywalled. It’s likely that Nextcloud maintains official helm charts — but only for paying customers.</p>
-<p>Someone had an issue with nextcloud configurations on helm, and I asked them for the problem and solution, and they <a href="https://programming.dev/comment/9714618">replied to my post</a>.</p>
-</section>
-</section>
-<section id="networking" class="level1">
-<h1>Networking</h1>
-<p>Yup. After spending the majority of my time setting up networking on my previous iteration of this plan, it’s time to do exactly that, <em>again</em>.</p>
-<p>My original plan was to host some components of openstack on a VPS, allowing my server to give any virtual machines public ipv6 addresses despite being firewalled and behind the NAT of Cal State Northridge’s internet… except there is no NAT. Or firewall. In fact, if I set up bridging, I can give virtual machines more than one public ipv4 address without going through any of that hassle. So my plans have changed.</p>
-<p>However, some questions come in to play that need to be answered, that I need to think about:</p>
-<ul>
-<li>Multi node kubernetes: The dream is to have some form of high availability, where any two machines can fail, and my setup stays up (high availability usually requires 3 machines).</li>
-<li>Can I deploy openstack parallel to kubernetes?</li>
-<li>Should my router go in front of, or behind my server?</li>
-</ul>
-<p>I would like to forgo the router entirely, as it reduces complexity. However, the router is useful because it can provide ethernet to my laptop, which is faster than the CSUN wifi, especially when it gets congested.</p>
-<p>I am thinking of putting the router in front of my server, and configuring bridged networking, to allow my server to access the CSUN network directly, through both it’s ethernet ports. However, I do fear a speed bottleneck — when attempting to test CSUN’s ethernet speeds, I discovered that my laptop’s ethernet port only supported 100 mbps, meaning even though the cable supported higher speeds, and the ethernet port potentially supported higher speeds, there was a cap. I need to research</p>
-<p>Another potential setup is for the server to be in front, with the router connected to it’s secondary NIC/ethernet port. I could use the special bridging setup I have discovered where the primary ethernet port is both a bridge and a normal network interface, and then I could add the secondary ethernet port as a virtual port to the bridge. I would then create a second bridge, and add it to the first bridge, and openstack would use that bridge as it’s bridge for virtual machines.</p>
-<p>I’ve decided on the second. Although, there is another bottleneck in place, the NIC on my server itself. Although my router has all 1000 Mb/s ports, both NIC of my servers are capped at 100mb/s. I need to buy a PCI ethernet card (preferably with two ethernet ports).</p>
-<p>Options:</p>
-<ul>
-<li>https://www.amazon.com/Dual-Port-Gigabit-Network-Express-Ethernet/dp/B09D3JL14S</li>
-</ul>
-<p>The other thing I need to get working with is dynamic dns. Since CSUN’s ethernet works via DHCP, I’m not guaranteed the same ip address between reboots or other network configuration changes. I am using porkbun as my DNS provider, and I am searching for some options for that.</p>
-<ul>
-<li>https://hub.docker.com/r/qmcgaw/ddns-updater/
-<ul>
-<li>Comes with kubernetes manifests, but look too complex for now</li>
-<li>minor issue with root domain of subdomains <a href="https://www.reddit.com/r/homelab/comments/137y1v9/dynamic_dns_with_porkbun/kegh2xy/">something needs to be “@”</a></li>
-</ul></li>
-</ul>
-<p>It works great, although I had trouble testing it up because I was on my phone’s hotspot, which only gives me an ipv6 address.</p>
-<p>After I get Dynamic dns working, I decided to set up bridging, since my server will sit in front of my router, or my computer having an ethernet port.</p>
-<p>I followed my documented steps on <a href="../build-server-2/">build server part 2</a> (the section about bridging and veth).</p>
-<p>Except, I did not set up a veth just yet. I don’t need it.</p>
-</section>
-<section id="kubernetes-installation-and-setup" class="level1">
-<h1>Kubernetes Installation and Setup</h1>
-<p>The first thing is to <a href="https://docs.rke2.io/known_issues#networkmanager">configure NetworkManager to ignore CNI managed interfaces</a>, otherwise issues will occur.</p>
-<p>I followed the <a href="https://docs.rke2.io/install/quickstart">quick start</a> install guide. I started with the server, however, that only installs the server components, and not the agent components of rke2.</p>
-<p>I also followed the agent guide, in an attempt to get a single node install. That was a bad idea — I think the server also is capable of acting as an agent in a single node install?</p>
-<p>However, nothing starts properly. The RKE2 server service crashes, and I need to investigate why. I suspect it is because kubernete’s virtual networking is unable to properly interact with my special bridged networking setup, and this results in crashes… but the logs don’t seem to say anything relevant.</p>
-<p>After a reinstall, it seems to work? (I think I figured out what caused it: I forgot to edit the NetworkManager.conf file). And looking at <a href="https://blog.alphabravo.io/posts/2021/single-node-rke2-pt1/">this guide</a>, it seems that the server components also come with the agent components, as shown by how they deploy rancher (a workload) on just the server.</p>
-<p>I mostly ignored the steps, except copying <code>/etc/rancher/rke2/rke2.yaml</code> to <code>~/.kube/config</code>, and I also chowned the config file as my user. This way I could manage kubernetes as a regular user, rather than only as root.</p>
-<p>I tried installing kubectl to my user using nix at first, but kubectl complained that if the version was two major releases away, it could cause issues. So insetad, I installing kubectl from a specific nixpkgs revision:</p>
-<div class="sourceCode" id="cb1" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb1-1">moonpie@thoth:~$ nix profile install nixpkgs/10b813040df67c4039086db0f6eaf65c536886c6#kubectl</span>
-<span id="cb1-2">moonpie@thoth:~$ kubectl version</span>
-<span id="cb1-3">Client Version: v1.28.4</span>
-<span id="cb1-4">Kustomize Version: v5.0.4-0.20230601165947-6ce0bf390ce3</span>
-<span id="cb1-5">Server Version: v1.28.10+rke2r1</span></code></pre></div>
-<p>Now… Fluxcd deployment is next.</p>
-<p>I installed fluxcd using nix.</p>
-<p><code>nix profile install nixpkgs#fluxcd</code></p>
-<p>Before I installed fluxcd however, I decided to <a href="https://docs.rke2.io/networking/networking_services?_highlight=nginx/networking/networking_services#nginx-ingress-controller">disable the nginx ingress controller</a>. I did this because I intend to deploy traefik or something else as my ingress controller with flux.</p>
-<p>It seems the RKE2 <a href="https://docs.rke2.io/install/configuration">configuration file</a> needs to be created manually. After creating that file, adding <code>disable: rke2-ingress-nginx</code> to it, and restarting the server service, the nginx controller is disabled.</p>
-<p>Now, for the flux install. Since I don’t want to use github, I decided to just use ssh as a git server.</p>
-<p>Following the guide for flux <a href="https://fluxcd.io/flux/installation/bootstrap/generic-git-server/#ssh-private-key">bootstrapping with git</a>:</p>
-<div class="sourceCode" id="cb2" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb2-1">flux bootstrap git --url ssh://moonpie@moonpiedumpl.ing/home/moonpie/fleet-charts --private-key-file=/home/moonpie/.ssh/moonstack --path=cluster/my-cluster</span></code></pre></div>
-<p>And it starts working immediately… except when I clone the git repo from the server, it’s empty‽ At least it has a branch, “master”, but this branch has no commits or anything to start from. I’m attempting to follow the rest of the <a href="https://fluxcd.io/flux/get-started">bootstrapping guide</a>, so I create a directory, “cluster/my-cluster” in the git repo and put the first chart in it. Nothing happens. I think I screwed up somewhere, so I decide to uninstall flux and start over again.</p>
-</section>
-<section id="presearch-and-notes-for-future-pieces" class="level1">
-<h1>Presearch and Notes for Future Pieces</h1>
-<section id="openstack" class="level2">
-<h2 class="anchored" data-anchor-id="openstack">Openstack</h2>
-<p>Since I am using Kubernetes to deploy services, it is worth investing if I can deploy Openstack (or some other self-hosted cloud) on Kubernetes.</p>
-<ul>
-<li><a href="https://yaook.cloud/">Yaook</a></li>
-<li><a href="https://github.com/vexxhost/atmosphere">Atmosphere</a></li>
-</ul>
-<p>These look appealing, but very hard to deploy.</p>
-</section>
-<section id="kubernetes" class="level2">
-<h2 class="anchored" data-anchor-id="kubernetes">Kubernetes</h2>
-</section>
-<section id="misc" class="level2">
-<h2 class="anchored" data-anchor-id="misc">Misc</h2>
-<p><a href="https://editor.networkpolicy.io/">Graphical network policy editor</a></p>
-<p><a href="https://k8syaml.com/">Semi graphical yaml editor</a></p>
-<section id="multi-tenancy" class="level3">
-<h3 class="anchored" data-anchor-id="multi-tenancy">Multi-Tenancy</h3>
-<p>In case I can’t obtain multi-tenancy by openstack provisioning kuberntes, there are some alternative solutions I am looking at:</p>
-<ul>
-<li>vcluster</li>
-<li><a href="https://github.com/projectcapsule/capsule">capsule</a></li>
-<li><a href="https://github.com/clastix/kamaji">kamaji</a></li>
-</ul>
-
-
-</section>
-</section>
-</section>
-
- ]]></description>
-  <category>projects</category>
-  <guid>./projects/build-server-4/</guid>
-  <pubDate>Wed, 20 Mar 2024 07:00:00 GMT</pubDate>
 </item>
 </channel>
 </rss>
