@@ -1,0 +1,154 @@
+---
+title: "WRCCDC Regionals Writeup"
+description: ""
+date: "2025-3-28"
+categories: [writeups]
+execute:
+  freeze: auto
+---
+
+This is a writeup for the WRCCDC regionals. As some context, [WRCCDC](https://wrccdc.org/) is a cybersecurity competition that involves managing an environment that is a simulation of a real company, while being hit by a cyberattack from competition organizers referred to as "red teamers".
+
+It's stressful. It's chaotic. But it's great fun.
+
+Vocab glossary (but I won't cover non-competition specific stuff):
+
+* Scoring engine: Software that automatically connects, and authenticates to scored services, and "scores" them for being up
+* Scored service: A service that is being checked by the scoring engine — not all services are.
+* Injects: Writeups of tasks we are assigned to do
+* Teams: Subsets of the competition organizers, volunteers responsible for making the game work 
+    * Red Team: **Competition Organizers** who pretend to be cyberattackers by slowly infiltrating machines they could instantly down but choose not to
+    * Orange Team: Pretends to be organizers
+    * White Team: Grades Injects
+    * Black (Ops/Operations) Team: Sets up the environment
+    * Gold Team: Organizional duties
+* Team packet: Document noting down the topology, some scored services, and rules of the competition.
+* Incident responses: Documents noting down how a cyberattack happened, affected services and data, and mitigation steps.
+
+
+I began with two nmap scans of the entire environment, to see what was on the network.
+
+I firstly logged into the _laptop_ with the hostname "Bishop41". The machine ran something [Winux](https://winuxos.com/), which is essentially Ubuntu with KDE, heavily themed to look like Windows. There was also [LinuxFX](https://linuxfx.org/), which was something similar. I liked them at first, I thought they were cool Windows clones that I could give to my mother so I could help her escape Windows, without her noticing, but the KDE UI kept crashing. 
+
+Thankfully, I have experience from my personal laptop:
+
+`systemctl --user restart plasma-plasmashell` (without sudo). The jokes is that KDE "_Krashes_" a lot.
+
+Bishop41 had some malware on it that was fairly easy to find... but I didn't find the later bits until after I had to do the presentation. The presentation: [presentation html link](./kitty_presentation)
+
+Of course, I elaborated on the points in the presentation, since the slides are somewhat information sparse. For example, I broke down how the reverse shell worked, pointing to the bits of the python code that bound to a port, or ran the bash process.
+
+And, I was also wrong about the reverse shell not being running.  It was `:(`. I later found that there was a cronjob, either added by red teamers or black teamers
+
+There was also another piece of dangerous software I missed, a web service that had an interface to submit python code that would run on the machine. Not quite malware, but it wasn't a scored service. I removed it, as it was serving on port 80, which interfered when I attempted to up the `apache2` service. 
+
+I also did a later presentation on a software, [Arkime](https://arkime.com/). I did not manage to get it deployed, and my presentation overview was very short. However, after my presentation, they asked me many questions about PCAP's, encryption, and other network analysis things, and I answered them pretty well. At the mixer that night, the person who quizzed me complimented me and told me that they were searching for specific keywordss for the 
+
+We had trouble with docker on the Scully machine, it would time out when attempting to pull images.
+
+
+
+# For Future CCDC
+
+## Issues We Struggled With
+
+* Not enough machines in the main workstation area. We started with 3 and pushed it up to 5 on day 1, but we still struggled.
+* I counted about 39 machines... Too many machines to manage, too little workstations
+    * Automation solutions are needed
+
+## Preparation Methodology Adjustments
+
+* People need to learn scripting
+    * Python for Linux
+    * Powershell for Windows
+    * People need to be able to write/edit scripts on the spot
+* People need to drill the fundamentals. Overall lack of experience that can be fixed.
+    * Set up stuff and tear it down.
+    * Kubernetes interaction/ how to change certificate used to authenticate
+    * docker-compose vs with space instead
+    * DNS/proxy access to the environments
+    * Be able to handle never before seen software thrown at us. Either rare stuff, or custom CCDC stuff.
+* People are gonna need to specialize. I wanted to avoid this. But I can't see a way around this. There isn't enough time for every person to learn every software, as much as that's what I want to do to prepare them for the real world
+
+## Things to Prepare
+
+* Printouts
+    * Ascii cheatsheet: Yeah. But we did actually need it for decoding the special signals being sent.
+    * Documentation? Create our own team book/cheatsheets?
+    * [Julia Evans](https://wizardzines.com/) cheatsheets would have helped a lot. 
+    * Pacman Rosetta
+    * Other misc, UPDATED cheatsheets
+    * Simpler passwords for our password sheets, or possibly cryptpad spreadsheet
+* Physical Books     
+    * Unix handbook, or the LPIC books are really good for physical books documenting Linux.
+* Custom Linux ISO that's really small, possibly doesn't need network, and has automatic install. This way we don't need to click through the Debian installer. 
+* Quarto and formatting:
+    * I threw together something quick using Nix to install quarto to make an html revealjs presentation and it worked _really well_.
+    * Do we _need_ themed templates for docs? Quarto's default dark is lame but extremely simple to use, vs custom document templates for every competition.
+        * Or [quarto brand.yml](https://quarto.org/docs/authoring/brand.html) for branding/templates
+    * Templates for presentations, injects.
+    * `embed-resources: true` to create self contained quarto revealjs and html. [See docs](https://quarto.org/docs/output-formats/html-basics.html#self-contained)
+* Nmap scans in multiple output formats — including **markdown tables** of multiple kinds (service as table, machines as table, etc). Or as CSV's. 
+* SIEM solution...
+    * Some way to log network connections for incident responses
+* Automate group policy — No more lockouts
+* Become able to consistently fix problems caused by red team on the Windows machines.
+* Learn the inject naming scheme. 
+* Airgap ready: Part of our environment was airgapped. How do we set up services without google?
+    * Physical docs, paper/books
+    * Small, portable, transferable services
+* Some way of organizing work for easy handoff
+    * The machines had virtual desktops but I didn't use them (they didn't show up on LinuxFX/Winux)
+* Automated granular backups
+    * Deduplication
+    * Just config, or data as well
+* Use CIS benchmarks instead of Microsoft Docs when docs are bad
+
+
+## Pre/During Comp
+
+* Stop assuming instructions are perfect. 
+    * Every team packet has had at least one thing incorrect. A machine not existing but documented, vice versa, changed ip addresses, etc
+    * The proxy didn't work because the instructions weren't perfect. Eventually we requested help from Black Team and they did but we can experiment more with instructions on our own.
+    * No hate to Ops Team. But it's a complex competition and that means things will go wrong. We just gotta adapt.
+* Cryptpad: We could have and should have used a public instance for injects that needed collaboration
+    * And cryptpad has a kanban board for task organization
+    * Possibly password sheet as well
+* Reuse injects if they reuse machines
+* Backup admin accounts on the machines. Could probably be automated.
+* Clipboard manager... please
+* I misspelled the password when writing it down...
+    * We should have brought the other sheet, having multiple people write the passwowrd down.
+    * Have physical backups and redundancies as well? 
+
+
+# Notes
+
+* Open internet acccess
+    * Proxy was not forced
+    * Chatgpt, perplexity were unblocked
+* Red Team did not delete `/var/syslog` even though they cleaned journalctl
+* Arkime wants elasticsearch/opensearch
+
+
+
+# Off-Topic
+
+
+## To Do Misc/Funny
+(To do stuff that isn't as important or relevant)
+* CCDC playlist: Since we had internet access, we should have put some bops on
+* Get the model of Coastline's college presentation windows machine — I love it's form factor, it's quite small
+* I should write my lowercase l in such a way where it's clear what they are
+
+
+## Notes Misc
+* The HP Elitedesk 800 G1 and G6 don't seem to have the small form factor I expected `:(` (They were the desktops in the classified area of the competition)
+* Datto brand device, running Debian 12 was a "magic box" used for Black Team. But I really liked the form factor of that device, it was quite small, like a NUC.
+
+
+
+## Personal/Leadership Notes
+
+* Encourage hypothesis/testing in a learning environment, rather than giving answers
+    * Watched a Black Teamer do it excellently

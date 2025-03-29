@@ -10,27 +10,21 @@ let
     ipykernel
     requests
   ];
-
-  texDeps = ps: with ps; [
-    scheme-infraonly
-    collection-latex
-    collection-latexrecommended
-    xetex
-    fontawesome5
-  ];
+  
   texEnv = (pkgs.texlive.combine {
     inherit (pkgs.texlive) scheme-infraonly
       collection-latex collection-latexrecommended
       fontawesome5
+      framed
       xetex;
   });
 
   quarto = pkgs.quarto.overrideAttrs (oldAttrs: rec {
     # 1.3 + newer (I think) has a weird bug with the text boxes where they are white on a black background. Readable, but ugly
-    version = "1.6.40";
+    version = "1.6.42";
     src = pkgs.fetchurl {
       url = "https://github.com/quarto-dev/quarto-cli/releases/download/v${version}/quarto-${version}-linux-amd64.tar.gz";
-      sha256 = "sha256-d74YsCtBSEdxSuqnPRo6OXxCnF118L69d99cnPl05/o=";
+      sha256 = "sha256-9mf1YfcfCWMZaYFlYyJN9WKlRHk8U2sq2ESb4mqz3sY=";
     };
     preFixup = ''
       wrapProgram $out/bin/quarto \

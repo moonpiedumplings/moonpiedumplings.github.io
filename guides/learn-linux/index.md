@@ -271,6 +271,8 @@ Below is stuff I don't like as much:
 
 <https://github.com/Adamkadaban/CTFs> — Mega list of CTF's and the like to get started. 
 
+<https://www.vulnhub.com/entry/kioptrix-level-1-1,22/> — Intro box to Vulnhub. In general, that site has many vulnerable virtual machines for learning penetration testing.
+
 <details><summary>Expand/Collapse</sumamry>
 
 [https://www.isc2.org/](https://www.isc2.org/landing/1MCC?utm_source=isc2&utm_medium=textlink&utm_campaign=GBL-CC-1M-DG&utm_term=bundlepage&utm_content=awareness)

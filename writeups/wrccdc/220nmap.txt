@@ -1,0 +1,1047 @@
+root@Bishop41:~# nmap -A 192.168.220.0-255
+Starting Nmap 7.94SVN ( https://nmap.org ) at 2025-03-28 09:50 PDT
+Nmap scan report for 192.168.220.1
+Host is up (0.00077s latency).
+Not shown: 997 closed tcp ports (reset)
+PORT    STATE SERVICE  VERSION
+22/tcp  open  ssh      Cisco SSH 1.25 (protocol 2.0)
+| ssh-hostkey: 
+|_  2048 6a:c0:fa:0f:63:f4:38:dc:af:9a:4d:ab:35:e1:2b:36 (RSA)
+80/tcp  open  http     nginx
+|_http-title: Site doesn't have a title (text/html; charset=utf-8).
+443/tcp open  ssl/http nginx
+| ssl-cert: Subject: commonName=IOS-Self-Signed-Certificate-343446479
+| Not valid before: 2020-07-25T09:04:41
+|_Not valid after:  2030-01-01T00:00:00
+| tls-nextprotoneg: 
+|_  http/1.1
+|_ssl-date: TLS randomness does not represent time
+|_http-title: Site doesn't have a title (text/html; charset=utf-8).
+MAC Address: 00:F8:2C:8C:8D:C1 (Cisco Systems)
+OS details: Cisco 836, 890, 1751, 1841, 2800, or 2900 router (IOS 12.4 - 15.1), Cisco Aironet 2600-series WAP (IOS 15.2(2))
+Network Distance: 1 hop
+Service Info: OS: IOS; CPE: cpe:/o:cisco:ios
+
+TRACEROUTE
+HOP RTT     ADDRESS
+1   0.77 ms 192.168.220.1
+
+Nmap scan report for 192.168.220.3
+Host is up (0.00050s latency).
+All 1000 scanned ports on 192.168.220.3 are in ignored states.
+Not shown: 1000 filtered tcp ports (no-response)
+MAC Address: 74:7D:24:6F:49:20 (Phicomm (Shanghai))
+Warning: OSScan results may be unreliable because we could not find at least 1 open and 1 closed port
+Device type: proxy server|firewall|remote management|WAP
+Running: Citrix embedded, Juniper embedded, Digi embedded, Linksys embedded
+OS CPE: cpe:/h:linksys:wrt610nv3
+OS details: Citrix Access Gateway VPN gateway, Juniper SA2500 SSL VPN gateway or Digi Passport console server, Linksys WRT610Nv3 WAP
+Network Distance: 1 hop
+
+TRACEROUTE
+HOP RTT     ADDRESS
+1   0.50 ms 192.168.220.3
+
+Nmap scan report for 192.168.220.5
+Host is up (0.00017s latency).
+Not shown: 995 closed tcp ports (reset)
+PORT     STATE SERVICE  VERSION
+22/tcp   open  ssh      OpenSSH 9.2p1 Debian 2+deb12u3 (protocol 2.0)
+| ssh-hostkey: 
+|   256 50:8d:8f:87:7a:69:2d:5e:b0:21:03:52:77:5e:62:0b (ECDSA)
+|_  256 79:a9:ed:58:ac:73:02:f7:2e:32:b3:ac:b8:36:6b:5b (ED25519)
+80/tcp   open  http     nginx 1.25.3
+|_http-server-header: nginx/1.25.3
+|_http-title: Frigate
+111/tcp  open  rpcbind  2-4 (RPC #100000)
+| rpcinfo: 
+|   program version    port/proto  service
+|   100000  2,3,4        111/tcp   rpcbind
+|   100000  2,3,4        111/udp   rpcbind
+|   100000  3,4          111/tcp6  rpcbind
+|_  100000  3,4          111/udp6  rpcbind
+443/tcp  open  ssl/http nginx 1.25.3
+|_ssl-date: TLS randomness does not represent time
+| ssl-cert: Subject: commonName=*/organizationName=FRIGATE DEFAULT CERT
+| Not valid before: 2025-03-26T21:03:59
+|_Not valid after:  2026-03-26T21:03:59
+|_http-server-header: nginx/1.25.3
+|_http-title: Frigate
+3128/tcp open  http     Proxmox Virtual Environment REST API 3.0
+|_http-title: Site doesn't have a title.
+|_http-server-header: pve-api-daemon/3.0
+MAC Address: 54:B2:03:14:C7:16 (Pegatron)
+Device type: general purpose
+Running: Linux 4.X|5.X
+OS CPE: cpe:/o:linux:linux_kernel:4 cpe:/o:linux:linux_kernel:5
+OS details: Linux 4.15 - 5.8
+Network Distance: 1 hop
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+
+TRACEROUTE
+HOP RTT     ADDRESS
+1   0.17 ms 192.168.220.5
+
+Nmap scan report for 192.168.220.7
+Host is up (0.00026s latency).
+Not shown: 989 closed tcp ports (reset)
+PORT     STATE SERVICE  VERSION
+22/tcp   open  ssh      OpenSSH 9.2p1 Debian 2+deb12u5 (protocol 2.0)
+| ssh-hostkey: 
+|   256 ec:d8:d7:ae:9d:88:77:c9:39:6b:45:56:c0:44:b0:d4 (ECDSA)
+|_  256 ce:f8:49:fe:62:fa:cd:17:7b:49:f8:8c:8d:7e:6e:19 (ED25519)
+25/tcp   open  smtp     Postfix smtpd
+|_smtp-commands: silk.fbc.scp, PIPELINING, SIZE 104857600, ETRN, STARTTLS, ENHANCEDSTATUSCODES, 8BITMIME, DSN
+| ssl-cert: Subject: commonName=mail.example.org/organizationName=mailcow
+| Not valid before: 2016-12-13T10:11:00
+|_Not valid after:  2019-11-28T10:11:00
+|_ssl-date: TLS randomness does not represent time
+80/tcp   open  http     nginx
+| http-robots.txt: 1 disallowed entry 
+|_/
+|_http-server-header: nginx
+| fingerprint-strings: 
+|   GetRequest: 
+|     HTTP/1.1 200 OK
+|     server: nginx
+|     date: Fri, 28 Mar 2025 16:51:33 GMT
+|     content-type: text/html; charset=utf-8
+|     vary: Accept-Encoding
+|     set-cookie: PHPSESSID=eef2e65c17e182ba87150828044c3798; path=/; HttpOnly
+|     expires: Thu, 19 Nov 1981 08:52:00 GMT
+|     cache-control: no-store, no-cache, must-revalidate
+|     pragma: no-cache
+|     strict-transport-security: max-age=15768000;
+|     x-content-type-options: nosniff
+|     x-xss-protection: 1; mode=block
+|     x-robots-tag: none
+|     x-download-options: noopen
+|     x-frame-options: SAMEORIGIN
+|     x-permitted-cross-domain-policies: none
+|     referrer-policy: strict-origin
+|     connection: close
+|     <!DOCTYPE html>
+|     <html lang="en-gb">
+|     <head>
+|     <meta charset="utf-8">
+|     <meta http-equiv="X-UA-Compatible" content="IE=edge">
+|     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0">
+|     <meta name="theme-color" content="#F5D76E"/>
+|     <meta http-equiv="Refer
+|   HTTPOptions: 
+|     HTTP/1.1 405 Not Allowed
+|     server: nginx
+|     date: Fri, 28 Mar 2025 16:51:33 GMT
+|     content-type: text/html; charset=utf-8
+|     content-length: 150
+|     x-frame-options: SAMEORIGIN
+|     connection: close
+|     <html>
+|     <head><title>405 Not Allowed</title></head>
+|     <body>
+|     <center><h1>405 Not Allowed</h1></center>
+|     <hr><center>nginx</center>
+|     </body>
+|     </html>
+|   RTSPRequest, X11Probe: 
+|     HTTP/1.1 400 Bad request
+|     Content-length: 90
+|     Cache-Control: no-cache
+|     Connection: close
+|     Content-Type: text/html
+|     <html><body><h1>400 Bad request</h1>
+|     Your browser sent an invalid request.
+|_    </body></html>
+|_http-title: mailcow UI
+110/tcp  open  pop3     Dovecot pop3d
+| ssl-cert: Subject: commonName=mail.example.org/organizationName=mailcow
+| Not valid before: 2016-12-13T10:11:00
+|_Not valid after:  2019-11-28T10:11:00
+|_ssl-date: TLS randomness does not represent time
+|_pop3-capabilities: UIDL AUTH-RESP-CODE TOP CAPA STLS PIPELINING USER SASL(PLAIN LOGIN) RESP-CODES
+143/tcp  open  imap     Dovecot imapd
+|_imap-capabilities: ENABLE SASL-IR listed capabilities LOGIN-REFERRALS IMAP4rev1 STARTTLS AUTH=LOGINA0001 post-login LITERAL+ ID more AUTH=PLAIN Pre-login OK IDLE have
+|_ssl-date: TLS randomness does not represent time
+| ssl-cert: Subject: commonName=mail.example.org/organizationName=mailcow
+| Not valid before: 2016-12-13T10:11:00
+|_Not valid after:  2019-11-28T10:11:00
+443/tcp  open  ssl/http nginx
+| http-robots.txt: 1 disallowed entry 
+|_/
+|_ssl-date: TLS randomness does not represent time
+|_http-title: mailcow UI
+| ssl-cert: Subject: commonName=mail.example.org/organizationName=mailcow
+| Not valid before: 2016-12-13T10:11:00
+|_Not valid after:  2019-11-28T10:11:00
+465/tcp  open  ssl/smtp Postfix smtpd
+|_ssl-date: TLS randomness does not represent time
+| ssl-cert: Subject: commonName=mail.example.org/organizationName=mailcow
+| Not valid before: 2016-12-13T10:11:00
+|_Not valid after:  2019-11-28T10:11:00
+|_smtp-commands: silk.fbc.scp, PIPELINING, SIZE 104857600, ETRN, AUTH PLAIN LOGIN, AUTH=PLAIN LOGIN, ENHANCEDSTATUSCODES, 8BITMIME, DSN
+587/tcp  open  smtp     Postfix smtpd
+|_smtp-commands: silk.fbc.scp, PIPELINING, SIZE 104857600, ETRN, STARTTLS, ENHANCEDSTATUSCODES, 8BITMIME, DSN
+| ssl-cert: Subject: commonName=mail.example.org/organizationName=mailcow
+| Not valid before: 2016-12-13T10:11:00
+|_Not valid after:  2019-11-28T10:11:00
+|_ssl-date: TLS randomness does not represent time
+993/tcp  open  imaps?
+|_imap-capabilities: ENABLE capabilities AUTH=LOGINA0001 post-login have LITERAL+ SASL-IR IDLE ID listed more AUTH=PLAIN IMAP4rev1 Pre-login LOGIN-REFERRALS OK
+|_ssl-date: TLS randomness does not represent time
+| ssl-cert: Subject: commonName=mail.example.org/organizationName=mailcow
+| Not valid before: 2016-12-13T10:11:00
+|_Not valid after:  2019-11-28T10:11:00
+995/tcp  open  pop3s?
+|_pop3-capabilities: CAPA SASL(PLAIN LOGIN) USER UIDL RESP-CODES PIPELINING AUTH-RESP-CODE TOP
+|_ssl-date: TLS randomness does not represent time
+| ssl-cert: Subject: commonName=mail.example.org/organizationName=mailcow
+| Not valid before: 2016-12-13T10:11:00
+|_Not valid after:  2019-11-28T10:11:00
+8080/tcp open  http     nginx
+|_http-title: mailcow UI
+| http-robots.txt: 1 disallowed entry 
+|_/
+1 service unrecognized despite returning data. If you know the service/version, please submit the following fingerprint at https://nmap.org/cgi-bin/submit.cgi?new-service :
+SF-Port80-TCP:V=7.94SVN%I=7%D=3/28%Time=67E6D395%P=x86_64-pc-linux-gnu%r(G
+SF:etRequest,3890,"HTTP/1\.1\x20200\x20OK\r\nserver:\x20nginx\r\ndate:\x20
+SF:Fri,\x2028\x20Mar\x202025\x2016:51:33\x20GMT\r\ncontent-type:\x20text/h
+SF:tml;\x20charset=utf-8\r\nvary:\x20Accept-Encoding\r\nset-cookie:\x20PHP
+SF:SESSID=eef2e65c17e182ba87150828044c3798;\x20path=/;\x20HttpOnly\r\nexpi
+SF:res:\x20Thu,\x2019\x20Nov\x201981\x2008:52:00\x20GMT\r\ncache-control:\
+SF:x20no-store,\x20no-cache,\x20must-revalidate\r\npragma:\x20no-cache\r\n
+SF:strict-transport-security:\x20max-age=15768000;\r\nx-content-type-optio
+SF:ns:\x20nosniff\r\nx-xss-protection:\x201;\x20mode=block\r\nx-robots-tag
+SF::\x20none\r\nx-download-options:\x20noopen\r\nx-frame-options:\x20SAMEO
+SF:RIGIN\r\nx-permitted-cross-domain-policies:\x20none\r\nreferrer-policy:
+SF:\x20strict-origin\r\nconnection:\x20close\r\n\r\n<!DOCTYPE\x20html>\n<h
+SF:tml\x20lang=\"en-gb\">\n<head>\n\x20\x20<meta\x20charset=\"utf-8\">\n\x
+SF:20\x20<meta\x20http-equiv=\"X-UA-Compatible\"\x20content=\"IE=edge\">\n
+SF:\x20\x20<meta\x20name=\"viewport\"\x20content=\"width=device-width,\x20
+SF:initial-scale=1,\x20maximum-scale=1,\x20user-scalable=0\">\n\x20\x20<me
+SF:ta\x20name=\"theme-color\"\x20content=\"#F5D76E\"/>\n\x20\x20<meta\x20h
+SF:ttp-equiv=\"Refer")%r(HTTPOptions,153,"HTTP/1\.1\x20405\x20Not\x20Allow
+SF:ed\r\nserver:\x20nginx\r\ndate:\x20Fri,\x2028\x20Mar\x202025\x2016:51:3
+SF:3\x20GMT\r\ncontent-type:\x20text/html;\x20charset=utf-8\r\ncontent-len
+SF:gth:\x20150\r\nx-frame-options:\x20SAMEORIGIN\r\nconnection:\x20close\r
+SF:\n\r\n<html>\r\n<head><title>405\x20Not\x20Allowed</title></head>\r\n<b
+SF:ody>\r\n<center><h1>405\x20Not\x20Allowed</h1></center>\r\n<hr><center>
+SF:nginx</center>\r\n</body>\r\n</html>\r\n")%r(RTSPRequest,CF,"HTTP/1\.1\
+SF:x20400\x20Bad\x20request\r\nContent-length:\x2090\r\nCache-Control:\x20
+SF:no-cache\r\nConnection:\x20close\r\nContent-Type:\x20text/html\r\n\r\n<
+SF:html><body><h1>400\x20Bad\x20request</h1>\nYour\x20browser\x20sent\x20a
+SF:n\x20invalid\x20request\.\n</body></html>\n")%r(X11Probe,CF,"HTTP/1\.1\
+SF:x20400\x20Bad\x20request\r\nContent-length:\x2090\r\nCache-Control:\x20
+SF:no-cache\r\nConnection:\x20close\r\nContent-Type:\x20text/html\r\n\r\n<
+SF:html><body><h1>400\x20Bad\x20request</h1>\nYour\x20browser\x20sent\x20a
+SF:n\x20invalid\x20request\.\n</body></html>\n");
+MAC Address: BC:24:11:41:24:15 (Unknown)
+Device type: general purpose
+Running: Linux 4.X|5.X
+OS CPE: cpe:/o:linux:linux_kernel:4 cpe:/o:linux:linux_kernel:5
+OS details: Linux 4.15 - 5.8
+Network Distance: 1 hop
+Service Info: Host: silk.fbc.scp; OS: Linux; CPE: cpe:/o:linux:linux_kernel
+
+TRACEROUTE
+HOP RTT     ADDRESS
+1   0.26 ms 192.168.220.7
+
+Nmap scan report for 192.168.220.9
+Host is up (0.00032s latency).
+Not shown: 997 closed tcp ports (reset)
+PORT     STATE SERVICE    VERSION
+22/tcp   open  ssh        OpenSSH 9.9 (protocol 2.0)
+| ssh-hostkey: 
+|   256 a2:8d:40:44:2d:92:ef:d1:20:a8:84:95:22:29:32:86 (ECDSA)
+|_  256 05:b8:25:6e:41:3b:4f:f2:ac:cb:6c:03:cd:2f:e8:cf (ED25519)
+80/tcp   open  http       nginx
+|_http-title: Secure Network Router
+8080/tcp open  http-proxy
+| http-title: WireGuard UI
+|_Requested resource was /login?next=/
+| fingerprint-strings: 
+|   FourOhFourRequest: 
+|     HTTP/1.0 404 Not Found
+|     Content-Type: application/json; charset=UTF-8
+|     Date: Fri, 28 Mar 2025 16:51:32 GMT
+|     Content-Length: 24
+|     {"message":"Not Found"}
+|   GenericLines, Help, Kerberos, LDAPSearchReq, LPDString, RTSPRequest, SSLSessionReq, Socks5, TLSSessionReq, TerminalServerCookie: 
+|     HTTP/1.1 400 Bad Request
+|     Content-Type: text/plain; charset=utf-8
+|     Connection: close
+|     Request
+|   GetRequest: 
+|     HTTP/1.0 307 Temporary Redirect
+|     Location: /login?next=/
+|     Date: Fri, 28 Mar 2025 16:51:32 GMT
+|     Content-Length: 0
+|   HTTPOptions: 
+|     HTTP/1.0 204 No Content
+|     Allow: OPTIONS, GET
+|_    Date: Fri, 28 Mar 2025 16:51:32 GMT
+1 service unrecognized despite returning data. If you know the service/version, please submit the following fingerprint at https://nmap.org/cgi-bin/submit.cgi?new-service :
+SF-Port8080-TCP:V=7.94SVN%I=7%D=3/28%Time=67E6D393%P=x86_64-pc-linux-gnu%r
+SF:(GetRequest,74,"HTTP/1\.0\x20307\x20Temporary\x20Redirect\r\nLocation:\
+SF:x20/login\?next=/\r\nDate:\x20Fri,\x2028\x20Mar\x202025\x2016:51:32\x20
+SF:GMT\r\nContent-Length:\x200\r\n\r\n")%r(HTTPOptions,55,"HTTP/1\.0\x2020
+SF:4\x20No\x20Content\r\nAllow:\x20OPTIONS,\x20GET\r\nDate:\x20Fri,\x2028\
+SF:x20Mar\x202025\x2016:51:32\x20GMT\r\n\r\n")%r(RTSPRequest,67,"HTTP/1\.1
+SF:\x20400\x20Bad\x20Request\r\nContent-Type:\x20text/plain;\x20charset=ut
+SF:f-8\r\nConnection:\x20close\r\n\r\n400\x20Bad\x20Request")%r(FourOhFour
+SF:Request,9A,"HTTP/1\.0\x20404\x20Not\x20Found\r\nContent-Type:\x20applic
+SF:ation/json;\x20charset=UTF-8\r\nDate:\x20Fri,\x2028\x20Mar\x202025\x201
+SF:6:51:32\x20GMT\r\nContent-Length:\x2024\r\n\r\n{\"message\":\"Not\x20Fo
+SF:und\"}\n")%r(Socks5,67,"HTTP/1\.1\x20400\x20Bad\x20Request\r\nContent-T
+SF:ype:\x20text/plain;\x20charset=utf-8\r\nConnection:\x20close\r\n\r\n400
+SF:\x20Bad\x20Request")%r(GenericLines,67,"HTTP/1\.1\x20400\x20Bad\x20Requ
+SF:est\r\nContent-Type:\x20text/plain;\x20charset=utf-8\r\nConnection:\x20
+SF:close\r\n\r\n400\x20Bad\x20Request")%r(Help,67,"HTTP/1\.1\x20400\x20Bad
+SF:\x20Request\r\nContent-Type:\x20text/plain;\x20charset=utf-8\r\nConnect
+SF:ion:\x20close\r\n\r\n400\x20Bad\x20Request")%r(SSLSessionReq,67,"HTTP/1
+SF:\.1\x20400\x20Bad\x20Request\r\nContent-Type:\x20text/plain;\x20charset
+SF:=utf-8\r\nConnection:\x20close\r\n\r\n400\x20Bad\x20Request")%r(Termina
+SF:lServerCookie,67,"HTTP/1\.1\x20400\x20Bad\x20Request\r\nContent-Type:\x
+SF:20text/plain;\x20charset=utf-8\r\nConnection:\x20close\r\n\r\n400\x20Ba
+SF:d\x20Request")%r(TLSSessionReq,67,"HTTP/1\.1\x20400\x20Bad\x20Request\r
+SF:\nContent-Type:\x20text/plain;\x20charset=utf-8\r\nConnection:\x20close
+SF:\r\n\r\n400\x20Bad\x20Request")%r(Kerberos,67,"HTTP/1\.1\x20400\x20Bad\
+SF:x20Request\r\nContent-Type:\x20text/plain;\x20charset=utf-8\r\nConnecti
+SF:on:\x20close\r\n\r\n400\x20Bad\x20Request")%r(LPDString,67,"HTTP/1\.1\x
+SF:20400\x20Bad\x20Request\r\nContent-Type:\x20text/plain;\x20charset=utf-
+SF:8\r\nConnection:\x20close\r\n\r\n400\x20Bad\x20Request")%r(LDAPSearchRe
+SF:q,67,"HTTP/1\.1\x20400\x20Bad\x20Request\r\nContent-Type:\x20text/plain
+SF:;\x20charset=utf-8\r\nConnection:\x20close\r\n\r\n400\x20Bad\x20Request
+SF:");
+MAC Address: BC:24:11:DC:C8:E6 (Unknown)
+Device type: general purpose
+Running: Linux 4.X|5.X
+OS CPE: cpe:/o:linux:linux_kernel:4 cpe:/o:linux:linux_kernel:5
+OS details: Linux 4.15 - 5.8
+Network Distance: 1 hop
+
+TRACEROUTE
+HOP RTT     ADDRESS
+1   0.31 ms 192.168.220.9
+
+Nmap scan report for 192.168.220.10
+Host is up (0.00026s latency).
+Not shown: 998 closed tcp ports (reset)
+PORT   STATE SERVICE VERSION
+22/tcp open  ssh     OpenSSH 9.9 (protocol 2.0)
+| ssh-hostkey: 
+|   256 1c:bc:a5:e1:7a:a0:3f:a8:24:c5:d8:be:0b:7e:cf:a6 (ECDSA)
+|_  256 10:08:cf:36:a8:19:82:1e:2f:bf:d8:d2:0b:e3:54:36 (ED25519)
+80/tcp open  http    nginx
+MAC Address: BC:24:11:D3:B1:52 (Unknown)
+Device type: general purpose
+Running: Linux 4.X|5.X
+OS CPE: cpe:/o:linux:linux_kernel:4 cpe:/o:linux:linux_kernel:5
+OS details: Linux 4.15 - 5.8
+Network Distance: 1 hop
+
+TRACEROUTE
+HOP RTT     ADDRESS
+1   0.26 ms 192.168.220.10
+
+Nmap scan report for 192.168.220.69
+Host is up (0.00023s latency).
+Not shown: 989 closed tcp ports (reset)
+PORT      STATE SERVICE       VERSION
+22/tcp    open  ssh           OpenSSH 9.6 (protocol 2.0)
+| ssh-hostkey: 
+|   256 aa:cd:6f:42:4c:d5:72:6c:b5:8e:9c:c5:48:1b:02:6e (ECDSA)
+|_  256 50:b2:c3:5b:09:2f:82:84:c5:bc:6a:7f:04:41:bd:29 (ED25519)
+80/tcp    open  http          nginx (reverse proxy)
+|_http-title: 404 Not Found
+443/tcp   open  ssl/http      nginx (reverse proxy)
+| ssl-cert: Subject: commonName=Kubernetes Ingress Controller Fake Certificate/organizationName=Acme Co
+| Subject Alternative Name: DNS:ingress.local
+| Not valid before: 2025-03-28T04:14:55
+|_Not valid after:  2026-03-28T04:14:55
+|_http-title: 404 Not Found
+|_ssl-date: TLS randomness does not represent time
+5000/tcp  open  http          Docker Registry (API: 2.0)
+|_http-title: Site doesn't have a title.
+5001/tcp  open  http          Docker Registry (API: 2.0)
+|_http-title: Site doesn't have a title.
+5002/tcp  open  http          Docker Registry (API: 2.0)
+|_http-title: Site doesn't have a title.
+5003/tcp  open  http          Docker Registry (API: 2.0)
+|_http-title: Site doesn't have a title.
+5004/tcp  open  http          Docker Registry (API: 2.0)
+|_http-title: Site doesn't have a title.
+8181/tcp  open  http          nginx (reverse proxy)
+|_http-title: 404 Not Found
+8443/tcp  open  ssl/https-alt
+| fingerprint-strings: 
+|   FourOhFourRequest, GetRequest, HTTPOptions: 
+|     HTTP/1.0 400 Bad Request
+|     Date: Fri, 28 Mar 2025 16:51:47 GMT
+|     Content-Length: 0
+|   GenericLines, Help, Kerberos, LDAPSearchReq, LPDString, RTSPRequest, SIPOptions, SSLSessionReq, TLSSessionReq, TerminalServerCookie: 
+|     HTTP/1.1 400 Bad Request
+|     Content-Type: text/plain; charset=utf-8
+|     Connection: close
+|_    Request
+| ssl-cert: Subject: organizationName=nil2
+| Subject Alternative Name: DNS:ingress-nginx-controller-admission, DNS:ingress-nginx-controller-admission.ingress-nginx.svc
+| Not valid before: 2025-03-10T08:15:22
+|_Not valid after:  2125-02-14T08:15:22
+|_http-title: Site doesn't have a title.
+30000/tcp open  ndmps?
+1 service unrecognized despite returning data. If you know the service/version, please submit the following fingerprint at https://nmap.org/cgi-bin/submit.cgi?new-service :
+SF-Port8443-TCP:V=7.94SVN%T=SSL%I=7%D=3/28%Time=67E6D3A3%P=x86_64-pc-linux
+SF:-gnu%r(GetRequest,54,"HTTP/1\.0\x20400\x20Bad\x20Request\r\nDate:\x20Fr
+SF:i,\x2028\x20Mar\x202025\x2016:51:47\x20GMT\r\nContent-Length:\x200\r\n\
+SF:r\n")%r(HTTPOptions,54,"HTTP/1\.0\x20400\x20Bad\x20Request\r\nDate:\x20
+SF:Fri,\x2028\x20Mar\x202025\x2016:51:47\x20GMT\r\nContent-Length:\x200\r\
+SF:n\r\n")%r(FourOhFourRequest,54,"HTTP/1\.0\x20400\x20Bad\x20Request\r\nD
+SF:ate:\x20Fri,\x2028\x20Mar\x202025\x2016:51:47\x20GMT\r\nContent-Length:
+SF:\x200\r\n\r\n")%r(GenericLines,67,"HTTP/1\.1\x20400\x20Bad\x20Request\r
+SF:\nContent-Type:\x20text/plain;\x20charset=utf-8\r\nConnection:\x20close
+SF:\r\n\r\n400\x20Bad\x20Request")%r(RTSPRequest,67,"HTTP/1\.1\x20400\x20B
+SF:ad\x20Request\r\nContent-Type:\x20text/plain;\x20charset=utf-8\r\nConne
+SF:ction:\x20close\r\n\r\n400\x20Bad\x20Request")%r(Help,67,"HTTP/1\.1\x20
+SF:400\x20Bad\x20Request\r\nContent-Type:\x20text/plain;\x20charset=utf-8\
+SF:r\nConnection:\x20close\r\n\r\n400\x20Bad\x20Request")%r(SSLSessionReq,
+SF:67,"HTTP/1\.1\x20400\x20Bad\x20Request\r\nContent-Type:\x20text/plain;\
+SF:x20charset=utf-8\r\nConnection:\x20close\r\n\r\n400\x20Bad\x20Request")
+SF:%r(TerminalServerCookie,67,"HTTP/1\.1\x20400\x20Bad\x20Request\r\nConte
+SF:nt-Type:\x20text/plain;\x20charset=utf-8\r\nConnection:\x20close\r\n\r\
+SF:n400\x20Bad\x20Request")%r(TLSSessionReq,67,"HTTP/1\.1\x20400\x20Bad\x2
+SF:0Request\r\nContent-Type:\x20text/plain;\x20charset=utf-8\r\nConnection
+SF::\x20close\r\n\r\n400\x20Bad\x20Request")%r(Kerberos,67,"HTTP/1\.1\x204
+SF:00\x20Bad\x20Request\r\nContent-Type:\x20text/plain;\x20charset=utf-8\r
+SF:\nConnection:\x20close\r\n\r\n400\x20Bad\x20Request")%r(LPDString,67,"H
+SF:TTP/1\.1\x20400\x20Bad\x20Request\r\nContent-Type:\x20text/plain;\x20ch
+SF:arset=utf-8\r\nConnection:\x20close\r\n\r\n400\x20Bad\x20Request")%r(LD
+SF:APSearchReq,67,"HTTP/1\.1\x20400\x20Bad\x20Request\r\nContent-Type:\x20
+SF:text/plain;\x20charset=utf-8\r\nConnection:\x20close\r\n\r\n400\x20Bad\
+SF:x20Request")%r(SIPOptions,67,"HTTP/1\.1\x20400\x20Bad\x20Request\r\nCon
+SF:tent-Type:\x20text/plain;\x20charset=utf-8\r\nConnection:\x20close\r\n\
+SF:r\n400\x20Bad\x20Request");
+MAC Address: 54:B2:03:04:88:92 (Pegatron)
+Device type: general purpose
+Running: Linux 4.X|5.X
+OS CPE: cpe:/o:linux:linux_kernel:4 cpe:/o:linux:linux_kernel:5
+OS details: Linux 4.15 - 5.8
+Network Distance: 1 hop
+
+TRACEROUTE
+HOP RTT     ADDRESS
+1   0.23 ms 192.168.220.69
+
+Nmap scan report for 192.168.220.111
+Host is up (0.014s latency).
+Not shown: 995 filtered tcp ports (no-response), 4 filtered tcp ports (host-unreach)
+PORT     STATE SERVICE    VERSION
+5432/tcp open  postgresql PostgreSQL DB 9.6.0 or later
+| ssl-cert: Subject: commonName=keycloak-rw
+| Subject Alternative Name: DNS:keycloak-rw, DNS:keycloak-rw.keycloak, DNS:keycloak-rw.keycloak.svc, DNS:keycloak-rw.keycloak.svc.cluster.local, DNS:keycloak-r, DNS:keycloak-r.keycloak, DNS:keycloak-r.keycloak.svc, DNS:keycloak-r.keycloak.svc.cluster.local, DNS:keycloak-ro, DNS:keycloak-ro.keycloak, DNS:keycloak-ro.keycloak.svc, DNS:keycloak-ro.keycloak.svc.cluster.local, DNS:keycloak-db, DNS:keycloak-db.keycloak, DNS:keycloak-db.keycloak.svc, DNS:keycloak-db.keycloak.svc.cluster.local
+| Not valid before: 2025-03-23T21:55:50
+|_Not valid after:  2025-06-21T21:55:50
+|_ssl-date: TLS randomness does not represent time
+| fingerprint-strings: 
+|   SMBProgNeg: 
+|     SFATAL
+|     VFATAL
+|     C0A000
+|     Munsupported frontend protocol 65363.19778: server supports 3.0 to 3.0
+|     Fpostmaster.c
+|     L2145
+|_    RProcessStartupPacket
+1 service unrecognized despite returning data. If you know the service/version, please submit the following fingerprint at https://nmap.org/cgi-bin/submit.cgi?new-service :
+SF-Port5432-TCP:V=7.94SVN%I=7%D=3/28%Time=67E6D39E%P=x86_64-pc-linux-gnu%r
+SF:(SMBProgNeg,8C,"E\0\0\0\x8bSFATAL\0VFATAL\0C0A000\0Munsupported\x20fron
+SF:tend\x20protocol\x2065363\.19778:\x20server\x20supports\x203\.0\x20to\x
+SF:203\.0\0Fpostmaster\.c\0L2145\0RProcessStartupPacket\0\0");
+MAC Address: 54:B2:03:04:88:92 (Pegatron)
+Warning: OSScan results may be unreliable because we could not find at least 1 open and 1 closed port
+OS fingerprint not ideal because: Missing a closed TCP port so results incomplete
+No OS matches for host
+Network Distance: 1 hop
+
+TRACEROUTE
+HOP RTT      ADDRESS
+1   13.55 ms 192.168.220.111
+
+Nmap scan report for 192.168.220.112
+Host is up (0.00041s latency).
+Not shown: 999 filtered tcp ports (no-response)
+PORT     STATE SERVICE    VERSION
+5432/tcp open  postgresql PostgreSQL DB 9.6.0 or later
+|_ssl-date: TLS randomness does not represent time
+| fingerprint-strings: 
+|   SMBProgNeg: 
+|     SFATAL
+|     VFATAL
+|     C0A000
+|     Munsupported frontend protocol 65363.19778: server supports 3.0 to 3.0
+|     Fpostmaster.c
+|     L2145
+|_    RProcessStartupPacket
+| ssl-cert: Subject: commonName=wiki-rw
+| Subject Alternative Name: DNS:wiki-rw, DNS:wiki-rw.wiki, DNS:wiki-rw.wiki.svc, DNS:wiki-rw.wiki.svc.cluster.local, DNS:wiki-r, DNS:wiki-r.wiki, DNS:wiki-r.wiki.svc, DNS:wiki-r.wiki.svc.cluster.local, DNS:wiki-ro, DNS:wiki-ro.wiki, DNS:wiki-ro.wiki.svc, DNS:wiki-ro.wiki.svc.cluster.local, DNS:wiki-db, DNS:wiki-db.wiki, DNS:wiki-db.wiki.svc, DNS:wiki-db.wiki.svc.cluster.local
+| Not valid before: 2025-03-23T21:55:50
+|_Not valid after:  2025-06-21T21:55:50
+1 service unrecognized despite returning data. If you know the service/version, please submit the following fingerprint at https://nmap.org/cgi-bin/submit.cgi?new-service :
+SF-Port5432-TCP:V=7.94SVN%I=7%D=3/28%Time=67E6D39F%P=x86_64-pc-linux-gnu%r
+SF:(SMBProgNeg,8C,"E\0\0\0\x8bSFATAL\0VFATAL\0C0A000\0Munsupported\x20fron
+SF:tend\x20protocol\x2065363\.19778:\x20server\x20supports\x203\.0\x20to\x
+SF:203\.0\0Fpostmaster\.c\0L2145\0RProcessStartupPacket\0\0");
+MAC Address: 54:B2:03:04:88:92 (Pegatron)
+Warning: OSScan results may be unreliable because we could not find at least 1 open and 1 closed port
+OS fingerprint not ideal because: Missing a closed TCP port so results incomplete
+No OS matches for host
+Network Distance: 1 hop
+
+TRACEROUTE
+HOP RTT     ADDRESS
+1   0.41 ms 192.168.220.112
+
+Nmap scan report for 192.168.220.113
+Host is up (0.0097s latency).
+Not shown: 985 filtered tcp ports (no-response), 14 filtered tcp ports (host-unreach)
+PORT     STATE SERVICE    VERSION
+5432/tcp open  postgresql PostgreSQL DB 9.6.0 or later
+|_ssl-date: TLS randomness does not represent time
+| fingerprint-strings: 
+|   SMBProgNeg: 
+|     SFATAL
+|     VFATAL
+|     C0A000
+|     Munsupported frontend protocol 65363.19778: server supports 3.0 to 3.0
+|     Fpostmaster.c
+|     L2145
+|_    RProcessStartupPacket
+| ssl-cert: Subject: commonName=fbclog-rw
+| Subject Alternative Name: DNS:fbclog-rw, DNS:fbclog-rw.fbclog, DNS:fbclog-rw.fbclog.svc, DNS:fbclog-rw.fbclog.svc.cluster.local, DNS:fbclog-r, DNS:fbclog-r.fbclog, DNS:fbclog-r.fbclog.svc, DNS:fbclog-r.fbclog.svc.cluster.local, DNS:fbclog-ro, DNS:fbclog-ro.fbclog, DNS:fbclog-ro.fbclog.svc, DNS:fbclog-ro.fbclog.svc.cluster.local, DNS:fbclog-db, DNS:fbclog-db.fbclog, DNS:fbclog-db.fbclog.svc, DNS:fbclog-db.fbclog.svc.cluster.local
+| Not valid before: 2025-03-23T21:55:49
+|_Not valid after:  2025-06-21T21:55:49
+1 service unrecognized despite returning data. If you know the service/version, please submit the following fingerprint at https://nmap.org/cgi-bin/submit.cgi?new-service :
+SF-Port5432-TCP:V=7.94SVN%I=7%D=3/28%Time=67E6D39F%P=x86_64-pc-linux-gnu%r
+SF:(SMBProgNeg,8C,"E\0\0\0\x8bSFATAL\0VFATAL\0C0A000\0Munsupported\x20fron
+SF:tend\x20protocol\x2065363\.19778:\x20server\x20supports\x203\.0\x20to\x
+SF:203\.0\0Fpostmaster\.c\0L2145\0RProcessStartupPacket\0\0");
+MAC Address: 54:B2:03:04:88:92 (Pegatron)
+Warning: OSScan results may be unreliable because we could not find at least 1 open and 1 closed port
+OS fingerprint not ideal because: Missing a closed TCP port so results incomplete
+No OS matches for host
+Network Distance: 1 hop
+
+TRACEROUTE
+HOP RTT     ADDRESS
+1   9.69 ms 192.168.220.113
+
+Nmap scan report for 192.168.220.114
+Host is up (0.00033s latency).
+Not shown: 997 filtered tcp ports (no-response), 2 filtered tcp ports (host-unreach)
+PORT     STATE SERVICE    VERSION
+5432/tcp open  postgresql PostgreSQL DB 9.6.0 or later
+|_ssl-date: TLS randomness does not represent time
+| fingerprint-strings: 
+|   SMBProgNeg: 
+|     SFATAL
+|     VFATAL
+|     C0A000
+|     Munsupported frontend protocol 65363.19778: server supports 3.0 to 3.0
+|     Fpostmaster.c
+|     L2145
+|_    RProcessStartupPacket
+| ssl-cert: Subject: commonName=cachet-rw
+| Subject Alternative Name: DNS:cachet-rw, DNS:cachet-rw.cachet, DNS:cachet-rw.cachet.svc, DNS:cachet-rw.cachet.svc.cluster.local, DNS:cachet-r, DNS:cachet-r.cachet, DNS:cachet-r.cachet.svc, DNS:cachet-r.cachet.svc.cluster.local, DNS:cachet-ro, DNS:cachet-ro.cachet, DNS:cachet-ro.cachet.svc, DNS:cachet-ro.cachet.svc.cluster.local, DNS:cachet-db, DNS:cachet-db.cachet, DNS:cachet-db.cachet.svc, DNS:cachet-db.cachet.svc.cluster.local
+| Not valid before: 2025-03-23T21:55:49
+|_Not valid after:  2025-06-21T21:55:49
+1 service unrecognized despite returning data. If you know the service/version, please submit the following fingerprint at https://nmap.org/cgi-bin/submit.cgi?new-service :
+SF-Port5432-TCP:V=7.94SVN%I=7%D=3/28%Time=67E6D3A0%P=x86_64-pc-linux-gnu%r
+SF:(SMBProgNeg,8C,"E\0\0\0\x8bSFATAL\0VFATAL\0C0A000\0Munsupported\x20fron
+SF:tend\x20protocol\x2065363\.19778:\x20server\x20supports\x203\.0\x20to\x
+SF:203\.0\0Fpostmaster\.c\0L2145\0RProcessStartupPacket\0\0");
+MAC Address: 54:B2:03:04:88:92 (Pegatron)
+Warning: OSScan results may be unreliable because we could not find at least 1 open and 1 closed port
+OS fingerprint not ideal because: Missing a closed TCP port so results incomplete
+No OS matches for host
+Network Distance: 1 hop
+
+TRACEROUTE
+HOP RTT     ADDRESS
+1   0.33 ms 192.168.220.114
+
+Nmap scan report for 192.168.220.227
+Host is up (0.00044s latency).
+Not shown: 998 filtered tcp ports (no-response)
+PORT     STATE SERVICE            VERSION
+80/tcp   open  http               Microsoft IIS httpd 10.0
+|_http-server-header: Microsoft-IIS/10.0
+|_http-title: FBC Home
+| http-methods: 
+|_  Potentially risky methods: TRACE
+3389/tcp open  ssl/ms-wbt-server?
+| ssl-cert: Subject: commonName=WIN11-22H2-X64
+| Not valid before: 2025-02-27T05:46:02
+|_Not valid after:  2025-08-29T05:46:02
+|_ssl-date: TLS randomness does not represent time
+| rdp-ntlm-info: 
+|   Target_Name: WIN11-22H2-X64
+|   NetBIOS_Domain_Name: WIN11-22H2-X64
+|   NetBIOS_Computer_Name: WIN11-22H2-X64
+|   DNS_Domain_Name: WIN11-22H2-X64
+|   DNS_Computer_Name: WIN11-22H2-X64
+|   Product_Version: 10.0.22621
+|_  System_Time: 2025-03-28T16:54:37+00:00
+MAC Address: BC:24:11:86:CF:D7 (Unknown)
+Warning: OSScan results may be unreliable because we could not find at least 1 open and 1 closed port
+Device type: general purpose
+Running (JUST GUESSING): Microsoft Windows 2019|10 (90%)
+OS CPE: cpe:/o:microsoft:windows_10
+Aggressive OS guesses: Microsoft Windows Server 2019 (90%), Microsoft Windows 10 1909 (88%)
+No exact OS matches for host (test conditions non-ideal).
+Network Distance: 1 hop
+Service Info: OS: Windows; CPE: cpe:/o:microsoft:windows
+
+TRACEROUTE
+HOP RTT     ADDRESS
+1   0.44 ms 192.168.220.227
+
+Nmap scan report for 192.168.220.231
+Host is up (0.016s latency).
+Not shown: 996 closed tcp ports (reset)
+PORT     STATE SERVICE       VERSION
+22/tcp   open  ssh           OpenSSH 9.6p1 Ubuntu 3ubuntu13.8 (Ubuntu Linux; protocol 2.0)
+| ssh-hostkey: 
+|   256 f6:69:06:be:f5:5c:e3:ec:b6:50:79:ff:42:2d:e7:b3 (ECDSA)
+|_  256 b4:4a:76:e9:cb:2b:9e:85:f4:9b:73:60:ac:ef:ee:f1 (ED25519)
+139/tcp  open  netbios-ssn   Samba smbd 4.6.2
+445/tcp  open  netbios-ssn   Samba smbd 4.6.2
+3389/tcp open  ms-wbt-server xrdp
+MAC Address: 9C:29:76:52:60:3E (Intel Corporate)
+Device type: general purpose
+Running: Linux 4.X|5.X
+OS CPE: cpe:/o:linux:linux_kernel:4 cpe:/o:linux:linux_kernel:5
+OS details: Linux 4.15 - 5.8
+Network Distance: 1 hop
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+
+Host script results:
+|_smb2-time: Protocol negotiation failed (SMB2)
+|_nbstat: NetBIOS name: DUNHAM, NetBIOS user: <unknown>, NetBIOS MAC: <unknown> (unknown)
+
+TRACEROUTE
+HOP RTT      ADDRESS
+1   15.56 ms 192.168.220.231
+
+Nmap scan report for 192.168.220.250
+Host is up (0.0043s latency).
+Not shown: 997 closed tcp ports (reset)
+PORT     STATE SERVICE VERSION
+80/tcp   open  http
+|_http-title: Site doesn't have a title (text/html).
+| fingerprint-strings: 
+|   GetRequest, HTTPOptions: 
+|     HTTP/1.1 200 OK
+|     CONNECTION: close
+|     CONTENT-LENGTH: 35011
+|     Date: Fri, 28 Mar 2025 10:51:51 GMT
+|     Last-Modified: Fri, 16 Jul 2021 10:38:18 GMT
+|     Etag: "1626431898:88c3"
+|     CACHE-CONTROL: max-age=0
+|     X-Frame-Options: SAMEORIGIN
+|     Strict-Transport-Security: max-age=604800; includeSubDomains
+|     X-XSS-Protection: 1;mode=block
+|     Content-Security-Policy: script-src 'self' 'unsafe-inline' 'unsafe-eval'
+|     X-Content-Type-Options: nosniff
+|     CONTENT-TYPE: text/html
+|_    <!DOCTYPE html> <html> <head> <title></title> <meta charset="UTF-8"> <meta http-equiv="X-UA-Compatible" content="IE=edge"> <meta name="format-detection" content="telephone=no"> <script src="jsBase/lib/jquery.js?version=@WebVersion@"></script> <script src="jsBase/widget/js/jquery.ui.core.js?version=@WebVersion@"></script> <script src="jsBase/widget/js/jquery.ui.widget.js?version=@WebVersion@"></script> <script>jQuery.noConflict();</script> <script
+554/tcp  open  rtsp
+|_rtsp-methods: OPTIONS, DESCRIBE, ANNOUNCE, SETUP, PLAY, RECORD, PAUSE, TEARDOWN, SET_PARAMETER, GET_PARAMETER
+| fingerprint-strings: 
+|   HTTPOptions, RTSPRequest: 
+|     RTSP/1.0 200 OK
+|     CSeq: 0
+|     Server: Rtsp Server/3.0
+|     Public: OPTIONS, DESCRIBE, ANNOUNCE, SETUP, PLAY, RECORD, PAUSE, TEARDOWN, SET_PARAMETER, GET_PARAMETER
+|   SIPOptions: 
+|     RTSP/1.0 200 OK
+|     CSeq: 42
+|     Server: Rtsp Server/3.0
+|_    Public: OPTIONS, DESCRIBE, ANNOUNCE, SETUP, PLAY, RECORD, PAUSE, TEARDOWN, SET_PARAMETER, GET_PARAMETER
+1935/tcp open  rtmp?
+2 services unrecognized despite returning data. If you know the service/version, please submit the following fingerprints at https://nmap.org/cgi-bin/submit.cgi?new-service :
+==============NEXT SERVICE FINGERPRINT (SUBMIT INDIVIDUALLY)==============
+SF-Port80-TCP:V=7.94SVN%I=7%D=3/28%Time=67E6D3A7%P=x86_64-pc-linux-gnu%r(G
+SF:etRequest,10F8,"HTTP/1\.1\x20200\x20OK\r\nCONNECTION:\x20close\r\nCONTE
+SF:NT-LENGTH:\x2035011\r\nDate:\x20Fri,\x2028\x20Mar\x202025\x2010:51:51\x
+SF:20GMT\r\nLast-Modified:\x20Fri,\x2016\x20Jul\x202021\x2010:38:18\x20GMT
+SF:\r\nEtag:\x20\"1626431898:88c3\"\r\nCACHE-CONTROL:\x20max-age=0\r\nX-Fr
+SF:ame-Options:\x20SAMEORIGIN\r\nStrict-Transport-Security:\x20max-age=604
+SF:800;\x20includeSubDomains\r\nX-XSS-Protection:\x201;mode=block\r\nConte
+SF:nt-Security-Policy:\x20script-src\x20'self'\x20'unsafe-inline'\x20'unsa
+SF:fe-eval'\r\nX-Content-Type-Options:\x20nosniff\r\nCONTENT-TYPE:\x20text
+SF:/html\r\n\r\n<!DOCTYPE\x20html>\x20<html>\x20<head>\x20<title></title>\
+SF:x20<meta\x20charset=\"UTF-8\">\x20<meta\x20http-equiv=\"X-UA-Compatible
+SF:\"\x20content=\"IE=edge\">\x20<meta\x20name=\"format-detection\"\x20con
+SF:tent=\"telephone=no\">\x20<script\x20src=\"jsBase/lib/jquery\.js\?versi
+SF:on=@WebVersion@\"></script>\x20<script\x20src=\"jsBase/widget/js/jquery
+SF:\.ui\.core\.js\?version=@WebVersion@\"></script>\x20<script\x20src=\"js
+SF:Base/widget/js/jquery\.ui\.widget\.js\?version=@WebVersion@\"></script>
+SF:\x20<script>jQuery\.noConflict\(\);</script>\x20<script")%r(HTTPOptions
+SF:,1C48,"HTTP/1\.1\x20200\x20OK\r\nCONNECTION:\x20close\r\nCONTENT-LENGTH
+SF::\x2035011\r\nDate:\x20Fri,\x2028\x20Mar\x202025\x2010:51:51\x20GMT\r\n
+SF:Last-Modified:\x20Fri,\x2016\x20Jul\x202021\x2010:38:18\x20GMT\r\nEtag:
+SF:\x20\"1626431898:88c3\"\r\nCACHE-CONTROL:\x20max-age=0\r\nX-Frame-Optio
+SF:ns:\x20SAMEORIGIN\r\nStrict-Transport-Security:\x20max-age=604800;\x20i
+SF:ncludeSubDomains\r\nX-XSS-Protection:\x201;mode=block\r\nContent-Securi
+SF:ty-Policy:\x20script-src\x20'self'\x20'unsafe-inline'\x20'unsafe-eval'\
+SF:r\nX-Content-Type-Options:\x20nosniff\r\nCONTENT-TYPE:\x20text/html\r\n
+SF:\r\n<!DOCTYPE\x20html>\x20<html>\x20<head>\x20<title></title>\x20<meta\
+SF:x20charset=\"UTF-8\">\x20<meta\x20http-equiv=\"X-UA-Compatible\"\x20con
+SF:tent=\"IE=edge\">\x20<meta\x20name=\"format-detection\"\x20content=\"te
+SF:lephone=no\">\x20<script\x20src=\"jsBase/lib/jquery\.js\?version=@WebVe
+SF:rsion@\"></script>\x20<script\x20src=\"jsBase/widget/js/jquery\.ui\.cor
+SF:e\.js\?version=@WebVersion@\"></script>\x20<script\x20src=\"jsBase/widg
+SF:et/js/jquery\.ui\.widget\.js\?version=@WebVersion@\"></script>\x20<scri
+SF:pt>jQuery\.noConflict\(\);</script>\x20<script");
+==============NEXT SERVICE FINGERPRINT (SUBMIT INDIVIDUALLY)==============
+SF-Port554-TCP:V=7.94SVN%I=7%D=3/28%Time=67E6D3AB%P=x86_64-pc-linux-gnu%r(
+SF:RTSPRequest,9E,"RTSP/1\.0\x20200\x20OK\r\nCSeq:\x200\r\nServer:\x20Rtsp
+SF:\x20Server/3\.0\r\nPublic:\x20OPTIONS,\x20DESCRIBE,\x20ANNOUNCE,\x20SET
+SF:UP,\x20PLAY,\x20RECORD,\x20PAUSE,\x20TEARDOWN,\x20SET_PARAMETER,\x20GET
+SF:_PARAMETER\r\n\r\n")%r(HTTPOptions,9E,"RTSP/1\.0\x20200\x20OK\r\nCSeq:\
+SF:x200\r\nServer:\x20Rtsp\x20Server/3\.0\r\nPublic:\x20OPTIONS,\x20DESCRI
+SF:BE,\x20ANNOUNCE,\x20SETUP,\x20PLAY,\x20RECORD,\x20PAUSE,\x20TEARDOWN,\x
+SF:20SET_PARAMETER,\x20GET_PARAMETER\r\n\r\n")%r(SIPOptions,9F,"RTSP/1\.0\
+SF:x20200\x20OK\r\nCSeq:\x2042\r\nServer:\x20Rtsp\x20Server/3\.0\r\nPublic
+SF::\x20OPTIONS,\x20DESCRIBE,\x20ANNOUNCE,\x20SETUP,\x20PLAY,\x20RECORD,\x
+SF:20PAUSE,\x20TEARDOWN,\x20SET_PARAMETER,\x20GET_PARAMETER\r\n\r\n");
+MAC Address: 9C:8E:CD:35:DE:87 (Amcrest Technologies)
+Device type: general purpose
+Running: Linux 3.X|4.X
+OS CPE: cpe:/o:linux:linux_kernel:3 cpe:/o:linux:linux_kernel:4
+OS details: Linux 3.2 - 4.9
+Network Distance: 1 hop
+
+TRACEROUTE
+HOP RTT     ADDRESS
+1   4.34 ms 192.168.220.250
+
+Nmap scan report for 192.168.220.252
+Host is up (0.00030s latency).
+Not shown: 995 closed tcp ports (reset)
+PORT      STATE SERVICE  VERSION
+22/tcp    open  ssh      Dropbear sshd 2011.54 (protocol 2.0)
+| ssh-hostkey: 
+|_  1040 55:f0:7e:e7:d8:1c:ae:e4:1d:a7:76:f7:87:11:c4:e4 (RSA)
+53/tcp    open  domain   dnsmasq 2.62
+| dns-nsid: 
+|_  bind.version: dnsmasq-2.62
+80/tcp    open  http     BusyBox http 1.19.4
+|_http-title: Site doesn't have a title (text/html).
+443/tcp   open  ssl/http BusyBox http 1.19.4
+|_http-title: Site doesn't have a title (text/html).
+|_ssl-date: TLS randomness does not represent time
+| sslv2: 
+|   SSLv2 supported
+|_  ciphers: none
+| ssl-cert: Subject: commonName=TP-Link/stateOrProvinceName=GD/countryName=CN
+| Not valid before: 2018-12-10T08:00:36
+|_Not valid after:  2023-12-09T08:00:36
+20005/tcp open  btx?
+MAC Address: 98:DA:C4:47:30:D8 (TP-Link Technologies)
+Device type: general purpose
+Running: Linux 2.6.X|3.X
+OS CPE: cpe:/o:linux:linux_kernel:2.6 cpe:/o:linux:linux_kernel:3
+OS details: Linux 2.6.32 - 3.10
+Network Distance: 1 hop
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+
+TRACEROUTE
+HOP RTT     ADDRESS
+1   0.30 ms 192.168.220.252
+
+Nmap scan report for 192.168.220.254
+Host is up (0.0025s latency).
+Not shown: 997 closed tcp ports (reset)
+PORT    STATE SERVICE    VERSION
+22/tcp  open  ssh        Cisco SSH 1.25 (protocol 2.0)
+| ssh-hostkey: 
+|_  1024 a6:97:a0:d2:5a:a3:4a:ad:af:b6:2a:db:de:0d:e1:2c (RSA)
+80/tcp  open  http       Cisco IOS http config
+| http-auth: 
+| HTTP/1.1 401 Unauthorized\x0D
+|_  Basic realm=level_1_or_view_access
+|_http-title: Site doesn't have a title.
+|_http-server-header: cisco-IOS
+443/tcp open  ssl/https?
+| ssl-cert: Subject: commonName=Sw1.wrccdc.org
+| Not valid before: 2025-03-28T17:19:59
+|_Not valid after:  2035-03-26T17:19:59
+|_ssl-date: 2025-03-28T17:23:28+00:00; +28m02s from scanner time.
+MAC Address: D4:C9:3C:F1:2A:C7 (Cisco Systems)
+Device type: router
+Running: Cisco IOS 12.X|15.X
+OS CPE: cpe:/h:cisco:836_router cpe:/h:cisco:890_router cpe:/h:cisco:1751_router cpe:/h:cisco:2800_router cpe:/o:cisco:ios:12 cpe:/h:cisco:1841_router cpe:/h:cisco:2900_router cpe:/o:cisco:ios:15
+OS details: Cisco 836, 890, 1751, 1841, 2800, or 2900 router (IOS 12.4 - 15.1)
+Network Distance: 1 hop
+Service Info: OS: IOS; CPE: cpe:/o:cisco:ios
+
+Host script results:
+|_clock-skew: 28m01s
+
+TRACEROUTE
+HOP RTT     ADDRESS
+1   2.49 ms 192.168.220.254
+
+Nmap scan report for 192.168.220.21
+Host is up (0.00015s latency).
+Not shown: 995 closed tcp ports (reset)
+PORT     STATE SERVICE       VERSION
+22/tcp   open  ssh           OpenSSH 9.6p1 Ubuntu 3ubuntu13.8 (Ubuntu Linux; protocol 2.0)
+| ssh-hostkey: 
+|   256 de:1f:01:1a:83:6d:be:f0:5d:ed:5f:fa:26:b0:01:e2 (ECDSA)
+|_  256 fe:8d:9d:c3:35:28:45:79:44:e5:5a:71:f2:f0:96:80 (ED25519)
+80/tcp   open  http          Werkzeug/2.2.3 Python/3.12.3
+|_http-server-header: Werkzeug/2.2.3 Python/3.12.3
+|_http-title: FBC Dev Tools - Python Compiler
+| fingerprint-strings: 
+|   GetRequest: 
+|     HTTP/1.1 200 OK
+|     Server: Werkzeug/2.2.3 Python/3.12.3
+|     Date: Fri, 28 Mar 2025 16:55:39 GMT
+|     Content-Type: text/html; charset=utf-8
+|     Content-Length: 5276
+|     Connection: close
+|     <!DOCTYPE html>
+|     <html lang="en">
+|     <head>
+|     <meta charset="UTF-8">
+|     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+|     <title>FBC Dev Tools - Python Compiler</title>
+|     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+|     <link rel="stylesheet" href="/static/css/style.css">
+|     <style>
+|     body {
+|     background-color: #1a1a1a;
+|     color: #f0f0f0;
+|     .navbar {
+|     background-color: #300;
+|     .navbar-brand {
+|     font-weight: bold;
+|     color: #fff !important;
+|     .nav-link {
+|     color: #ddd !important;
+|     .nav-link:hover {
+|   HTTPOptions: 
+|     HTTP/1.1 200 OK
+|     Server: Werkzeug/2.2.3 Python/3.12.3
+|     Date: Fri, 28 Mar 2025 16:55:39 GMT
+|     Content-Type: text/html; charset=utf-8
+|     Allow: OPTIONS, HEAD, GET
+|     Content-Length: 0
+|     Connection: close
+|   RTSPRequest: 
+|     <!DOCTYPE HTML>
+|     <html lang="en">
+|     <head>
+|     <meta charset="utf-8">
+|     <title>Error response</title>
+|     </head>
+|     <body>
+|     <h1>Error response</h1>
+|     <p>Error code: 400</p>
+|     <p>Message: Bad request version ('RTSP/1.0').</p>
+|     <p>Error code explanation: 400 - Bad request syntax or unsupported method.</p>
+|     </body>
+|_    </html>
+139/tcp  open  netbios-ssn   Samba smbd 4.6.2
+445/tcp  open  netbios-ssn   Samba smbd 4.6.2
+3389/tcp open  ms-wbt-server xrdp
+1 service unrecognized despite returning data. If you know the service/version, please submit the following fingerprint at https://nmap.org/cgi-bin/submit.cgi?new-service :
+SF-Port80-TCP:V=7.94SVN%I=7%D=3/28%Time=67E6D48B%P=x86_64-pc-linux-gnu%r(G
+SF:etRequest,154B,"HTTP/1\.1\x20200\x20OK\r\nServer:\x20Werkzeug/2\.2\.3\x
+SF:20Python/3\.12\.3\r\nDate:\x20Fri,\x2028\x20Mar\x202025\x2016:55:39\x20
+SF:GMT\r\nContent-Type:\x20text/html;\x20charset=utf-8\r\nContent-Length:\
+SF:x205276\r\nConnection:\x20close\r\n\r\n<!DOCTYPE\x20html>\n<html\x20lan
+SF:g=\"en\">\n<head>\n\x20\x20\x20\x20<meta\x20charset=\"UTF-8\">\n\x20\x2
+SF:0\x20\x20<meta\x20name=\"viewport\"\x20content=\"width=device-width,\x2
+SF:0initial-scale=1\.0\">\n\x20\x20\x20\x20<title>FBC\x20Dev\x20Tools\x20-
+SF:\x20Python\x20Compiler</title>\n\x20\x20\x20\x20<link\x20rel=\"styleshe
+SF:et\"\x20href=\"https://stackpath\.bootstrapcdn\.com/bootstrap/4\.5\.2/c
+SF:ss/bootstrap\.min\.css\">\n\x20\x20\x20\x20<link\x20rel=\"stylesheet\"\
+SF:x20href=\"/static/css/style\.css\">\n\x20\x20\x20\x20<style>\n\x20\x20\
+SF:x20\x20\x20\x20\x20\x20body\x20{\n\x20\x20\x20\x20\x20\x20\x20\x20\x20\
+SF:x20\x20\x20background-color:\x20#1a1a1a;\n\x20\x20\x20\x20\x20\x20\x20\
+SF:x20\x20\x20\x20\x20color:\x20#f0f0f0;\n\x20\x20\x20\x20\x20\x20\x20\x20
+SF:}\n\x20\x20\x20\x20\x20\x20\x20\x20\.navbar\x20{\n\x20\x20\x20\x20\x20\
+SF:x20\x20\x20\x20\x20\x20\x20background-color:\x20#300;\n\x20\x20\x20\x20
+SF:\x20\x20\x20\x20}\n\x20\x20\x20\x20\x20\x20\x20\x20\.navbar-brand\x20{\
+SF:n\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20font-weight:\x20bold;\
+SF:n\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20color:\x20#fff\x20!imp
+SF:ortant;\n\x20\x20\x20\x20\x20\x20\x20\x20}\n\x20\x20\x20\x20\x20\x20\x2
+SF:0\x20\.nav-link\x20{\n\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20c
+SF:olor:\x20#ddd\x20!important;\n\x20\x20\x20\x20\x20\x20\x20\x20}\n\x20\x
+SF:20\x20\x20\x20\x20\x20\x20\.nav-link:hover\x20{\n\x20\x20\x20\x20\x20\x
+SF:20")%r(HTTPOptions,C7,"HTTP/1\.1\x20200\x20OK\r\nServer:\x20Werkzeug/2\
+SF:.2\.3\x20Python/3\.12\.3\r\nDate:\x20Fri,\x2028\x20Mar\x202025\x2016:55
+SF::39\x20GMT\r\nContent-Type:\x20text/html;\x20charset=utf-8\r\nAllow:\x2
+SF:0OPTIONS,\x20HEAD,\x20GET\r\nContent-Length:\x200\r\nConnection:\x20clo
+SF:se\r\n\r\n")%r(RTSPRequest,16C,"<!DOCTYPE\x20HTML>\n<html\x20lang=\"en\
+SF:">\n\x20\x20\x20\x20<head>\n\x20\x20\x20\x20\x20\x20\x20\x20<meta\x20ch
+SF:arset=\"utf-8\">\n\x20\x20\x20\x20\x20\x20\x20\x20<title>Error\x20respo
+SF:nse</title>\n\x20\x20\x20\x20</head>\n\x20\x20\x20\x20<body>\n\x20\x20\
+SF:x20\x20\x20\x20\x20\x20<h1>Error\x20response</h1>\n\x20\x20\x20\x20\x20
+SF:\x20\x20\x20<p>Error\x20code:\x20400</p>\n\x20\x20\x20\x20\x20\x20\x20\
+SF:x20<p>Message:\x20Bad\x20request\x20version\x20\('RTSP/1\.0'\)\.</p>\n\
+SF:x20\x20\x20\x20\x20\x20\x20\x20<p>Error\x20code\x20explanation:\x20400\
+SF:x20-\x20Bad\x20request\x20syntax\x20or\x20unsupported\x20method\.</p>\n
+SF:\x20\x20\x20\x20</body>\n</html>\n");
+Device type: general purpose
+Running: Linux 2.6.X
+OS CPE: cpe:/o:linux:linux_kernel:2.6.32
+OS details: Linux 2.6.32
+Network Distance: 0 hops
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+
+Host script results:
+| smb2-security-mode: 
+|   3:1:1: 
+|_    Message signing enabled but not required
+|_nbstat: NetBIOS name: BISHOP41, NetBIOS user: <unknown>, NetBIOS MAC: <unknown> (unknown)
+| smb2-time: 
+|   date: 2025-03-28T16:57:01
+|_  start_date: N/A
+
+Nmap scan report for 192.168.220.232
+Host is up (0.00012s latency).
+Not shown: 995 closed tcp ports (reset)
+PORT     STATE SERVICE       VERSION
+22/tcp   open  ssh           OpenSSH 9.6p1 Ubuntu 3ubuntu13.8 (Ubuntu Linux; protocol 2.0)
+| ssh-hostkey: 
+|   256 de:1f:01:1a:83:6d:be:f0:5d:ed:5f:fa:26:b0:01:e2 (ECDSA)
+|_  256 fe:8d:9d:c3:35:28:45:79:44:e5:5a:71:f2:f0:96:80 (ED25519)
+80/tcp   open  http          Werkzeug/2.2.3 Python/3.12.3
+|_http-title: FBC Dev Tools - Python Compiler
+|_http-server-header: Werkzeug/2.2.3 Python/3.12.3
+| fingerprint-strings: 
+|   GetRequest: 
+|     HTTP/1.1 200 OK
+|     Server: Werkzeug/2.2.3 Python/3.12.3
+|     Date: Fri, 28 Mar 2025 16:57:08 GMT
+|     Content-Type: text/html; charset=utf-8
+|     Content-Length: 5276
+|     Connection: close
+|     <!DOCTYPE html>
+|     <html lang="en">
+|     <head>
+|     <meta charset="UTF-8">
+|     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+|     <title>FBC Dev Tools - Python Compiler</title>
+|     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+|     <link rel="stylesheet" href="/static/css/style.css">
+|     <style>
+|     body {
+|     background-color: #1a1a1a;
+|     color: #f0f0f0;
+|     .navbar {
+|     background-color: #300;
+|     .navbar-brand {
+|     font-weight: bold;
+|     color: #fff !important;
+|     .nav-link {
+|     color: #ddd !important;
+|     .nav-link:hover {
+|   HTTPOptions: 
+|     HTTP/1.1 200 OK
+|     Server: Werkzeug/2.2.3 Python/3.12.3
+|     Date: Fri, 28 Mar 2025 16:57:08 GMT
+|     Content-Type: text/html; charset=utf-8
+|     Allow: OPTIONS, HEAD, GET
+|     Content-Length: 0
+|     Connection: close
+|   RTSPRequest: 
+|     <!DOCTYPE HTML>
+|     <html lang="en">
+|     <head>
+|     <meta charset="utf-8">
+|     <title>Error response</title>
+|     </head>
+|     <body>
+|     <h1>Error response</h1>
+|     <p>Error code: 400</p>
+|     <p>Message: Bad request version ('RTSP/1.0').</p>
+|     <p>Error code explanation: 400 - Bad request syntax or unsupported method.</p>
+|     </body>
+|_    </html>
+139/tcp  open  netbios-ssn   Samba smbd 4.6.2
+445/tcp  open  netbios-ssn   Samba smbd 4.6.2
+3389/tcp open  ms-wbt-server xrdp
+1 service unrecognized despite returning data. If you know the service/version, please submit the following fingerprint at https://nmap.org/cgi-bin/submit.cgi?new-service :
+SF-Port80-TCP:V=7.94SVN%I=7%D=3/28%Time=67E6D4E4%P=x86_64-pc-linux-gnu%r(G
+SF:etRequest,154B,"HTTP/1\.1\x20200\x20OK\r\nServer:\x20Werkzeug/2\.2\.3\x
+SF:20Python/3\.12\.3\r\nDate:\x20Fri,\x2028\x20Mar\x202025\x2016:57:08\x20
+SF:GMT\r\nContent-Type:\x20text/html;\x20charset=utf-8\r\nContent-Length:\
+SF:x205276\r\nConnection:\x20close\r\n\r\n<!DOCTYPE\x20html>\n<html\x20lan
+SF:g=\"en\">\n<head>\n\x20\x20\x20\x20<meta\x20charset=\"UTF-8\">\n\x20\x2
+SF:0\x20\x20<meta\x20name=\"viewport\"\x20content=\"width=device-width,\x2
+SF:0initial-scale=1\.0\">\n\x20\x20\x20\x20<title>FBC\x20Dev\x20Tools\x20-
+SF:\x20Python\x20Compiler</title>\n\x20\x20\x20\x20<link\x20rel=\"styleshe
+SF:et\"\x20href=\"https://stackpath\.bootstrapcdn\.com/bootstrap/4\.5\.2/c
+SF:ss/bootstrap\.min\.css\">\n\x20\x20\x20\x20<link\x20rel=\"stylesheet\"\
+SF:x20href=\"/static/css/style\.css\">\n\x20\x20\x20\x20<style>\n\x20\x20\
+SF:x20\x20\x20\x20\x20\x20body\x20{\n\x20\x20\x20\x20\x20\x20\x20\x20\x20\
+SF:x20\x20\x20background-color:\x20#1a1a1a;\n\x20\x20\x20\x20\x20\x20\x20\
+SF:x20\x20\x20\x20\x20color:\x20#f0f0f0;\n\x20\x20\x20\x20\x20\x20\x20\x20
+SF:}\n\x20\x20\x20\x20\x20\x20\x20\x20\.navbar\x20{\n\x20\x20\x20\x20\x20\
+SF:x20\x20\x20\x20\x20\x20\x20background-color:\x20#300;\n\x20\x20\x20\x20
+SF:\x20\x20\x20\x20}\n\x20\x20\x20\x20\x20\x20\x20\x20\.navbar-brand\x20{\
+SF:n\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20font-weight:\x20bold;\
+SF:n\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20color:\x20#fff\x20!imp
+SF:ortant;\n\x20\x20\x20\x20\x20\x20\x20\x20}\n\x20\x20\x20\x20\x20\x20\x2
+SF:0\x20\.nav-link\x20{\n\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20c
+SF:olor:\x20#ddd\x20!important;\n\x20\x20\x20\x20\x20\x20\x20\x20}\n\x20\x
+SF:20\x20\x20\x20\x20\x20\x20\.nav-link:hover\x20{\n\x20\x20\x20\x20\x20\x
+SF:20")%r(HTTPOptions,C7,"HTTP/1\.1\x20200\x20OK\r\nServer:\x20Werkzeug/2\
+SF:.2\.3\x20Python/3\.12\.3\r\nDate:\x20Fri,\x2028\x20Mar\x202025\x2016:57
+SF::08\x20GMT\r\nContent-Type:\x20text/html;\x20charset=utf-8\r\nAllow:\x2
+SF:0OPTIONS,\x20HEAD,\x20GET\r\nContent-Length:\x200\r\nConnection:\x20clo
+SF:se\r\n\r\n")%r(RTSPRequest,16C,"<!DOCTYPE\x20HTML>\n<html\x20lang=\"en\
+SF:">\n\x20\x20\x20\x20<head>\n\x20\x20\x20\x20\x20\x20\x20\x20<meta\x20ch
+SF:arset=\"utf-8\">\n\x20\x20\x20\x20\x20\x20\x20\x20<title>Error\x20respo
+SF:nse</title>\n\x20\x20\x20\x20</head>\n\x20\x20\x20\x20<body>\n\x20\x20\
+SF:x20\x20\x20\x20\x20\x20<h1>Error\x20response</h1>\n\x20\x20\x20\x20\x20
+SF:\x20\x20\x20<p>Error\x20code:\x20400</p>\n\x20\x20\x20\x20\x20\x20\x20\
+SF:x20<p>Message:\x20Bad\x20request\x20version\x20\('RTSP/1\.0'\)\.</p>\n\
+SF:x20\x20\x20\x20\x20\x20\x20\x20<p>Error\x20code\x20explanation:\x20400\
+SF:x20-\x20Bad\x20request\x20syntax\x20or\x20unsupported\x20method\.</p>\n
+SF:\x20\x20\x20\x20</body>\n</html>\n");
+Device type: general purpose
+Running: Linux 2.6.X
+OS CPE: cpe:/o:linux:linux_kernel:2.6.32
+OS details: Linux 2.6.32
+Network Distance: 0 hops
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+
+Host script results:
+| smb2-security-mode: 
+|   3:1:1: 
+|_    Message signing enabled but not required
+|_nbstat: NetBIOS name: BISHOP41, NetBIOS user: <unknown>, NetBIOS MAC: <unknown> (unknown)
+| smb2-time: 
+|   date: 2025-03-28T16:58:30
+|_  start_date: N/A
+
+Post-scan script results:
+| clock-skew: 
+|   0s: 
+|     192.168.220.227
+|     192.168.220.21
+|_    192.168.220.232
+| ssh-hostkey: Possible duplicate hosts
+| Key 256 fe:8d:9d:c3:35:28:45:79:44:e5:5a:71:f2:f0:96:80 (ED25519) used by:
+|   192.168.220.21
+|   192.168.220.232
+| Key 256 de:1f:01:1a:83:6d:be:f0:5d:ed:5f:fa:26:b0:01:e2 (ECDSA) used by:
+|   192.168.220.21
+|_  192.168.220.232
+OS and Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 256 IP addresses (18 hosts up) scanned in 505.64 seconds
