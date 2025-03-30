@@ -13,6 +13,16 @@ execute:
   freeze: auto
 ---
 
+# Failure and What's Next
+
+I wanted a custom solution that used FluxCD to deploy Openstack, since I wanted my entire setup, inclduing Openstack, to be tracked in a Git repo (GitOps).
+
+> [StarlingX OpenStack is installed and managed as an FluxCD application.](https://docs.starlingx.io/system_configuration/index-sysconf-d511820651f0.html#starlingx-openstack)
+
+Now, StarlingX, sadly, is not GitOps OpenStack. Configurations to the OpenStack application are done via the command line, or via helm value files. Perhaps I can clone the flux repo they use, but truthfully, I'm not going to worry about it for now. 
+
+I would like an OpenStack deployment up shortly, and while this project is fun (and definitely possible it seems), it is taking too long.
+
 # Background & Goals
 
 Since I got literally no work done on my server, I think it would be prudent to scale down. Rather than opting for a larger option.

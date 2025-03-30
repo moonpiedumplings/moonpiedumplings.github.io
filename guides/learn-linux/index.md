@@ -49,6 +49,8 @@ I also like resources maintained by some kind of organization, either the offici
 
 [Ubuntu's Terminal Basics](https://help.ubuntu.com/community/UsingTheTerminal)
 
+[Het-Tanis Linux Course](https://professionallinuxusersgroup.github.io/lac/)
+
 ## Ansible
 
 [Het-Tanis Lab on Killercoda](https://killercoda.com/het-tanis/course/Ansible-Labs)
@@ -72,12 +74,17 @@ I also like resources maintained by some kind of organization, either the offici
 
 * Interactive courses relating to a variety of topics, including Linux basics, Ansible, and Kubernetes. Requires login, although Github login can be used.
 
+<https://kubebyexample.com/learning-paths>
+
+* Not interactive, but follow-along labs for Linux fundamentals, containers, and kubernetes.
 
 ## Troubleshooting servers
 
 [SadServers](https://sadservers.com/)
 
 * Interactive troubleshooting of broken Linux servers.
+
+## SRE
 
 # Windows
 
@@ -315,6 +322,12 @@ https://cryptohack.org/
 https://www.youtube.com/watch?v=iqSMRO78UD0&list=PLUl4u3cNGP61EZllk7zwgvPbI4kbnKhWz
 
 </details>
+
+# Cert Preparation
+
+* <https://github.com/connectans/awesome-CISSP-CCSP/blob/main/asset/The%20sunflower%20CISSP%20Summary%20Version%202.0.pdf>
+
+* 
 
 # Chess
 
