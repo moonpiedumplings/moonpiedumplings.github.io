@@ -21,6 +21,40 @@ ul.task-list li input[type="checkbox"] {
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
 }
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
 </style>
 
 
@@ -194,15 +228,78 @@ ul.task-list li input[type="checkbox"] {
 <li>Incident responses: Documents noting down how a cyberattack happened, affected services and data, and mitigation steps.</li>
 </ul>
 <p>I began with two nmap scans of the entire environment, to see what was on the network.</p>
+<ul>
+<li><a href="./pastes/220nmap.txt">Nmap scan 1</a> (public environment, physical machines)</li>
+<li><a href="./pastes/230nmap.txt">Nmap scan 2</a> (“cloud” environment/VM’s)</li>
+</ul>
+<p>There was also one more environment, which was the partially airgapped one, which I did not nmap.</p>
+<p>There weren’t enough physical machines at first. We started out with 3 workstations that had input working and internet access, and then later pushed it up to 5. What we should have probably done is deploy a proxy of some sort on the device in between the airgapped network and the main network (scully), and then used that to get internet access on more of the workstations. But because we didn’t know if it was acceptable, we didn’t do it.</p>
 <p>I firstly logged into the <em>laptop</em> with the hostname “Bishop41”. The machine ran something <a href="https://winuxos.com/">Winux</a>, which is essentially Ubuntu with KDE, heavily themed to look like Windows. There was also <a href="https://linuxfx.org/">LinuxFX</a>, which was something similar. I liked them at first, I thought they were cool Windows clones that I could give to my mother so I could help her escape Windows, without her noticing, but the KDE UI kept crashing.</p>
 <p>Thankfully, I have experience from my personal laptop:</p>
 <p><code>systemctl --user restart plasma-plasmashell</code> (without sudo). The jokes is that KDE “<em>Krashes</em>” a lot.</p>
+<p>Firstly, I had to change the dns at <code>/etc/resolv.conf</code>. It was originally marked immutable, so I had to unmark it with <code>chattr -i /etc/resolv.conf</code> in order to be able to edit, even as a root user.</p>
 <p>Bishop41 had some malware on it that was fairly easy to find… but I didn’t find the later bits until after I had to do the presentation. The presentation: <a href="./kitty_presentation">presentation html link</a></p>
 <p>Of course, I elaborated on the points in the presentation, since the slides are somewhat information sparse. For example, I broke down how the reverse shell worked, pointing to the bits of the python code that bound to a port, or ran the bash process.</p>
 <p>And, I was also wrong about the reverse shell not being running. It was <code>:(</code>. I later found that there was a cronjob, either added by red teamers or black teamers</p>
 <p>There was also another piece of dangerous software I missed, a web service that had an interface to submit python code that would run on the machine. Not quite malware, but it wasn’t a scored service. I removed it, as it was serving on port 80, which interfered when I attempted to up the <code>apache2</code> service.</p>
-<p>I also did a later presentation on a software, <a href="https://arkime.com/">Arkime</a>. I did not manage to get it deployed, and my presentation overview was very short. However, after my presentation, they asked me many questions about PCAP’s, encryption, and other network analysis things, and I answered them pretty well. At the mixer that night, the person who quizzed me complimented me and told me that they were searching for specific keywordss for the</p>
-<p>We had trouble with docker on the Scully machine, it would time out when attempting to pull images.</p>
+<p>I did find something interesting in the apache2.</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>&lt;Directory /&gt;</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>        Options FollowSymLinks</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>        AllowOverride None</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>        Require all denied</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>&lt;/Directory&gt;</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>&lt;Directory /usr/share&gt;</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>        AllowOverride None</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>        Require all granted</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>&lt;/Directory&gt;</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>&lt;Directory /var/www/&gt;</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>        Options Indexes FollowSymLinks</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>        AllowOverride None</span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>        Require all granted</span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>&lt;/Directory&gt;</span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>#&lt;Directory /srv/&gt;</span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>#       Options Indexes FollowSymLinks</span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>#       AllowOverride None</span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>#       Require all granted</span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>#&lt;/Directory&gt;</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>I’m pretty sure /usr/share <em>isn’t</em> supposed to be publicly accessible on the web. Thankfully, this seems to be read only access.</p>
+<p>I also did a later presentation on a software, <a href="https://arkime.com/">Arkime</a>. I did not manage to get it deployed, and my presentation overview was very short. However, after my presentation, they asked me many questions about PCAP’s, encryption, and other network analysis things, and I answered them pretty well. At the mixer that night, the person who quizzed me complimented me and told me that they were searching for specific keywords for the presentation.</p>
+<p>Bishop41 also had a live, scored service that was a “python web environment”. An orange teamer actually came and in to (attempt to) use it to learn how to reverse an array. But that software was essentially a permanent security hole, as it could run arbitrary python on the machine as root.</p>
+<p>We had trouble with docker on the Scully machine, it would time out when attempting to pull images. I never figured it out. It could ping, but it could not curl or install packages. Until it could for a bit. Then it stopped working again. And yes, DNS on the machine was working.</p>
+<p>Later on, it got owned and some red teams claimed the bootloader was replaced with Nyan cat — although I did not see this one in person.</p>
+<p>For the router, bologna (how is that pronounced?), it got owned later on. It was an alpine router.</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>~ # ss -tulpn                                                                                                                    │</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>│Netid   State     Recv-Q    Send-Q       Local Address:Port        Peer Address:Port   Process                                   │</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>│udp     UNCONN    0         0                  0.0.0.0:67               0.0.0.0:*       users:(("dnsmasq",pid=3088,fd=4))        │</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>│udp     UNCONN    0         0                  0.0.0.0:37179            0.0.0.0:*       users:(("squid",pid=3482,fd=9))          │</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>│udp     UNCONN    0         0                  0.0.0.0:2521             0.0.0.0:*                                                │</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>│udp     UNCONN    0         0                  0.0.0.0:58414            0.0.0.0:*       users:(("dnsmasq",pid=3088,fd=14))       │</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>│udp     UNCONN    0         0                  0.0.0.0:53               0.0.0.0:*       users:(("dnsmasq",pid=3088,fd=6))        │</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>│udp     UNCONN    0         0                        *:50916                  *:*       users:(("squid",pid=3482,fd=8))          │</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>│udp     UNCONN    0         0                     [::]:2521                [::]:*                                                │</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>│udp     UNCONN    0         0                     [::]:53                  [::]:*       users:(("dnsmasq",pid=3088,fd=8))        │</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>│tcp     LISTEN    0         128                0.0.0.0:8080             0.0.0.0:*       users:(("shellinaboxd",pid=3441,fd=4))   │</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>│tcp     LISTEN    0         200              127.0.0.1:5432             0.0.0.0:*       users:(("postgres",pid=3409,fd=7))       │</span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>│tcp     LISTEN    0         32                 0.0.0.0:53               0.0.0.0:*       users:(("dnsmasq",pid=3088,fd=7))        │</span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>│tcp     LISTEN    0         128                0.0.0.0:22               0.0.0.0:*       users:(("sshd",pid=3519,fd=7))           │</span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>│tcp     LISTEN    0         1024                     *:443                    *:*       users:(("mini_httpd",pid=3257,fd=4))     │</span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>│tcp     LISTEN    0         200                  [::1]:5432                [::]:*       users:(("postgres",pid=3409,fd=6))       │</span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>│tcp     LISTEN    0         256                      *:3128                   *:*       users:(("squid",pid=3482,fd=12))         │</span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>│tcp     LISTEN    0         256                      *:3129                   *:*       users:(("squid",pid=3482,fd=13))         │</span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>│tcp     LISTEN    0         32                    [::]:53                  [::]:*       users:(("dnsmasq",pid=3088,fd=9))        │</span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>│tcp     LISTEN    0         128                   [::]:22                  [::]:*       users:(("sshd",pid=3519,fd=8))           │</span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>│~ # service shellinaboxd stop                                                                                                    │</span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>│ * Stopping shellinaboxd ... </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p><a href="https://github.com/shellinabox/shellinabox">Shellinabox</a> is a small web service that lets you run shell commands via browser interface. Essentially a backdoor.</p>
+<p>In addition to this, when bologna was pwned, the <code>.profile</code> file, which the <code>ash</code> shell seems to run when it started up, was set to play a very long “video” via a program called asciicinema, which basically plays videos in the terminal.</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>bologna:~# cat .profile </span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>#!/bin/sh</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>asciinema play /.demo.rec</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>And then this would play a very long simulation of the machine getting hacked. To exit, I would hit Ctrl+C and then type <code>exit</code>, and then spam Ctrl + Z or Ctrl + D to quit. Painful, but I found zellij wouldn’t rerun this when starting. It was also persistent, it stayed even after I deleted the .profile file. (Oh. I probably should have just edited it to remove the “asciinema play” bit).</p>
+<p>Later through the competition, we started using cryptpad on a public instance. We used a link shortener to make it easier to access. We had a spreadsheet for inventory and passwords.</p>
 <section id="for-future-ccdc" class="level1">
 <h1>For Future CCDC</h1>
 <section id="issues-we-struggled-with" class="level2">
@@ -233,6 +330,21 @@ ul.task-list li input[type="checkbox"] {
 <li>Be able to handle never before seen software thrown at us. Either rare stuff, or custom CCDC stuff.</li>
 </ul></li>
 <li>People are gonna need to specialize. I wanted to avoid this. But I can’t see a way around this. There isn’t enough time for every person to learn every software, as much as that’s what I want to do to prepare them for the real world</li>
+<li>OSINT in general
+<ul>
+<li>But we should look at the Github’s of all other teams <em>and</em> competition organizers. There might be things like config files (kubernetes, or nix) in those git repos</li>
+<li>Github code search. Search engines. People need to know how to search.</li>
+</ul></li>
+<li>Certain injects, like the ansible one’s, could be done “at home” and then we could reuse the code during comp.</li>
+<li>Possibly drill to prepare endurance. Although music would have helped.</li>
+<li>Drill for readiness with <em>specific</em> utility software: ssh, zellij, restic (?), SIEM
+<ul>
+<li>Also proxies</li>
+<li>But it’s not worth it to attempt to memorize the environments, especially since they give us rare or custom services. It’s better to have a fundamental understanding.</li>
+</ul></li>
+<li>Drill to the point where people can still operate under pressure</li>
+<li>Basic troubleshooting skills — Although I don’t think they were lacking, but instead people flustering under pressure.</li>
+<li>Blogs people write to, rather than injects.</li>
 </ul>
 </section>
 <section id="things-to-prepare" class="level2">
@@ -246,12 +358,20 @@ ul.task-list li input[type="checkbox"] {
 <li>Pacman Rosetta</li>
 <li>Other misc, UPDATED cheatsheets</li>
 <li>Simpler passwords for our password sheets, or possibly cryptpad spreadsheet</li>
+<li>Way more password sheets if we are going to do those. Like 16 instead of 6.</li>
+</ul></li>
+<li>Sticky notes for the computers, to have a “todo” for what to do on the workstation/related machines?
+<ul>
+<li>Blank sticky note = no password changed</li>
 </ul></li>
 <li>Physical Books
 <ul>
 <li>Unix handbook, or the LPIC books are really good for physical books documenting Linux.</li>
 </ul></li>
-<li>Custom Linux ISO that’s really small, possibly doesn’t need network, and has automatic install. This way we don’t need to click through the Debian installer.</li>
+<li>Custom Linux ISO that’s really small, possibly doesn’t need network, and has automatic install. This way we don’t need to click through the Debian installer.
+<ul>
+<li>Also find a good small live distro for physical machines, so that we can use things like <code>chntpw</code> or other recovery tools.</li>
+</ul></li>
 <li>Quarto and formatting:
 <ul>
 <li>I threw together something quick using Nix to install quarto to make an html revealjs presentation and it worked <em>really well</em>.</li>
@@ -266,6 +386,7 @@ ul.task-list li input[type="checkbox"] {
 <li>SIEM solution…
 <ul>
 <li>Some way to log network connections for incident responses</li>
+<li>Log network and traffic for software like Bishop41’s extremely insecure web based python dev environment</li>
 </ul></li>
 <li>Automate group policy — No more lockouts</li>
 <li>Become able to consistently fix problems caused by red team on the Windows machines.</li>
@@ -273,19 +394,76 @@ ul.task-list li input[type="checkbox"] {
 <li>Airgap ready: Part of our environment was airgapped. How do we set up services without google?
 <ul>
 <li>Physical docs, paper/books</li>
-<li>Small, portable, transferable services</li>
+<li>Small, portable, transferable services
+<ul>
+<li>Terminal/Tui collaboration tools. Zellij, but also, does a collaborative text editor exist?</li>
+</ul></li>
 </ul></li>
 <li>Some way of organizing work for easy handoff
 <ul>
 <li>The machines had virtual desktops but I didn’t use them (they didn’t show up on LinuxFX/Winux)</li>
 </ul></li>
-<li>Automated granular backups
+<li>Automated granular backups (restic?)
 <ul>
 <li>Deduplication</li>
 <li>Just config, or data as well</li>
 </ul></li>
 <li>Use CIS benchmarks instead of Microsoft Docs when docs are bad</li>
+<li>Ansible injects can probably be done in advance. We could do them at home as injects and then copy the code.</li>
+<li>Some sort of backup software. Restic?</li>
+<li>Set up honeypots/traps for lower privilege users (Windows, but Linux could do this as well).
+<ul>
+<li>Windows containers</li>
+<li>Find ip’s, prevent privilege escalation</li>
+</ul></li>
+<li>Automation that could be run in the background so other people can work on the workstation</li>
+<li>Some kind of pastebin service to share text/files/images.</li>
+<li>Soar/Nix to install packages, or other custom/distro agnostic package managers
+<ul>
+<li>Nix for quarto. But texlive small is needed for pdf.</li>
+<li>Soar for zellij, restic, some other static stuff.</li>
+</ul></li>
+<li>Easier passwords</li>
+<li>Backdoors for the windows machines outside of a backup user/admin
+<ul>
+<li>Meshcentral? (also, can Meshcentral aggregate logs SIEM style?).</li>
+</ul></li>
+<li>Url shortener, self hosted</li>
+<li>Clipboard managers. Built into KDE and Windows nowadays.</li>
+<li>KDE is the best. Gnome lacks features.</li>
 </ul>
+<p>Software we need:</p>
+<ul>
+<li>Static binary, client-server</li>
+<li>“clustered”, where instances can interact, possibly find eachother</li>
+<li>Shell (reverse shell?) that are collaborative (zellij)</li>
+<li>backup from any machine to any other (restic?)
+<ul>
+<li>Also need Windows backup (group policy, AD stuff, DNS) backup ability</li>
+</ul></li>
+<li>Forward, view and search logs from other machines
+<ul>
+<li><a href="https://lnav.org/">lnav</a>?</li>
+<li>Also network traffic, basically Incident Response needs (source ip address, destination, time). Command history.</li>
+</ul></li>
+<li>Collaborative text editor or spreadsheet setup.
+<ul>
+<li>Inventory, passwords, injects</li>
+</ul></li>
+<li>Built in automation
+<ul>
+<li>Basic tasks</li>
+<li>Machines add themselves to the inventory</li>
+<li>Changes password as an install step</li>
+</ul></li>
+<li>Proxy traffic to other machines, to escape airgap</li>
+<li>Pastebin/file sharing</li>
+<li>Run on our own devices during competitions</li>
+<li>Literally based on kubernetes?</li>
+<li>Hide itself? The ability to disguise as other services?</li>
+</ul>
+<p>UCI: <a href="https://github.com/UCI-CCDC/LOCS/blob/b097d1adfad6037253c13a29bf811f045e77f151/linux/dominion/domlogging.py" class="uri">https://github.com/UCI-CCDC/LOCS/blob/b097d1adfad6037253c13a29bf811f045e77f151/linux/dominion/domlogging.py</a></p>
+<p>Scripts for password shuffling, adding to SIEM, etc. They have many things we want.</p>
 </section>
 <section id="preduring-comp" class="level2">
 <h2 class="anchored" data-anchor-id="preduring-comp">Pre/During Comp</h2>
@@ -322,19 +500,29 @@ ul.task-list li input[type="checkbox"] {
 </ul></li>
 <li>Red Team did not delete <code>/var/syslog</code> even though they cleaned journalctl</li>
 <li>Arkime wants elasticsearch/opensearch</li>
+<li>hold shift to bypass zellij hijacking selections in mouse mode</li>
+<li>Apparently it’s possible to disable <code>sys</code>/syscalls in python. Not perfect but is better secure than arbitrary commmands.</li>
+<li>No second presentation on the second day, despite claims otherwise.</li>
+<li>Injects, including presentations, only in pdf format.</li>
+<li>Winget was installed on at least one of the windows machines.</li>
+<li>Active Directory doesn’t work in safe mode.</li>
+<li>Red team did not get an empty “test environment”. There was a half sized environment managed by Anthropic Claude though. It did’t do too well.</li>
 </ul>
 </section>
 <section id="off-topic" class="level1">
 <h1>Off-Topic</h1>
 <section id="to-do-miscfunny" class="level2">
 <h2 class="anchored" data-anchor-id="to-do-miscfunny">To Do Misc/Funny</h2>
-<p>(To do stuff that isn’t as important or relevant) * CCDC playlist: Since we had internet access, we should have put some bops on * Get the model of Coastline’s college presentation windows machine — I love it’s form factor, it’s quite small * I should write my lowercase l in such a way where it’s clear what they are</p>
+<p>(To do stuff that isn’t as important or relevant) * CCDC playlist: Since we had internet access, we should have put some bops on * In all serious, this would have helped with our motivatio greatly. * Get the model of Coastline’s college presentation windows machine — I love it’s form factor, it’s quite small * I should write my lowercase l in such a way where it’s clear what they are * More pencils. I should also bring my own notebook. * Cutleries? It would be nice if we had a knife for the cream cheese so we could put it on the bagels. * Scissors and printer paper (I want to do origami)</p>
 </section>
 <section id="notes-misc" class="level2">
 <h2 class="anchored" data-anchor-id="notes-misc">Notes Misc</h2>
 <ul>
 <li>The HP Elitedesk 800 G1 and G6 don’t seem to have the small form factor I expected <code>:(</code> (They were the desktops in the classified area of the competition)</li>
 <li>Datto brand device, running Debian 12 was a “magic box” used for Black Team. But I really liked the form factor of that device, it was quite small, like a NUC.</li>
+<li>Apparently, Insurance companies find red teamers highly valuable, since they can assess risk in companies that they insure for cyber attacks.</li>
+<li>“Red team forces leadership to respond”</li>
+<li>Not wearing identifying clothing is apparently a strategy by some teams.</li>
 </ul>
 </section>
 <section id="personalleadership-notes" class="level2">
