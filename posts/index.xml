@@ -28,7 +28,7 @@
 <li>Injects: Writeups of tasks we are assigned to do</li>
 <li>Teams: Subsets of the competition organizers, volunteers responsible for making the game work
 <ul>
-<li>Red Team: <strong>Competition Organizers</strong> who pretend to be cyberattackers by slowly infiltrating machines they could instantly down but choose not to</li>
+<li>Red Team: <strong>Competition Organizers</strong> who pretend to be cyberattackers by slowly infiltrating machines they could instantly destroy but instead choose not to</li>
 <li>Orange Team: Pretends to be organizers</li>
 <li>White Team: Grades Injects</li>
 <li>Black (Ops/Operations) Team: Sets up the environment</li>
@@ -37,12 +37,21 @@
 <li>Team packet: Document noting down the topology, some scored services, and rules of the competition.</li>
 <li>Incident responses: Documents noting down how a cyberattack happened, affected services and data, and mitigation steps.</li>
 </ul>
+<section id="writeup" class="level1">
+<h1>Writeup</h1>
+<section id="topology" class="level2">
+<h2 class="anchored" data-anchor-id="topology">Topology</h2>
 <p>I began with two nmap scans of the entire environment, to see what was on the network.</p>
 <ul>
 <li><a href="./pastes/220nmap.txt">Nmap scan 1</a> (public environment, physical machines)</li>
 <li><a href="./pastes/230nmap.txt">Nmap scan 2</a> (“cloud” environment/VM’s)</li>
 </ul>
 <p>There was also one more environment, which was the partially airgapped one, which I did not nmap.</p>
+<p>The topolgy was very complex, there were 3 environments in total, one “cloud” environment hosted on vcenter, and two physical environments, one of which was airgapped.</p>
+<p><img src="./writeups/wrccdc/images/topologyfinal2025.webp" class="img-fluid"></p>
+</section>
+<section id="work" class="level2">
+<h2 class="anchored" data-anchor-id="work">Work</h2>
 <p>There weren’t enough physical machines at first. We started out with 3 workstations that had input working and internet access, and then later pushed it up to 5. What we should have probably done is deploy a proxy of some sort on the device in between the airgapped network and the main network (scully), and then used that to get internet access on more of the workstations. But because we didn’t know if it was acceptable, we didn’t do it.</p>
 <p>I firstly logged into the <em>laptop</em> with the hostname “Bishop41”. The machine ran something <a href="https://winuxos.com/">Winux</a>, which is essentially Ubuntu with KDE, heavily themed to look like Windows. There was also <a href="https://linuxfx.org/">LinuxFX</a>, which was something similar. I liked them at first, I thought they were cool Windows clones that I could give to my mother so I could help her escape Windows, without her noticing, but the KDE UI kept crashing.</p>
 <p>Thankfully, I have experience from my personal laptop:</p>
@@ -110,6 +119,129 @@
 <span id="cb3-3">asciinema play /.demo.rec</span></code></pre></div>
 <p>And then this would play a very long simulation of the machine getting hacked. To exit, I would hit Ctrl+C and then type <code>exit</code>, and then spam Ctrl + Z or Ctrl + D to quit. Painful, but I found zellij wouldn’t rerun this when starting. It was also persistent, it stayed even after I deleted the .profile file. (Oh. I probably should have just edited it to remove the “asciinema play” bit).</p>
 <p>Later through the competition, we started using cryptpad on a public instance. We used a link shortener to make it easier to access. We had a spreadsheet for inventory and passwords.</p>
+</section>
+<section id="injects" class="level2">
+<h2 class="anchored" data-anchor-id="injects">Injects</h2>
+<p>We also had a lot of trouble with the Kubernetes cluster. Before Orange team came in and took it, a <a href="./files/drplan.txt">Disaster Recovery Plan</a>. This documented how to migrate the services from one kubernetes cluster to another, but we did not do this.</p>
+<p>There were some other injects that would have been helpful to us. For example, one inject was to set up a way to transfer data from high side to low side by setting up <a href="https://nifi.apache.org/">Apache Nifi</a>. That would have been legitimately useful to transfer stuff from low side to high side.</p>
+<p>There was also an ansible inject, which required the creation of 3 playbooks that would collect: Disk space, network interfaces, and system services running. We then had to run those playbooks on 10 machines.</p>
+</section>
+<section id="final-scores-and-future-plans" class="level2">
+<h2 class="anchored" data-anchor-id="final-scores-and-future-plans">Final Scores and Future Plans</h2>
+<p><img src="./writeups/wrccdc/images/scores.jpg" class="img-fluid"></p>
+<p>We only had a single person who had been to regionals before, and our previous Windows and Linux team leads were no longer on the team. We lost a ton of knowledge, both the raw technical knowledge, but also the passed down knowledge about the competition, like what is acceptable, and what compromises are okay in terms of scoring.</p>
+<p>I always expected last place. We were woefully underprepared, not having expected to make it to regionals — So we had all split up and began working on our own stuff (I was working on Openstack so I could have a remote lab for people <em>next year</em>), and we were suprised when the announcment about Regionals came out. And then we had to get back together and prepare for one of the harder regions of CCDC in less than 2 months, while our entire team consisted of 9 active members.</p>
+<p>Like when I play chess against a vastly better player, my goal was never to win, but instead to <em>not lose instantly</em>. And we did.</p>
+<p><img src="./writeups/wrccdc/images/graph.jpg" class="img-fluid"></p>
+<p>We are not the lowest team, that’s the environment managed by the Anthropic Claude AI. We are the second lowest team.</p>
+<p>I’m very pleased with our performance. Despite setting the low goal of not losing instantly, sometimes not even that is achievable, which sucks. But we managed to mostly hold ourselves together for the first half of the first day, and we managed to learn a lot.</p>
+<p>Since we are effectively starting from scratch, it’s important that we record all the stuff we are missing so we can fix these issues. This is why I have this writeup.</p>
+</section>
+</section>
+<section id="debrief-notes" class="level1">
+<h1>Debrief Notes</h1>
+<p>Brandon/<code>@ProBro</code></p>
+<ul>
+<li>Much of the stuff was set up in the week before competition.</li>
+</ul>
+<p>Ops team debrief by Wasabi:</p>
+<ul>
+<li>One of the largest topologies ever, 3 networks connected by vpn or something else.</li>
+<li>Scully router was too secure, stopping traffic to the phones.</li>
+<li>Most custom services ever. Some of it was written hours before competition start. Satellite control system, written in 4 hours. A few chatbots. OTP service could get hijacked by red team by changing the seed.</li>
+<li>Red hat was doing wireless hacking and jamming antennae…</li>
+<li>CVE’s were dropped for non ccdc-specific services.</li>
+<li>We are not allowed to unplug EVERYTHING. Like the coastline college environment, or the magic box. One team shut that down and their scoring stopped working</li>
+<li>Red team would deny outbound dns traffic to break dns. Red team would also drop udp traffic but not tcp, so ssh would still be allowed.</li>
+<li>some teams used the site to site vpn to connect to all networks.</li>
+<li>Teams should really do an inventory, especially <em>how</em> things are connected, not just what.</li>
+<li>Only 90 tickets, half of qualifiers. Teams got a lot of poinrs back from ticketing from ops team errors.</li>
+<li>8 custom apps, some had CVE’s reported in them.</li>
+<li>Deployment for each pod went from 2 hours for a team to 30 minutes when they were setting up environments.</li>
+<li>Changes from Qualifiers:
+<ul>
+<li>teams coordinated, red team and ops team talked to eachother. Ops team had a sheet with red team plans. They used this to guess if an issue was red team related.</li>
+<li>Environment was much more tested.</li>
+</ul></li>
+<li>NUCC (nonprofit that provides software) provided unifi gear, and they will peovide it if we ask.
+<ul>
+<li>I met the owner, he goes to SFVGlug sometimes. He offered to lend us network hardware.</li>
+</ul></li>
+<li>Vcenter crashed.</li>
+<li>Slow =/= not working. Many teams complained, saying something that was not working when really it was just slow.</li>
+<li>Windows licenses sometimes needed to be reactivated <code>slmgr /rearm</code></li>
+<li>Printers would instantly distract a few people from every team. I hope the vid is put on youtube, it’s hilarious.</li>
+<li>A couple hours before the taking of the kubernetes machine there was a disaster recovery sent out. Only 4 teams recovered from that. Also red team was taking advantage of that distraction to break into people’s machines.</li>
+<li>Old switch was a dhcp server, but unifi needs dhcp to get set up</li>
+<li>Inter Laptop
+<ul>
+<li>A lot of malware</li>
+<li>Web based python development environment</li>
+<li>was supposed to be hiding the domain controller by resting on top of the machine (in our env we received a broken monitor, although we were not supposed to receive a monitor at all)</li>
+<li>had a unifi switch controller preinstalled, for setting up the new unifi</li>
+</ul></li>
+<li>20-30 in person volunteers, 5 remote for ops team.</li>
+<li>300 physical systems and 200 virtual machines.</li>
+<li>Ask clovismint for info about services.</li>
+<li>Beesad validates tickets after the event, to give points back. Thanks Beesad!</li>
+</ul>
+<p>Orange Team Debrief:</p>
+<ul>
+<li>Orange team was also black team…</li>
+<li>Orange team scoring: 40% was phone answers, 30% was services, 30% was customer service</li>
+<li>Commonly missed: not answering the phone, hanging up, or not calling us back</li>
+<li>People blocked orange team’s vpn clients into high side</li>
+<li>They will call and tell if a service is down, and they track callbacks on a sheet. You get full points if you fix the service and call back.</li>
+<li>Radio check. Only one team changed the frequency. Interrogation.</li>
+</ul>
+<p>White Team Debrief:</p>
+<ul>
+<li>Does all injects and grading</li>
+<li>They had a schedule for the injects, to ensure that there was always at least 2 injects except at the beginning or end of the day. They also worked with black and orange team, arranging these. Announcements are also timed, such as the DR plan.</li>
+<li>3500 items scored, by this morning. 45 seconds per item scored.</li>
+<li>Some issues with some injects, like submitting an inject as an ODT renamed as a pdf, or same thing woth the wrong #.
+<ul>
+<li>Double check them</li>
+</ul></li>
+<li>Read the team packet…</li>
+<li>A single link is not a substitute for documentation, especially for high side which doesn’t have internet.</li>
+<li>The inject gave temporary permission for an inject to have data flow beyweem hi side and low side. This was probably the proxy inject, where we would have set up the proxy that gives internet access to hi side.</li>
+<li>Easter eggs are funny and wake the inject graders up. They have very little sleep.</li>
+<li>Infographics should be easy to read and print.</li>
+<li>More chain/linked injects than usual. Common in the real world.</li>
+</ul>
+<p>Red Team:</p>
+<ul>
+<li>Red team always wins. They don’t want people to make the mistakes that they did when we go into the real world.</li>
+<li>Every time red time does something, they are trying to teach something.</li>
+<li>Red team brought a radio jammer
+<ul>
+<li>Only one team passed the code signals test, by sending out people to talk to the red teamers and ask what they are doing, and then change their frequency</li>
+</ul></li>
+<li>Red team looks at Github and sees all the repos.</li>
+<li>Red team doesn’t like when people do stuff that doesn’t translate to the real world, so they punish it.</li>
+<li>Red team “gives more love” to teams that are aware they are on the systems.</li>
+<li>Red team lost access to their boxes when vcenter when down becuase they forgot their changed ip address.</li>
+<li>Red team keeps surprises so people can’t prep for what they do.</li>
+<li>Red team did not do anything tricky, like 0 days the night before (nationals)… they simply searched for what’s vulnerable and what’s open.</li>
+<li>“We love kubernetes”. K8s is new to the competition. To mitigate basics: change default kubeconfig or block 6443 api server. This is how they got in, and they would run pods, down pods, etc.
+<ul>
+<li>Forgejo has default creds in helm chart, changes could be pushed to fluxcd.</li>
+<li>Look into environment variables and configurations of deployments. Helm values, etc.</li>
+<li>Xtraop product manager says to Learn Kubernetes because people struggle to secure it in the real world.</li>
+</ul></li>
+<li>MITRE shows how people do attacks in the real world.</li>
+<li>Windows: Zerologon, eternalblue, RPC, new C2 called Realm, static rust binary. 3 differenr tyows if C2: slitter, realm, cobalt strike.
+<ul>
+<li>Reset DC passwords, stole hashes, pass the hash.</li>
+</ul></li>
+<li>Watching connections, ssh logs. Large static binaries = suspicious, potential C2 server. Binary in tempt directory making outbound connections = suspicious.</li>
+<li>Scully had ssh private key in root of scully. Make sure to clean those up.</li>
+<li>Alpine router got pwned, 3 different ways to get admin access. Webmin/cockpit I think? They should be shut down.</li>
+<li>Ragusa had a flask app with a command injection vuln. No team found it for the entire competirion. We need to be able to figure out how they got in and patch it.</li>
+<li>Red team offered to do mock/scrimmages</li>
+</ul>
+</section>
 <section id="for-future-ccdc" class="level1">
 <h1>For Future CCDC</h1>
 <section id="issues-we-struggled-with" class="level2">
@@ -155,6 +287,7 @@
 <li>Drill to the point where people can still operate under pressure</li>
 <li>Basic troubleshooting skills — Although I don’t think they were lacking, but instead people flustering under pressure.</li>
 <li>Blogs people write to, rather than injects.</li>
+<li>Weekly assignments that are discussed and done during the week.</li>
 </ul>
 </section>
 <section id="things-to-prepare" class="level2">
@@ -166,6 +299,7 @@
 <li>Documentation? Create our own team book/cheatsheets?</li>
 <li><a href="https://wizardzines.com/">Julia Evans</a> cheatsheets would have helped a lot.</li>
 <li>Pacman Rosetta</li>
+<li><a href="https://www.sans.org/blog/the-ultimate-list-of-sans-cheat-sheets/">Sans cheatsheets</a>, <a href="https://imgv2-2-f.scribdassets.com/img/document/686774535/original/adfc0dbeca/1702226435?v=1">E.g: Linux</a></li>
 <li>Other misc, UPDATED cheatsheets</li>
 <li>Simpler passwords for our password sheets, or possibly cryptpad spreadsheet</li>
 <li>Way more password sheets if we are going to do those. Like 16 instead of 6.</li>
@@ -273,10 +407,11 @@
 <li>Hide itself? The ability to disguise as other services?</li>
 </ul>
 <p>UCI: <a href="https://github.com/UCI-CCDC/LOCS/blob/b097d1adfad6037253c13a29bf811f045e77f151/linux/dominion/domlogging.py" class="uri">https://github.com/UCI-CCDC/LOCS/blob/b097d1adfad6037253c13a29bf811f045e77f151/linux/dominion/domlogging.py</a></p>
-<p>Scripts for password shuffling, adding to SIEM, etc. They have many things we want.</p>
+<p>Scripts for password shuffling, adding to SIEM, etc. They have many things we want. We should also look at other teams.</p>
 </section>
 <section id="preduring-comp" class="level2">
 <h2 class="anchored" data-anchor-id="preduring-comp">Pre/During Comp</h2>
+<p>It should be noted that some of this is stuff we did during the competition that worked well, in addition to things we didn’t do but should have.</p>
 <ul>
 <li>Stop assuming instructions are perfect.
 <ul>
@@ -288,6 +423,7 @@
 <ul>
 <li>And cryptpad has a kanban board for task organization</li>
 <li>Possibly password sheet as well</li>
+<li>Use link shortener to find/share it easily.</li>
 </ul></li>
 <li>Reuse injects if they reuse machines</li>
 <li>Backup admin accounts on the machines. Could probably be automated.</li>
@@ -297,10 +433,26 @@
 <li>We should have brought the other sheet, having multiple people write the passwowrd down.</li>
 <li>Have physical backups and redundancies as well?</li>
 </ul></li>
+<li>Add machines to spreadsheet inventory as part of first steps
+<ul>
+<li>Along with password, and documenting what password is used via coordinates.</li>
+</ul></li>
+</ul>
+</section>
+<section id="notes" class="level2">
+<h2 class="anchored" data-anchor-id="notes">Notes</h2>
+<p>This is that passed down knowledge that we are lacking.</p>
+<ul>
+<li>I didn’t know dockerizing services was acceptable, but I overheard one team mention this, and it was also mentioned in the discord as the accepted strategy to secure one the flask web app that let the users run arbitrary python code as root on the machines.</li>
+<li>ALL the teams did better than us. But one team unplugged Coastline Collges non-ccdc networking equipment.
+<ul>
+<li>One team unplugged the “magic box” the scoring engine used.</li>
+<li>It’s probably much better to be much more aggressive and ask for forgiveness rather than permission.</li>
+</ul></li>
 </ul>
 </section>
 </section>
-<section id="notes" class="level1">
+<section id="notes-1" class="level1">
 <h1>Notes</h1>
 <ul>
 <li>Open internet acccess
@@ -309,7 +461,7 @@
 <li>Chatgpt, perplexity were unblocked</li>
 </ul></li>
 <li>Red Team did not delete <code>/var/syslog</code> even though they cleaned journalctl</li>
-<li>Arkime wants elasticsearch/opensearch</li>
+<li>Arkime wants elasticsearch/opensearch — they don’t come with a UI by default</li>
 <li>hold shift to bypass zellij hijacking selections in mouse mode</li>
 <li>Apparently it’s possible to disable <code>sys</code>/syscalls in python. Not perfect but is better secure than arbitrary commmands.</li>
 <li>No second presentation on the second day, despite claims otherwise.</li>
@@ -317,13 +469,29 @@
 <li>Winget was installed on at least one of the windows machines.</li>
 <li>Active Directory doesn’t work in safe mode.</li>
 <li>Red team did not get an empty “test environment”. There was a half sized environment managed by Anthropic Claude though. It did’t do too well.</li>
+<li>There was actually an inject to set up a data flow between hi side and low side</li>
+<li>There as an inject about setting up a new unify switch before they took our old one away, and there was an announcement about migrating the services from one kubernetes clusters before they took the small NUC with the kubernetes on it as well.</li>
 </ul>
 </section>
 <section id="off-topic" class="level1">
 <h1>Off-Topic</h1>
 <section id="to-do-miscfunny" class="level2">
 <h2 class="anchored" data-anchor-id="to-do-miscfunny">To Do Misc/Funny</h2>
-<p>(To do stuff that isn’t as important or relevant) * CCDC playlist: Since we had internet access, we should have put some bops on * In all serious, this would have helped with our motivatio greatly. * Get the model of Coastline’s college presentation windows machine — I love it’s form factor, it’s quite small * I should write my lowercase l in such a way where it’s clear what they are * More pencils. I should also bring my own notebook. * Cutleries? It would be nice if we had a knife for the cream cheese so we could put it on the bagels. * Scissors and printer paper (I want to do origami)</p>
+<p>(To do stuff that isn’t as important or relevant)</p>
+<ul>
+<li>CCDC playlist: Since we had internet access, we should have put some bops on
+<ul>
+<li>In all serious, this would have helped with our motivation greatly.</li>
+<li>One team was watching a fortnite stream (though this was an image from a previous year). Everybody goes “haha funny fortnite” but in all seriousness, watching twitch streams acts as an external source of motivation for me while I work on longer projects. I watch either people new to horror games, or software/cybersec stuff, because I enjoy seeing people suffer.</li>
+</ul></li>
+<li>Get the model of Coastline’s college presentation windows machine — I love it’s form factor, it’s quite small. I forgot. <code>:(</code>. Oh well.</li>
+<li>I should write my lowercase l in such a way where it’s clear what they are</li>
+<li>More pencils. I should also bring my own notebook.</li>
+<li>Cutleries? It would be nice if we had a knife for the cream cheese so we could put it on the bagels.</li>
+<li>Scissors and printer paper (I want to do origami)</li>
+<li>Amazon makes customm hoodies. They aren’t good, apparently, but you can just submit an image to go on a hoodie.</li>
+<li>Keep my hands/self warm. The room was cold and I typed slower than usual until my hands warmed up.</li>
+</ul>
 </section>
 <section id="notes-misc" class="level2">
 <h2 class="anchored" data-anchor-id="notes-misc">Notes Misc</h2>
@@ -333,6 +501,26 @@
 <li>Apparently, Insurance companies find red teamers highly valuable, since they can assess risk in companies that they insure for cyber attacks.</li>
 <li>“Red team forces leadership to respond”</li>
 <li>Not wearing identifying clothing is apparently a strategy by some teams.</li>
+</ul>
+<p>Sean/Tirefire:</p>
+<ul>
+<li>College is also about what you <em>don’t like</em> as well as what you like</li>
+<li>Weekly assignments assigned on saturday, and then done and discussed during the week</li>
+<li>Team leader who managed rather than operating directly, they wouldn’t have their hands on a keyboard.</li>
+<li>Inject person who is timekeeper and bugging people to do things</li>
+<li>Team composition: 2 networking 2 linux 2 windows, all problem solvers. Figure it out if you don’t know. Not necessary specialize, but at least cross train.</li>
+<li>Argued that we should have just taken a laptop to low side
+<ul>
+<li>We could have just connected it to low side wifi.</li>
+</ul></li>
+<li>https://fogproject.org — disk cloning project, pretty cool</li>
+<li>Potential strat: Turn off service, harden some, turn it off again to prevent SLA checks.</li>
+<li>Qualifiers env is replicated into regionals regularly. “You’ll see regionals again, like in invitationals”.</li>
+<li>“We don’t affect Nationals at all”.</li>
+<li>Cameron wanted to record. “Just do it anyways, see what happens.”. Forgiveness, rather than permission.</li>
+<li>Put CCDC on your resume. It shows skills of teamwork, handling pressure, and learning new things.</li>
+<li>Presentation is a skill in it of itself</li>
+<li>Understanding security tradeoffs, compromises. Sometimes a sacrifice needs to be made.</li>
 </ul>
 </section>
 <section id="personalleadership-notes" class="level2">
@@ -1979,6 +2167,7 @@ Expand/Collapse Testing
 <p><a href="https://ryanstutorials.net/linuxtutorial/" class="uri">https://ryanstutorials.net/linuxtutorial/</a></p>
 <p><a href="https://eng.libretexts.org/Bookshelves/Computer_Science/Operating_Systems/Linux_-_The_Penguin_Marches_On_(McClanahan)">Linux — The Penguin Marches On (Libretexts)</a></p>
 <p><a href="https://help.ubuntu.com/community/UsingTheTerminal">Ubuntu’s Terminal Basics</a></p>
+<p><a href="https://professionallinuxusersgroup.github.io/lac/">Het-Tanis Linux Course</a></p>
 <section id="ansible" class="level2">
 <h2 class="anchored" data-anchor-id="ansible">Ansible</h2>
 <p><a href="https://killercoda.com/het-tanis/course/Ansible-Labs">Het-Tanis Lab on Killercoda</a></p>
@@ -2001,6 +2190,10 @@ Expand/Collapse Testing
 <ul>
 <li>Interactive courses relating to a variety of topics, including Linux basics, Ansible, and Kubernetes. Requires login, although Github login can be used.</li>
 </ul>
+<p><a href="https://kubebyexample.com/learning-paths" class="uri">https://kubebyexample.com/learning-paths</a></p>
+<ul>
+<li>Not interactive, but follow-along labs for Linux fundamentals, containers, and kubernetes.</li>
+</ul>
 </section>
 <section id="troubleshooting-servers" class="level2">
 <h2 class="anchored" data-anchor-id="troubleshooting-servers">Troubleshooting servers</h2>
@@ -2008,6 +2201,9 @@ Expand/Collapse Testing
 <ul>
 <li>Interactive troubleshooting of broken Linux servers.</li>
 </ul>
+</section>
+<section id="sre" class="level2">
+<h2 class="anchored" data-anchor-id="sre">SRE</h2>
 </section>
 </section>
 <section id="windows" class="level1">
@@ -2185,6 +2381,13 @@ Expand/Collapse
 </summary>
 <p>https://gotchas.salusa.dev/GettingStarted.html https://soatok.blog/2020/06/10/how-to-learn-cryptography-as-a-programmer/ https://cryptopals.com/ https://cryptohack.org/ https://www.youtube.com/watch?v=iqSMRO78UD0&amp;list=PLUl4u3cNGP61EZllk7zwgvPbI4kbnKhWz</p>
 </details>
+</section>
+<section id="cert-preparation" class="level1">
+<h1>Cert Preparation</h1>
+<ul>
+<li><p><a href="https://github.com/connectans/awesome-CISSP-CCSP/blob/main/asset/The%20sunflower%20CISSP%20Summary%20Version%202.0.pdf" class="uri">https://github.com/connectans/awesome-CISSP-CCSP/blob/main/asset/The%20sunflower%20CISSP%20Summary%20Version%202.0.pdf</a></p></li>
+<li></li>
+</ul>
 </section>
 <section id="chess" class="level1">
 <h1>Chess</h1>

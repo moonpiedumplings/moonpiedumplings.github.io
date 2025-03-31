@@ -1,0 +1,38 @@
+1. Point DNS at new IPs (first to minimize issues caused by DNS caching)
+  a. Connect to Snowden via RDP
+  b. Adjust the following DNS records:
+    i.   fbclog.fbc.scp       CNAME shyguy.fbc.scp  -> rome.pizza.loco
+    ii.  sso.fbc.scp          CNAME shyguy.fbc.scp  -> rome.pizza.loco
+    iii. wiki.fbc.scp         CNAME shyguy.fbc.scp  -> rome.pizza.loco
+    iv.  keycloak.db.fbc.scp  A     192.168.220.111 -> 192.168.230.48
+    v.   wiki.db.fbc.scp      A     192.168.220.112 -> 192.168.230.49
+    vi.  fbclog.db.fbc.scp    A     192.168.220.113 -> 192.168.230.50
+    vii. cachet.db.fbc.scp    A     192.168.220.114 -> 192.168.230.51
+2. Failover databases and apps via Flux
+  a. In the repository http://oven.pizza.loco/steve/flux (only accessible to oven administrators; see note below), update the following files:
+    i.   apps/shyguy/kustomization.yaml: Replace the contents of the `resources` array with [] (an empty array) to prevent shyguy from attempting to spin up the apps again if it comes back online
+    ii.  apps/rome/kustomization.yaml: For each of keycloak,wiki,fbclog, replace the two lines `../base/[SERVICE]/namespace.yaml` and `../base/[SERVICE]/db.yaml` with just `../base/[SERVICE]`. This will tell rome to deploy the entire service, rather than just what's needed for a standby database.
+    iii. For each of:
+           - apps/base/keycloak/db.yaml
+           - apps/base/wiki/db.yaml
+           - apps/base/fbclog/db.yaml
+           - base/db/cachet.yaml
+         Update the Cluster object's .spec.replica.primary and .spec.replica.source fields from [SERVICE]-shyguy to [SERVICE]-rome.
+  b. On rome, run `flux reconcile source git flux-system` to force it to immediately refresh the git repository.
+  c. Run `watch flux get kustomization` and ensure all kustomizations return to Ready state. Troubleshoot any errors that come up in the Kustomization descriptions. See below for troubleshooting tips.
+
+
+NOTE: The Flux repository is only accessible to oven administrators. At the time of writing, the list of oven administrators comprises:
+  - Administrator (pizza.loco AD)
+  - O5-5 (oven local user)
+  - You (oven local user)
+  - gitea_admin (oven local user)
+  - steve (oven local user)
+  
+Troubleshooting tips:
+If `flux get kustomization` shows issues with things being stalled/failed:
+  1. Run `k -n [namespace] get po` to get a list of pods. If any are in CrashLoopBackOff, run `k -n [namespace] delete po [podname]` to delete them, causing Kubernetes to create a new one to replace them. Hopefully, that new one will reach Running status with all containers Ready (the 1/1 to the left of the status).
+  2. If the new pod also enters CrashLoopBackOff status, use `k -n [namespace] logs -f [podname]` to get the logs of the pod. Hopefully this will help you narrow down the issue. Good luck.
+  3. Once all pods are Ready, run `flux reconcile kustomization apps` to make sure the cluster state is synchronized. Use `watch flux get kustomization` to verify all kustomizations reach Ready status.
+  4. If all pods are working but flux get kustomization still shows a HelmRelease as failed, try running `flux -n [namespace] suspend helmrelease [helmrelease name] && flux -n [namespace] resume helmrelease [helmrelease name]`. HelmReleases are weird and will sometimes get stuck in weird states, so suspending and resuming will often give them the kick they need to get back to normal.
+  5. If all else fails and a HelmRelease is still broken, try deleting the HelmRelease and reconciling the apps kustomization again. This may take a bit as this will redeploy the entire app, but because all state is stored in the database nothing should be lost.
