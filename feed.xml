@@ -10,7 +10,39 @@
 <atom:link href="./feed.xml" rel="self" type="application/rss+xml"/>
 <description>All posts, intended to be used in an RSS feed. Can be found at feed.xml</description>
 <generator>quarto-1.6.42</generator>
-<lastBuildDate>Fri, 28 Mar 2025 07:00:00 GMT</lastBuildDate>
+<lastBuildDate>Tue, 01 Apr 2025 07:00:00 GMT</lastBuildDate>
+<item>
+  <title>Build Server 6 — StarlingX</title>
+  <link>./projects/starlingx/</link>
+  <description><![CDATA[ 
+
+
+
+
+<section id="the-why" class="level1">
+<h1>The Why</h1>
+<p>In my <a href="../build-server-5/">previous project</a>, I attempted to deploy <a href="https://en.wikipedia.org/wiki/OpenStack">Openstack</a> entirely with <a href="https://en.wikipedia.org/wiki/DevOps#GitOps">GitOps</a> methodologies, using <a href="https://fluxcd.io/">FluxCD</a>.</p>
+<p>I failed. Well, it didn’t fail, but I think I’ve spent too long on it and I need to move on.</p>
+<p>Recently, I’ve discovered a project that simeutaneously seems to be a distribution of OpenStack, Kubernetes, and Linux, called <a href="https://www.starlingx.io/">StarlingX</a>.</p>
+<p>Also:</p>
+<blockquote class="blockquote">
+<p><a href="https://docs.starlingx.io/system_configuration/index-sysconf-d511820651f0.html#starlingx-openstack">StarlingX OpenStack is installed and managed as an FluxCD application.</a></p>
+</blockquote>
+<p>Now, StarlingX, sadly, is not GitOps OpenStack. Configurations to the OpenStack application are done via the command line, or via helm value files. Perhaps I can clone the flux repo they use, but truthfully, I’m not going to worry about it for now.</p>
+</section>
+<section id="starlingx-deployment" class="level1">
+<h1>StarlingX Deployment</h1>
+<p>There are multiple deployment guides, but I am interested in the <a href="https://docs.starlingx.io/r/stx.10.0/deploy_install_guides/release/bare_metal/aio_simplex_install_kubernetes.html">“Simplex”</a> install, which documents how to do an All in One install, using a single server, which is all I have.</p>
+<p>I also care a lot about “For OpenStack only: Configure data interfaces for controller-0. Data class interfaces are vSwitch interfaces used by vSwitch to provide VM virtio vNIC connectivity to OpenStack Neutron Tenant Networks on the underlying assigned Data Network.”, since I only have one physical interface in use, and the other one will be virtual.</p>
+
+
+</section>
+
+ ]]></description>
+  <category>projects</category>
+  <guid>./projects/starlingx/</guid>
+  <pubDate>Tue, 01 Apr 2025 07:00:00 GMT</pubDate>
+</item>
 <item>
   <title>WRCCDC Regionals Writeup</title>
   <link>./writeups/wrccdc/</link>
@@ -29,7 +61,7 @@
 <li>Teams: Subsets of the competition organizers, volunteers responsible for making the game work
 <ul>
 <li>Red Team: <strong>Competition Organizers</strong> who pretend to be cyberattackers by slowly infiltrating machines they could instantly destroy but instead choose not to</li>
-<li>Orange Team: Pretends to be organizers</li>
+<li>Orange Team: Pretends to be customers</li>
 <li>White Team: Grades Injects</li>
 <li>Black (Ops/Operations) Team: Sets up the environment</li>
 <li>Gold Team: Organizional duties</li>
@@ -128,14 +160,13 @@
 </section>
 <section id="final-scores-and-future-plans" class="level2">
 <h2 class="anchored" data-anchor-id="final-scores-and-future-plans">Final Scores and Future Plans</h2>
-<p><img src="./writeups/wrccdc/images/scores.jpg" class="img-fluid"></p>
+<p><img src="./writeups/wrccdc/images/scores.webp" class="img-fluid"></p>
 <p>We only had a single person who had been to regionals before, and our previous Windows and Linux team leads were no longer on the team. We lost a ton of knowledge, both the raw technical knowledge, but also the passed down knowledge about the competition, like what is acceptable, and what compromises are okay in terms of scoring.</p>
 <p>I always expected last place. We were woefully underprepared, not having expected to make it to regionals — So we had all split up and began working on our own stuff (I was working on Openstack so I could have a remote lab for people <em>next year</em>), and we were suprised when the announcment about Regionals came out. And then we had to get back together and prepare for one of the harder regions of CCDC in less than 2 months, while our entire team consisted of 9 active members.</p>
 <p>Like when I play chess against a vastly better player, my goal was never to win, but instead to <em>not lose instantly</em>. And we did.</p>
 <p><img src="./writeups/wrccdc/images/graph.jpg" class="img-fluid"></p>
-<p>We are not the lowest team, that’s the environment managed by the Anthropic Claude AI. We are the second lowest team.</p>
 <p>I’m very pleased with our performance. Despite setting the low goal of not losing instantly, sometimes not even that is achievable, which sucks. But we managed to mostly hold ourselves together for the first half of the first day, and we managed to learn a lot.</p>
-<p>Since we are effectively starting from scratch, it’s important that we record all the stuff we are missing so we can fix these issues. This is why I have this writeup.</p>
+<p>Since we are effectively starting from scratch, it’s important that we record all the stuff we are missing so we can fix these issues. This is why I have this writeup. I will probaly turn the “Things to do” into a Kanban of some kind and we will knock them out one by one over the off season.</p>
 </section>
 </section>
 <section id="debrief-notes" class="level1">
@@ -2959,6 +2990,15 @@ zellij</code></pre>
 
 
 
+<section id="failure-and-whats-next" class="level1">
+<h1>Failure and What’s Next</h1>
+<p>I wanted a custom solution that used FluxCD to deploy Openstack, since I wanted my entire setup, inclduing Openstack, to be tracked in a Git repo (GitOps).</p>
+<blockquote class="blockquote">
+<p><a href="https://docs.starlingx.io/system_configuration/index-sysconf-d511820651f0.html#starlingx-openstack">StarlingX OpenStack is installed and managed as an FluxCD application.</a></p>
+</blockquote>
+<p>Now, StarlingX, sadly, is not GitOps OpenStack. Configurations to the OpenStack application are done via the command line, or via helm value files. Perhaps I can clone the flux repo they use, but truthfully, I’m not going to worry about it for now.</p>
+<p>I would like an OpenStack deployment up shortly, and while this project is fun (and definitely possible it seems), it is taking too long.</p>
+</section>
 <section id="background-goals" class="level1">
 <h1>Background &amp; Goals</h1>
 <p>Since I got literally no work done on my server, I think it would be prudent to scale down. Rather than opting for a larger option.</p>
@@ -10847,108 +10887,6 @@ font-style: inherit;">sysinit.target</span></span></code></pre></div>
   <category>playground</category>
   <guid>./playground/setuid-containers/</guid>
   <pubDate>Thu, 02 May 2024 07:00:00 GMT</pubDate>
-</item>
-<item>
-  <title>Nice Challenge 4</title>
-  <dc:creator>Jeffrey Fonseca</dc:creator>
-  <link>./writeups/nice-challenge-4/</link>
-  <description><![CDATA[ 
-
-
-
-
-<p>This is for the <a href="https://nice-challenge.com/">NICE</a> challenge.</p>
-<p>I did pretty poorly with this one. I have little to no hands-on experience with pfsense and Windows Active Directory.</p>
-<p>Same as before, there was a simulated chatroomm:</p>
-<div class="quarto-figure quarto-figure-center">
-<figure class="figure">
-<p><img src="./writeups/nice-challenge-4/images/meetingnotes.png" class="img-fluid figure-img"></p>
-<figcaption>meeting notes</figcaption>
-</figure>
-</div>
-<p>However, there were yet more notes, as mentioned in the simulated chatroom:</p>
-<pre class="defualt"><code>Create Active Directory security group named DasNetworkAdmins with Gary Thatcher, Brimlock Stones, and yourself as members. Grant members of DasNetworkAdmins the privileges required to sign in to pfSense (Firewall) and make changes on all pages as admins.
-
-For the pfSense LDAP authentication, I have created a bind user for you on the domain. The credentials are 'pfSenseBind' with the password 'password123'. The system for getting that setup works much better in new versions of pfSense, so you should do that first.
-
-Please create a new database called production_site and create the user das_user for the website to connect with using the backup located at /ftp on Backup.
-das_user only needs to have privilege on that database, since we're trying to keep a least privilege model.
-
-Please patch shellshock on Fileshare
-
-For the Domain Group Policy we are making for the new security group, DasNetworkAdmins, please:
-
-Name it Network-Policy
-Please ensure that the Computers Security Setting Account Password Policy is set to not allow passwords to be shorter than 14 characters.
-
-Please enable the Computers Security Setting Local Policy for Auditing Policy Changes on both successes and failures.
-    
-
-Please enable the Computers Security Setting Local Policy Security Option to limit the amount of cached previous logons to 0.
-    
-
-Then make sure to apply and enforce the new GPO.
-
-Make sure that after migrating the website to the production server that it is all accessible at www.daswebs.com.
-
-DO NOT CHANGE ANY PASSWORDS</code></pre>
-<p>(I used <a href="https://xkcd949.com">xkcd949.com</a> to send the file to a remote machine, since the Windows command line was not cooperative.)</p>
-<p>And here are the checks:</p>
-<p><img src="./writeups/nice-challenge-4/images/initialchecks.png" class="img-fluid"></p>
-<section id="database" class="level1">
-<h1>Database</h1>
-<p>I need to start by importing the relevant database from <code>/ftp/wordpress.sql</code>, on the Debian 9 “Backup” machine, onto the database on the Windows “Database” machine</p>
-<p>An easy way to do that is via the builtin <code>python3 -m http.server</code> command with <code>/ftp</code> as my working directory. I can then simply download the file from <code>172.16.30.79:8000/wordpress.sql</code> using the Firefox browser on windows.</p>
-<p><img src="./writeups/nice-challenge-4/images/firefoxdownloads.png" class="img-fluid"></p>
-<p>Then, I can simply <a href="https://www.digitalocean.com/community/tutorials/how-to-import-and-export-databases-in-mysql-or-mariadb#step-2-mdash-importing-a-mysql-or-mariadb-database">import an sql database using the mysql command line</a></p>
-<p>I also need to <a href="https://www.digitalocean.com/community/tutorials/how-to-create-a-new-user-and-grant-permissions-in-mysql">create a user</a></p>
-<div class="sourceCode" id="cb2" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb2-1">mysql -u root</span>
-<span id="cb2-2"></span>
-<span id="cb2-3">CREATE DATABASE production_database;</span>
-<span id="cb2-4"></span>
-<span id="cb2-5">CREATE USER 'das_user'@'*' IDENTIFIED BY password 'das_password';</span>
-<span id="cb2-6"></span>
-<span id="cb2-7">GRANT ALL PRIVILEGES ON production_database.* TO 'das_user'@'*';</span>
-<span id="cb2-8"></span>
-<span id="cb2-9">exit</span></code></pre></div>
-<p>And then in the normal shell:</p>
-<div class="sourceCode" id="cb3" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb3-1">bash # this is important or else &lt; redirect will not work</span>
-<span id="cb3-2"></span>
-<span id="cb3-3">mysql -u root -p production_site &lt; C:\\Users\playerone.DASWEBS\Downloads\wordpress.sql</span></code></pre></div>
-<p>However, despite all of this, the check still isn’t green.</p>
-</section>
-<section id="fileshare" class="level1">
-<h1>Fileshare</h1>
-<p>I was tasked with patching <a href="https://en.wikipedia.org/wiki/Shellshock_(software_bug)">Shellshock</a> this machine. “Fileshare” was a Debian 10 machine, which is still receiving <a href="https://endoflife.date/debian">minimal LTS support</a>, meaning all I have to do to patch this bug is to upgrade the packages.</p>
-<div class="sourceCode" id="cb4" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb4-1"></span>
-<span id="cb4-2">sudo apt update</span>
-<span id="cb4-3"></span>
-<span id="cb4-4">sudo apt upgrade</span></code></pre></div>
-<p>This errored, it recommended running with <code>--fix-missing</code>, and so I did.</p>
-<div class="sourceCode" id="cb5" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb5-1">sudo apt upgrade --fix-missing</span></code></pre></div>
-<p>After this, the “Shellshock” check was green.</p>
-</section>
-<section id="domain-admin" class="level1">
-<h1>Domain-Admin</h1>
-<p>To change group policy on the Windows Domain Controller …</p>
-</section>
-<section id="firewall" class="level1">
-<h1>Firewall</h1>
-<p><a href="https://docs.netgate.com/pfsense/en/latest/usermanager/ldap.html">Here the docs on connecting pfsense to ldap</a></p>
-</section>
-<section id="prod-web" class="level1">
-<h1>Prod-Web</h1>
-<p>To install the “required web server software” (Apache), was simple</p>
-<div class="sourceCode" id="cb6" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb6-1">sudo yum install httpd</span></code></pre></div>
-<p>However, the relevant check does not become green.</p>
-
-
-</section>
-
- ]]></description>
-  <category>writeups</category>
-  <guid>./writeups/nice-challenge-4/</guid>
-  <pubDate>Sat, 20 Apr 2024 07:00:00 GMT</pubDate>
 </item>
 </channel>
 </rss>
