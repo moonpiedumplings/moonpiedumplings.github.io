@@ -6,9 +6,9 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
-<meta name="description" content="Guides I’ve written. I keep this on the internet, so I can easily send these to people that need help.">
+<meta name="dcterms.date" content="2025-04-01">
 
-<title>Guides – Jeffrey Fonseca</title>
+<title>Build Server 6 — An easier HCI? – Jeffrey Fonseca</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -21,29 +21,61 @@ ul.task-list li input[type="checkbox"] {
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
 }
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
 </style>
 
 
-<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
-<script src="../site_libs/quarto-nav/headroom.min.js"></script>
-<script src="../site_libs/clipboard/clipboard.min.js"></script>
-<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
-<script src="../site_libs/quarto-search/fuse.min.js"></script>
-<script src="../site_libs/quarto-search/quarto-search.js"></script>
-<meta name="quarto:offset" content="../">
-<script src="../site_libs/quarto-listing/list.min.js"></script>
-<script src="../site_libs/quarto-listing/quarto-listing.js"></script>
-<script src="../site_libs/quarto-html/quarto.js"></script>
-<script src="../site_libs/quarto-html/popper.min.js"></script>
-<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
-<script src="../site_libs/quarto-html/anchor.min.js"></script>
-<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../site_libs/quarto-html/quarto-syntax-highlighting-2f5df379a58b258e96c21c0638c20c03.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="../site_libs/quarto-html/quarto-syntax-highlighting-dark-b53751a350365c71b6c909e95f209ed1.css" rel="prefetch" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
-<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../site_libs/bootstrap/bootstrap-c37a40b267d3139d93432c283e34c257.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../site_libs/bootstrap/bootstrap-dark-8c032b19d07330da7d23f921a253d8d1.min.css" rel="prefetch" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<script src="../../site_libs/quarto-html/quarto.js"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-2f5df379a58b258e96c21c0638c20c03.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-b53751a350365c71b6c909e95f209ed1.css" rel="prefetch" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-c37a40b267d3139d93432c283e34c257.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-8c032b19d07330da7d23f921a253d8d1.min.css" rel="prefetch" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -71,76 +103,18 @@ ul.task-list li input[type="checkbox"] {
     "search-label": "Search"
   }
 }</script>
-<script>
 
-  window.document.addEventListener("DOMContentLoaded", function (_event) {
-    const listingTargetEl = window.document.querySelector('#listing-listing .list');
-    if (!listingTargetEl) {
-      // No listing discovered, do not attach.
-      return; 
-    }
-
-    const options = {
-      valueNames: ['listing-date','listing-title','listing-author',{ data: ['index'] },{ data: ['categories'] },{ data: ['listing-date-sort'] },{ data: ['listing-title-sort'] }],
-      
-      searchColumns: ["listing-date","listing-title","listing-author"],
-    };
-
-    window['quarto-listings'] = window['quarto-listings'] || {};
-    window['quarto-listings']['listing-listing'] = new List('listing-listing', options);
-
-    if (window['quarto-listing-loaded']) {
-      window['quarto-listing-loaded']();
-    }
-  });
-
-  window.addEventListener('hashchange',() => {
-    if (window['quarto-listing-loaded']) {
-      window['quarto-listing-loaded']();
-    }
-  })
-  </script>
-
-  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
-  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
-
-<script type="text/javascript">
-const typesetMath = (el) => {
-  if (window.MathJax) {
-    // MathJax Typeset
-    window.MathJax.typeset([el]);
-  } else if (window.katex) {
-    // KaTeX Render
-    var mathElements = el.getElementsByClassName("math");
-    var macros = [];
-    for (var i = 0; i < mathElements.length; i++) {
-      var texText = mathElements[i].firstChild;
-      if (mathElements[i].tagName == "SPAN") {
-        window.katex.render(texText.data, mathElements[i], {
-          displayMode: mathElements[i].classList.contains('display'),
-          throwOnError: false,
-          macros: macros,
-          fleqn: false
-        });
-      }
-    }
-  }
-}
-window.Quarto = {
-  typesetMath
-};
-</script>
 
 </head>
 
 <body class="nav-fixed">
 
 <div id="quarto-search-results"></div>
-  <header id="quarto-header" class="headroom fixed-top quarto-banner">
+  <header id="quarto-header" class="headroom fixed-top">
     <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
       <div class="navbar-container container-fluid">
       <div class="navbar-brand-container mx-auto">
-    <a class="navbar-brand" href="../index.html">
+    <a class="navbar-brand" href="../../index.html">
     <span class="navbar-title">Jeffrey Fonseca</span>
     </a>
   </div>
@@ -151,17 +125,17 @@ window.Quarto = {
           <div class="collapse navbar-collapse" id="navbarCollapse">
             <ul class="navbar-nav navbar-nav-scroll me-auto">
   <li class="nav-item">
-    <a class="nav-link" href="../posts/index.html"> 
+    <a class="nav-link" href="../../posts/index.html"> 
 <span class="menu-text">Posts</span></a>
   </li>  
   <li class="nav-item">
-    <a class="nav-link" href="../resume/index.html"> 
+    <a class="nav-link" href="../../resume/index.html"> 
 <span class="menu-text">Resume</span></a>
   </li>  
 </ul>
             <ul class="navbar-nav navbar-nav-scroll ms-auto">
   <li class="nav-item compact">
-    <a class="nav-link" href="../../feed.xml"> <i class="bi bi-rss" role="img">
+    <a class="nav-link" href="../../../feed.xml"> <i class="bi bi-rss" role="img">
 </i> 
 <span class="menu-text"></span></a>
   </li>  
@@ -179,198 +153,151 @@ window.Quarto = {
     </nav>
 </header>
 <!-- content -->
-<header id="title-block-header" class="quarto-title-block default page-columns page-full">
-  <div class="quarto-title-banner page-columns page-full">
-    <div class="quarto-title column-page-left">
-      <h1 class="title">Guides</h1>
-                  <div>
-        <div class="description">
-          Guides I’ve written. I keep this on the internet, so I can easily send these to people that need help.
-        </div>
-      </div>
-                </div>
-  </div>
-    
-  
-  <div class="quarto-title-meta column-page-left">
-
-      
-    
-      
-    </div>
-    
-  
-  </header><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-full page-navbar">
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
 <!-- sidebar -->
 <!-- margin-sidebar -->
     <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
-        
-    <h5 class="quarto-listing-category-title">Categories</h5><div class="quarto-listing-category category-default"><div class="category" data-category="">All <span class="quarto-category-count">(12)</span></div><div class="category" data-category="Z3VpZGVz">guides <span class="quarto-category-count">(12)</span></div></div></div>
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#the-why" id="toc-the-why" class="nav-link active" data-scroll-target="#the-why">The Why</a></li>
+  <li><a href="#starlingx-attempt" id="toc-starlingx-attempt" class="nav-link" data-scroll-target="#starlingx-attempt">StarlingX Attempt</a></li>
+  <li><a href="#installing-debian" id="toc-installing-debian" class="nav-link" data-scroll-target="#installing-debian">Installing Debian</a></li>
+  </ul>
+</nav>
+    </div>
 <!-- main -->
-<main class="content quarto-banner-title-block column-page-left" id="quarto-document-content">
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Build Server 6 — An easier HCI?</h1>
+  <div class="quarto-categories">
+    <div class="quarto-category">projects</div>
+  </div>
+  </div>
 
 
 
+<div class="quarto-title-meta">
+
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">April 1, 2025</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
 
 
+</header>
 
 
+<section id="the-why" class="level1">
+<h1>The Why</h1>
+<p>In my <a href="../build-server-5/">previous project</a>, I attempted to deploy <a href="https://en.wikipedia.org/wiki/OpenStack">Openstack</a> entirely with <a href="https://en.wikipedia.org/wiki/DevOps#GitOps">GitOps</a> methodologies, using <a href="https://fluxcd.io/">FluxCD</a>.</p>
+<p>I failed. Well, it didn’t fail, but I think I’ve spent too long on it and I need to move on.</p>
+<p>Recently, I’ve discovered a project that simeutaneously seems to be a distribution of OpenStack, Kubernetes, and Linux, called <a href="https://www.starlingx.io/">StarlingX</a>.</p>
+<p>Also:</p>
+<blockquote class="blockquote">
+<p><a href="https://docs.starlingx.io/system_configuration/index-sysconf-d511820651f0.html#starlingx-openstack">StarlingX OpenStack is installed and managed as an FluxCD application.</a></p>
+</blockquote>
+<p>Now, StarlingX, sadly, is not GitOps OpenStack. Configurations to the OpenStack application are done via the command line, or via helm value files. Perhaps I can clone the flux repo they use, but truthfully, I’m not going to worry about it for now.</p>
+</section>
+<section id="starlingx-attempt" class="level1">
+<h1>StarlingX Attempt</h1>
+<p>There are multiple deployment guides, but I am interested in the <a href="https://docs.starlingx.io/r/stx.10.0/deploy_install_guides/release/bare_metal/aio_simplex_install_kubernetes.html">“Simplex”</a> install, which documents how to do an All in One install, using a single server, which is all I have.</p>
+<p>I also care a lot about “For OpenStack only: Configure data interfaces for controller-0. Data class interfaces are vSwitch interfaces used by vSwitch to provide VM virtio vNIC connectivity to OpenStack Neutron Tenant Networks on the underlying assigned Data Network.”, since I only have one physical interface in use, and the other one will be virtual.</p>
+<p>I started by obtaining an ISO, and attempting to install it in a virtual machine. The installer crashed becasue it wanted 500 GB of storage… which is fair I guess.At least it doesn’t crash because I don’t have enough CPU cores or ram.</p>
+<p>Just kidding. It doesn’t boot. I don’t know why. Instead it stays stuck on “booting on hard disk”. This probably would work better on a physical machine, but I want to make sure it works on a virtual machine first.</p>
+<p>But I install it on my physical server anyways. It doesn’t get an ip address via dhcp.</p>
+<p>I understand why people like turnkey solutions, like ESXI now.</p>
+<p>I look into another HCI solution: <a href="https://docs.harvesterhci.io/">Suse Harvester</a>. It’s actually a very good software, the UI is great and the install is easy. But if you want any kind of authorization and control over who can see what projects, you have to deploy rancher, which can then “consume” the harvester api and work with it. While excellent, I don’t really feel like having to set up rancher either on another server, or in a virtual machine.</p>
+<p>In addition to that, I could not figure out how networking works, and how to set up a bridged network.</p>
+<p>But I begin looking into something else, <a href="https://linuxcontainers.org/incus/docs/main/">Incus</a>.</p>
+<p>Incus:</p>
+<ul>
+<li>Can be installed on top of another distro</li>
+<li>Has networking I understand, “simply” bridging</li>
+<li>Has <a href="https://linuxcontainers.org/incus/docs/main/authorization/#tls-authorization">authorization and authentication</a> by restricting TLS certs to a project
+<ul>
+<li>Not the complex SSO I want, but I need <em>something</em> working</li>
+</ul></li>
+</ul>
+<p>Incus also has some nice features, like it can access a <a href="https://images.linuxcontainers.org/">repository</a> of LXC images (similar to Dockerhub), which is cool for testing out many different Linux distros.</p>
+<p>Anyway, I did actually attempt to deploy it using Debian backports.</p>
+<pre><code>root@b718c16e3b2d:/etc/apt/sources.list.d# apt install incus
+Reading package lists... Done
+Building dependency tree... Done
+Reading state information... Done
+Some packages could not be installed. This may mean that you have
+requested an impossible situation or if you are using the unstable
+distribution that some required packages have not yet been created
+or been moved out of Incoming.
+The following information may help to resolve the situation:
 
-
-<div class="quarto-listing quarto-listing-container-table" id="listing-listing">
-<table class="quarto-listing-table table">
-<thead>
-<tr>
-<th>
-Date
-</th>
-<th>
-Title
-</th>
-<th>
-Author
-</th>
-</tr>
-</thead>
-<tbody class="list">
-<tr data-index="0" data-categories="Z3VpZGVz" data-listing-date-sort="1739606400000" data-listing-file-modified-sort="1743900223237" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="5" data-listing-word-count-sort="927" data-listing-title-sort="Free resources to learn various things" data-listing-filename-sort="index.md">
-<td>
-<span class="listing-date">Feb 15, 2025</span>
-</td>
-<td>
-<a href="../guides/learn-linux/index.html" class="title listing-title">Free resources to learn various things</a>
-</td>
-<td>
-<span class="listing-author">&nbsp;</span>
-</td>
-</tr>
-<tr data-index="1" data-categories="Z3VpZGVz" data-listing-date-sort="1730012400000" data-listing-file-modified-sort="1741332099014" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="2" data-listing-word-count-sort="376" data-listing-title-sort="Installing Unity on Distrobox" data-listing-filename-sort="index.qmd">
-<td>
-<span class="listing-date">Oct 27, 2024</span>
-</td>
-<td>
-<a href="../guides/unity-distrobox/index.html" class="title listing-title">Installing Unity on Distrobox</a>
-</td>
-<td>
-<span class="listing-author">&nbsp;</span>
-</td>
-</tr>
-<tr data-index="2" data-categories="Z3VpZGVz" data-listing-date-sort="1728802800000" data-listing-file-modified-sort="1741332099014" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="4" data-listing-word-count-sort="723" data-listing-title-sort="Sympy Gamma, my favorite WolframAlpha alternative" data-listing-filename-sort="index.qmd">
-<td>
-<span class="listing-date">Oct 13, 2024</span>
-</td>
-<td>
-<a href="../guides/sympy/index.html" class="title listing-title">Sympy Gamma, my favorite WolframAlpha alternative</a>
-</td>
-<td>
-<span class="listing-author">&nbsp;</span>
-</td>
-</tr>
-<tr data-index="3" data-categories="Z3VpZGVz" data-listing-date-sort="1700035200000" data-listing-file-modified-sort="1743783893087" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="6" data-listing-word-count-sort="1152" data-listing-title-sort="CCDC Environment setup" data-listing-filename-sort="index.qmd">
-<td>
-<span class="listing-date">Nov 15, 2023</span>
-</td>
-<td>
-<a href="../guides/ccdc-env/index.html" class="title listing-title">CCDC Environment setup</a>
-</td>
-<td>
-<span class="listing-author">&nbsp;</span>
-</td>
-</tr>
-<tr data-index="4" data-categories="Z3VpZGVz" data-listing-date-sort="1698476400000" data-listing-file-modified-sort="1743783893087" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="2" data-listing-word-count-sort="281" data-listing-title-sort="CCDC Learning Resources" data-listing-filename-sort="index.qmd">
-<td>
-<span class="listing-date">Oct 28, 2023</span>
-</td>
-<td>
-<a href="../guides/ccdc-learning/index.html" class="title listing-title">CCDC Learning Resources</a>
-</td>
-<td>
-<span class="listing-author">&nbsp;</span>
-</td>
-</tr>
-<tr data-index="5" data-categories="Z3VpZGVz" data-listing-date-sort="1691391600000" data-listing-file-modified-sort="1743783893087" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="2" data-listing-word-count-sort="237" data-listing-title-sort="Tmux" data-listing-filename-sort="index.qmd">
-<td>
-<span class="listing-date">Aug 7, 2023</span>
-</td>
-<td>
-<a href="../guides/tmux/index.html" class="title listing-title">Tmux</a>
-</td>
-<td>
-<span class="listing-author">&nbsp;</span>
-</td>
-</tr>
-<tr data-index="6" data-categories="Z3VpZGVz" data-listing-date-sort="1687935600000" data-listing-file-modified-sort="1741332099013" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="4" data-listing-word-count-sort="751" data-listing-title-sort="Basics of Git" data-listing-filename-sort="index.qmd">
-<td>
-<span class="listing-date">Jun 28, 2023</span>
-</td>
-<td>
-<a href="../guides/git/index.html" class="title listing-title">Basics of Git</a>
-</td>
-<td>
-<span class="listing-author">&nbsp;</span>
-</td>
-</tr>
-<tr data-index="7" data-categories="Z3VpZGVz" data-listing-date-sort="1686812400000" data-listing-file-modified-sort="1741332099014" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="5" data-listing-word-count-sort="984" data-listing-title-sort="Urestricted Wifi/Hotspot as long as you have one unlimited device" data-listing-filename-sort="index.qmd">
-<td>
-<span class="listing-date">Jun 15, 2023</span>
-</td>
-<td>
-<a href="../guides/unrestricted-tethering/index.html" class="title listing-title">Urestricted Wifi/Hotspot as long as you have one unlimited device</a>
-</td>
-<td>
-<span class="listing-author">&nbsp;</span>
-</td>
-</tr>
-<tr data-index="8" data-categories="Z3VpZGVz" data-listing-date-sort="1686466800000" data-listing-file-modified-sort="1741332099014" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="5" data-listing-word-count-sort="894" data-listing-title-sort="Installing the nix package manager and how it's useful" data-listing-filename-sort="index.qmd">
-<td>
-<span class="listing-date">Jun 11, 2023</span>
-</td>
-<td>
-<a href="../guides/nix-fun/index.html" class="title listing-title">Installing the nix package manager and how it’s useful</a>
-</td>
-<td>
-<span class="listing-author">&nbsp;</span>
-</td>
-</tr>
-<tr data-index="9" data-categories="Z3VpZGVz" data-listing-date-sort="1677571200000" data-listing-file-modified-sort="1741332099014" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="4" data-listing-word-count-sort="645" data-listing-title-sort="Nginx proxy manager" data-listing-filename-sort="index.qmd">
-<td>
-<span class="listing-date">Feb 28, 2023</span>
-</td>
-<td>
-<a href="../guides/npm/index.html" class="title listing-title">Nginx proxy manager</a>
-</td>
-<td>
-<span class="listing-author">&nbsp;</span>
-</td>
-</tr>
-<tr data-index="10" data-categories="Z3VpZGVz" data-listing-date-sort="1676361600000" data-listing-file-modified-sort="1741332099013" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="2" data-listing-word-count-sort="340" data-listing-title-sort="How to get a subdomain from duckdns" data-listing-filename-sort="index.qmd">
-<td>
-<span class="listing-date">Feb 14, 2023</span>
-</td>
-<td>
-<a href="../guides/duckdns/index.html" class="title listing-title">How to get a subdomain from duckdns</a>
-</td>
-<td>
-<span class="listing-author">&nbsp;</span>
-</td>
-</tr>
-<tr data-index="11" data-categories="Z3VpZGVz" data-listing-date-sort="1664521200000" data-listing-file-modified-sort="1741332099004" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="3" data-listing-word-count-sort="455" data-listing-title-sort="Set up cockpit on an AWS EC2 instance" data-listing-filename-sort="index.qmd">
-<td>
-<span class="listing-date">Sep 30, 2022</span>
-</td>
-<td>
-<a href="../guides/cockpit-setup/index.html" class="title listing-title">Set up cockpit on an AWS EC2 instance</a>
-</td>
-<td>
-<span class="listing-author">&nbsp;</span>
-</td>
-</tr>
-</tbody>
-</table>
-<div class="listing-no-matching d-none">
-No matching items
+The following packages have unmet dependencies:
+ incus : Depends: qemu-system-x86 (&gt;= 1:8.0) but 1:7.2+dfsg-7+deb12u12 is to be installed
+E: Unable to correct problems, you have held broken packages.</code></pre>
+<p>Disappointing.</p>
+<p>Instead, I followed the instructions on the <a href="https://github.com/zabbly/incus">github</a>… mostly.</p>
+<div class="code-with-filename">
+<div class="code-with-filename-file">
+<pre><strong>/etc/apt/sources.list.d/zabbly-incus-lts-6.0.sources</strong></pre>
 </div>
-</div></main> <!-- /main -->
+<div class="sourceCode" id="cb2" data-filename="/etc/apt/sources.list.d/zabbly-incus-lts-6.0.sources"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>Enabled: yes</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>Types: deb</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>URIs: https://pkgs.zabbly.com/incus/lts-6.0</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>Suites: bookworm</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>Components: main</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>Architectures: amd64</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>Signed-By: /etc/apt/keyrings/zabbly.asc</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>This is a container, I will test a virtual machine install later on.</p>
+</section>
+<section id="installing-debian" class="level1">
+<h1>Installing Debian</h1>
+<p><a href="https://wiki.debian.org/UEFI#Force_grub-efi_installation_to_the_removable_media_path" class="uri">https://wiki.debian.org/UEFI#Force_grub-efi_installation_to_the_removable_media_path</a> — gotta do this in the installer</p>
+<p>Switch from ifupdown/iproute2 to NetworkManager</p>
+<div class="code-with-filename">
+<div class="code-with-filename-file">
+<pre><strong>/etc/network/interfaces</strong></pre>
+</div>
+<div class="sourceCode" id="cb3" data-filename="/etc/network/interfaces"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a># This file describes the network interfaces available on your system</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a># and how to activate them. For more information, see interfaces(5).</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>source /etc/network/interfaces.d/*</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a># The loopback network interface</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>auto lo</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>iface lo inet loopback</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a># The primary network interface</span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>#allow-hotplug enp0s25</span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>#iface enp0s25 inet dhcp</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Comment out network interfaces.</p>
+<div class="code-with-filename">
+<div class="code-with-filename-file">
+<pre><strong>/etc/NetworkManager/NetworkManager.conf</strong></pre>
+</div>
+<div class="sourceCode" id="cb4" data-filename="/etc/NetworkManager/NetworkManager.conf"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>[main]</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>plugins=ifupdown,keyfile</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>[ifupdown]</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>managed=true</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>And changed “managed” to true instead of false.</p>
+
+
+</section>
+
+</main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">
 window.document.addEventListener("DOMContentLoaded", function (event) {
   const toggleBodyColorMode = (bsSheetEl) => {

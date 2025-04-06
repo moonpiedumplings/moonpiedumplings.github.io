@@ -6,7 +6,7 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
-<meta name="dcterms.date" content="2024-10-31">
+<meta name="dcterms.date" content="2025-04-01">
 
 <title>Portable executable experiments for CCDC – Jeffrey Fonseca</title>
 <style>
@@ -180,8 +180,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#indygreg-python" id="toc-indygreg-python" class="nav-link" data-scroll-target="#indygreg-python">IndyGreg Python</a></li>
   </ul></li>
   <li><a href="#coreutils" id="toc-coreutils" class="nav-link" data-scroll-target="#coreutils">Coreutils</a></li>
-  <li><a href="#toolpacks" id="toc-toolpacks" class="nav-link" data-scroll-target="#toolpacks">Toolpacks</a></li>
   </ul></li>
+  <li><a href="#soar-previously-toolpacks" id="toc-soar-previously-toolpacks" class="nav-link" data-scroll-target="#soar-previously-toolpacks">Soar (Previously Toolpacks)</a></li>
+  <li><a href="#stailx" id="toc-stailx" class="nav-link" data-scroll-target="#stailx">StailX</a></li>
   <li><a href="#dockerc" id="toc-dockerc" class="nav-link" data-scroll-target="#dockerc">Dockerc</a></li>
   <li><a href="#less-promising-options" id="toc-less-promising-options" class="nav-link" data-scroll-target="#less-promising-options">Less promising options</a>
   <ul class="collapse">
@@ -209,7 +210,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <div>
     <div class="quarto-title-meta-heading">Published</div>
     <div class="quarto-title-meta-contents">
-      <p class="date">October 31, 2024</p>
+      <p class="date">April 1, 2025</p>
     </div>
   </div>
   
@@ -457,8 +458,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li><a href="https://github.com/ahgamut/superconfigure/releases/" class="uri">https://github.com/ahgamut/superconfigure/releases/</a> — this is cosmo. I would prefer a single binary though, for simplicity, rather than seperate staticly compiled coreutils which is what this is. But, if in a pinch, it makes a good replacement for a broken coreutil.</li>
 </ul>
 </section>
-<section id="toolpacks" class="level2">
-<h2 class="anchored" data-anchor-id="toolpacks">Toolpacks</h2>
+</section>
+<section id="soar-previously-toolpacks" class="level1">
+<h1>Soar (Previously Toolpacks)</h1>
 <p>I recently learned about a new project, called <a href="https://github.com/Azathothas/Toolpacks">Toolpacks</a>. Toolpacks is a truly massive set of static binaries, with so many utilities, including zellij, tmux, ssh, and many others. I see 2292 binaries for x86_64 Linux, and good amounts for Windows and Arm Linux as well.</p>
 <p>Another cool thing about Toolpacks is that they also provide <a href="https://en.wikipedia.org/wiki/UPX">UPX</a> versions of the software they distribute. UPX is a method of creating self extracting, compressed binaries that further saves space. For example:</p>
 <div class="sourceCode" id="cb19"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>[moonpie@lizard toolpack]$ du -sh zellij</span>
@@ -467,21 +469,71 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>8.6M    zellij.upx</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>That’s a pretty big reduction on the zellij binary, which is one of the largest binaries I’ve seen. Interesting, they also have caddy, and nginx. I find this very promising.</p>
 <p>There are also builds of busybox or toybox, which could replace coreutils in a pinch on Linux machines. There are a few other interesting one’s, such as <a href="https://github.com/vdjagilev/nmap-formatter">nmap-formatter</a>, a software that can format nmap XML output and convert it to CSV or other formats, which we may find easier to submit.</p>
+<p>Lately, this toolpacks project has been merged into a another project, <a href="https://github.com/pkgforge/soarpkgs">soarpkgs</a>. This is essentially a “package repository” for the new package manager, <a href="https://github.com/pkgforge/soar">soar</a>.</p>
+<p>To install soar:</p>
+<p><code>curl -fsSL https://soar.qaidvoid.dev/install.sh | sh</code></p>
+<p>But, then it doesn’t install packages in a location accessible to the path by default.</p>
+<pre><code>soar install zellij
+
+some stuff omitted for brevity
+
+[1/1] zellij#github.com.zellij-org.zelli [━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━] 6.84 MiB/s     34.19 MiB/34.19 MiB   
+* zellij#github.com.zellij-org.zellij [Installed to: /root/.local/share/soar/packages/zellij-github.com.zellij-org.zellij-B0rtPDm77205]
+  Binaries:
+    /root/.local/share/soar/bin/zellij -&gt; /root/.local/share/soar/packages/zellij-github.com.zellij-org.zellij-B0rtPDm77205/zellij
+  Notes:
+  Pre Built Binary Fetched from Upstream. Check/Report @ https://github.com/zellij-org/zellij</code></pre>
+<p>And this file location isn’t accessible in the path by default.</p>
+<p>It seems that I can use <code>soar run packagename</code> in order to run packages without installing them, similar to nix. But this isn’t really what I want either.</p>
+<p>A much better way is to use <code>soar download</code> (or <code>soar dl</code>) to download the packages we want.</p>
+<p>So:</p>
+<pre><code>root@2972c8731770:/usr/local/bin# soar dl rsync
+Downloading package: rsync#nixpkgs.rsync
+ [━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━] 4.95 MiB/s     5.99 MiB/5.99 MiB     root@2972c8731770:/usr/local/bin# ls
+rsync  soar
+root@2972c8731770:/usr/local/bin# rsync --version
+rsync  version 3.4.1  protocol version 32
+Copyright (C) 1996-2025 by Andrew Tridgell, Wayne Davison, and others.
+Web site: https://rsync.samba.org/
+Capabilities:
+    64-bit files, 64-bit inums, 64-bit timestamps, 64-bit long ints,
+    no socketpairs, symlinks, symtimes, hardlinks, no hardlink-specials,
+    no hardlink-symlinks, IPv6, atimes, batchfiles, inplace, append, ACLs,
+    xattrs, optional secluded-args, iconv, prealloc, stop-at, no crtimes
+Optimizations:
+    no SIMD-roll, no asm-roll, openssl-crypto, no asm-MD5
+Checksum list:
+    xxh128 xxh3 xxh64 (xxhash) md5 md4 sha1 none
+Compress list:
+    zstd lz4 zlibx zlib none
+Daemon auth list:
+    sha512 sha256 sha1 md5 md4
+
+rsync comes with ABSOLUTELY NO WARRANTY.  This is free software, and you
+are welcome to redistribute it under certain conditions.  See the GNU
+General Public Licence for details.
+root@2972c8731770:/usr/local/bin#</code></pre>
+<p>I like this quite a bit. It can be used to quickly install the tools we need during the commpetition, like zellij or rsync.</p>
 </section>
+<section id="stailx" class="level1">
+<h1>StailX</h1>
+<p><a href="https://stal-ix.github.io/" class="uri">https://stal-ix.github.io/</a></p>
+<p>Stal-IX is similar to Soar, a distro agnostic package manager that focuses on the installation of static binaries.</p>
+<p>It’s a very interesting and promising project, but the install steps are <a href="https://stal-ix.github.io/INSTALL.html">quite complex</a>, so I don’t think it’s suitable for our usecase.</p>
 </section>
 <section id="dockerc" class="level1">
 <h1>Dockerc</h1>
 <p><a href="https://github.com/NilsIrl/dockerc">Dockerc</a> is a project that compiles a docker container to a static executable, by bundling the runtime. I discovered this because it was packaged on the Toolpacks listed above.</p>
 <p>Because it is a container, I’m going to assume that this solution only works on Linux — but that doesn’t mean it’s not useful.</p>
-<div class="sourceCode" id="cb20"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>vagrant@debian10:~$ sudo dockerc --image docker://library/httpd -o httpd --rootfull</span>
-<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>vagrant@debian10:~$ sudo ./httpd</span>
-<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>unknown argument ignored: lazytime</span>
-<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>AH00557: httpd: apr_sockaddr_info_get() failed for umoci-default</span>
-<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>AH00557: httpd: apr_sockaddr_info_ge....</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb22"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>vagrant@debian10:~$ sudo dockerc --image docker://library/httpd -o httpd --rootfull</span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>vagrant@debian10:~$ sudo ./httpd</span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>unknown argument ignored: lazytime</span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>AH00557: httpd: apr_sockaddr_info_get() failed for umoci-default</span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a>AH00557: httpd: apr_sockaddr_info_ge....</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>And it works — kinda. httpd doesn’t seem to bind an address. However, if I use an alpine container (which starts a shell), and then test with <code>python -m http.server</code>, that binds an address to the same localhost as the alpine machine.</p>
-<div class="sourceCode" id="cb21"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>sudo dockerc --image docker://docker.io/library/nginx --output nginx --rootfull</span>
-<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>sudo ./nginx</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb23"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>sudo dockerc --image docker://docker.io/library/nginx --output nginx --rootfull</span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>sudo ./nginx</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>This also does not bind ports.</p>
 </section>
 <section id="less-promising-options" class="level1">

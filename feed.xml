@@ -10,39 +10,7 @@
 <atom:link href="./feed.xml" rel="self" type="application/rss+xml"/>
 <description>All posts, intended to be used in an RSS feed. Can be found at feed.xml</description>
 <generator>quarto-1.6.42</generator>
-<lastBuildDate>Tue, 01 Apr 2025 07:00:00 GMT</lastBuildDate>
-<item>
-  <title>Build Server 6 — StarlingX</title>
-  <link>./projects/starlingx/</link>
-  <description><![CDATA[ 
-
-
-
-
-<section id="the-why" class="level1">
-<h1>The Why</h1>
-<p>In my <a href="../build-server-5/">previous project</a>, I attempted to deploy <a href="https://en.wikipedia.org/wiki/OpenStack">Openstack</a> entirely with <a href="https://en.wikipedia.org/wiki/DevOps#GitOps">GitOps</a> methodologies, using <a href="https://fluxcd.io/">FluxCD</a>.</p>
-<p>I failed. Well, it didn’t fail, but I think I’ve spent too long on it and I need to move on.</p>
-<p>Recently, I’ve discovered a project that simeutaneously seems to be a distribution of OpenStack, Kubernetes, and Linux, called <a href="https://www.starlingx.io/">StarlingX</a>.</p>
-<p>Also:</p>
-<blockquote class="blockquote">
-<p><a href="https://docs.starlingx.io/system_configuration/index-sysconf-d511820651f0.html#starlingx-openstack">StarlingX OpenStack is installed and managed as an FluxCD application.</a></p>
-</blockquote>
-<p>Now, StarlingX, sadly, is not GitOps OpenStack. Configurations to the OpenStack application are done via the command line, or via helm value files. Perhaps I can clone the flux repo they use, but truthfully, I’m not going to worry about it for now.</p>
-</section>
-<section id="starlingx-deployment" class="level1">
-<h1>StarlingX Deployment</h1>
-<p>There are multiple deployment guides, but I am interested in the <a href="https://docs.starlingx.io/r/stx.10.0/deploy_install_guides/release/bare_metal/aio_simplex_install_kubernetes.html">“Simplex”</a> install, which documents how to do an All in One install, using a single server, which is all I have.</p>
-<p>I also care a lot about “For OpenStack only: Configure data interfaces for controller-0. Data class interfaces are vSwitch interfaces used by vSwitch to provide VM virtio vNIC connectivity to OpenStack Neutron Tenant Networks on the underlying assigned Data Network.”, since I only have one physical interface in use, and the other one will be virtual.</p>
-
-
-</section>
-
- ]]></description>
-  <category>projects</category>
-  <guid>./projects/starlingx/</guid>
-  <pubDate>Tue, 01 Apr 2025 07:00:00 GMT</pubDate>
-</item>
+<lastBuildDate>Fri, 04 Apr 2025 07:00:00 GMT</lastBuildDate>
 <item>
   <title>WRCCDC Regionals Writeup</title>
   <link>./writeups/wrccdc/</link>
@@ -168,6 +136,20 @@
 <p>I’m very pleased with our performance. Despite setting the low goal of not losing instantly, sometimes not even that is achievable, which sucks. But we managed to mostly hold ourselves together for the first half of the first day, and we managed to learn a lot.</p>
 <p>Since we are effectively starting from scratch, it’s important that we record all the stuff we are missing so we can fix these issues. This is why I have this writeup. I will probaly turn the “Things to do” into a Kanban of some kind and we will knock them out one by one over the off season.</p>
 </section>
+</section>
+<section id="images" class="level1">
+<h1>Images</h1>
+<p>Here is our team:</p>
+<p><img src="./writeups/wrccdc/images/selfie.webp" class="img-fluid"></p>
+<p>The rightmost guy is a competition organizer, but everybody else is from Layer 8’s CCDC team. We convinced black to team to take an image from the webcam they had in the room that they were using to monitor teams.</p>
+<p><img src="./writeups/wrccdc/images/elevator.webp" class="img-fluid"></p>
+<p><img src="./writeups/wrccdc/images/containment.webp" class="img-fluid"></p>
+<p>This is when they went into the rooms and “contained the anomalies” (took away some machines, forcing migration of services and restoration of backups).</p>
+<p><img src="./writeups/wrccdc/images/detection.webp" class="img-fluid"></p>
+<p>Detecting anomalies!</p>
+<p>The costumes were so much fun.</p>
+<p><img src="./writeups/wrccdc/images/hallway.webp" class="img-fluid"></p>
+<p>Here is the hallway of Coastline College. In this image, Black/Orange team is bringing the new Unifi switches to the teams.</p>
 </section>
 <section id="debrief-notes" class="level1">
 <h1>Debrief Notes</h1>
@@ -570,7 +552,612 @@
  ]]></description>
   <category>writeups</category>
   <guid>./writeups/wrccdc/</guid>
-  <pubDate>Fri, 28 Mar 2025 07:00:00 GMT</pubDate>
+  <pubDate>Fri, 04 Apr 2025 07:00:00 GMT</pubDate>
+</item>
+<item>
+  <title>Getting Started with Linux</title>
+  <link>./talks/linux/</link>
+  <description><![CDATA[ 
+
+
+
+
+<p>For the Layer8 Cybersecurity club here at Cal State Northridge, and potentially more clubs, I will do a presentation introducing people to Linux</p>
+<p>Below is the same presentation, rendered to html with the slide titles as headers.</p>
+<p>If you want to see the presentation in slides form, click the “RevealJS” format on the right, under “Other formats”.</p>
+<p>Here is a qr code to the slides:</p>
+<p><br></p>
+<section id="introductions" class="level2">
+<h2 class="anchored" data-anchor-id="introductions">Introductions:</h2>
+<ul>
+<li>Jeffrey Fonseca (<code>@moonpiedumplings</code>)
+<ul>
+<li>Linux user for 6 years</li>
+<li>Sophomore</li>
+<li>Vice President of Layer 8</li>
+</ul></li>
+<li>Mustakimur Rahman (<code>@arithmeticninja</code>)
+<ul>
+<li>Linux user for 7 years</li>
+<li>Senior</li>
+<li>VP of IEEE</li>
+</ul></li>
+</ul>
+</section>
+<section id="what-is-linux" class="level2">
+<h2 class="anchored" data-anchor-id="what-is-linux">What is Linux?</h2>
+<div class="columns">
+<div class="column" style="width:50%;">
+<p><img src="https://upload.wikimedia.org/wikipedia/commons/e/e1/Operating_system_placement.svg" class="img-fluid"></p>
+</div><div class="column" style="width:50%;">
+<ul>
+<li>Linux is an Operating System</li>
+<li>Lowest level of software on a computer</li>
+</ul>
+</div>
+</div>
+</section>
+<section id="why-linux-in-the-industry" class="level2">
+<h2 class="anchored" data-anchor-id="why-linux-in-the-industry">Why Linux in the Industry</h2>
+<ul>
+<li>Linux is “open source” — No license fees</li>
+<li>Used in the vast majority of servers</li>
+<li>Games, web servers, etc</li>
+</ul>
+</section>
+<section id="why-linux-personally" class="level2">
+<h2 class="anchored" data-anchor-id="why-linux-personally">Why Linux Personally</h2>
+<ul>
+<li>It’s faster!</li>
+<li>No ads, bloatware</li>
+<li>Many tools are designed for Linux firstly</li>
+</ul>
+</section>
+<section id="introduction-to-linux" class="level2">
+<h2 class="anchored" data-anchor-id="introduction-to-linux">Introduction to Linux</h2>
+<ul>
+<li>“Command Line” — alternate way of interfacing with applications</li>
+<li>It’s <em>not</em> programming. It’s not a logic puzzle that needs to be solved.
+<ul>
+<li>Commands are designed to be <em>used</em>.</li>
+</ul></li>
+</ul>
+</section>
+<section id="introduction-to-the-command-line" class="level2">
+<h2 class="anchored" data-anchor-id="introduction-to-the-command-line">Introduction to the Command Line</h2>
+<ul>
+<li>All computer operating systems have a cli</li>
+<li>Command format: <code>commandname --argument1 inputfile</code></li>
+</ul>
+</section>
+<section id="terminal-and-shell" class="level2">
+<h2 class="anchored" data-anchor-id="terminal-and-shell">Terminal and Shell</h2>
+<ul>
+<li><code>ls</code> — list files in current directory</li>
+<li><code>cat &lt;filename&gt;</code> — print file contents</li>
+<li><code>pwd</code> — print current working directory</li>
+<li><code>cd</code> change directory</li>
+</ul>
+</section>
+<section id="more-commands" class="level2">
+<h2 class="anchored" data-anchor-id="more-commands">More Commands</h2>
+<ul>
+<li><code>ssh -p portname username@ip/hostname</code> connect to a remote machine</li>
+<li><code>find -iname "*texttofind*"</code> find files by some text</li>
+<li><code>grep filename</code> search a file for text within it.</li>
+<li><code>man commandname</code> Built in documentation about commands</li>
+</ul>
+</section>
+<section id="distributions" class="level2">
+<h2 class="anchored" data-anchor-id="distributions">Distributions</h2>
+<ul>
+<li>Linux is just the kernel, but more than the kernel is needed</li>
+<li>When people package up the kernel + utility software, it becomes a “Distro”</li>
+<li>Red Hat Linux is the most widely used distribution, 70% of enterprise use cases*</li>
+</ul>
+</section>
+<section id="red-hat-administrative-commands" class="level2">
+<h2 class="anchored" data-anchor-id="red-hat-administrative-commands">Red Hat Administrative Commands:</h2>
+<ul>
+<li><code>dnf</code> — package manager.
+<ul>
+<li><code>dnf install packagename</code> installs more software</li>
+<li><code>dnf remove packagename</code></li>
+<li><code>dnf update</code> update packages</li>
+</ul></li>
+</ul>
+</section>
+<section id="overthewire" class="level2">
+<h2 class="anchored" data-anchor-id="overthewire">Overthewire</h2>
+<ul>
+<li>OverTheWire Bandit is an introduction to the Linux Command Line</li>
+<li><a href="https://overthewire.org/wargames/bandit/" class="uri">https://overthewire.org/wargames/bandit/</a></li>
+<li>Use <code>man</code> to get help on and see what the sample commands they give do!</li>
+</ul>
+</section>
+<section id="web-based-terminals" class="level2">
+<h2 class="anchored" data-anchor-id="web-based-terminals">Web Based Terminals:</h2>
+<ul>
+<li><a href="https://shell.segfault.net" class="uri">https://shell.segfault.net</a></li>
+<li><a href="https://sshwifty-demo.nirui.org/" class="uri">https://sshwifty-demo.nirui.org/</a></li>
+<li><a href="https://ssheasy.com/" class="uri">https://ssheasy.com/</a></li>
+</ul>
+</section>
+<section id="further-resources" class="level2">
+<h2 class="anchored" data-anchor-id="further-resources">Further Resources</h2>
+<ul>
+<li>Layer 8 dues ($25/semester) gives access to Red Hat Academy</li>
+<li>Tryhackme/hackthebox</li>
+<li><a href="https://professionallinuxusersgroup.github.io/lac/project.html">ProLug Linux Course</a>
+<ul>
+<li>Videos and Labs</li>
+</ul></li>
+<li><a href="https://learning.lpi.org/en/learning-materials/learning-materials/">LPIC Learning Materials</a>
+<ul>
+<li><a href="https://learning.lpi.org/en/learning-materials/101-500/">101</a>, and <a href="https://learning.lpi.org/en/learning-materials/101-500/">102</a> are free Linux books</li>
+</ul></li>
+</ul>
+</section>
+<section id="thank-you" class="level2">
+<h2 class="anchored" data-anchor-id="thank-you">Thank You!</h2>
+
+
+</section>
+
+<div id="quarto-appendix" class="default"><section class="quarto-appendix-contents" id="quarto-reuse"><h2 class="anchored quarto-appendix-heading">Reuse</h2><div class="quarto-appendix-contents"><div><a rel="license" href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a></div></div></section></div> ]]></description>
+  <category>talks</category>
+  <guid>./talks/linux/</guid>
+  <pubDate>Wed, 02 Apr 2025 07:00:00 GMT</pubDate>
+</item>
+<item>
+  <title>Build Server 6 — An easier HCI?</title>
+  <link>./projects/build-server-6/</link>
+  <description><![CDATA[ 
+
+
+
+
+<section id="the-why" class="level1">
+<h1>The Why</h1>
+<p>In my <a href="../build-server-5/">previous project</a>, I attempted to deploy <a href="https://en.wikipedia.org/wiki/OpenStack">Openstack</a> entirely with <a href="https://en.wikipedia.org/wiki/DevOps#GitOps">GitOps</a> methodologies, using <a href="https://fluxcd.io/">FluxCD</a>.</p>
+<p>I failed. Well, it didn’t fail, but I think I’ve spent too long on it and I need to move on.</p>
+<p>Recently, I’ve discovered a project that simeutaneously seems to be a distribution of OpenStack, Kubernetes, and Linux, called <a href="https://www.starlingx.io/">StarlingX</a>.</p>
+<p>Also:</p>
+<blockquote class="blockquote">
+<p><a href="https://docs.starlingx.io/system_configuration/index-sysconf-d511820651f0.html#starlingx-openstack">StarlingX OpenStack is installed and managed as an FluxCD application.</a></p>
+</blockquote>
+<p>Now, StarlingX, sadly, is not GitOps OpenStack. Configurations to the OpenStack application are done via the command line, or via helm value files. Perhaps I can clone the flux repo they use, but truthfully, I’m not going to worry about it for now.</p>
+</section>
+<section id="starlingx-attempt" class="level1">
+<h1>StarlingX Attempt</h1>
+<p>There are multiple deployment guides, but I am interested in the <a href="https://docs.starlingx.io/r/stx.10.0/deploy_install_guides/release/bare_metal/aio_simplex_install_kubernetes.html">“Simplex”</a> install, which documents how to do an All in One install, using a single server, which is all I have.</p>
+<p>I also care a lot about “For OpenStack only: Configure data interfaces for controller-0. Data class interfaces are vSwitch interfaces used by vSwitch to provide VM virtio vNIC connectivity to OpenStack Neutron Tenant Networks on the underlying assigned Data Network.”, since I only have one physical interface in use, and the other one will be virtual.</p>
+<p>I started by obtaining an ISO, and attempting to install it in a virtual machine. The installer crashed becasue it wanted 500 GB of storage… which is fair I guess.At least it doesn’t crash because I don’t have enough CPU cores or ram.</p>
+<p>Just kidding. It doesn’t boot. I don’t know why. Instead it stays stuck on “booting on hard disk”. This probably would work better on a physical machine, but I want to make sure it works on a virtual machine first.</p>
+<p>But I install it on my physical server anyways. It doesn’t get an ip address via dhcp.</p>
+<p>I understand why people like turnkey solutions, like ESXI now.</p>
+<p>I look into another HCI solution: <a href="https://docs.harvesterhci.io/">Suse Harvester</a>. It’s actually a very good software, the UI is great and the install is easy. But if you want any kind of authorization and control over who can see what projects, you have to deploy rancher, which can then “consume” the harvester api and work with it. While excellent, I don’t really feel like having to set up rancher either on another server, or in a virtual machine.</p>
+<p>In addition to that, I could not figure out how networking works, and how to set up a bridged network.</p>
+<p>But I begin looking into something else, <a href="https://linuxcontainers.org/incus/docs/main/">Incus</a>.</p>
+<p>Incus:</p>
+<ul>
+<li>Can be installed on top of another distro</li>
+<li>Has networking I understand, “simply” bridging</li>
+<li>Has <a href="https://linuxcontainers.org/incus/docs/main/authorization/#tls-authorization">authorization and authentication</a> by restricting TLS certs to a project
+<ul>
+<li>Not the complex SSO I want, but I need <em>something</em> working</li>
+</ul></li>
+</ul>
+<p>Incus also has some nice features, like it can access a <a href="https://images.linuxcontainers.org/">repository</a> of LXC images (similar to Dockerhub), which is cool for testing out many different Linux distros.</p>
+<p>Anyway, I did actually attempt to deploy it using Debian backports.</p>
+<pre><code>root@b718c16e3b2d:/etc/apt/sources.list.d# apt install incus
+Reading package lists... Done
+Building dependency tree... Done
+Reading state information... Done
+Some packages could not be installed. This may mean that you have
+requested an impossible situation or if you are using the unstable
+distribution that some required packages have not yet been created
+or been moved out of Incoming.
+The following information may help to resolve the situation:
+
+The following packages have unmet dependencies:
+ incus : Depends: qemu-system-x86 (&gt;= 1:8.0) but 1:7.2+dfsg-7+deb12u12 is to be installed
+E: Unable to correct problems, you have held broken packages.</code></pre>
+<p>Disappointing.</p>
+<p>Instead, I followed the instructions on the <a href="https://github.com/zabbly/incus">github</a>… mostly.</p>
+<div class="code-with-filename">
+<div class="code-with-filename-file">
+<pre><strong>/etc/apt/sources.list.d/zabbly-incus-lts-6.0.sources</strong></pre>
+</div>
+<div class="sourceCode" id="cb2" data-filename="/etc/apt/sources.list.d/zabbly-incus-lts-6.0.sources" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb2-1">Enabled: yes</span>
+<span id="cb2-2">Types: deb</span>
+<span id="cb2-3">URIs: https://pkgs.zabbly.com/incus/lts-6.0</span>
+<span id="cb2-4">Suites: bookworm</span>
+<span id="cb2-5">Components: main</span>
+<span id="cb2-6">Architectures: amd64</span>
+<span id="cb2-7">Signed-By: /etc/apt/keyrings/zabbly.asc</span></code></pre></div>
+</div>
+<p>This is a container, I will test a virtual machine install later on.</p>
+</section>
+<section id="installing-debian" class="level1">
+<h1>Installing Debian</h1>
+<p><a href="https://wiki.debian.org/UEFI#Force_grub-efi_installation_to_the_removable_media_path" class="uri">https://wiki.debian.org/UEFI#Force_grub-efi_installation_to_the_removable_media_path</a> — gotta do this in the installer</p>
+<p>Switch from ifupdown/iproute2 to NetworkManager</p>
+<div class="code-with-filename">
+<div class="code-with-filename-file">
+<pre><strong>/etc/network/interfaces</strong></pre>
+</div>
+<div class="sourceCode" id="cb3" data-filename="/etc/network/interfaces" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb3-1"># This file describes the network interfaces available on your system</span>
+<span id="cb3-2"># and how to activate them. For more information, see interfaces(5).</span>
+<span id="cb3-3"></span>
+<span id="cb3-4">source /etc/network/interfaces.d/*</span>
+<span id="cb3-5"></span>
+<span id="cb3-6"># The loopback network interface</span>
+<span id="cb3-7">auto lo</span>
+<span id="cb3-8">iface lo inet loopback</span>
+<span id="cb3-9"></span>
+<span id="cb3-10"># The primary network interface</span>
+<span id="cb3-11">#allow-hotplug enp0s25</span>
+<span id="cb3-12">#iface enp0s25 inet dhcp</span></code></pre></div>
+</div>
+<p>Comment out network interfaces.</p>
+<div class="code-with-filename">
+<div class="code-with-filename-file">
+<pre><strong>/etc/NetworkManager/NetworkManager.conf</strong></pre>
+</div>
+<div class="sourceCode" id="cb4" data-filename="/etc/NetworkManager/NetworkManager.conf" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb4-1">[main]</span>
+<span id="cb4-2">plugins=ifupdown,keyfile</span>
+<span id="cb4-3"></span>
+<span id="cb4-4">[ifupdown]</span>
+<span id="cb4-5">managed=true</span></code></pre></div>
+</div>
+<p>And changed “managed” to true instead of false.</p>
+
+
+</section>
+
+ ]]></description>
+  <category>projects</category>
+  <guid>./projects/build-server-6/</guid>
+  <pubDate>Tue, 01 Apr 2025 07:00:00 GMT</pubDate>
+</item>
+<item>
+  <title>Portable executable experiments for CCDC</title>
+  <link>./playground/ape-experiments/</link>
+  <description><![CDATA[ 
+
+
+
+
+<p>The college I am going to has a team that comeptes in a competition called <a href="https://en.wikipedia.org/wiki/National_Collegiate_Cyber_Defense_Competition">CCDC</a>, which is a blue team cybersecurity competition. It involves securing misconfigured, outdated OS’s and services, while being asked to do tasks called “injects”, and protecting a highly vulnerable environment from “red teamers” — competition organizers who play the role of a hypothetical attacker.</p>
+<p>One of the big problems encountered in CCDC is the portability of applications. Competitors will be asked to work across a variety of Linux distros, of various types and various package versions, and even across the BSD versions. Of course, sometimes the solution is simple: install your tools, like python or tmux, from the package manager on every Linux/BSD OS.</p>
+<p>The second problem is that the organizers of the competition may break our package managers. Deleting repos, or giving us a distro without a package manager, or giving us End-Of-Life distributions, with dead repositories.</p>
+<p>And also, we aren’t allowed to do a distribution release upgrade. So we can’t go from CentOS 8 to CentOS Stream or other things like that. We also aren’t allowed to replace non-containerized scored services with containers. We also aren’t allowed to replace scored services with another application of the same type, so no replacing Apache with Caddy.</p>
+<p>However, we can use static executables to replace services, and there are real limits on what kind of utilities we can deploy, other than resources usage (Linux/BSD machines usually have 2 gigabytes of ram).</p>
+<p>I was looking into portable executables, to mitigate some of the problems and restrictions. I would like to have a portable version of python, so that ansible playbooks relating to firewall automation and backups can be run as soon as possible, and also a portable terminal multiplexer, so that our team members can collaborate directly. I would also like portable (statically compiled) versions of some of the services, so that we can replace them in place, rather than being forced to rely on a package manager that may not work.</p>
+<section id="apecosmo" class="level1">
+<h1>Ape/Cosmo</h1>
+<p><a href="https://justine.lol/cosmopolitan/index.html">Cosmopolitan</a> is a project that turns C into build once, run anywhere language. It works by creating a fat binary that contains code for all other operating systems, including UEFI, and then dynamically figuring out where it is being run.</p>
+<p>There are some precompiled binaries for ape as well:</p>
+<ul>
+<li><a href="https://github.com/ahgamut/superconfigure/releases" class="uri">https://github.com/ahgamut/superconfigure/releases</a></li>
+<li><a href="https://cosmo.zip/pub/cosmos/bin/" class="uri">https://cosmo.zip/pub/cosmos/bin/</a></li>
+</ul>
+<p>Some of these tools are very interesting, in particular <code>tmux</code> and <code>python</code>. Ansible requires python to be on the machines, but it can be difficult to get python on a machine, especially if the package manager is broken. I can easily imagine something like:</p>
+<p><code>cat staticpython | ssh hostname "cat &gt; remotestaticssh"</code></p>
+<p>The above would enable us to get a version of staticly compiled python on anything with ssh, and only ssh needed. There are also some <a href="https://superuser.com/questions/291423/how-to-copy-a-file-without-using-scp-inside-an-ssh-session">other ways to do it</a>.</p>
+<p>I download an actually portable version of tmux and python, and attempt to run them (the test is to see if they still work without glibc, which is often a limitation of portability for many other portable binaries).</p>
+<div class="sourceCode" id="cb1" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb1-1">[moonpie@lizard apeb]$ ./python</span>
+<span id="cb1-2">0088:err:sync:RtlpWaitForCriticalSection section 00006FFFFFFAC440 "../wine-staging/dlls/ntdll/loader.c: loader_section" wait timed out in thread 0088, blocked by 007c, retrying (60 sec)</span>
+<span id="cb1-3">0120:fixme:file:server_get_file_info Unsupported info class 1c</span>
+<span id="cb1-4">0120:fixme:file:NtFsControlFile FSCTL_GET_REPARSE_POINT semi-stub</span>
+<span id="cb1-5">0120:fixme:file:server_get_file_info Unsupported info class 1c</span>
+<span id="cb1-6">0120:fixme:file:server_get_file_info Unsupported info class 1c</span>
+<span id="cb1-7">Python 3.12.3 (main, Aug  3 2024, 10:18:33) [GCC 14.1.0] on linux</span>
+<span id="cb1-8">Type "help", "copyright", "credits" or "license" for more information.</span>
+<span id="cb1-9">0120:fixme:file:server_get_file_info Unsupported info class 1c</span>
+<span id="cb1-10">&gt;&gt;&gt; exit(_</span>
+<span id="cb1-11">^C0124:err:virtual:virtual_setup_exception stack overflow 1280 bytes addr 0x952cd2 stack 0x1300b00 (0x1300000-0x1301000-0x1400000)</span>
+<span id="cb1-12">^C012c:err:virtual:virtual_setup_exception stack overflow 1280 bytes addr 0x952cd2 stack 0x1400b00 (0x1400000-0x1401000-0x1500000)</span>
+<span id="cb1-13">^C0134:err:virtual:virtual_setup_exception stack overflow 1280 bytes addr 0x952cd2 stack 0x1500b00 (0x1500000-0x1501000-0x1600000)</span>
+<span id="cb1-14">^C013c:err:virtual:virtual_setup_exception stack overflow 1280 bytes addr 0x952cd2 stack 0x1600b00 (0x1600000-0x1601000-0x1700000)</span>
+<span id="cb1-15">^C0144:err:virtual:virtual_setup_exception stack overflow 1280 bytes addr 0x952cd2 stack 0x1700b00 (0x1700000-0x1701000-0x1800000)</span></code></pre></div>
+<p>My Arch Linux install attempts to use wine to load up the python program. There are also issues quitting, and I end up having to use pkill to kill python. This is because my OS attempts to use <a href="https://en.wikipedia.org/wiki/Binfmt_misc">binfmt_misc</a>, and finds out that Wine is an acceptable program for launching ape binaries. ape binaries are not designed to run under wine, this behavior happens instead.</p>
+<p>The way to avoid this is to use the <a href="https://justine.lol/apeloader/">ape loader</a>.</p>
+<div class="sourceCode" id="cb2" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb2-1">[moonpie@lizard apeb]$ ./ape-x86_64.elf ./python</span>
+<span id="cb2-2">Python 3.12.3 (main, Aug  3 2024, 10:18:33) [GCC 14.1.0] on linux</span>
+<span id="cb2-3">Type "help", "copyright", "credits" or "license" for more information.</span>
+<span id="cb2-4">&gt;&gt;&gt;</span>
+<span id="cb2-5">``</span>
+<span id="cb2-6"></span>
+<span id="cb2-7">And this works. But, although there is also a version of python distributed with many python libraries included, called `pypack1`, it doesn't contain some crucial python packages that I may need for ansible administration of systems, like sql manipulation tools. </span>
+<span id="cb2-8"></span>
+<span id="cb2-9">```{.default}</span>
+<span id="cb2-10">[moonpie@lizard apeb]$ ./ape-x86_64.elf ./python -m venv venv</span>
+<span id="cb2-11">Error: Command '['/home/moonpie/vscode/test/apeb/venv/bin/python', '-m', 'ensurepip', '--upgrade', '--default-pip']' returned non-zero exit status 1.</span></code></pre></div>
+<p>Yeah. I’m not too worried, because I wrote my roles so that the databse manipulation can also be done remotely, from a playbook running on localhost, but it would be simpler if everything can be run on the remote systems.</p>
+<div class="sourceCode" id="cb3" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb3-1">[moonpie@lizard apeb]$ ./ape-x86_64.elf ./tmux</span>
+<span id="cb3-2">[moonpie@lizard apeb]$ ./ape-x86_64.elf ./tmux -h</span>
+<span id="cb3-3">tmux: unknown option -- h</span>
+<span id="cb3-4">usage: tmux [-2CDlNuvV] [-c shell-command] [-f file] [-L socket-name]</span>
+<span id="cb3-5">            [-S socket-path] [-T features] [command [flags]]</span></code></pre></div>
+<p>And tmux just won’t load, although it will print the help output. I find this very weird, as I could get tmux to load earlier, but not now. It doesn’t load on my host system, or in an Debian or Alpine container.</p>
+<p>This only seems to apply to the ape tmux, as tmux installed by apt in a debian container doesn’t have this issue, and then after that, tmux is able to start sessions normally, but then it can’t again after I kill all sessions. At least this isolates it to an issue with ape.</p>
+<p>It could just be a bug of some sort, but the package version only updated 3 days ago from now (August 6th), so those haven’t changed.</p>
+<p>The weirdest thing is that the ape tmux is actually able to work normally… but only after I launch a session via non-ape tmux. And then, one I kill all tmux sessions, then it stops working again.</p>
+<p>It seems like the ape tmux is having trouble starting the server:</p>
+<div class="sourceCode" id="cb4" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb4-1">/stuff # ape ./tmux start-server</span>
+<span id="cb4-2">/stuff #</span>
+<span id="cb4-3">/stuff # ape ./tmux ls</span>
+<span id="cb4-4">no server running on /tmp/tmux-0/default</span></code></pre></div>
+<p>I found a <a href="https://github.com/tmux/tmux/issues/736">half relevant issue</a>, but the failed solution gives me more answers:</p>
+<div class="sourceCode" id="cb5" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb5-1">/stuff # ape ./tmux new-session -t testing -d</span>
+<span id="cb5-2">create window failed: fork failed: Operation not permitted</span></code></pre></div>
+<p>I eventually made a post on the redbean discord server, and uploaded my <a href="https://gist.github.com/moonpiedumplings/809dcc89cfe289f8341aae85069a57e1">strace to a github gist</a>. I’ll wait to see if anyone replies.</p>
+<div class="sourceCode" id="cb6" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb6-1">[moonpie@lizard apeb]$ ./ape-x86_64.elf ./tmux new-session -d -vv</span>
+<span id="cb6-2">no server running on /tmp/tmux-1000/default</span></code></pre></div>
+<div class="sourceCode" id="cb7" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb7-1">/stuff # ./ape-x86_64.elf ./tmux new-session -d -vv</span>
+<span id="cb7-2">no server running on /tmp/tmux-0/default</span></code></pre></div>
+<p>So tmux can be ran with -vv for something more verbose.</p>
+<p>This might also be a tmux bug, since the version of tmux provided by ape/cosmo is 3.3a, rather than the latest 3.4, however, the nix bundled tmux also has this issue, and nix has 3.4 of tmux.</p>
+<p>I played around with attempting to build newer versions of tmux from the <a href="https://github.com/ahgamut/superconfigure?tab=readme-ov-file#how-can-i-build-these-locally">superconfigure</a> github repo, but their instructions don’t seem to work. The scripts assume Ubuntu 22 LTS, although I was only able to find that out after looking at what distro was used in their github actions.</p>
+<section id="openbsd" class="level2">
+<h2 class="anchored" data-anchor-id="openbsd">Openbsd</h2>
+<div class="sourceCode" id="cb8" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb8-1">[vagrant@openbsd7 ~]$ ./ape ./python</span>
+<span id="cb8-2">Python 3.12.3 (main, Aug  3 2024, 10:18:33) [GCC 14.1.0] on linux</span>
+<span id="cb8-3">Type "help", "copyright", "credits" or "license" for more information.</span>
+<span id="cb8-4">&gt;&gt;&gt;</span>
+<span id="cb8-5">[vagrant@openbsd7 ~]$ ./ape ./tmux new-ession -d -vv</span>
+<span id="cb8-6">no server running on /tmp/tmux-1000/default</span></code></pre></div>
+</section>
+<section id="netbsd" class="level2">
+<h2 class="anchored" data-anchor-id="netbsd">NetBSD</h2>
+<div class="sourceCode" id="cb9" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb9-1">[vagrant@netbsd8 ~]$ ./ape ./python</span>
+<span id="cb9-2">Python 3.12.3 (main, Aug  3 2024, 10:18:33) [GCC 14.1.0] on linux</span>
+<span id="cb9-3">Type "help", "copyright", "credits" or "license" for more information.</span>
+<span id="cb9-4">&gt;&gt;&gt;</span>
+<span id="cb9-5">[vagrant@netbsd8 ~]$ ./ape ./tmux new-session -d -vv</span>
+<span id="cb9-6">no server running on /tmp/tmux-1000/default</span></code></pre></div>
+<p>Vim executes successfully as well. It’s able to execute without the ape interpeter, but python crashes when I try to do that.</p>
+</section>
+<section id="dragonflybsd" class="level2">
+<h2 class="anchored" data-anchor-id="dragonflybsd">DragonflyBSD</h2>
+<p>We’ve seen this FreeBSD fork in the competition environment. But, DragonFlyBSD was forked from FreeBSD 4.8, which was nearly 21 years ago. At this point, they have diverged to the point where ape binaries do not run on Dragonfly. Cosmo does not officially support DragonflyBSD, and it’s highly likely that there are other differences, like the <code>pf</code> firewall configuration file having different syntax.</p>
+<div class="sourceCode" id="cb10" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb10-1">[vagrant@dragonflybsd6 ~]$ ./ape ./python</span>
+<span id="cb10-2">ELF binary type "9" not known.</span></code></pre></div>
+</section>
+<section id="freebsd" class="level2">
+<h2 class="anchored" data-anchor-id="freebsd">FreeBSD</h2>
+<p>I intend to test, but vagrant networking is giving me trouble. Cosmo should work with FreeBSD though.</p>
+</section>
+</section>
+<section id="nix-bundle" class="level1">
+<h1>Nix bundle</h1>
+<p><code>nix bundle nixpkgs#programname</code> is a command that bundles a program into a self extracting archive that uses proot to run itself. A big problem with nix bundle is that it mostly only works on Linux, and relying on proot makes it less portable compared to ape. <a href="https://nix.dev/manual/nix/2.13/command-ref/new-cli/nix3-bundle">Here is the official manual</a>… on an unofficial site.</p>
+<div class="sourceCode" id="cb11" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb11-1">[moonpie@lizard apeb]$ nix bundle nixpkgs#zellij</span>
+<span id="cb11-2">[moonpie@lizard apeb]$ ls -la zellij</span>
+<span id="cb11-3">lrwxrwxrwx 1 moonpie moonpie 47 Aug  6 22:28 zellij -&gt; /nix/store/5d5fi0x4g7v33m7jscxwjijaxi3lg2kp-arx</span></code></pre></div>
+<p>One thing that is mildly annoying is that nix builds stuff in the nix store, and then symlinks to it from the outside, meaning you have to copy out the binary first.</p>
+<p>The first thing I tried to do was bundle zellij and tmux, and funnily enough, they run into the exact same issue as ape. If I launch a zellij or tmux session using a non-ape, non nix-bundled session, first, then I can use the nix bundled zellij or tmux normally.</p>
+</section>
+<section id="guix-pack" class="level1">
+<h1>Guix pack</h1>
+<p>Guix pack is different. Rather than doing self extracting or staticly compiled executables, it generates a tarball (or docker image, but I’m focused on tarball), which can be extracted and has the programs with a vendored dependency.</p>
+<p>I found a <a href="https://hub.docker.com/r/metacall/guix">docker container for guix</a>, which is good because I’d rather run guix entirely in a podman container in my home volume, to avoid snapshotting guix in btrfs snapshots of the root subvolume.</p>
+<p><code>podman run -it --rm -v ".:/stuff" --privileged</code></p>
+<p>I had to run it with –privileged, otherwise the guix builder fails.</p>
+<p>Once inside, the <code>guix pack</code> command packs programs into a tarball. <a href="https://guix.gnu.org/manual/en/html_node/Invoking-guix-pack.html">Documentation</a></p>
+<p><code>guix pack -RR tmux</code> generates a tarball… but I’m struggling to run it outside the store.</p>
+</section>
+<section id="appimage" class="level1">
+<h1>Appimage</h1>
+<p>Appimages are good, but with a few caveats: They only work on Linux, and they require fuse2 (not fuse3, but fuse2) to run, and they rely on the same version of glibc.</p>
+<p>There are some <a href="https://github.com/tmux/tmux/wiki/Installing#appimage-package">prebuilt appimages for tmux</a> and it works fine after I install fuse2.</p>
+</section>
+<section id="static-compilation" class="level1">
+<h1>Static Compilation</h1>
+<section id="tmux" class="level2">
+<h2 class="anchored" data-anchor-id="tmux">Tmux</h2>
+<p><a href="https://github.com/tmux/tmux/wiki/Installing">tmux has instructions for installing</a>.</p>
+<p><code>apk add git gcc musl-dev openssl-dev openssl-libs-static openssl ncurses-terminfo</code></p>
+<p>After these packages are installed, compiling tmux staticly will work. (it should be noted that the instructions assume you use the relase tarball, rather than directly from the source code).</p>
+<div class="sourceCode" id="cb12" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb12-1">./configure --enable-static</span>
+<span id="cb12-2"></span>
+<span id="cb12-3">make</span></code></pre></div>
+<p>However:</p>
+<div class="sourceCode" id="cb13" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb13-1">/stuff # ./stmux</span>
+<span id="cb13-2">can't find terminfo database</span></code></pre></div>
+<p>The staticly compiled tmux doesn’t include ncurses and terminfo libraries. After installing <code>ncurses-terminfo</code> then it works fine.</p>
+<p>Apparently it’s possible to staticly bundle ncurses, libevent, and tmux, but it’s an even more involved process. Users must compile ncurses, which generates .a files and then link those to tmux when compiling using LIBS and -l flag to link it.</p>
+</section>
+<section id="zellij" class="level2">
+<h2 class="anchored" data-anchor-id="zellij">Zellij</h2>
+<div class="sourceCode" id="cb14" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb14-1">git clone https://github.com/zellij-org/zellij/</span>
+<span id="cb14-2"></span>
+<span id="cb14-3">podman run -it --rm -v "./zellij:/zellij" docker.io/library/rust:alpine3.18</span>
+<span id="cb14-4"></span>
+<span id="cb14-5">apk add openssl1.1-compat openssl1.1-compat-dev openssl1.1-compat-libs-static musl-utils musl-dev protoc # but only for alpine 3.18</span>
+<span id="cb14-6"></span>
+<span id="cb14-7">alternatively: apk add openssl openssl-libs-static openssl-dev musl-utils musl-dev protoc</span>
+<span id="cb14-8"></span>
+<span id="cb14-9">cd /zellij</span>
+<span id="cb14-10"></span>
+<span id="cb14-11">rustup target add x86_64-unknown-linux-musl</span>
+<span id="cb14-12"></span>
+<span id="cb14-13">rustup target add wasm32-wasi</span>
+<span id="cb14-14"></span>
+<span id="cb14-15">RUSTFLAGS="-C target-feature=+crt-static" OPENSSL_NO_VENDOR="1" cargo build --target x86_64-unknown-linux-musl  </span>
+<span id="cb14-16"></span>
+<span id="cb14-17"></span>
+<span id="cb14-18">/stuff/zellij # RUSTFLAGS="-C target-feature=+crt-static" OPENSSL_NO_VENDOR="1" cargo xtask build</span>
+<span id="cb14-19">error: cannot produce proc-macro for `prost-derive v0.11.9` as the target `x86_64-unknown-linux-musl` does not support these crate types</span></code></pre></div>
+<p>This still crashes for now, but I need to figure out how to compile it if I want to target other BSD’s.</p>
+<p><code>error: couldn't read /stuff/zellij/zellij-utils/../target/wasm32-wasi/debug/compact-bar.wasm: No such file or directory (os error 2)</code></p>
+<p>Let’s try debian, since it seems they do their official builds — even musl ones — on ubuntu.</p>
+<div class="sourceCode" id="cb15" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb15-1"></span>
+<span id="cb15-2">podman run -it --rm -v "./zellij:/zellij" docker.io/library/rust:bookworm</span>
+<span id="cb15-3"></span>
+<span id="cb15-4">apt update &amp;&amp; apt install musl-tools protobuf-compiler</span>
+<span id="cb15-5"></span>
+<span id="cb15-6">rustup target add x86_64-unknown-linux-musl</span>
+<span id="cb15-7"></span>
+<span id="cb15-8">rustup target add wasm32-wasi</span>
+<span id="cb15-9"></span>
+<span id="cb15-10">cargo xtask ci cross x86_64-unknown-linux-musl   # This crashes</span>
+<span id="cb15-11"></span>
+<span id="cb15-12">cargo build --verbose --release --target x86_64-unknown-linux-musl # This works</span>
+<span id="cb15-13"></span>
+<span id="cb15-14">rustup target add x86_64-unknown-netbsd</span>
+<span id="cb15-15"></span>
+<span id="cb15-16">cargo build --verbose --release --target x86_64-unknown-netbsd</span>
+<span id="cb15-17"> error occurred: Failed to find tool. Is `x86_64--netbsd-gcc` installed?</span></code></pre></div>
+<p>So it seems like cross compilation support isn’t too good.</p>
+<p>Then I tried with the alpine container in the same directory:</p>
+<div class="sourceCode" id="cb16" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb16-1"></span>
+<span id="cb16-2">apk add openssl openssl-libs-static openssl-dev musl-utils musl-dev protoc gcc-cross-embedded</span>
+<span id="cb16-3"></span>
+<span id="cb16-4">rustup target add wasm32-wasi</span>
+<span id="cb16-5"></span>
+<span id="cb16-6">rustup target add x86_64-unknown-netbsd</span>
+<span id="cb16-7"></span>
+<span id="cb16-8">RUSTFLAGS="-C target-feature=+crt-static" OPENSSL_NO_VENDOR="1" OPENSSL_INCLUDE_DIR="/usr/include/openssl" OPENSSL_LIB_DIR="/usr/lib" cargo build --target x86_64-unknown-freebsd</span></code></pre></div>
+<p>This is much closer, but doesn’t work.</p>
+<div class="sourceCode" id="cb17" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb17-1">note: /usr/lib/gcc/x86_64-alpine-linux-musl/13.2.1/../../../../x86_64-alpine-linux-musl/bin/ld: cannot find -lexecinfo: No such file or directory</span>
+<span id="cb17-2">          /usr/lib/gcc/x86_64-alpine-linux-musl/13.2.1/../../../../x86_64-alpine-linux-musl/bin/ld: cannot find -lkvm: No such file or directory</span>
+<span id="cb17-3">          /usr/lib/gcc/x86_64-alpine-linux-musl/13.2.1/../../../../x86_64-alpine-linux-musl/bin/ld: cannot find -lmemstat: No such file or directory</span>
+<span id="cb17-4">          /usr/lib/gcc/x86_64-alpine-linux-musl/13.2.1/../../../../x86_64-alpine-linux-musl/bin/ld: cannot find -lkvm: No such file or directory</span>
+<span id="cb17-5">          /usr/lib/gcc/x86_64-alpine-linux-musl/13.2.1/../../../../x86_64-alpine-linux-musl/bin/ld: cannot find -lprocstat: No such file or directory</span>
+<span id="cb17-6">          /usr/lib/gcc/x86_64-alpine-linux-musl/13.2.1/../../../../x86_64-alpine-linux-musl/bin/ld: cannot find -ldevstat: No such file or directory</span>
+<span id="cb17-7">          /usr/lib/gcc/x86_64-alpine-linux-musl/13.2.1/../../../../x86_64-alpine-linux-musl/bin/ld: cannot find -lexecinfo: No such file or directory</span>
+<span id="cb17-8">          collect2: error: ld returned 1 exit status</span></code></pre></div>
+<p>Zellij already ships a <a href="https://github.com/zellij-org/zellij/releases">static version on their releases</a> (zellij-x86_64-unknown-linux-musl.tar.gz). From my testing, it only runs on Linux.</p>
+</section>
+<section id="python" class="level2">
+<h2 class="anchored" data-anchor-id="python">Python</h2>
+<ul>
+<li><a href="https://github.com/indygreg/python-build-standalone" class="uri">https://github.com/indygreg/python-build-standalone</a> / <a href="https://gregoryszorc.com/docs/python-build-standalone/main/" class="uri">https://gregoryszorc.com/docs/python-build-standalone/main/</a></li>
+<li><a href="https://pyoxidizer.readthedocs.io/en/latest/pyoxy.html" class="uri">https://pyoxidizer.readthedocs.io/en/latest/pyoxy.html</a></li>
+<li><a href="https://wiki.python.org/moin/BuildStatically" class="uri">https://wiki.python.org/moin/BuildStatically</a> — not as promising</li>
+<li><a href="https://github.com/RustPython/RustPython" class="uri">https://github.com/RustPython/RustPython</a>
+<ul>
+<li>Not <a href="https://rustpython.github.io/pages/whats-left">feature complete</a></li>
+</ul></li>
+</ul>
+<p>Also, I just want to note about python, that <code>help('modules')</code> in an interactive shell will list all the modules that a python interpreter is able to access. With statically compiled versions of python, this shows what python libraries have been bundled with the library.</p>
+<section id="indygreg-python" class="level3">
+<h3 class="anchored" data-anchor-id="indygreg-python">IndyGreg Python</h3>
+<div class="sourceCode" id="cb18" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb18-1">usage: build-main.py [-h]</span>
+<span id="cb18-2">                     [--target-triple {s390x-unknown-linux-gnu,x86_64_v4-unknown-linux-gnu,ppc64le-unknown-linux-gnu,x86_64_v2-unknown-linux-gnu,i686-unknown-linux-gnu,x86_64_v3-unknown-linux-gnu,x86_64-unknown-linux-musl,x86_64-unknown-linux-gnu,armv7-unknown-linux-gnueabihf,armv7-unknown-linux-gnueabi,x86_64_v4-unknown-linux-musl,mipsel-unknown-linux-gnu,x86_64_v3-unknown-linux-musl,mips-unknown-linux-gnu,aarch64-unknown-linux-gnu,x86_64_v2-unknown-linux-musl}]</span>
+<span id="cb18-3">                     [--optimizations {lto,pgo+lto,noopt,pgo,debug}] [--python {cpython-3.10,cpython-3.11,cpython-3.8,cpython-3.12,cpython-3.9}] [--python-source PYTHON_SOURCE]</span>
+<span id="cb18-4">                     [--break-on-failure] [--no-docker] [--serial]</span>
+<span id="cb18-5">                     [--make-target {default,toolchain-image-xcb,toolchain-image-build,empty,toolchain-image-xcb.cross,toolchain-image-gcc,toolchain,toolchain-image-build.cross}]</span>
+<span id="cb18-6">build-main.py: error: argument --target-triple: invalid choice: 'x86_64-unknown-freebsd' (choose from 's390x-unknown-linux-gnu', 'x86_64_v4-unknown-linux-gnu', 'ppc64le-unknown-linux-gnu', 'x86_64_v2-unknown-linux-gnu', 'i686-unknown-linux-gnu', 'x86_64_v3-unknown-linux-gnu', 'x86_64-unknown-linux-musl', 'x86_64-unknown-linux-gnu', 'armv7-unknown-linux-gnueabihf', 'armv7-unknown-linux-gnueabi', 'x86_64_v4-unknown-linux-musl', 'mipsel-unknown-linux-gnu', 'x86_64_v3-unknown-linux-musl', 'mips-unknown-linux-gnu', 'aarch64-unknown-linux-gnu', 'x86_64_v2-unknown-linux-musl')</span>
+<span id="cb18-7">[moonpie@lizard python-build-standalone]$ ./build-linux.py --target x86_64-unknown-freebsd</span></code></pre></div>
+<p>No freebsd or other non-linux support.</p>
+</section>
+</section>
+<section id="coreutils" class="level2">
+<h2 class="anchored" data-anchor-id="coreutils">Coreutils</h2>
+<ul>
+<li><a href="https://github.com/uutils/coreutils" class="uri">https://github.com/uutils/coreutils</a></li>
+<li><a href="https://packages.debian.org/sid/busybox-static" class="uri">https://packages.debian.org/sid/busybox-static</a></li>
+<li><a href="https://busybox.net/FAQ.html" class="uri">https://busybox.net/FAQ.html</a> — looks like busybox releases are already staticly linked, but they mostly focus on Linux releases</li>
+<li><a href="https://github.com/ahgamut/superconfigure/releases/" class="uri">https://github.com/ahgamut/superconfigure/releases/</a> — this is cosmo. I would prefer a single binary though, for simplicity, rather than seperate staticly compiled coreutils which is what this is. But, if in a pinch, it makes a good replacement for a broken coreutil.</li>
+</ul>
+</section>
+</section>
+<section id="soar-previously-toolpacks" class="level1">
+<h1>Soar (Previously Toolpacks)</h1>
+<p>I recently learned about a new project, called <a href="https://github.com/Azathothas/Toolpacks">Toolpacks</a>. Toolpacks is a truly massive set of static binaries, with so many utilities, including zellij, tmux, ssh, and many others. I see 2292 binaries for x86_64 Linux, and good amounts for Windows and Arm Linux as well.</p>
+<p>Another cool thing about Toolpacks is that they also provide <a href="https://en.wikipedia.org/wiki/UPX">UPX</a> versions of the software they distribute. UPX is a method of creating self extracting, compressed binaries that further saves space. For example:</p>
+<div class="sourceCode" id="cb19" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb19-1">[moonpie@lizard toolpack]$ du -sh zellij</span>
+<span id="cb19-2">30M     zellij</span>
+<span id="cb19-3">[moonpie@lizard toolpack]$ du -sh zellij.upx</span>
+<span id="cb19-4">8.6M    zellij.upx</span></code></pre></div>
+<p>That’s a pretty big reduction on the zellij binary, which is one of the largest binaries I’ve seen. Interesting, they also have caddy, and nginx. I find this very promising.</p>
+<p>There are also builds of busybox or toybox, which could replace coreutils in a pinch on Linux machines. There are a few other interesting one’s, such as <a href="https://github.com/vdjagilev/nmap-formatter">nmap-formatter</a>, a software that can format nmap XML output and convert it to CSV or other formats, which we may find easier to submit.</p>
+<p>Lately, this toolpacks project has been merged into a another project, <a href="https://github.com/pkgforge/soarpkgs">soarpkgs</a>. This is essentially a “package repository” for the new package manager, <a href="https://github.com/pkgforge/soar">soar</a>.</p>
+<p>To install soar:</p>
+<p><code>curl -fsSL https://soar.qaidvoid.dev/install.sh | sh</code></p>
+<p>But, then it doesn’t install packages in a location accessible to the path by default.</p>
+<pre><code>soar install zellij
+
+some stuff omitted for brevity
+
+[1/1] zellij#github.com.zellij-org.zelli [━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━] 6.84 MiB/s     34.19 MiB/34.19 MiB   
+* zellij#github.com.zellij-org.zellij [Installed to: /root/.local/share/soar/packages/zellij-github.com.zellij-org.zellij-B0rtPDm77205]
+  Binaries:
+    /root/.local/share/soar/bin/zellij -&gt; /root/.local/share/soar/packages/zellij-github.com.zellij-org.zellij-B0rtPDm77205/zellij
+  Notes:
+  Pre Built Binary Fetched from Upstream. Check/Report @ https://github.com/zellij-org/zellij</code></pre>
+<p>And this file location isn’t accessible in the path by default.</p>
+<p>It seems that I can use <code>soar run packagename</code> in order to run packages without installing them, similar to nix. But this isn’t really what I want either.</p>
+<p>A much better way is to use <code>soar download</code> (or <code>soar dl</code>) to download the packages we want.</p>
+<p>So:</p>
+<pre><code>root@2972c8731770:/usr/local/bin# soar dl rsync
+Downloading package: rsync#nixpkgs.rsync
+ [━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━] 4.95 MiB/s     5.99 MiB/5.99 MiB     root@2972c8731770:/usr/local/bin# ls
+rsync  soar
+root@2972c8731770:/usr/local/bin# rsync --version
+rsync  version 3.4.1  protocol version 32
+Copyright (C) 1996-2025 by Andrew Tridgell, Wayne Davison, and others.
+Web site: https://rsync.samba.org/
+Capabilities:
+    64-bit files, 64-bit inums, 64-bit timestamps, 64-bit long ints,
+    no socketpairs, symlinks, symtimes, hardlinks, no hardlink-specials,
+    no hardlink-symlinks, IPv6, atimes, batchfiles, inplace, append, ACLs,
+    xattrs, optional secluded-args, iconv, prealloc, stop-at, no crtimes
+Optimizations:
+    no SIMD-roll, no asm-roll, openssl-crypto, no asm-MD5
+Checksum list:
+    xxh128 xxh3 xxh64 (xxhash) md5 md4 sha1 none
+Compress list:
+    zstd lz4 zlibx zlib none
+Daemon auth list:
+    sha512 sha256 sha1 md5 md4
+
+rsync comes with ABSOLUTELY NO WARRANTY.  This is free software, and you
+are welcome to redistribute it under certain conditions.  See the GNU
+General Public Licence for details.
+root@2972c8731770:/usr/local/bin#</code></pre>
+<p>I like this quite a bit. It can be used to quickly install the tools we need during the commpetition, like zellij or rsync.</p>
+</section>
+<section id="stailx" class="level1">
+<h1>StailX</h1>
+<p><a href="https://stal-ix.github.io/" class="uri">https://stal-ix.github.io/</a></p>
+<p>Stal-IX is similar to Soar, a distro agnostic package manager that focuses on the installation of static binaries.</p>
+<p>It’s a very interesting and promising project, but the install steps are <a href="https://stal-ix.github.io/INSTALL.html">quite complex</a>, so I don’t think it’s suitable for our usecase.</p>
+</section>
+<section id="dockerc" class="level1">
+<h1>Dockerc</h1>
+<p><a href="https://github.com/NilsIrl/dockerc">Dockerc</a> is a project that compiles a docker container to a static executable, by bundling the runtime. I discovered this because it was packaged on the Toolpacks listed above.</p>
+<p>Because it is a container, I’m going to assume that this solution only works on Linux — but that doesn’t mean it’s not useful.</p>
+<div class="sourceCode" id="cb22" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb22-1">vagrant@debian10:~$ sudo dockerc --image docker://library/httpd -o httpd --rootfull</span>
+<span id="cb22-2">vagrant@debian10:~$ sudo ./httpd</span>
+<span id="cb22-3">unknown argument ignored: lazytime</span>
+<span id="cb22-4">AH00557: httpd: apr_sockaddr_info_get() failed for umoci-default</span>
+<span id="cb22-5">AH00557: httpd: apr_sockaddr_info_ge....</span></code></pre></div>
+<p>And it works — kinda. httpd doesn’t seem to bind an address. However, if I use an alpine container (which starts a shell), and then test with <code>python -m http.server</code>, that binds an address to the same localhost as the alpine machine.</p>
+<div class="sourceCode" id="cb23" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb23-1">sudo dockerc --image docker://docker.io/library/nginx --output nginx --rootfull</span>
+<span id="cb23-2"></span>
+<span id="cb23-3">sudo ./nginx</span></code></pre></div>
+<p>This also does not bind ports.</p>
+</section>
+<section id="less-promising-options" class="level1">
+<h1>Less promising options</h1>
+<section id="pkgin" class="level2">
+<h2 class="anchored" data-anchor-id="pkgin">pkgin</h2>
+<p><a href="https://pkgin.net/" class="uri">https://pkgin.net/</a></p>
+<p>Pkgin is a package manager that can manage packages compiled by <a href="https://www.pkgsrc.org/">pkgsrc</a>. It works on multiple BSDs (including Dragonfly), Macos, and Debian Linux. I don’t think we’ll ever see OpenSolaris but we’ll see.</p>
+
+
+</section>
+</section>
+
+ ]]></description>
+  <category>playground</category>
+  <guid>./playground/ape-experiments/</guid>
+  <pubDate>Tue, 01 Apr 2025 07:00:00 GMT</pubDate>
 </item>
 <item>
   <title>SCaLE 22x: All 4 days</title>
@@ -2225,6 +2812,7 @@ Expand/Collapse Testing
 <ul>
 <li>Not interactive, but follow-along labs for Linux fundamentals, containers, and kubernetes.</li>
 </ul>
+<p><a href="https://professionallinuxusersgroup.github.io/lac/u9intro.html">ProLug Linux Admin Course</a> Units 9 and 10.</p>
 </section>
 <section id="troubleshooting-servers" class="level2">
 <h2 class="anchored" data-anchor-id="troubleshooting-servers">Troubleshooting servers</h2>
@@ -2540,293 +3128,6 @@ Expand/Collapse
   <category>talks</category>
   <guid>./talks/intro-cyber/</guid>
   <pubDate>Mon, 10 Feb 2025 08:00:00 GMT</pubDate>
-</item>
-<item>
-  <title>Portable executable experiments for CCDC</title>
-  <link>./playground/ape-experiments/</link>
-  <description><![CDATA[ 
-
-
-
-
-<p>The college I am going to has a team that comeptes in a competition called <a href="https://en.wikipedia.org/wiki/National_Collegiate_Cyber_Defense_Competition">CCDC</a>, which is a blue team cybersecurity competition. It involves securing misconfigured, outdated OS’s and services, while being asked to do tasks called “injects”, and protecting a highly vulnerable environment from “red teamers” — competition organizers who play the role of a hypothetical attacker.</p>
-<p>One of the big problems encountered in CCDC is the portability of applications. Competitors will be asked to work across a variety of Linux distros, of various types and various package versions, and even across the BSD versions. Of course, sometimes the solution is simple: install your tools, like python or tmux, from the package manager on every Linux/BSD OS.</p>
-<p>The second problem is that the organizers of the competition may break our package managers. Deleting repos, or giving us a distro without a package manager, or giving us End-Of-Life distributions, with dead repositories.</p>
-<p>And also, we aren’t allowed to do a distribution release upgrade. So we can’t go from CentOS 8 to CentOS Stream or other things like that. We also aren’t allowed to replace non-containerized scored services with containers. We also aren’t allowed to replace scored services with another application of the same type, so no replacing Apache with Caddy.</p>
-<p>However, we can use static executables to replace services, and there are real limits on what kind of utilities we can deploy, other than resources usage (Linux/BSD machines usually have 2 gigabytes of ram).</p>
-<p>I was looking into portable executables, to mitigate some of the problems and restrictions. I would like to have a portable version of python, so that ansible playbooks relating to firewall automation and backups can be run as soon as possible, and also a portable terminal multiplexer, so that our team members can collaborate directly. I would also like portable (statically compiled) versions of some of the services, so that we can replace them in place, rather than being forced to rely on a package manager that may not work.</p>
-<section id="apecosmo" class="level1">
-<h1>Ape/Cosmo</h1>
-<p><a href="https://justine.lol/cosmopolitan/index.html">Cosmopolitan</a> is a project that turns C into build once, run anywhere language. It works by creating a fat binary that contains code for all other operating systems, including UEFI, and then dynamically figuring out where it is being run.</p>
-<p>There are some precompiled binaries for ape as well:</p>
-<ul>
-<li><a href="https://github.com/ahgamut/superconfigure/releases" class="uri">https://github.com/ahgamut/superconfigure/releases</a></li>
-<li><a href="https://cosmo.zip/pub/cosmos/bin/" class="uri">https://cosmo.zip/pub/cosmos/bin/</a></li>
-</ul>
-<p>Some of these tools are very interesting, in particular <code>tmux</code> and <code>python</code>. Ansible requires python to be on the machines, but it can be difficult to get python on a machine, especially if the package manager is broken. I can easily imagine something like:</p>
-<p><code>cat staticpython | ssh hostname "cat &gt; remotestaticssh"</code></p>
-<p>The above would enable us to get a version of staticly compiled python on anything with ssh, and only ssh needed. There are also some <a href="https://superuser.com/questions/291423/how-to-copy-a-file-without-using-scp-inside-an-ssh-session">other ways to do it</a>.</p>
-<p>I download an actually portable version of tmux and python, and attempt to run them (the test is to see if they still work without glibc, which is often a limitation of portability for many other portable binaries).</p>
-<div class="sourceCode" id="cb1" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb1-1">[moonpie@lizard apeb]$ ./python</span>
-<span id="cb1-2">0088:err:sync:RtlpWaitForCriticalSection section 00006FFFFFFAC440 "../wine-staging/dlls/ntdll/loader.c: loader_section" wait timed out in thread 0088, blocked by 007c, retrying (60 sec)</span>
-<span id="cb1-3">0120:fixme:file:server_get_file_info Unsupported info class 1c</span>
-<span id="cb1-4">0120:fixme:file:NtFsControlFile FSCTL_GET_REPARSE_POINT semi-stub</span>
-<span id="cb1-5">0120:fixme:file:server_get_file_info Unsupported info class 1c</span>
-<span id="cb1-6">0120:fixme:file:server_get_file_info Unsupported info class 1c</span>
-<span id="cb1-7">Python 3.12.3 (main, Aug  3 2024, 10:18:33) [GCC 14.1.0] on linux</span>
-<span id="cb1-8">Type "help", "copyright", "credits" or "license" for more information.</span>
-<span id="cb1-9">0120:fixme:file:server_get_file_info Unsupported info class 1c</span>
-<span id="cb1-10">&gt;&gt;&gt; exit(_</span>
-<span id="cb1-11">^C0124:err:virtual:virtual_setup_exception stack overflow 1280 bytes addr 0x952cd2 stack 0x1300b00 (0x1300000-0x1301000-0x1400000)</span>
-<span id="cb1-12">^C012c:err:virtual:virtual_setup_exception stack overflow 1280 bytes addr 0x952cd2 stack 0x1400b00 (0x1400000-0x1401000-0x1500000)</span>
-<span id="cb1-13">^C0134:err:virtual:virtual_setup_exception stack overflow 1280 bytes addr 0x952cd2 stack 0x1500b00 (0x1500000-0x1501000-0x1600000)</span>
-<span id="cb1-14">^C013c:err:virtual:virtual_setup_exception stack overflow 1280 bytes addr 0x952cd2 stack 0x1600b00 (0x1600000-0x1601000-0x1700000)</span>
-<span id="cb1-15">^C0144:err:virtual:virtual_setup_exception stack overflow 1280 bytes addr 0x952cd2 stack 0x1700b00 (0x1700000-0x1701000-0x1800000)</span></code></pre></div>
-<p>My Arch Linux install attempts to use wine to load up the python program. There are also issues quitting, and I end up having to use pkill to kill python. This is because my OS attempts to use <a href="https://en.wikipedia.org/wiki/Binfmt_misc">binfmt_misc</a>, and finds out that Wine is an acceptable program for launching ape binaries. ape binaries are not designed to run under wine, this behavior happens instead.</p>
-<p>The way to avoid this is to use the <a href="https://justine.lol/apeloader/">ape loader</a>.</p>
-<div class="sourceCode" id="cb2" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb2-1">[moonpie@lizard apeb]$ ./ape-x86_64.elf ./python</span>
-<span id="cb2-2">Python 3.12.3 (main, Aug  3 2024, 10:18:33) [GCC 14.1.0] on linux</span>
-<span id="cb2-3">Type "help", "copyright", "credits" or "license" for more information.</span>
-<span id="cb2-4">&gt;&gt;&gt;</span>
-<span id="cb2-5">``</span>
-<span id="cb2-6"></span>
-<span id="cb2-7">And this works. But, although there is also a version of python distributed with many python libraries included, called `pypack1`, it doesn't contain some crucial python packages that I may need for ansible administration of systems, like sql manipulation tools. </span>
-<span id="cb2-8"></span>
-<span id="cb2-9">```{.default}</span>
-<span id="cb2-10">[moonpie@lizard apeb]$ ./ape-x86_64.elf ./python -m venv venv</span>
-<span id="cb2-11">Error: Command '['/home/moonpie/vscode/test/apeb/venv/bin/python', '-m', 'ensurepip', '--upgrade', '--default-pip']' returned non-zero exit status 1.</span></code></pre></div>
-<p>Yeah. I’m not too worried, because I wrote my roles so that the databse manipulation can also be done remotely, from a playbook running on localhost, but it would be simpler if everything can be run on the remote systems.</p>
-<div class="sourceCode" id="cb3" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb3-1">[moonpie@lizard apeb]$ ./ape-x86_64.elf ./tmux</span>
-<span id="cb3-2">[moonpie@lizard apeb]$ ./ape-x86_64.elf ./tmux -h</span>
-<span id="cb3-3">tmux: unknown option -- h</span>
-<span id="cb3-4">usage: tmux [-2CDlNuvV] [-c shell-command] [-f file] [-L socket-name]</span>
-<span id="cb3-5">            [-S socket-path] [-T features] [command [flags]]</span></code></pre></div>
-<p>And tmux just won’t load, although it will print the help output. I find this very weird, as I could get tmux to load earlier, but not now. It doesn’t load on my host system, or in an Debian or Alpine container.</p>
-<p>This only seems to apply to the ape tmux, as tmux installed by apt in a debian container doesn’t have this issue, and then after that, tmux is able to start sessions normally, but then it can’t again after I kill all sessions. At least this isolates it to an issue with ape.</p>
-<p>It could just be a bug of some sort, but the package version only updated 3 days ago from now (August 6th), so those haven’t changed.</p>
-<p>The weirdest thing is that the ape tmux is actually able to work normally… but only after I launch a session via non-ape tmux. And then, one I kill all tmux sessions, then it stops working again.</p>
-<p>It seems like the ape tmux is having trouble starting the server:</p>
-<div class="sourceCode" id="cb4" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb4-1">/stuff # ape ./tmux start-server</span>
-<span id="cb4-2">/stuff #</span>
-<span id="cb4-3">/stuff # ape ./tmux ls</span>
-<span id="cb4-4">no server running on /tmp/tmux-0/default</span></code></pre></div>
-<p>I found a <a href="https://github.com/tmux/tmux/issues/736">half relevant issue</a>, but the failed solution gives me more answers:</p>
-<div class="sourceCode" id="cb5" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb5-1">/stuff # ape ./tmux new-session -t testing -d</span>
-<span id="cb5-2">create window failed: fork failed: Operation not permitted</span></code></pre></div>
-<p>I eventually made a post on the redbean discord server, and uploaded my <a href="https://gist.github.com/moonpiedumplings/809dcc89cfe289f8341aae85069a57e1">strace to a github gist</a>. I’ll wait to see if anyone replies.</p>
-<div class="sourceCode" id="cb6" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb6-1">[moonpie@lizard apeb]$ ./ape-x86_64.elf ./tmux new-session -d -vv</span>
-<span id="cb6-2">no server running on /tmp/tmux-1000/default</span></code></pre></div>
-<div class="sourceCode" id="cb7" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb7-1">/stuff # ./ape-x86_64.elf ./tmux new-session -d -vv</span>
-<span id="cb7-2">no server running on /tmp/tmux-0/default</span></code></pre></div>
-<p>So tmux can be ran with -vv for something more verbose.</p>
-<p>This might also be a tmux bug, since the version of tmux provided by ape/cosmo is 3.3a, rather than the latest 3.4, however, the nix bundled tmux also has this issue, and nix has 3.4 of tmux.</p>
-<p>I played around with attempting to build newer versions of tmux from the <a href="https://github.com/ahgamut/superconfigure?tab=readme-ov-file#how-can-i-build-these-locally">superconfigure</a> github repo, but their instructions don’t seem to work. The scripts assume Ubuntu 22 LTS, although I was only able to find that out after looking at what distro was used in their github actions.</p>
-<section id="openbsd" class="level2">
-<h2 class="anchored" data-anchor-id="openbsd">Openbsd</h2>
-<div class="sourceCode" id="cb8" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb8-1">[vagrant@openbsd7 ~]$ ./ape ./python</span>
-<span id="cb8-2">Python 3.12.3 (main, Aug  3 2024, 10:18:33) [GCC 14.1.0] on linux</span>
-<span id="cb8-3">Type "help", "copyright", "credits" or "license" for more information.</span>
-<span id="cb8-4">&gt;&gt;&gt;</span>
-<span id="cb8-5">[vagrant@openbsd7 ~]$ ./ape ./tmux new-ession -d -vv</span>
-<span id="cb8-6">no server running on /tmp/tmux-1000/default</span></code></pre></div>
-</section>
-<section id="netbsd" class="level2">
-<h2 class="anchored" data-anchor-id="netbsd">NetBSD</h2>
-<div class="sourceCode" id="cb9" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb9-1">[vagrant@netbsd8 ~]$ ./ape ./python</span>
-<span id="cb9-2">Python 3.12.3 (main, Aug  3 2024, 10:18:33) [GCC 14.1.0] on linux</span>
-<span id="cb9-3">Type "help", "copyright", "credits" or "license" for more information.</span>
-<span id="cb9-4">&gt;&gt;&gt;</span>
-<span id="cb9-5">[vagrant@netbsd8 ~]$ ./ape ./tmux new-session -d -vv</span>
-<span id="cb9-6">no server running on /tmp/tmux-1000/default</span></code></pre></div>
-<p>Vim executes successfully as well. It’s able to execute without the ape interpeter, but python crashes when I try to do that.</p>
-</section>
-<section id="dragonflybsd" class="level2">
-<h2 class="anchored" data-anchor-id="dragonflybsd">DragonflyBSD</h2>
-<p>We’ve seen this FreeBSD fork in the competition environment. But, DragonFlyBSD was forked from FreeBSD 4.8, which was nearly 21 years ago. At this point, they have diverged to the point where ape binaries do not run on Dragonfly. Cosmo does not officially support DragonflyBSD, and it’s highly likely that there are other differences, like the <code>pf</code> firewall configuration file having different syntax.</p>
-<div class="sourceCode" id="cb10" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb10-1">[vagrant@dragonflybsd6 ~]$ ./ape ./python</span>
-<span id="cb10-2">ELF binary type "9" not known.</span></code></pre></div>
-</section>
-<section id="freebsd" class="level2">
-<h2 class="anchored" data-anchor-id="freebsd">FreeBSD</h2>
-<p>I intend to test, but vagrant networking is giving me trouble. Cosmo should work with FreeBSD though.</p>
-</section>
-</section>
-<section id="nix-bundle" class="level1">
-<h1>Nix bundle</h1>
-<p><code>nix bundle nixpkgs#programname</code> is a command that bundles a program into a self extracting archive that uses proot to run itself. A big problem with nix bundle is that it mostly only works on Linux, and relying on proot makes it less portable compared to ape. <a href="https://nix.dev/manual/nix/2.13/command-ref/new-cli/nix3-bundle">Here is the official manual</a>… on an unofficial site.</p>
-<div class="sourceCode" id="cb11" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb11-1">[moonpie@lizard apeb]$ nix bundle nixpkgs#zellij</span>
-<span id="cb11-2">[moonpie@lizard apeb]$ ls -la zellij</span>
-<span id="cb11-3">lrwxrwxrwx 1 moonpie moonpie 47 Aug  6 22:28 zellij -&gt; /nix/store/5d5fi0x4g7v33m7jscxwjijaxi3lg2kp-arx</span></code></pre></div>
-<p>One thing that is mildly annoying is that nix builds stuff in the nix store, and then symlinks to it from the outside, meaning you have to copy out the binary first.</p>
-<p>The first thing I tried to do was bundle zellij and tmux, and funnily enough, they run into the exact same issue as ape. If I launch a zellij or tmux session using a non-ape, non nix-bundled session, first, then I can use the nix bundled zellij or tmux normally.</p>
-</section>
-<section id="guix-pack" class="level1">
-<h1>Guix pack</h1>
-<p>Guix pack is different. Rather than doing self extracting or staticly compiled executables, it generates a tarball (or docker image, but I’m focused on tarball), which can be extracted and has the programs with a vendored dependency.</p>
-<p>I found a <a href="https://hub.docker.com/r/metacall/guix">docker container for guix</a>, which is good because I’d rather run guix entirely in a podman container in my home volume, to avoid snapshotting guix in btrfs snapshots of the root subvolume.</p>
-<p><code>podman run -it --rm -v ".:/stuff" --privileged</code></p>
-<p>I had to run it with –privileged, otherwise the guix builder fails.</p>
-<p>Once inside, the <code>guix pack</code> command packs programs into a tarball. <a href="https://guix.gnu.org/manual/en/html_node/Invoking-guix-pack.html">Documentation</a></p>
-<p><code>guix pack -RR tmux</code> generates a tarball… but I’m struggling to run it outside the store.</p>
-</section>
-<section id="appimage" class="level1">
-<h1>Appimage</h1>
-<p>Appimages are good, but with a few caveats: They only work on Linux, and they require fuse2 (not fuse3, but fuse2) to run, and they rely on the same version of glibc.</p>
-<p>There are some <a href="https://github.com/tmux/tmux/wiki/Installing#appimage-package">prebuilt appimages for tmux</a> and it works fine after I install fuse2.</p>
-</section>
-<section id="static-compilation" class="level1">
-<h1>Static Compilation</h1>
-<section id="tmux" class="level2">
-<h2 class="anchored" data-anchor-id="tmux">Tmux</h2>
-<p><a href="https://github.com/tmux/tmux/wiki/Installing">tmux has instructions for installing</a>.</p>
-<p><code>apk add git gcc musl-dev openssl-dev openssl-libs-static openssl ncurses-terminfo</code></p>
-<p>After these packages are installed, compiling tmux staticly will work. (it should be noted that the instructions assume you use the relase tarball, rather than directly from the source code).</p>
-<div class="sourceCode" id="cb12" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb12-1">./configure --enable-static</span>
-<span id="cb12-2"></span>
-<span id="cb12-3">make</span></code></pre></div>
-<p>However:</p>
-<div class="sourceCode" id="cb13" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb13-1">/stuff # ./stmux</span>
-<span id="cb13-2">can't find terminfo database</span></code></pre></div>
-<p>The staticly compiled tmux doesn’t include ncurses and terminfo libraries. After installing <code>ncurses-terminfo</code> then it works fine.</p>
-<p>Apparently it’s possible to staticly bundle ncurses, libevent, and tmux, but it’s an even more involved process. Users must compile ncurses, which generates .a files and then link those to tmux when compiling using LIBS and -l flag to link it.</p>
-</section>
-<section id="zellij" class="level2">
-<h2 class="anchored" data-anchor-id="zellij">Zellij</h2>
-<div class="sourceCode" id="cb14" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb14-1">git clone https://github.com/zellij-org/zellij/</span>
-<span id="cb14-2"></span>
-<span id="cb14-3">podman run -it --rm -v "./zellij:/zellij" docker.io/library/rust:alpine3.18</span>
-<span id="cb14-4"></span>
-<span id="cb14-5">apk add openssl1.1-compat openssl1.1-compat-dev openssl1.1-compat-libs-static musl-utils musl-dev protoc # but only for alpine 3.18</span>
-<span id="cb14-6"></span>
-<span id="cb14-7">alternatively: apk add openssl openssl-libs-static openssl-dev musl-utils musl-dev protoc</span>
-<span id="cb14-8"></span>
-<span id="cb14-9">cd /zellij</span>
-<span id="cb14-10"></span>
-<span id="cb14-11">rustup target add x86_64-unknown-linux-musl</span>
-<span id="cb14-12"></span>
-<span id="cb14-13">rustup target add wasm32-wasi</span>
-<span id="cb14-14"></span>
-<span id="cb14-15">RUSTFLAGS="-C target-feature=+crt-static" OPENSSL_NO_VENDOR="1" cargo build --target x86_64-unknown-linux-musl  </span>
-<span id="cb14-16"></span>
-<span id="cb14-17"></span>
-<span id="cb14-18">/stuff/zellij # RUSTFLAGS="-C target-feature=+crt-static" OPENSSL_NO_VENDOR="1" cargo xtask build</span>
-<span id="cb14-19">error: cannot produce proc-macro for `prost-derive v0.11.9` as the target `x86_64-unknown-linux-musl` does not support these crate types</span></code></pre></div>
-<p>This still crashes for now, but I need to figure out how to compile it if I want to target other BSD’s.</p>
-<p><code>error: couldn't read /stuff/zellij/zellij-utils/../target/wasm32-wasi/debug/compact-bar.wasm: No such file or directory (os error 2)</code></p>
-<p>Let’s try debian, since it seems they do their official builds — even musl ones — on ubuntu.</p>
-<div class="sourceCode" id="cb15" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb15-1"></span>
-<span id="cb15-2">podman run -it --rm -v "./zellij:/zellij" docker.io/library/rust:bookworm</span>
-<span id="cb15-3"></span>
-<span id="cb15-4">apt update &amp;&amp; apt install musl-tools protobuf-compiler</span>
-<span id="cb15-5"></span>
-<span id="cb15-6">rustup target add x86_64-unknown-linux-musl</span>
-<span id="cb15-7"></span>
-<span id="cb15-8">rustup target add wasm32-wasi</span>
-<span id="cb15-9"></span>
-<span id="cb15-10">cargo xtask ci cross x86_64-unknown-linux-musl   # This crashes</span>
-<span id="cb15-11"></span>
-<span id="cb15-12">cargo build --verbose --release --target x86_64-unknown-linux-musl # This works</span>
-<span id="cb15-13"></span>
-<span id="cb15-14">rustup target add x86_64-unknown-netbsd</span>
-<span id="cb15-15"></span>
-<span id="cb15-16">cargo build --verbose --release --target x86_64-unknown-netbsd</span>
-<span id="cb15-17"> error occurred: Failed to find tool. Is `x86_64--netbsd-gcc` installed?</span></code></pre></div>
-<p>So it seems like cross compilation support isn’t too good.</p>
-<p>Then I tried with the alpine container in the same directory:</p>
-<div class="sourceCode" id="cb16" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb16-1"></span>
-<span id="cb16-2">apk add openssl openssl-libs-static openssl-dev musl-utils musl-dev protoc gcc-cross-embedded</span>
-<span id="cb16-3"></span>
-<span id="cb16-4">rustup target add wasm32-wasi</span>
-<span id="cb16-5"></span>
-<span id="cb16-6">rustup target add x86_64-unknown-netbsd</span>
-<span id="cb16-7"></span>
-<span id="cb16-8">RUSTFLAGS="-C target-feature=+crt-static" OPENSSL_NO_VENDOR="1" OPENSSL_INCLUDE_DIR="/usr/include/openssl" OPENSSL_LIB_DIR="/usr/lib" cargo build --target x86_64-unknown-freebsd</span></code></pre></div>
-<p>This is much closer, but doesn’t work.</p>
-<div class="sourceCode" id="cb17" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb17-1">note: /usr/lib/gcc/x86_64-alpine-linux-musl/13.2.1/../../../../x86_64-alpine-linux-musl/bin/ld: cannot find -lexecinfo: No such file or directory</span>
-<span id="cb17-2">          /usr/lib/gcc/x86_64-alpine-linux-musl/13.2.1/../../../../x86_64-alpine-linux-musl/bin/ld: cannot find -lkvm: No such file or directory</span>
-<span id="cb17-3">          /usr/lib/gcc/x86_64-alpine-linux-musl/13.2.1/../../../../x86_64-alpine-linux-musl/bin/ld: cannot find -lmemstat: No such file or directory</span>
-<span id="cb17-4">          /usr/lib/gcc/x86_64-alpine-linux-musl/13.2.1/../../../../x86_64-alpine-linux-musl/bin/ld: cannot find -lkvm: No such file or directory</span>
-<span id="cb17-5">          /usr/lib/gcc/x86_64-alpine-linux-musl/13.2.1/../../../../x86_64-alpine-linux-musl/bin/ld: cannot find -lprocstat: No such file or directory</span>
-<span id="cb17-6">          /usr/lib/gcc/x86_64-alpine-linux-musl/13.2.1/../../../../x86_64-alpine-linux-musl/bin/ld: cannot find -ldevstat: No such file or directory</span>
-<span id="cb17-7">          /usr/lib/gcc/x86_64-alpine-linux-musl/13.2.1/../../../../x86_64-alpine-linux-musl/bin/ld: cannot find -lexecinfo: No such file or directory</span>
-<span id="cb17-8">          collect2: error: ld returned 1 exit status</span></code></pre></div>
-<p>Zellij already ships a <a href="https://github.com/zellij-org/zellij/releases">static version on their releases</a> (zellij-x86_64-unknown-linux-musl.tar.gz). From my testing, it only runs on Linux.</p>
-</section>
-<section id="python" class="level2">
-<h2 class="anchored" data-anchor-id="python">Python</h2>
-<ul>
-<li><a href="https://github.com/indygreg/python-build-standalone" class="uri">https://github.com/indygreg/python-build-standalone</a> / <a href="https://gregoryszorc.com/docs/python-build-standalone/main/" class="uri">https://gregoryszorc.com/docs/python-build-standalone/main/</a></li>
-<li><a href="https://pyoxidizer.readthedocs.io/en/latest/pyoxy.html" class="uri">https://pyoxidizer.readthedocs.io/en/latest/pyoxy.html</a></li>
-<li><a href="https://wiki.python.org/moin/BuildStatically" class="uri">https://wiki.python.org/moin/BuildStatically</a> — not as promising</li>
-<li><a href="https://github.com/RustPython/RustPython" class="uri">https://github.com/RustPython/RustPython</a>
-<ul>
-<li>Not <a href="https://rustpython.github.io/pages/whats-left">feature complete</a></li>
-</ul></li>
-</ul>
-<p>Also, I just want to note about python, that <code>help('modules')</code> in an interactive shell will list all the modules that a python interpreter is able to access. With statically compiled versions of python, this shows what python libraries have been bundled with the library.</p>
-<section id="indygreg-python" class="level3">
-<h3 class="anchored" data-anchor-id="indygreg-python">IndyGreg Python</h3>
-<div class="sourceCode" id="cb18" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb18-1">usage: build-main.py [-h]</span>
-<span id="cb18-2">                     [--target-triple {s390x-unknown-linux-gnu,x86_64_v4-unknown-linux-gnu,ppc64le-unknown-linux-gnu,x86_64_v2-unknown-linux-gnu,i686-unknown-linux-gnu,x86_64_v3-unknown-linux-gnu,x86_64-unknown-linux-musl,x86_64-unknown-linux-gnu,armv7-unknown-linux-gnueabihf,armv7-unknown-linux-gnueabi,x86_64_v4-unknown-linux-musl,mipsel-unknown-linux-gnu,x86_64_v3-unknown-linux-musl,mips-unknown-linux-gnu,aarch64-unknown-linux-gnu,x86_64_v2-unknown-linux-musl}]</span>
-<span id="cb18-3">                     [--optimizations {lto,pgo+lto,noopt,pgo,debug}] [--python {cpython-3.10,cpython-3.11,cpython-3.8,cpython-3.12,cpython-3.9}] [--python-source PYTHON_SOURCE]</span>
-<span id="cb18-4">                     [--break-on-failure] [--no-docker] [--serial]</span>
-<span id="cb18-5">                     [--make-target {default,toolchain-image-xcb,toolchain-image-build,empty,toolchain-image-xcb.cross,toolchain-image-gcc,toolchain,toolchain-image-build.cross}]</span>
-<span id="cb18-6">build-main.py: error: argument --target-triple: invalid choice: 'x86_64-unknown-freebsd' (choose from 's390x-unknown-linux-gnu', 'x86_64_v4-unknown-linux-gnu', 'ppc64le-unknown-linux-gnu', 'x86_64_v2-unknown-linux-gnu', 'i686-unknown-linux-gnu', 'x86_64_v3-unknown-linux-gnu', 'x86_64-unknown-linux-musl', 'x86_64-unknown-linux-gnu', 'armv7-unknown-linux-gnueabihf', 'armv7-unknown-linux-gnueabi', 'x86_64_v4-unknown-linux-musl', 'mipsel-unknown-linux-gnu', 'x86_64_v3-unknown-linux-musl', 'mips-unknown-linux-gnu', 'aarch64-unknown-linux-gnu', 'x86_64_v2-unknown-linux-musl')</span>
-<span id="cb18-7">[moonpie@lizard python-build-standalone]$ ./build-linux.py --target x86_64-unknown-freebsd</span></code></pre></div>
-<p>No freebsd or other non-linux support.</p>
-</section>
-</section>
-<section id="coreutils" class="level2">
-<h2 class="anchored" data-anchor-id="coreutils">Coreutils</h2>
-<ul>
-<li><a href="https://github.com/uutils/coreutils" class="uri">https://github.com/uutils/coreutils</a></li>
-<li><a href="https://packages.debian.org/sid/busybox-static" class="uri">https://packages.debian.org/sid/busybox-static</a></li>
-<li><a href="https://busybox.net/FAQ.html" class="uri">https://busybox.net/FAQ.html</a> — looks like busybox releases are already staticly linked, but they mostly focus on Linux releases</li>
-<li><a href="https://github.com/ahgamut/superconfigure/releases/" class="uri">https://github.com/ahgamut/superconfigure/releases/</a> — this is cosmo. I would prefer a single binary though, for simplicity, rather than seperate staticly compiled coreutils which is what this is. But, if in a pinch, it makes a good replacement for a broken coreutil.</li>
-</ul>
-</section>
-<section id="toolpacks" class="level2">
-<h2 class="anchored" data-anchor-id="toolpacks">Toolpacks</h2>
-<p>I recently learned about a new project, called <a href="https://github.com/Azathothas/Toolpacks">Toolpacks</a>. Toolpacks is a truly massive set of static binaries, with so many utilities, including zellij, tmux, ssh, and many others. I see 2292 binaries for x86_64 Linux, and good amounts for Windows and Arm Linux as well.</p>
-<p>Another cool thing about Toolpacks is that they also provide <a href="https://en.wikipedia.org/wiki/UPX">UPX</a> versions of the software they distribute. UPX is a method of creating self extracting, compressed binaries that further saves space. For example:</p>
-<div class="sourceCode" id="cb19" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb19-1">[moonpie@lizard toolpack]$ du -sh zellij</span>
-<span id="cb19-2">30M     zellij</span>
-<span id="cb19-3">[moonpie@lizard toolpack]$ du -sh zellij.upx</span>
-<span id="cb19-4">8.6M    zellij.upx</span></code></pre></div>
-<p>That’s a pretty big reduction on the zellij binary, which is one of the largest binaries I’ve seen. Interesting, they also have caddy, and nginx. I find this very promising.</p>
-<p>There are also builds of busybox or toybox, which could replace coreutils in a pinch on Linux machines. There are a few other interesting one’s, such as <a href="https://github.com/vdjagilev/nmap-formatter">nmap-formatter</a>, a software that can format nmap XML output and convert it to CSV or other formats, which we may find easier to submit.</p>
-</section>
-</section>
-<section id="dockerc" class="level1">
-<h1>Dockerc</h1>
-<p><a href="https://github.com/NilsIrl/dockerc">Dockerc</a> is a project that compiles a docker container to a static executable, by bundling the runtime. I discovered this because it was packaged on the Toolpacks listed above.</p>
-<p>Because it is a container, I’m going to assume that this solution only works on Linux — but that doesn’t mean it’s not useful.</p>
-<div class="sourceCode" id="cb20" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb20-1">vagrant@debian10:~$ sudo dockerc --image docker://library/httpd -o httpd --rootfull</span>
-<span id="cb20-2">vagrant@debian10:~$ sudo ./httpd</span>
-<span id="cb20-3">unknown argument ignored: lazytime</span>
-<span id="cb20-4">AH00557: httpd: apr_sockaddr_info_get() failed for umoci-default</span>
-<span id="cb20-5">AH00557: httpd: apr_sockaddr_info_ge....</span></code></pre></div>
-<p>And it works — kinda. httpd doesn’t seem to bind an address. However, if I use an alpine container (which starts a shell), and then test with <code>python -m http.server</code>, that binds an address to the same localhost as the alpine machine.</p>
-<div class="sourceCode" id="cb21" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb21-1">sudo dockerc --image docker://docker.io/library/nginx --output nginx --rootfull</span>
-<span id="cb21-2"></span>
-<span id="cb21-3">sudo ./nginx</span></code></pre></div>
-<p>This also does not bind ports.</p>
-</section>
-<section id="less-promising-options" class="level1">
-<h1>Less promising options</h1>
-<section id="pkgin" class="level2">
-<h2 class="anchored" data-anchor-id="pkgin">pkgin</h2>
-<p><a href="https://pkgin.net/" class="uri">https://pkgin.net/</a></p>
-<p>Pkgin is a package manager that can manage packages compiled by <a href="https://www.pkgsrc.org/">pkgsrc</a>. It works on multiple BSDs (including Dragonfly), Macos, and Debian Linux. I don’t think we’ll ever see OpenSolaris but we’ll see.</p>
-
-
-</section>
-</section>
-
- ]]></description>
-  <category>playground</category>
-  <guid>./playground/ape-experiments/</guid>
-  <pubDate>Thu, 31 Oct 2024 07:00:00 GMT</pubDate>
 </item>
 <item>
   <title>Installing Unity on Distrobox</title>
@@ -10722,171 +11023,6 @@ font-style: inherit;">sysinit.target</span></span></code></pre></div>
   <category>playground</category>
   <guid>./playground/cachyos-install/</guid>
   <pubDate>Tue, 04 Jun 2024 07:00:00 GMT</pubDate>
-</item>
-<item>
-  <title>Container images and setuid binaries</title>
-  <link>./playground/setuid-containers/</link>
-  <description><![CDATA[ 
-
-
-
-
-<p>A friend sends me a message in Discord:</p>
-<p><code>$ find / -perm /4000</code></p>
-<blockquote class="blockquote">
-<p>That will show all suid executables on your system</p>
-</blockquote>
-<p>They then post the output of this command on openbsd:</p>
-<div class="sourceCode" id="cb1" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb1-1">/usr/bin/chfn</span>
-<span id="cb1-2">/usr/bin/chpass</span>
-<span id="cb1-3">/usr/bin/chsh</span>
-<span id="cb1-4">/usr/bin/doas</span>
-<span id="cb1-5">/usr/bin/lpr</span>
-<span id="cb1-6">/usr/bin/lprm</span>
-<span id="cb1-7">/usr/bin/passwd</span>
-<span id="cb1-8">/usr/bin/su</span>
-<span id="cb1-9">/usr/libexec/lockspool</span>
-<span id="cb1-10">/usr/libexec/ssh-keysign</span>
-<span id="cb1-11">/usr/sbin/authpf</span>
-<span id="cb1-12">/usr/sbin/authpf-noip</span>
-<span id="cb1-13">/usr/sbin/pppd</span>
-<span id="cb1-14">/usr/sbin/traceroute</span>
-<span id="cb1-15">/usr/sbin/traceroute6</span>
-<span id="cb1-16">/sbin/ping</span>
-<span id="cb1-17">/sbin/ping6</span>
-<span id="cb1-18">/sbin/shutdown</span></code></pre></div>
-<p>Another friend tries it out on Gentoo Linux</p>
-<div class="sourceCode" id="cb2" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb2-1">/usr/bin/chfn</span>
-<span id="cb2-2">/usr/bin/chpass</span>
-<span id="cb2-3">/usr/bin/chsh</span>
-<span id="cb2-4">/usr/bin/doas</span>
-<span id="cb2-5">/usr/bin/lpr</span>
-<span id="cb2-6">/usr/bin/lprm</span>
-<span id="cb2-7">/usr/bin/passwd</span>
-<span id="cb2-8">/usr/bin/su</span>
-<span id="cb2-9">/usr/libexec/lockspool</span>
-<span id="cb2-10">/usr/libexec/ssh-keysign</span>
-<span id="cb2-11">/usr/sbin/authpf</span>
-<span id="cb2-12">/usr/sbin/authpf-noip</span>
-<span id="cb2-13">/usr/sbin/pppd</span>
-<span id="cb2-14">/usr/sbin/traceroute</span>
-<span id="cb2-15">/usr/sbin/traceroute6</span>
-<span id="cb2-16">/sbin/ping</span>
-<span id="cb2-17">/sbin/ping6</span>
-<span id="cb2-18">/sbin/shutdown</span></code></pre></div>
-<p>I suppose I should explain what setuid binaries are. Setuid binaries run with the permissions of the user who owns the binary. Usually, it’s used for things like <code>sudo</code>, which use setuid to elevate the binary to root first, and then the rootful binary then does the things, like grant permissions.</p>
-<p>Setuid binaries are typically considered a security risk, because an exploit like a buffer overflow or some other exploit can be disasterous in a process running as root. In fact, that’s how many privilege escalation vulnerabilities on Linux have happened — exploiting a setuid binary owned by root.</p>
-<p>I then run the command on my own system (Arch Linux)</p>
-<div class="sourceCode" id="cb3" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb3-1">[moonpie@lizard ~]$ find / -perm /4000 2&gt;/dev/null</span>
-<span id="cb3-2">/home/moonpie/.local/share/containers/storage/overlay/2fa37f2ee66efbd308b9b91bce81c262f5e6ab6c3bf8056632afc60cc602785c/diff/usr/bin/chfn</span>
-<span id="cb3-3">/home/moonpie/.local/share/containers/storage/overlay/2fa37f2ee66efbd308b9b91bce81c262f5e6ab6c3bf8056632afc60cc602785c/diff/usr/bin/chsh</span>
-<span id="cb3-4">/home/moonpie/.local/share/containers/storage/overlay/2fa37f2ee66efbd308b9b91bce81c262f5e6ab6c3bf8056632afc60cc602785c/diff/usr/bin/gpasswd</span>
-<span id="cb3-5">/home/moonpie/.local/share/containers/storage/overlay/2fa37f2ee66efbd308b9b91bce81c262f5e6ab6c3bf8056632afc60cc602785c/diff/usr/bin/mount</span>
-<span id="cb3-6">/home/moonpie/.local/share/containers/storage/overlay/2fa37f2ee66efbd308b9b91bce81c262f5e6ab6c3bf8056632afc60cc602785c/diff/usr/bin/newgrp</span>
-<span id="cb3-7">/home/moonpie/.local/share/containers/storage/overlay/2fa37f2ee66efbd308b9b91bce81c262f5e6ab6c3bf8056632afc60cc602785c/diff/usr/bin/passwd</span>
-<span id="cb3-8">/home/moonpie/.local/share/containers/storage/overlay/2fa37f2ee66efbd308b9b91bce81c262f5e6ab6c3bf8056632afc60cc602785c/diff/usr/bin/su</span>
-<span id="cb3-9">/home/moonpie/.local/share/containers/storage/overlay/2fa37f2ee66efbd308b9b91bce81c262f5e6ab6c3bf8056632afc60cc602785c/diff/usr/bin/umount</span>
-<span id="cb3-10">/home/moonpie/.local/share/containers/storage/overlay/b2a22dd93936f487715bbc38b3a93f3f8e7d927fbf473871581c0a333f94d23a/diff/usr/lib/dbus-1.0/dbus-daemon-launch-helper</span>
-<span id="cb3-11">/home/moonpie/.local/share/containers/storage/overlay/af21757bc7d5f497f4ce0552dbad07cf0725413c3a305e1ff2c8a7b5097eeb49/diff/usr/lib/dbus-1.0/dbus-daemon-launch-helper</span>
-<span id="cb3-12">/home/moonpie/.local/share/containers/storage/overlay/ae134c61b154341a1dd932bd88cb44e805837508284e5d60ead8e94519eb339f/diff/usr/bin/chfn</span>
-<span id="cb3-13">/home/moonpie/.local/share/containers/storage/overlay/ae134c61b154341a1dd932bd88cb44e805837508284e5d60ead8e94519eb339f/diff/usr/bin/chsh</span>
-<span id="cb3-14">/home/moonpie/.local/share/containers/storage/overlay/ae134c61b154341a1dd932bd88cb44e805837508284e5d60ead8e94519eb339f/diff/usr/bin/gpasswd</span>
-<span id="cb3-15">/home/moonpie/.local/share/containers/storage/overlay/ae134c61b154341a1dd932bd88cb44e805837508284e5d60ead8e94519eb339f/diff/usr/bin/mount</span>
-<span id="cb3-16">/home/moonpie/.local/share/containers/storage/overlay/ae134c61b154341a1dd932bd88cb44e805837508284e5d60ead8e94519eb339f/diff/usr/bin/newgrp</span>
-<span id="cb3-17">/home/moonpie/.local/share/containers/storage/overlay/ae134c61b154341a1dd932bd88cb44e805837508284e5d60ead8e94519eb339f/diff/usr/bin/passwd</span>
-<span id="cb3-18">/home/moonpie/.local/share/containers/storage/overlay/ae134c61b154341a1dd932bd88cb44e805837508284e5d60ead8e94519eb339f/diff/usr/bin/su</span>
-<span id="cb3-19">/home/moonpie/.local/share/containers/storage/overlay/ae134c61b154341a1dd932bd88cb44e805837508284e5d60ead8e94519eb339f/diff/usr/bin/umount</span>
-<span id="cb3-20">/home/moonpie/.local/share/containers/storage/overlay/fd77695eba64b4eb5db10dd9ef0181d0053dbc23e6c465f3001d664f19e621d7/diff/usr/lib/openssh/ssh-keysign</span>
-<span id="cb3-21">/home/moonpie/.local/share/containers/storage/overlay/ede391454aeab91f6777dd38e55e085975ffcfd298987b8ec685196f2a6c811a/diff/usr/bin/chfn</span>
-<span id="cb3-22">/home/moonpie/.local/share/containers/storage/overlay/ede391454aeab91f6777dd38e55e085975ffcfd298987b8ec685196f2a6c811a/diff/usr/bin/chsh</span>
-<span id="cb3-23">/home/moonpie/.local/share/containers/storage/overlay/ede391454aeab91f6777dd38e55e085975ffcfd298987b8ec685196f2a6c811a/diff/usr/bin/gpasswd</span>
-<span id="cb3-24">/home/moonpie/.local/share/containers/storage/overlay/ede391454aeab91f6777dd38e55e085975ffcfd298987b8ec685196f2a6c811a/diff/usr/bin/mount</span>
-<span id="cb3-25">/home/moonpie/.local/share/containers/storage/overlay/ede391454aeab91f6777dd38e55e085975ffcfd298987b8ec685196f2a6c811a/diff/usr/bin/newgrp</span>
-<span id="cb3-26">/home/moonpie/.local/share/containers/storage/overlay/ede391454aeab91f6777dd38e55e085975ffcfd298987b8ec685196f2a6c811a/diff/usr/bin/passwd</span>
-<span id="cb3-27">/home/moonpie/.local/share/containers/storage/overlay/ede391454aeab91f6777dd38e55e085975ffcfd298987b8ec685196f2a6c811a/diff/usr/bin/su</span>
-<span id="cb3-28">/home/moonpie/.local/share/containers/storage/overlay/ede391454aeab91f6777dd38e55e085975ffcfd298987b8ec685196f2a6c811a/diff/usr/bin/umount</span>
-<span id="cb3-29">/home/moonpie/.local/share/containers/storage/overlay/c4bc4a1387e82c199a05c950a61d31aba8e1481a94c63196b82e25ac8367e5d1/diff/usr/bin/chage</span>
-<span id="cb3-30">/home/moonpie/.local/share/containers/storage/overlay/c4bc4a1387e82c199a05c950a61d31aba8e1481a94c63196b82e25ac8367e5d1/diff/usr/bin/gpasswd</span>
-<span id="cb3-31">/home/moonpie/.local/share/containers/storage/overlay/c4bc4a1387e82c199a05c950a61d31aba8e1481a94c63196b82e25ac8367e5d1/diff/usr/bin/mount</span>
-<span id="cb3-32">/home/moonpie/.local/share/containers/storage/overlay/c4bc4a1387e82c199a05c950a61d31aba8e1481a94c63196b82e25ac8367e5d1/diff/usr/bin/newgrp</span>
-<span id="cb3-33">/home/moonpie/.local/share/containers/storage/overlay/c4bc4a1387e82c199a05c950a61d31aba8e1481a94c63196b82e25ac8367e5d1/diff/usr/bin/passwd</span>
-<span id="cb3-34">/home/moonpie/.local/share/containers/storage/overlay/c4bc4a1387e82c199a05c950a61d31aba8e1481a94c63196b82e25ac8367e5d1/diff/usr/bin/su</span>
-<span id="cb3-35">/home/moonpie/.local/share/containers/storage/overlay/c4bc4a1387e82c199a05c950a61d31aba8e1481a94c63196b82e25ac8367e5d1/diff/usr/bin/umount</span>
-<span id="cb3-36">/home/moonpie/.local/share/containers/storage/overlay/c4bc4a1387e82c199a05c950a61d31aba8e1481a94c63196b82e25ac8367e5d1/diff/usr/sbin/pam_timestamp_check</span>
-<span id="cb3-37">/home/moonpie/.local/share/containers/storage/overlay/c4bc4a1387e82c199a05c950a61d31aba8e1481a94c63196b82e25ac8367e5d1/diff/usr/sbin/unix_chkpwd</span>
-<span id="cb3-38">/home/moonpie/.local/share/containers/storage/overlay/c4bc4a1387e82c199a05c950a61d31aba8e1481a94c63196b82e25ac8367e5d1/diff/usr/sbin/userhelper</span>
-<span id="cb3-39">/home/moonpie/.local/share/containers/storage/overlay/9b1016e74f7eb4282d4aa84ecefedda2bc0f6625203e5085e070bd649945a965/diff/usr/bin/fusermount3</span>
-<span id="cb3-40">/usr/bin/fusermount</span>
-<span id="cb3-41">/usr/bin/mount.cifs</span>
-<span id="cb3-42">/usr/bin/fusermount3</span>
-<span id="cb3-43">/usr/bin/mount.nfs</span>
-<span id="cb3-44">/usr/bin/ksu</span>
-<span id="cb3-45">/usr/bin/sudo</span>
-<span id="cb3-46">/usr/bin/pkexec</span>
-<span id="cb3-47">/usr/bin/chage</span>
-<span id="cb3-48">/usr/bin/expiry</span>
-<span id="cb3-49">/usr/bin/gpasswd</span>
-<span id="cb3-50">/usr/bin/passwd</span>
-<span id="cb3-51">/usr/bin/sg</span>
-<span id="cb3-52">/usr/bin/unix_chkpwd</span>
-<span id="cb3-53">/usr/bin/crontab</span>
-<span id="cb3-54">/usr/bin/vmware-authd</span>
-<span id="cb3-55">/usr/bin/chfn</span>
-<span id="cb3-56">/usr/bin/chsh</span>
-<span id="cb3-57">/usr/bin/mount</span>
-<span id="cb3-58">/usr/bin/newgrp</span>
-<span id="cb3-59">/usr/bin/su</span>
-<span id="cb3-60">/usr/bin/umount</span>
-<span id="cb3-61">/usr/lib/dbus-1.0/dbus-daemon-launch-helper</span>
-<span id="cb3-62">/usr/lib/polkit-1/polkit-agent-helper-1</span>
-<span id="cb3-63">/usr/lib/mail-dotlock</span>
-<span id="cb3-64">/usr/lib/ssh/ssh-keysign</span>
-<span id="cb3-65">/usr/lib/kf5/fileshareset</span>
-<span id="cb3-66">/usr/lib/qemu/qemu-bridge-helper</span>
-<span id="cb3-67">/usr/lib/cockpit/cockpit-session</span>
-<span id="cb3-68">/usr/lib/vmware/bin/vmware-vmx</span>
-<span id="cb3-69">/usr/lib/vmware/bin/vmware-vmx-debug</span>
-<span id="cb3-70">/usr/lib/vmware/bin/vmware-vmx-stats</span>
-<span id="cb3-71">/usr/lib/virtualbox/VBoxHeadless</span>
-<span id="cb3-72">/usr/lib/virtualbox/VBoxNetAdpCtl</span>
-<span id="cb3-73">/usr/lib/virtualbox/VBoxNetDHCP</span>
-<span id="cb3-74">/usr/lib/virtualbox/VBoxNetNAT</span>
-<span id="cb3-75">/usr/lib/virtualbox/VBoxSDL</span>
-<span id="cb3-76">/usr/lib/virtualbox/VirtualBoxVM</span>
-<span id="cb3-77">/usr/lib/electron27/chrome-sandbox</span>
-<span id="cb3-78">/usr/lib/chromium/chrome-sandbox</span>
-<span id="cb3-79">/usr/lib/electron28/chrome-sandbox</span>
-<span id="cb3-80">/usr/lib/Xorg.wrap</span>
-<span id="cb3-81">/opt/microsoft/msedge/msedge-sandbox</span></code></pre></div>
-<p>But okay. This isn’t too bad. Maybe I can’t execute binaries from the contianer images, outside the container images.</p>
-<div class="sourceCode" id="cb4" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb4-1">[moonpie@lizard ~]$ cd /home/moonpie/.local/share/containers/storage/overlay/2fa37f2ee66efbd308b9b91bce81c262f5e6ab6c3bf8056632afc60cc602785c/diff/usr/bin/</span>
-<span id="cb4-2">[moonpie@lizard bin]$ ./gpasswd</span>
-<span id="cb4-3">configuration error - unknown item 'FAIL_DELAY' (notify administrator)</span>
-<span id="cb4-4">Usage: gpasswd [option] GROUP</span>
-<span id="cb4-5"></span>
-<span id="cb4-6">Options:</span>
-<span id="cb4-7">  -a, --add USER                add USER to GROUP</span>
-<span id="cb4-8">  -d, --delete USER             remove USER from GROUP</span>
-<span id="cb4-9">  -h, --help                    display this help message and exit</span>
-<span id="cb4-10">  -Q, --root CHROOT_DIR         directory to chroot into</span>
-<span id="cb4-11">  -r, --remove-password         remove the GROUP's password</span>
-<span id="cb4-12">  -R, --restrict                restrict access to GROUP to its members</span>
-<span id="cb4-13">  -M, --members USER,...        set the list of members of GROUP</span>
-<span id="cb4-14">  -A, --administrators ADMIN,...</span>
-<span id="cb4-15">                                set the list of administrators for GROUP</span>
-<span id="cb4-16">Except for the -A and -M options, the options cannot be combined.</span></code></pre></div>
-<p>That error is likely due to the fact that my Arch system has a newer version of the config file then whatever this <code>gpasswd</code> binary is expecting.</p>
-<p>Theoretically, if there was a vulnerable setuid binary in one of these containers, then someone could execute it to become able to do things as my user.</p>
-<p>However, this isn’t actually that big of an issue, because only I can access my home direcotry, where the container images are stored.</p>
-<p>I also experimented with docker images, with the rootful docker daemon. The same thing happened, where only root has permission to read and execuite the directories those docker images are stored in.</p>
-<p>I panicked at first, seeing all those setuid binaries, but it doesn’t seem to be that much of a deal, and doesn’t give people access to things they don’t already have access to.. by default at least.</p>
-
-
-
- ]]></description>
-  <category>playground</category>
-  <guid>./playground/setuid-containers/</guid>
-  <pubDate>Thu, 02 May 2024 07:00:00 GMT</pubDate>
 </item>
 </channel>
 </rss>
