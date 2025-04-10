@@ -6,7 +6,7 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
-<meta name="dcterms.date" content="2025-04-01">
+<meta name="dcterms.date" content="2025-04-09">
 
 <title>Build Server 6 — An easier HCI? – Jeffrey Fonseca</title>
 <style>
@@ -163,7 +163,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <ul>
   <li><a href="#the-why" id="toc-the-why" class="nav-link active" data-scroll-target="#the-why">The Why</a></li>
   <li><a href="#starlingx-attempt" id="toc-starlingx-attempt" class="nav-link" data-scroll-target="#starlingx-attempt">StarlingX Attempt</a></li>
-  <li><a href="#installing-debian" id="toc-installing-debian" class="nav-link" data-scroll-target="#installing-debian">Installing Debian</a></li>
+  <li><a href="#installing-debian" id="toc-installing-debian" class="nav-link" data-scroll-target="#installing-debian">Installing Debian</a>
+  <ul class="collapse">
+  <li><a href="#networking" id="toc-networking" class="nav-link" data-scroll-target="#networking">Networking</a></li>
+  </ul></li>
   </ul>
 </nav>
     </div>
@@ -186,7 +189,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <div>
     <div class="quarto-title-meta-heading">Published</div>
     <div class="quarto-title-meta-contents">
-      <p class="date">April 1, 2025</p>
+      <p class="date">April 9, 2025</p>
     </div>
   </div>
   
@@ -263,6 +266,8 @@ E: Unable to correct problems, you have held broken packages.</code></pre>
 <section id="installing-debian" class="level1">
 <h1>Installing Debian</h1>
 <p><a href="https://wiki.debian.org/UEFI#Force_grub-efi_installation_to_the_removable_media_path" class="uri">https://wiki.debian.org/UEFI#Force_grub-efi_installation_to_the_removable_media_path</a> — gotta do this in the installer</p>
+<section id="networking" class="level2">
+<h2 class="anchored" data-anchor-id="networking">Networking</h2>
 <p>Switch from ifupdown/iproute2 to NetworkManager</p>
 <div class="code-with-filename">
 <div class="code-with-filename-file">
@@ -293,8 +298,201 @@ E: Unable to correct problems, you have held broken packages.</code></pre>
 <span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>managed=true</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>And changed “managed” to true instead of false.</p>
+<p>Once I do this, I use cockpit to convert the main network interface into a bridge that also a ethernet interface.</p>
+<p>So I got incus working. In a new/incognito tab, you can go to <code>/ui/login</code>, and follow the instructions to set up the UI.</p>
+<p>I attempt to set up an Alpine instance, with the network attatched directly to my ethernet/bridge combo. Yeah, that was a bad idea, as it took my network offline.</p>
+<p>Instead, I decided to create a veth, and then attatch that to my bridge (openstack style… ugh. I can’t believe I’m doing this again).</p>
+<p><code>nmcli con add type veth ifname veth1 con-name veth1 veth.peer eth1</code></p>
+<p>And then add the <code>veth1</code> as a port to the <code>eth0</code> bridge.</p>
+<p>And then after that:</p>
+<p><code>incus network create public0 bridge.external_interfaces=eth1 ipv4.address=none ipv4.dhcp=false ipv6.address=none ipv6.dhcp=false</code></p>
+<p>This essentially creates a public network with no dns and dhcp. Instead, vitual machines will get their required address via dhcp — and they do!</p>
+<p>But I realize something: I have two ethernet ports available to me, but I am only using one of them. I should use either a bond or a team to combine them into one, and then convert <em>that</em> merged interface into a bridge that also acts as an ethernet port.</p>
+<p>Based on <a href="https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/7/html/networking_guide/sec-comparison_of_network_teaming_to_bonding#sec-Comparison_of_Network_Teaming_to_Bonding">this comparison chart</a>, it looks like Teaming is better.</p>
+<pre><code>root@thoth:~# speedtest
+Retrieving speedtest.net configuration...
+Testing from California Research and Education Network (130.166.90.206)...
+Retrieving speedtest.net server list...
+Selecting best server based on ping...
+Hosted by Melbicom (Los Angeles, CA) [32.80 km]: 2.94 ms
+Testing download speed................................................................................
+Download: 93.59 Mbit/s
+Testing upload speed......................................................................................................
+Upload: 86.25 Mbit/s</code></pre>
+<p>It looks like my upload and download is capped at 100 Mbit/s. Let’s see if we can double that.</p>
+<p>Okay, but it looks like <a href="https://www.redhat.com/en/blog/if-you-bonding-you-will-love-teaming">teaming has been deprecated</a> — but in Red Hat, or in general? My Debian system still seems to be able to set up teaming.</p>
+<p>Okay, but now that I know I want bonding, <a href="https://www.kernel.org/doc/Documentation/networking/bonding.txt">which mode do I want</a>? Some modes seem to require configuration on the switch, which rules them out, but I want best performance from the modes I can use.</p>
+<p>Testing time!</p>
+<p>I did two kinds of tests: one with <code>speedtest</code>, and another with <code>speedtest &amp; speedtest &amp; speedtest</code>, to see if more in parallel would have different results.</p>
+<p>Better than would it would be alone, but it still seems bad.</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Bond Method Used</th>
+<th>Single Speedtest (Mbit/s)</th>
+<th>Triple Speedtest Down</th>
+<th>Triple Speedtest Up</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>No Bond</td>
+<td>93.59 down, 86.25 up</td>
+<td>30.12, 29.33, 23.13</td>
+<td>41.62 Mbit/32.98, 52.79</td>
+</tr>
+<tr class="even">
+<td>balance-alb</td>
+<td>93.60 down, 91.53 up</td>
+<td></td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>balance-rr</td>
+<td>99.95 down, 161.43 up</td>
+<td>58.96, 59.08, 61.67</td>
+<td>59.84, 57.80, 59.80</td>
+</tr>
+<tr class="even">
+<td>balance-tlb</td>
+<td>93.60 down, 87.51 up</td>
+<td></td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>802.3ad / LACP</td>
+<td>93 down, 90 up</td>
+<td>32, 32, 28</td>
+<td>31, 27, 29</td>
+</tr>
+<tr class="even">
+<td>balance-xor</td>
+<td></td>
+<td>35, 37, 17</td>
+<td>38, 35, 46</td>
+</tr>
+</tbody>
+</table>
+<p>Okay, that’s enough enough speedtest tests, I should probably switch to <code>iperf3</code> to test parallel connections properly.</p>
+<p><code>iperf3 -c ping.online.net -p 5203</code></p>
+<p>Iperf testing:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 25%">
+<col style="width: 33%">
+<col style="width: 40%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Bond Method Used</th>
+<th>Single Stream (mbit/s)</th>
+<th>Multi stream (mbit/s total)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>No bond</td>
+<td>77 (average), 94 (top)</td>
+<td></td>
+</tr>
+<tr class="even">
+<td>802.3ad / LAP</td>
+<td>94 , 77</td>
+<td>80, 70 (no improvement…)</td>
+</tr>
+<tr class="odd">
+<td>Round Robin</td>
+<td>120</td>
+<td>167, 143</td>
+</tr>
+<tr class="even">
+<td>balance-alb</td>
+<td>75</td>
+<td>75</td>
+</tr>
+</tbody>
+</table>
+<p>I notice that the first packet seems to have a lot less information, and then it’s the stuff after that that usually hits near 100 mbit/s in speed.</p>
+<p>(I also ran a quick check with iperf to make sure that both interfaces actually worked, which they did, they both worked and got 70 mbit/s of bandwidth.).</p>
+<p>Round robin works by just rotating which interface gets the next packet. According to the internet, it can result in packets arriving out of order, which can lead to slower speeds than a single nic in some cases. I can’t find any posts on this that are newer than 3 years old, so I don’t know if it applies, but I wanted to avoid round robin for that reason.</p>
+<p>People say the best mode is LACP, but I don’t get any performance improvement — however, according to <a href="https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/9/html/configuring_and_managing_networking/configuring-network-bonding_configuring-and-managing-networking#configuring-a-network-bond-by-using-nmcli_configuring-network-bonding">Red Hat’s documentation</a>, this mode does seem to require some configuration on the side of the network switch — perhaps without that configuration can still <em>do</em> a bond and combine two interfaces into one, but you don’t get any performance out of it?</p>
+<p>But when I run iperf on each of the physical interfaces simeuataneously, perhaps there is some kind of cap? Maybe the “two” ethernet interfaces in the wall are actually only one? But then why does round robin have consistent, better performance, over the theoretical 100 mbit/s limit?</p>
+<p>I think it is the former issue:</p>
+<pre><code>root@thoth:~# cat /proc/net/bonding/bond0
+Ethernet Channel Bonding Driver: v6.1.0-32-amd64
+
+Bonding Mode: IEEE 802.3ad Dynamic link aggregation
+Transmit Hash Policy: layer2 (0)
+MII Status: up
+MII Polling Interval (ms): 100
+Up Delay (ms): 0
+Down Delay (ms): 0
+Peer Notification Delay (ms): 0
+
+802.3ad info
+LACP active: on
+LACP rate: slow
+Min links: 0
+Aggregator selection policy (ad_select): stable
+System priority: 65535
+System MAC address: 48:4d:7e:ec:54:2f
+Active Aggregator Info:
+        Aggregator ID: 1
+        Number of ports: 1
+        Actor Key: 7
+        Partner Key: 1
+        Partner Mac Address: 00:00:00:00:00:00
+
+Slave Interface: enp0s25
+MII Status: up
+Speed: 100 Mbps
+Permanent HW addr: 48:4d:7e:ec:54:2f
+Slave queue ID: 0
+Aggregator ID: 1
+
+Slave Interface: enp9s0
+MII Status: up
+Permanent HW addr: 48:4d:7e:ec:54:31
+Aggregator ID: 2
+</code></pre>
+<p>Much of the information has been ommitted for brevity, but it seems that if your switch doesn’t support/isn’t configured, then the “Aggregator ID” will be different when it’s supposed to be the same, meaning only one ethernet interface is actually getting used.</p>
+<p>Instead of LACP, I set up loadbalancer-alb and use <code>ifstat</code> to moniter network traffic:</p>
+<pre><code> enp9s0             enp0s25             incusbr0             bond0
+ KB/s in  KB/s out   KB/s in  KB/s out   KB/s in  KB/s out   KB/s in  KB/s out
+    1.17     13.88      1.91      0.12      0.00      0.00      3.09     14.01
+    0.88     34.00      2.31      0.12      0.00      0.00      3.19     34.12
+    0.87     13.68      1.30      0.12      0.00      0.00      2.17     13.80
+    1.27     28.83      3.04      0.12      0.00      0.00      4.31     28.95
+    1.02     75.72      8.41      0.70      0.00      0.00      9.43     76.42
+    1.06   1645.20     36.86      1.95      0.00      0.00     37.91   1647.15
+   10.93  11556.15    461.64   2343.31      0.00      0.00    472.64  13900.86
+  662.03  12008.30      0.75  12008.21      0.00      0.00    662.78  24016.50
+  378.35  12006.45    224.79  12010.69      0.00      0.00    603.08  24017.15
+    1.47  11989.03    621.00  12012.35      0.00      0.00    622.53  24005.57
+    1.21  12008.51    617.68  12010.60      0.00      0.00    618.82  24020.51
+    0.90  12024.64    614.12  12012.30      0.00      0.00    615.02  24029.94
+    1.14  11998.92    545.02  11707.88      0.00      0.00    546.16  23708.20
+    0.72  12005.98    438.31   5809.23      0.00      0.00    439.04  17822.20
+    1.17  12006.77    491.46   8342.55      0.00      0.00    492.70  20340.93
+    1.11   5736.56    445.10  11851.00      0.00      0.00    446.14  17587.56
+    2.98     32.26    115.14   4567.08      0.00      0.00    118.12   4599.34</code></pre>
+<p>Nice! When running two <code>iperf</code> tests at once, to two different servers, both are used at once, and I get double the network traffic! Both iperf tests report 80 mbit/s.</p>
+<p>Then, I convert this bond to a bridge using cockpit. And the process of attempting to do so, the machine goes offline. It’s possible that you cannot convert a bond to the special bridge that also acts as a normal ethernet at the same time, or maybe you cannot use a bond as a bridge at all.</p>
+<p>No, it does work. It’s just that the address was reasigned via dhcp, but I wasn’t sshing into the right port (I use port 22022 rather than the default 22).</p>
+<p>And then: <code>nmcli con add type veth ifname veth1 con-name veth1 veth.peer eth1</code></p>
+<p>And then disable both from cockpit, but add veth1 as a port to the main bridge.</p>
+<p>Then, eth1 can be used as a bridge for incus.</p>
+<p><code>incus network create public0 bridge.external_interfaces=eth1 ipv4.address=none ipv4.dhcp=false ipv6.address=none ipv6.dhcp=false</code></p>
+<p>And then it works.</p>
 
 
+</section>
 </section>
 
 </main> <!-- /main -->
