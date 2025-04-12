@@ -12,7 +12,7 @@ tags:
 title: Final Exam corrections
 toc: true
 execute:
-  freeze: auto
+  freeze: false
 
 ---
 

@@ -1,6 +1,6 @@
 ---
 title: "Portable executable experiments for CCDC"
-date: "2024-10-31"
+date: "2025-4-1"
 categories: [playground]  
 # draft: true
 format:
@@ -10,7 +10,7 @@ format:
     code-block-background: true
     code-overflow: wrap
 execute:
-  freeze: auto
+  freeze: false
 ---
 
 The college I am going to has a team that comeptes in a competition called [CCDC](https://en.wikipedia.org/wiki/National_Collegiate_Cyber_Defense_Competition), which is a blue team cybersecurity competition. It involves securing misconfigured, outdated OS's and services, while being asked to do tasks called "injects", and protecting a highly vulnerable environment from "red teamers" — competition organizers who play the role of a hypothetical attacker. 
@@ -348,7 +348,7 @@ No freebsd or other non-linux support.
 * <https://github.com/ahgamut/superconfigure/releases/> — this is cosmo. I would prefer a single binary though, for simplicity, rather than seperate staticly compiled coreutils which is what this is. But, if in a pinch, it makes a good replacement for a broken coreutil.
 
             
-## Toolpacks
+# Soar (Previously Toolpacks)
 
 I recently learned about a new project, called [Toolpacks](https://github.com/Azathothas/Toolpacks). Toolpacks is a truly massive set of static binaries, with so many utilities, including zellij, tmux, ssh, and many others. I see 2292 binaries for x86_64 Linux, and good amounts for Windows and Arm Linux as well. 
 
@@ -365,6 +365,73 @@ That's a pretty big reduction on the zellij binary, which is one of the largest 
 
 There are also builds of busybox or toybox, which could replace coreutils in a pinch on Linux machines. There are a few other interesting one's, such as [nmap-formatter](https://github.com/vdjagilev/nmap-formatter), a software that can format nmap XML output and convert it to CSV or other formats, which we may find easier to submit.
 
+Lately, this toolpacks project has been merged into a another project, [soarpkgs](https://github.com/pkgforge/soarpkgs). This is essentially a "package repository" for the new package manager, [soar](https://github.com/pkgforge/soar).
+
+To install soar: 
+
+`curl -fsSL https://soar.qaidvoid.dev/install.sh | sh`
+
+But, then it doesn't install packages in a location accessible to the path by default.
+
+```
+soar install zellij
+
+some stuff omitted for brevity
+
+[1/1] zellij#github.com.zellij-org.zelli [━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━] 6.84 MiB/s     34.19 MiB/34.19 MiB   
+* zellij#github.com.zellij-org.zellij [Installed to: /root/.local/share/soar/packages/zellij-github.com.zellij-org.zellij-B0rtPDm77205]
+  Binaries:
+    /root/.local/share/soar/bin/zellij -> /root/.local/share/soar/packages/zellij-github.com.zellij-org.zellij-B0rtPDm77205/zellij
+  Notes:
+  Pre Built Binary Fetched from Upstream. Check/Report @ https://github.com/zellij-org/zellij
+```
+
+And this file location isn't accessible in the path by default.
+
+It seems that I can use `soar run packagename` in order to run packages without installing them, similar to nix. But this isn't really what I want either. 
+
+A much better way is to use `soar download` (or `soar dl`) to download the packages we want.
+
+So:
+
+```
+root@2972c8731770:/usr/local/bin# soar dl rsync
+Downloading package: rsync#nixpkgs.rsync
+ [━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━] 4.95 MiB/s     5.99 MiB/5.99 MiB     root@2972c8731770:/usr/local/bin# ls
+rsync  soar
+root@2972c8731770:/usr/local/bin# rsync --version
+rsync  version 3.4.1  protocol version 32
+Copyright (C) 1996-2025 by Andrew Tridgell, Wayne Davison, and others.
+Web site: https://rsync.samba.org/
+Capabilities:
+    64-bit files, 64-bit inums, 64-bit timestamps, 64-bit long ints,
+    no socketpairs, symlinks, symtimes, hardlinks, no hardlink-specials,
+    no hardlink-symlinks, IPv6, atimes, batchfiles, inplace, append, ACLs,
+    xattrs, optional secluded-args, iconv, prealloc, stop-at, no crtimes
+Optimizations:
+    no SIMD-roll, no asm-roll, openssl-crypto, no asm-MD5
+Checksum list:
+    xxh128 xxh3 xxh64 (xxhash) md5 md4 sha1 none
+Compress list:
+    zstd lz4 zlibx zlib none
+Daemon auth list:
+    sha512 sha256 sha1 md5 md4
+
+rsync comes with ABSOLUTELY NO WARRANTY.  This is free software, and you
+are welcome to redistribute it under certain conditions.  See the GNU
+General Public Licence for details.
+root@2972c8731770:/usr/local/bin#
+```
+
+I like this quite a bit. It can be used to quickly install the tools we need during the commpetition, like zellij or rsync.
+
+# StailX
+
+<https://stal-ix.github.io/>
+
+Stal-IX is similar to Soar, a distro agnostic package manager that focuses on the installation of static binaries.
+
+It's a very interesting and promising project, but the install steps are [quite complex](https://stal-ix.github.io/INSTALL.html), so I don't think it's suitable for our usecase. 
 
 
 # Dockerc

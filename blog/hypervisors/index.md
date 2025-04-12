@@ -10,7 +10,7 @@ format:
     code-summary: "Show the code"
     code-block-background: true
 execute:
-  freeze: true
+  freeze: false
 
 # Remove when I want this rendered to the main site
 draft: true

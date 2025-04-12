@@ -17,7 +17,7 @@ toc: true
 type: ap
 week: 13
 execute:
-  freeze: auto
+  freeze: false
 
 ---
 

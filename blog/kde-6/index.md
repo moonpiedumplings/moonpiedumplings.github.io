@@ -8,7 +8,7 @@ format:
     code-summary: "Show the code"
     code-block-background: true
 execute:
-  freeze: auto
+  freeze: false
 ---
 
 KDE 6 is released, and it comes with quite a few new features. 

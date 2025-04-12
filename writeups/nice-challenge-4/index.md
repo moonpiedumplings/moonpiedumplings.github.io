@@ -5,7 +5,7 @@ date: "2024-4-20"
 categories: [writeups]
 author: Jeffrey Fonseca
 execute:
-  freeze: auto
+  freeze: false
 ---
 
 This is for the [NICE](https://nice-challenge.com/) challenge.

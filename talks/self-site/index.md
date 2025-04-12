@@ -15,7 +15,7 @@ format:
     footer: "Jeffrey Fonseca — [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/)"
     theme: dark
 execute:
-  freeze: true
+  freeze: false
 ---
 
 ::: {.content-hidden when-format="revealjs"}

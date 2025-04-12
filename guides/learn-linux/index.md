@@ -8,7 +8,7 @@ format:
     code-summary: "Show the code"
     code-block-background: true
 execute:
-  freeze: auto
+  freeze: false
 ---
 
 My browser bookmarks bar is massive. I basically bookmark anything interesting I come across, and now I have a lot of resources accumulated, and I think it's worth it to write them down, although formatting is still a work in progress. 
@@ -77,6 +77,9 @@ I also like resources maintained by some kind of organization, either the offici
 <https://kubebyexample.com/learning-paths>
 
 * Not interactive, but follow-along labs for Linux fundamentals, containers, and kubernetes.
+
+
+[ProLug Linux Admin Course](https://professionallinuxusersgroup.github.io/lac/u9intro.html) Units 9 and 10. 
 
 ## Troubleshooting servers
 

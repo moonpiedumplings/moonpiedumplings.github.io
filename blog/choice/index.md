@@ -9,7 +9,7 @@ format:
     code-summary: "Show the code"
     code-block-background: true
 execute:
-  freeze: auto
+  freeze: false
 ---
 
 I use KDE and a rolling release distro. When KDE updated from 5 to 6, it was horrificially unstable. One or two crashes a day for a week or two. I could have chosen to undo the update, or change the DE, but I didn't.

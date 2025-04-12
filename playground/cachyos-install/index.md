@@ -10,7 +10,7 @@ format:
     code-block-background: true
     code-overflow: wrap
 execute:
-  freeze: auto
+  freeze: false
 ---
 
 I've decided to reinstall [cachyos](https://cachyos.org/), the Arch Linux fork I use on my laptop's, because the config of my smaller laptop is getting crusty. In addition to not having any swap setup, `/nix` is part of the main btrfs subvolume, meaning it is included in snapshots, and my snapshots are far, far larger than they should be.

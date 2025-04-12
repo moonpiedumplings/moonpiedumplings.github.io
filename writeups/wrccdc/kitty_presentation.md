@@ -6,7 +6,7 @@ format:
         theme: dark
         #center: true
 execute:
-  freeze: true
+  freeze: false
 ---
 
 # Overview

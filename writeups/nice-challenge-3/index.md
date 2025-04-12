@@ -5,7 +5,7 @@ date: "2024-2-13"
 categories: [writeups]
 author: Jeffrey Fonseca
 execute:
-  freeze: auto
+  freeze: false
 ---
 
 This is for the [NICE](https://nice-challenge.com/) challenge. This challenge was significantly harder than the previous challenges, involving being attacked in realtime, and having to write up incident response reports — and if you were too slow, you didn't get the points. 

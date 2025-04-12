@@ -1,0 +1,332 @@
+---
+title: "Build Server 6 — An easier HCI?"
+date: "2025-4-9"
+categories: [projects]
+format:
+  html:
+    code-fold: true
+    code-summary: "Show the code"
+    code-block-background: true
+execute:
+  freeze: false
+---
+
+# The Why
+
+In my [previous project](../build-server-5/), I attempted to deploy [Openstack](https://en.wikipedia.org/wiki/OpenStack) entirely with [GitOps](https://en.wikipedia.org/wiki/DevOps#GitOps) methodologies, using [FluxCD](https://fluxcd.io/).
+
+I failed. Well, it didn't fail, but I think I've spent too long on it and I need to move on.
+
+Recently, I've discovered a project that simeutaneously seems to be a distribution of OpenStack, Kubernetes, and Linux, called [StarlingX](https://www.starlingx.io/).
+
+Also:
+
+> [StarlingX OpenStack is installed and managed as an FluxCD application.](https://docs.starlingx.io/system_configuration/index-sysconf-d511820651f0.html#starlingx-openstack)
+
+Now, StarlingX, sadly, is not GitOps OpenStack. Configurations to the OpenStack application are done via the command line, or via helm value files. Perhaps I can clone the flux repo they use, but truthfully, I'm not going to worry about it for now.
+
+# StarlingX Attempt
+
+There are multiple deployment guides, but I am interested in the ["Simplex"](https://docs.starlingx.io/r/stx.10.0/deploy_install_guides/release/bare_metal/aio_simplex_install_kubernetes.html) install, which documents how to do an All in One install, using a single server, which is all I have.
+
+I also care a lot about "For OpenStack only: Configure data interfaces for controller-0. Data class interfaces are vSwitch interfaces used by vSwitch to provide VM virtio vNIC connectivity to OpenStack Neutron Tenant Networks on the underlying assigned Data Network.", since I only have one physical interface in use, and the other one will be virtual.
+
+I started by obtaining an ISO, and attempting to install it in a virtual machine. The installer crashed becasue it wanted 500 GB of storage... which is fair I guess.At least it doesn't crash because I don't have enough CPU cores or ram.
+
+Just kidding. It doesn't boot. I don't know why. Instead it stays stuck on "booting on hard disk". This probably would work better on a physical machine, but I want to make sure it works on a virtual machine first.
+
+But I install it on my physical server anyways. It doesn't get an ip address via dhcp.
+
+I understand why people like turnkey solutions, like ESXI now.
+
+I look into another HCI solution: [Suse Harvester](https://docs.harvesterhci.io/). It's actually a very good software, the UI is great and the install is easy. But if you want any kind of authorization and control over who can see what projects, you have to deploy rancher, which can then "consume" the harvester api and work with it. While excellent, I don't really feel like having to set up rancher either on another server, or in a virtual machine.
+
+In addition to that, I could not figure out how networking works, and how to set up a bridged network.
+
+But I begin looking into something else, [Incus](https://linuxcontainers.org/incus/docs/main/).
+
+Incus:
+
+-   Can be installed on top of another distro
+-   Has networking I understand, "simply" bridging
+-   Has [authorization and authentication](https://linuxcontainers.org/incus/docs/main/authorization/#tls-authorization) by restricting TLS certs to a project
+    -   Not the complex SSO I want, but I need *something* working
+
+Incus also has some nice features, like it can access a [repository](https://images.linuxcontainers.org/) of LXC images (similar to Dockerhub), which is cool for testing out many different Linux distros.
+
+Anyway, I did actually attempt to deploy it using Debian backports.
+
+```         
+root@b718c16e3b2d:/etc/apt/sources.list.d# apt install incus
+Reading package lists... Done
+Building dependency tree... Done
+Reading state information... Done
+Some packages could not be installed. This may mean that you have
+requested an impossible situation or if you are using the unstable
+distribution that some required packages have not yet been created
+or been moved out of Incoming.
+The following information may help to resolve the situation:
+
+The following packages have unmet dependencies:
+ incus : Depends: qemu-system-x86 (>= 1:8.0) but 1:7.2+dfsg-7+deb12u12 is to be installed
+E: Unable to correct problems, you have held broken packages.
+```
+
+Disappointing.
+
+Instead, I followed the instructions on the [github](https://github.com/zabbly/incus)... mostly.
+
+``` {.default filename="/etc/apt/sources.list.d/zabbly-incus-lts-6.0.sources"}
+Enabled: yes
+Types: deb
+URIs: https://pkgs.zabbly.com/incus/lts-6.0
+Suites: bookworm
+Components: main
+Architectures: amd64
+Signed-By: /etc/apt/keyrings/zabbly.asc
+```
+
+This is a container, I will test a virtual machine install later on.
+
+# Installing Debian
+
+<https://wiki.debian.org/UEFI#Force_grub-efi_installation_to_the_removable_media_path> — gotta do this in the installer
+
+
+# Networking
+
+Switch from ifupdown/iproute2 to NetworkManager
+
+``` {.default filename="/etc/network/interfaces"}
+# This file describes the network interfaces available on your system
+# and how to activate them. For more information, see interfaces(5).
+
+source /etc/network/interfaces.d/*
+
+# The loopback network interface
+auto lo
+iface lo inet loopback
+
+# The primary network interface
+#allow-hotplug enp0s25
+#iface enp0s25 inet dhcp
+```
+
+Comment out network interfaces.
+
+``` {.default filename="/etc/NetworkManager/NetworkManager.conf"}
+[main]
+plugins=ifupdown,keyfile
+
+[ifupdown]
+managed=true
+```
+
+And changed "managed" to true instead of false.
+
+Once I do this, I use cockpit to convert the main network interface into a bridge that also a ethernet interface.
+
+So I got incus working. In a new/incognito tab, you can go to `/ui/login`, and follow the instructions to set up the UI.
+
+I attempt to set up an Alpine instance, with the network attatched directly to my ethernet/bridge combo. Yeah, that was a bad idea, as it took my network offline.
+
+Instead, I decided to create a veth, and then attatch that to my bridge (openstack style... ugh. I can't believe I'm doing this again).
+
+`nmcli con add type veth ifname veth1 con-name veth1 veth.peer eth1`
+
+And then add the `veth1` as a port to the `eth0` bridge.
+
+And then after that:
+
+`incus network create public0 bridge.external_interfaces=eth1 ipv4.address=none ipv4.dhcp=false ipv6.address=none ipv6.dhcp=false`
+
+This essentially creates a public network with no dns and dhcp. Instead, vitual machines will get their required address via dhcp — and they do!
+
+But I realize something: I have two ethernet ports available to me, but I am only using one of them. I should use either a bond or a team to combine them into one, and then convert *that* merged interface into a bridge that also acts as an ethernet port.
+
+Based on [this comparison chart](https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/7/html/networking_guide/sec-comparison_of_network_teaming_to_bonding#sec-Comparison_of_Network_Teaming_to_Bonding), it looks like Teaming is better.
+
+```         
+root@thoth:~# speedtest
+Retrieving speedtest.net configuration...
+Testing from California Research and Education Network (130.166.90.206)...
+Retrieving speedtest.net server list...
+Selecting best server based on ping...
+Hosted by Melbicom (Los Angeles, CA) [32.80 km]: 2.94 ms
+Testing download speed................................................................................
+Download: 93.59 Mbit/s
+Testing upload speed......................................................................................................
+Upload: 86.25 Mbit/s
+```
+
+It looks like my upload and download is capped at 100 Mbit/s. Let's see if we can double that.
+
+Okay, but it looks like [teaming has been deprecated](https://www.redhat.com/en/blog/if-you-bonding-you-will-love-teaming) — but in Red Hat, or in general? My Debian system still seems to be able to set up teaming.
+
+Okay, but now that I know I want bonding, [which mode do I want](https://www.kernel.org/doc/Documentation/networking/bonding.txt)? Some modes seem to require configuration on the switch, which rules them out, but I want best performance from the modes I can use.
+
+Testing time!
+
+I did two kinds of tests: one with `speedtest`, and another with `speedtest & speedtest & speedtest`, to see if more in parallel would have different results.
+
+Better than would it would be alone, but it still seems bad.
+
+| Bond Method Used | Single Speedtest (Mbit/s) | Triple Speedtest Down | Triple Speedtest Up |
+|------------------|------------------|------------------|------------------|
+| No Bond | 93.59 down, 86.25 up | 30.12, 29.33, 23.13 | 41.62 Mbit/32.98, 52.79 |
+| balance-alb | 93.60 down, 91.53 up |  |  |
+| balance-rr | 99.95 down, 161.43 up | 58.96, 59.08, 61.67 | 59.84, 57.80, 59.80 |
+| balance-tlb | 93.60 down, 87.51 up |  |  |
+| 802.3ad / LACP | 93 down, 90 up | 32, 32, 28 | 31, 27, 29 |
+| balance-xor |  | 35, 37, 17 | 38, 35, 46 |
+
+Okay, that's enough enough speedtest tests, I should probably switch to `iperf3` to test parallel connections properly.
+
+`iperf3 -c ping.online.net -p 5203`
+
+Iperf testing:
+
+| Bond Method Used | Single Stream (mbit/s) | Multi stream (mbit/s total) |
+|------------------|------------------------|-----------------------------|
+| No bond          | 77 (average), 94 (top) |                             |
+| 802.3ad / LAP    | 94 , 77                | 80, 70 (no improvement...)  |
+| Round Robin      | 120                    | 167, 143                    |
+| balance-alb      | 75                     | 75                          |
+
+I notice that the first packet seems to have a lot less information, and then it's the stuff after that that usually hits near 100 mbit/s in speed.
+
+(I also ran a quick check with iperf to make sure that both interfaces actually worked, which they did, they both worked and got 70 mbit/s of bandwidth.).
+
+Round robin works by just rotating which interface gets the next packet. According to the internet, it can result in packets arriving out of order, which can lead to slower speeds than a single nic in some cases. I can't find any posts on this that are newer than 3 years old, so I don't know if it applies, but I wanted to avoid round robin for that reason.
+
+People say the best mode is LACP, but I don't get any performance improvement — however, according to [Red Hat's documentation](https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/9/html/configuring_and_managing_networking/configuring-network-bonding_configuring-and-managing-networking#configuring-a-network-bond-by-using-nmcli_configuring-network-bonding), this mode does seem to require some configuration on the side of the network switch — perhaps without that configuration can still _do_ a bond and combine two interfaces into one, but you don't get any performance out of it?
+
+But when I run iperf on each of the physical interfaces simeuataneously, perhaps there is some kind of cap? Maybe the "two" ethernet interfaces in the wall are actually only one? But then why does round robin have consistent, better performance, over the theoretical 100 mbit/s limit? 
+
+I think it is the former issue:
+
+```
+root@thoth:~# cat /proc/net/bonding/bond0
+Ethernet Channel Bonding Driver: v6.1.0-32-amd64
+
+Bonding Mode: IEEE 802.3ad Dynamic link aggregation
+Transmit Hash Policy: layer2 (0)
+MII Status: up
+MII Polling Interval (ms): 100
+Up Delay (ms): 0
+Down Delay (ms): 0
+Peer Notification Delay (ms): 0
+
+802.3ad info
+LACP active: on
+LACP rate: slow
+Min links: 0
+Aggregator selection policy (ad_select): stable
+System priority: 65535
+System MAC address: 48:4d:7e:ec:54:2f
+Active Aggregator Info:
+        Aggregator ID: 1
+        Number of ports: 1
+        Actor Key: 7
+        Partner Key: 1
+        Partner Mac Address: 00:00:00:00:00:00
+
+Slave Interface: enp0s25
+MII Status: up
+Speed: 100 Mbps
+Permanent HW addr: 48:4d:7e:ec:54:2f
+Slave queue ID: 0
+Aggregator ID: 1
+
+Slave Interface: enp9s0
+MII Status: up
+Permanent HW addr: 48:4d:7e:ec:54:31
+Aggregator ID: 2
+
+```
+
+Much of the information has been ommitted for brevity, but it seems that if your switch doesn't support/isn't configured, then the "Aggregator ID" will be different when it's supposed to be the same, meaning only one ethernet interface is actually getting used. 
+
+Instead of LACP, I set up loadbalancer-alb and use `ifstat` to moniter network traffic:
+
+```
+ enp9s0             enp0s25             incusbr0             bond0
+ KB/s in  KB/s out   KB/s in  KB/s out   KB/s in  KB/s out   KB/s in  KB/s out
+    1.17     13.88      1.91      0.12      0.00      0.00      3.09     14.01
+    0.88     34.00      2.31      0.12      0.00      0.00      3.19     34.12
+    0.87     13.68      1.30      0.12      0.00      0.00      2.17     13.80
+    1.27     28.83      3.04      0.12      0.00      0.00      4.31     28.95
+    1.02     75.72      8.41      0.70      0.00      0.00      9.43     76.42
+    1.06   1645.20     36.86      1.95      0.00      0.00     37.91   1647.15
+   10.93  11556.15    461.64   2343.31      0.00      0.00    472.64  13900.86
+  662.03  12008.30      0.75  12008.21      0.00      0.00    662.78  24016.50
+  378.35  12006.45    224.79  12010.69      0.00      0.00    603.08  24017.15
+    1.47  11989.03    621.00  12012.35      0.00      0.00    622.53  24005.57
+    1.21  12008.51    617.68  12010.60      0.00      0.00    618.82  24020.51
+    0.90  12024.64    614.12  12012.30      0.00      0.00    615.02  24029.94
+    1.14  11998.92    545.02  11707.88      0.00      0.00    546.16  23708.20
+    0.72  12005.98    438.31   5809.23      0.00      0.00    439.04  17822.20
+    1.17  12006.77    491.46   8342.55      0.00      0.00    492.70  20340.93
+    1.11   5736.56    445.10  11851.00      0.00      0.00    446.14  17587.56
+    2.98     32.26    115.14   4567.08      0.00      0.00    118.12   4599.34
+```
+
+Nice! When running two `iperf` tests at once, to two different servers, both are used at once, and I get double the network traffic! Both iperf tests report 80 mbit/s. 
+
+
+Then, I convert this bond to a bridge using cockpit. And the process of attempting to do so, the machine goes offline. It's possible that you cannot convert a bond to the special bridge that also acts as a normal ethernet at the same time, or maybe you cannot use a bond as a bridge at all. 
+
+No, it does work. It's just that the address was reasigned via dhcp, but I wasn't sshing into the right port (I use port 22022 rather than the default 22). 
+
+And then: `nmcli con add type veth ifname veth1 con-name veth1 veth.peer eth1`
+
+And then disable both from cockpit, but add veth1 as a port to the main bridge.
+
+Then, eth1 can be used as a bridge for incus.
+
+`incus network create public0 bridge.external_interfaces=eth1 ipv4.address=none ipv4.dhcp=false ipv6.address=none ipv6.dhcp=false`
+
+And then it works. 
+
+It's brought up to me by a friend, that there is a possibility that the limitation of speeds is not on my side, either the NIC or the cable, but instead on CSUN's side, a 100 mbit/s limitation per _mac address_.
+
+I test this by running three speedtests simultaneously, two on the side of CSUN's internet, and one within a virtual machine that has it's own Mac address. But the test only gets 200 mbit/s total from every device. 
+
+However, there is a real possibility I am using the wrong cables, and it's the cables that are limiting. I will test
+
+
+# Incus Configuration
+
+Firstly, I hate the "default" profile. It forces the `incusbr0` network on virtual machines, whereas I want users to be able to select an for which network they want — either a public network or an internal network.
+
+A big thing I want is for the layer8 project to have it's own seperate set of networks and firewall rules, but still be able to have access to the `public0` network I have created, so people can create public virtual machines.
+
+From `incus project edit layer8`:
+
+```{.yaml}
+config:
+  features.images: "false"
+  features.networks: "false"
+  features.networks.zones: "true"
+  features.profiles: "true"
+  features.storage.buckets: "true"
+  features.storage.volumes: "false"
+  restricted: "true"
+  restricted.networks.access: public0, internal0
+description: ""
+name: layer8
+used_by:
+- /1.0/profiles/default?project=layer8
+```
+
+There is no network named internal0 — instead I add one in after I create the project. With this, they would be limited to a single internal network, and public network.
+
+`incus config trust add-certificate --projects layer8 --restricted layer8.crt`
+
+`incus config trust add --projects layer8 --restricted layer8.crt`
+
+And with this, my instance is restricted. 
+
+Mostly. Storage pools and storage doesn't seem to work at all. 
+
+So I create another storage pool called "layer8" from the UI. But this fails, and doesn't seem to be accessible from the layer8 project. 

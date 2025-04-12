@@ -9,7 +9,7 @@ format:
     code-summary: "Show the code"
     code-block-background: true
 execute:
-  freeze: auto
+  freeze: false
 ---
 
 # Why the switch?

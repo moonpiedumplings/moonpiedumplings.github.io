@@ -9,7 +9,7 @@ format:
     code-summary: "Show the code"
     code-block-background: true
 execute:
-  freeze: auto
+  freeze: false
 ---
 
 So, I think it's time for me to move from the older channels way of doing things in nix, to the newer flakes. I am using the [determinate system nix installer](https://github.com/DeterminateSystems/nix-installer), which only comes with flakes. However, the nix docs are very poor, so I am going to document my process of converting my development environment here. 
