@@ -490,9 +490,34 @@ Aggregator ID: 2
 <p>Then, eth1 can be used as a bridge for incus.</p>
 <p><code>incus network create public0 bridge.external_interfaces=eth1 ipv4.address=none ipv4.dhcp=false ipv6.address=none ipv6.dhcp=false</code></p>
 <p>And then it works.</p>
+<p>It’s brought up to me by a friend, that there is a possibility that the limitation of speeds is not on my side, either the NIC or the cable, but instead on CSUN’s side, a 100 mbit/s limitation per <em>mac address</em>.</p>
+<p>I test this by running three speedtests simultaneously, two on the side of CSUN’s internet, and one within a virtual machine that has it’s own Mac address. But the test only gets 200 mbit/s total from every device.</p>
+<p>However, there is a real possibility I am using the wrong cables, and it’s the cables that are limiting. I will test</p>
 </section>
 <section id="incus-configuration" class="level1">
 <h1>Incus Configuration</h1>
+<p>Firstly, I hate the “default” profile. It forces the <code>incusbr0</code> network on virtual machines, whereas I want users to be able to select an for which network they want — either a public network or an internal network.</p>
+<p>A big thing I want is for the layer8 project to have it’s own seperate set of networks and firewall rules, but still be able to have access to the <code>public0</code> network I have created, so people can create public virtual machines.</p>
+<p>From <code>incus project edit layer8</code>:</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">config</span><span class="kw">:</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">features.images</span><span class="kw">:</span><span class="at"> </span><span class="st">"false"</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">features.networks</span><span class="kw">:</span><span class="at"> </span><span class="st">"false"</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">features.networks.zones</span><span class="kw">:</span><span class="at"> </span><span class="st">"true"</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">features.profiles</span><span class="kw">:</span><span class="at"> </span><span class="st">"true"</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">features.storage.buckets</span><span class="kw">:</span><span class="at"> </span><span class="st">"true"</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">features.storage.volumes</span><span class="kw">:</span><span class="at"> </span><span class="st">"false"</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">restricted</span><span class="kw">:</span><span class="at"> </span><span class="st">"true"</span></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">restricted.networks.access</span><span class="kw">:</span><span class="at"> public0, internal0</span></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a><span class="fu">description</span><span class="kw">:</span><span class="at"> </span><span class="st">""</span></span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a><span class="fu">name</span><span class="kw">:</span><span class="at"> layer8</span></span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a><span class="fu">used_by</span><span class="kw">:</span></span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a><span class="kw">-</span><span class="at"> /1.0/profiles/default?project=layer8</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>There is no network named internal0 — instead I add one in after I create the project. With this, they would be limited to a single internal network, and public network.</p>
+<p><code>incus config trust add-certificate --projects layer8 --restricted layer8.crt</code></p>
+<p><code>incus config trust add --projects layer8 --restricted layer8.crt</code></p>
+<p>And with this, my instance is restricted.</p>
+<p>Mostly. Storage pools and storage doesn’t seem to work at all.</p>
+<p>So I create another storage pool called “layer8” from the UI. But this fails, and doesn’t seem to be accessible from the layer8 project.</p>
 
 
 </section>
