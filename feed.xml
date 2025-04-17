@@ -315,7 +315,7 @@ Aggregator ID: 2
 </section>
 <section id="incus-configuration" class="level1">
 <h1>Incus Configuration</h1>
-<p>Firstly, I hate the “default” profile. It forces the <code>incusbr0</code> network on virtual machines, whereas I want users to be able to select an for which network they want — either a public network or an internal network.</p>
+<p>Firstly, I don’t want the “default” profile. It forces the <code>incusbr0</code> network on virtual machines, whereas I want users to be able to select an for which network they want — either a public network or an internal network.</p>
 <p>A big thing I want is for the layer8 project to have it’s own seperate set of networks and firewall rules, but still be able to have access to the <code>public0</code> network I have created, so people can create public virtual machines.</p>
 <p>From <code>incus project edit layer8</code>:</p>
 <div class="sourceCode" id="cb8" style="background: #f1f3f5;"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb8-1"><span class="fu" style="color: #4758AB;
@@ -449,13 +449,784 @@ font-style: inherit;">-</span><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;"> /1.0/profiles/default?project=layer8</span></span></code></pre></div>
 <p>There is no network named internal0 — instead I add one in after I create the project. With this, they would be limited to a single internal network, and public network.</p>
+<section id="authorization" class="level2">
+<h2 class="anchored" data-anchor-id="authorization">Authorization</h2>
 <p><code>incus config trust add-certificate --projects layer8 --restricted layer8.crt</code></p>
 <p><code>incus config trust add --projects layer8 --restricted layer8.crt</code></p>
 <p>And with this, my instance is restricted.</p>
 <p>Mostly. Storage pools and storage doesn’t seem to work at all.</p>
 <p>So I create another storage pool called “layer8” from the UI. But this fails, and doesn’t seem to be accessible from the layer8 project.</p>
+<p>I play around with it more, but I think what I need to do is write an “authorization scriptlet” that explicitly gives access for the layer8 storage pool to those users.</p>
+<p>The language used in these “scriptlets” is Starlark… which is not documented on the actual <a href="https://linuxcontainers.org/incus/docs/main/authorization/#authorization-scriptlet">authorization scriptlet</a> section. Thankfully, there is another <a href="https://linuxcontainers.org/incus/docs/main/explanation/clustering/#instance-placement-scriptlet">instance placement scriptlet</a>, which talks about the language and parameters taken, and how to actually use and set the scriptlet.</p>
+<p>Of course, this is still pretty unclear. What is an object? <a href="https://github.com/lxc/incus/blob/main/doc/rest-api.yaml">Incus has auto generated api documentation</a>, including on what I am assuming is an “object”, <a href="https://github.com/lxc/incus/blob/main/doc/rest-api.yaml#L6295">StoragePools</a>.</p>
+<p>So I need a scriptlet that allows the Layer 8 Certificate, to access storage pool objects named</p>
+<p>If if I have to do this anyways, what was the point of trying to avoid the openid + openfga (I would have to write code) setup?!</p>
+<p>So here is my attempt at a scriplet that allows all access:</p>
+<div class="code-with-filename">
+<div class="code-with-filename-file">
+<pre><strong>allowall.star</strong></pre>
+</div>
+<div class="sourceCode" id="cb9" data-filename="allowall.star" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">def</span> authorize(details, <span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">object</span>, entitlement):</span>
+<span id="cb9-2">  <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">return</span> <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">True</span></span></code></pre></div>
+</div>
+<p><code>cat allowall.star | incus config set authorization.scriptlet=-</code></p>
+<p>And it works! The Layer 8 Certificate can get access to all resources.</p>
+<p>Now let’s try to do it for real:</p>
+<div class="code-with-filename">
+<div class="code-with-filename-file">
+<pre><strong>auth.star</strong></pre>
+</div>
+<div class="sourceCode" id="cb10" data-filename="auth.star" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">def</span> authorize(details, <span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">object</span>, entitlement):</span>
+<span id="cb10-2">  <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">if</span> details.Username <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">==</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"025a3516ca2c"</span>:</span>
+<span id="cb10-3">    <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">if</span> <span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">object</span>.name <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">==</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"layer8"</span>:</span>
+<span id="cb10-4">      <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">return</span> <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">True</span></span>
+<span id="cb10-5">  <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">else</span>:</span>
+<span id="cb10-6">    <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">return</span> <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">False</span></span></code></pre></div>
+</div>
+<p>Okay. And now nothing has access to anything. It seems that these scriptlets happen <em>before</em> the authorizations happen, and not after. Meaning that you have to actually write scriptlets to do something</p>
+<div class="sourceCode" id="cb11" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">def</span> authorize(details, <span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">object</span>, entitlement):</span>
+<span id="cb11-2">  <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">if</span> details.Username <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">==</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"96bd207fe6a1"</span>:</span>
+<span id="cb11-3">    <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">return</span> <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">True</span></span>
+<span id="cb11-4">  <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">if</span> details.Username <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">==</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"025a3516ca2c"</span>:</span>
+<span id="cb11-5">    <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">if</span> details.IsAllProjectsRequest:</span>
+<span id="cb11-6">      <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">return</span> <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">False</span></span>
+<span id="cb11-7">    <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">if</span> details.ProjectName <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">==</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"layer8"</span>:</span>
+<span id="cb11-8">      <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">return</span> <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">True</span></span>
+<span id="cb11-9">    <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">if</span> <span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">object</span>.name <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">==</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"layer8"</span>:</span>
+<span id="cb11-10">      <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">return</span> <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">True</span></span>
+<span id="cb11-11">  <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">else</span>:</span>
+<span id="cb11-12">    <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">return</span> <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">False</span></span></code></pre></div>
+<p>At first I get an error:</p>
+<p><code>Failed to run: string has no .name field or method</code></p>
+<p>So it seems that object doesn’t actually have an atribute named anything. I can’t seem to find any documentation on this.</p>
+<div class="sourceCode" id="cb12" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">def</span> authorize(details, <span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">object</span>, entitlement):</span>
+<span id="cb12-2">  <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">if</span> details.Username <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">==</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"96bd207fe6a1"</span>:</span>
+<span id="cb12-3">    <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">return</span> <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">True</span></span>
+<span id="cb12-4">  <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">if</span> details.Username <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">==</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"025a3516ca2c"</span>:</span>
+<span id="cb12-5">    <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">if</span> details.IsAllProjectsRequest:</span>
+<span id="cb12-6">      <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">return</span> <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">False</span></span>
+<span id="cb12-7">    <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">if</span> details.ProjectName <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">==</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"layer8"</span>:</span>
+<span id="cb12-8">      <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">return</span> <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">True</span></span>
+<span id="cb12-9">    <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">if</span> <span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">object</span>.name <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">==</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"layer8"</span>:</span>
+<span id="cb12-10">      <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">return</span> <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">True</span></span>
+<span id="cb12-11">  <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">else</span>:</span>
+<span id="cb12-12">    <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">return</span> <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">False</span></span></code></pre></div>
+<p>And now the incus server hangs… Super annoying.</p>
+<div class="sourceCode" id="cb13" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">def</span> authorize(details, <span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">object</span>, entitlement):</span>
+<span id="cb13-2">  <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">if</span> details.Username <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">==</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"96bd207fe6a1"</span>:</span>
+<span id="cb13-3">    <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">return</span> <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">True</span></span>
+<span id="cb13-4">  <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">else</span>:</span>
+<span id="cb13-5">    <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">return</span> <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">False</span></span></code></pre></div>
+<p>Okay, and this fails. At this point. I also tried logging, which only seems to work if it’s a warning, and not an info level log.</p>
+<div class="sourceCode" id="cb14" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb14-1"><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">def</span> authorize(details, <span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">object</span>, entitlement):</span>
+<span id="cb14-2">  log_warn(details.Username)</span>
+<span id="cb14-3">  log_warn(<span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">object</span>)</span>
+<span id="cb14-4">  <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">return</span> <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">True</span></span></code></pre></div>
+<p>and:</p>
+<div class="sourceCode" id="cb15" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb15-1">(clipped for brevity) server:incus"</span>
+<span id="cb15-2">(clipped for brevity) horization scriptlet: 96bd207fe6a1b5ca48284f012e036fff43126870c52949479fe5647c61791db2"</span>
+<span id="cb15-3">(clipped for brevity) horization scriptlet: server:incus"</span></code></pre></div>
+<p>It seems that the certificate that is used, is not the clipped version listed by <code>incus config trust list</code></p>
+<pre><code>root@thoth:~# incus config trust list
++--------------+--------+-------------+--------------+----------------------+
+|     NAME     |  TYPE  | DESCRIPTION | FINGERPRINT  |     EXPIRY DATE      |
++--------------+--------+-------------+--------------+----------------------+
+| incus-ui.crt | client |             | 96bd207fe6a1 | 2027/12/31 19:33 PST |
++--------------+--------+-------------+--------------+----------------------+
+| layer8.crt   | client |             | 025a3516ca2c | 2027/12/31 19:54 PST |
++--------------+--------+-------------+--------------+----------------------+</code></pre>
+<p>But, I did figure out how storage pool is getting referred to:</p>
+<div class="sourceCode" id="cb17" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb17-1">orization scriptlet: 96bd207fe6a1b5ca48284f012e036fff43126870c52949479fe5647c61791db2"</span>
+<span id="cb17-2">orization scriptlet: storage_pool:layer8"</span></code></pre></div>
+<p>So I think the entire “object” is actually just a string. But it’s named object?!</p>
+<p>I <a href="https://github.com/lxc/incus/blob/332ad420f963779f03f1eb25d9725372ac946fa9/internal/server/scriptlet/auth/auth.go#L17">found the code, though</a>. And it seems like “object”, is in fact a string.</p>
+<p><code>func AuthorizationRun(l logger.Logger, details *common.RequestDetails, object string, entitlement string) (bool, error) {</code></p>
+<div class="sourceCode" id="cb18" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb18-1"><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">def</span> authorize(details, <span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">object</span>, entitlement):</span>
+<span id="cb18-2">  log_warn(details)</span>
+<span id="cb18-3">  log_warn(<span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">object</span>)</span>
+<span id="cb18-4">  log_warn(entitlement)</span>
+<span id="cb18-5">  <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">return</span> <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">True</span></span></code></pre></div>
+<p><code>journalctl -xeu incus</code></p>
+<div class="sourceCode" id="cb19" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb19-1">horization scriptlet: {\"Username\": \"96bd207fe6a1b5ca48284f012e036fff43126870c52949479fe56&gt;</span>
+<span id="cb19-2">horization scriptlet: storage_pool:layer8"</span>
+<span id="cb19-3">horization scriptlet: can_edit"</span>
+<span id="cb19-4">horization scriptlet: {\"Username\": \"96bd207fe6a1b5ca48284f012e036fff43126870c52949479fe56&gt;</span>
+<span id="cb19-5">horization scriptlet: server:incus"</span>
+<span id="cb19-6">horization scriptlet: can_view_resources"</span>
+<span id="cb19-7">horization scriptlet: {\"Username\": \"96bd207fe6a1b5ca48284f012e036fff4312</span></code></pre></div>
+<p>With this, I can design an authorization function that actually works.</p>
+<p>Also:</p>
+<div class="sourceCode" id="cb20" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb20-1">root@thoth:~# incus config trust show 96bd207fe6a1</span>
+<span id="cb20-2">name: incus-ui.crt</span>
+<span id="cb20-3">type: client</span>
+<span id="cb20-4">restricted: false</span>
+<span id="cb20-5">fingerprint: 96bd207fe6a1b5ca48284f012e036fff43126870c52949479fe5647c61791db2</span></code></pre></div>
+<p>By asking to show me information about the short version of the certificate, I can get the full version.</p>
+<div class="sourceCode" id="cb21" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb21-1"><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">def</span> authorize(details, <span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">object</span>, entitlement):</span>
+<span id="cb21-2">  <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">if</span> details.Username <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">==</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"96bd207fe6a1b5ca48284f012e036fff43126870c52949479fe5647c61791db2"</span>:</span>
+<span id="cb21-3">    <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">return</span> <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">True</span></span>
+<span id="cb21-4">  <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">if</span> details.Username <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">==</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"025a3516ca2c622a93446548954e33d75eafa3e8173d0d6a435fc27d4072932e"</span>:</span>
+<span id="cb21-5">    <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">if</span> details.ProjectName <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">==</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"layer8"</span>:</span>
+<span id="cb21-6">      <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">return</span> <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">True</span></span>
+<span id="cb21-7">    <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">if</span> <span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">object</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">==</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"storage_pool:layer8"</span>:</span>
+<span id="cb21-8">      <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">return</span> <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">True</span></span>
+<span id="cb21-9">    <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">if</span> details.IsAllProjectsRequest <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">==</span> <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">True</span>:</span>
+<span id="cb21-10">      <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">return</span> <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">False</span></span>
+<span id="cb21-11">  <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">else</span>:</span>
+<span id="cb21-12">    <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">return</span> <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">False</span></span></code></pre></div>
+<p>But this doesn’t work. It seems that the server api itself, and projects, are objects that are controlled by access control. I have to allow access.</p>
+<div class="sourceCode" id="cb22" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb22-1"><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">def</span> authorize(details, <span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">object</span>, entitlement):</span>
+<span id="cb22-2">  <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">if</span> details.Username <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">==</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"96bd207fe6a1b5ca48284f012e036fff43126870c52949479fe5647c61791db2"</span>:</span>
+<span id="cb22-3">    <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">return</span> <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">True</span></span>
+<span id="cb22-4">  <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">if</span> details.Username <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">==</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"025a3516ca2c622a93446548954e33d75eafa3e8173d0d6a435fc27d4072932e"</span>:</span>
+<span id="cb22-5">    <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">if</span> details.IsAllProjectsRequest <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">==</span> <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">True</span>:</span>
+<span id="cb22-6">      <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">return</span> <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">False</span></span>
+<span id="cb22-7">    <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">if</span> <span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">object</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">==</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"project:layer8"</span>:</span>
+<span id="cb22-8">      <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">if</span> entitlement <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">==</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"can_view"</span>:</span>
+<span id="cb22-9">        <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">return</span> <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">True</span></span>
+<span id="cb22-10">    <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">if</span> details.ProjectName <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">==</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"layer8"</span>:</span>
+<span id="cb22-11">      <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">return</span> <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">True</span></span>
+<span id="cb22-12">    <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">if</span> details.ProjectName <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">==</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"default"</span>:</span>
+<span id="cb22-13">      <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">if</span> entitlement <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">==</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"can_view_resources"</span>:</span>
+<span id="cb22-14">        <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">return</span> <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">True</span></span>
+<span id="cb22-15">    <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">if</span> <span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">object</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">==</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"storage_pool:layer8"</span>:</span>
+<span id="cb22-16">      <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">return</span> <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">True</span></span>
+<span id="cb22-17">    <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">if</span> <span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">object</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">==</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"server:incus"</span>:</span>
+<span id="cb22-18">      <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">if</span> entitlement <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">==</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"can_view_sensitive"</span>:</span>
+<span id="cb22-19">        <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">return</span> <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">True</span></span>
+<span id="cb22-20">      <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">if</span> entitlement <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">==</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"can_view"</span>:</span>
+<span id="cb22-21">        <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">return</span> <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">True</span></span>
+<span id="cb22-22">  <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">else</span>:</span>
+<span id="cb22-23">    <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">return</span> <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">False</span></span></code></pre></div>
+<p>After this I do some testing, and it mostly works — except the Layer 8 certificate has access to the <code>default</code> storage pool, including being able to upload isos, which is not what I want. But, if I remove the <code>can_view_resources</code> bit, then the Layer 8 Certificate cannot see the disk space used in that storage pool — which I may want.</p>
+<p>I also may need to give access to the objects <code>"profile:layer8/default"</code>, since that seems to exist in the <code>default</code> project.</p>
+<p>So I asked on the creators youtube stream, if there is any way to associate a storage pool to a project, for a restricted certificate.</p>
+<p>He says that you can set a limit of 0 for the disk space of a storage pool, for a project, and then that project won’t be able to access that storage pool. I don’t like this solution, as I want my authorization logic to be deny by default, and explicitly allow access to certain resources. However, it does give me an idea:</p>
+<p>What if I deny access to storage pools not named layer8? Well, I would first have to filter for an object, a string that starts with “storage_pool:”</p>
+<div class="sourceCode" id="cb23" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb23-1"><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">def</span> authorize(details, <span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">object</span>, entitlement):</span>
+<span id="cb23-2">  <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">if</span> details.Username <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">==</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"96bd207fe6a1b5ca48284f012e036fff43126870c52949479fe5647c61791db2"</span>:</span>
+<span id="cb23-3">    <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">return</span> <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">True</span></span>
+<span id="cb23-4">  <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">if</span> details.Username <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">==</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"025a3516ca2c622a93446548954e33d75eafa3e8173d0d6a435fc27d4072932e"</span>:</span>
+<span id="cb23-5">    <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">if</span> <span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">object</span>.startswith(<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"storage_pool:"</span>):</span>
+<span id="cb23-6">      <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">if</span> <span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">object</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">!=</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"storage_pool:layer8"</span>:</span>
+<span id="cb23-7">        <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">return</span> <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">False</span></span>
+<span id="cb23-8">      <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">return</span> <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">True</span></span>
+<span id="cb23-9">    <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">if</span> details.IsAllProjectsRequest <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">==</span> <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">True</span>:</span>
+<span id="cb23-10">      <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">return</span> <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">False</span></span>
+<span id="cb23-11">    <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">if</span> <span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">object</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">==</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"project:layer8"</span>:</span>
+<span id="cb23-12">      <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">if</span> entitlement <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">==</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"can_view"</span>:</span>
+<span id="cb23-13">        <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">return</span> <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">True</span> </span>
+<span id="cb23-14">    <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">if</span> details.ProjectName <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">==</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"layer8"</span>:</span>
+<span id="cb23-15">      <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">return</span> <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">True</span></span>
+<span id="cb23-16">    <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">if</span> details.ProjectName <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">==</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"default"</span>:</span>
+<span id="cb23-17">      <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">if</span> entitlement <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">==</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"can_view_resources"</span>:</span>
+<span id="cb23-18">        <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">return</span> <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">True</span></span>
+<span id="cb23-19">    <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">if</span> <span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">object</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">==</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"server:incus"</span>:</span>
+<span id="cb23-20">      <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">if</span> entitlement <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">==</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"can_view"</span>:</span>
+<span id="cb23-21">        <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">return</span> <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">True</span></span>
+<span id="cb23-22">      <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">if</span> entitlement <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">==</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"can_view_resources"</span>:</span>
+<span id="cb23-23">        <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">return</span> <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">True</span></span>
+<span id="cb23-24">  <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">else</span>:</span>
+<span id="cb23-25">    <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">return</span> <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">False</span></span></code></pre></div>
+<p>This still doesn’t restrict the Layer 8 certificate from uploading to the default storage pool. Actually now, Incus seems to crash/freeze, and I have to restart the systemd service in order to get back.</p>
+<p>Okay. At this point, attempting to upload an ISO crashes Incus (testing with the allow all log script). The API won’t load, and the command line just hangs as well. Systemd logs don’t say anything, so I’m stuck. I can restart Incus, but this changes testing my authorization scriptlets from annoying to painful.</p>
+<p>I’m going to update the website this, and make a post in the Incus forum.</p>
 
 
+</section>
 </section>
 
  ]]></description>
