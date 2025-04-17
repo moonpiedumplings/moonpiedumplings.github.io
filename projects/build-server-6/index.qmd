@@ -7,6 +7,7 @@ format:
     code-fold: true
     code-summary: "Show the code"
     code-block-background: true
+    code-overflow: wrap
 execute:
   freeze: false
 ---
@@ -297,7 +298,7 @@ However, there is a real possibility I am using the wrong cables, and it's the c
 
 # Incus Configuration
 
-Firstly, I hate the "default" profile. It forces the `incusbr0` network on virtual machines, whereas I want users to be able to select an for which network they want — either a public network or an internal network.
+Firstly, I don't want the "default" profile. It forces the `incusbr0` network on virtual machines, whereas I want users to be able to select an for which network they want — either a public network or an internal network.
 
 A big thing I want is for the layer8 project to have it's own seperate set of networks and firewall rules, but still be able to have access to the `public0` network I have created, so people can create public virtual machines.
 
@@ -321,6 +322,8 @@ used_by:
 
 There is no network named internal0 — instead I add one in after I create the project. With this, they would be limited to a single internal network, and public network.
 
+## Authorization
+
 `incus config trust add-certificate --projects layer8 --restricted layer8.crt`
 
 `incus config trust add --projects layer8 --restricted layer8.crt`
@@ -330,3 +333,252 @@ And with this, my instance is restricted.
 Mostly. Storage pools and storage doesn't seem to work at all. 
 
 So I create another storage pool called "layer8" from the UI. But this fails, and doesn't seem to be accessible from the layer8 project. 
+
+I play around with it more, but I think what I need to do is write an "authorization scriptlet" that explicitly gives access for the layer8 storage pool to those users. 
+
+The language used in these "scriptlets" is Starlark... which is not documented on the actual [authorization scriptlet](https://linuxcontainers.org/incus/docs/main/authorization/#authorization-scriptlet) section. Thankfully, there is another [instance placement scriptlet](https://linuxcontainers.org/incus/docs/main/explanation/clustering/#instance-placement-scriptlet), which talks about the language and parameters taken, and how to actually use and set the scriptlet. 
+
+Of course, this is still pretty unclear. What is an object? [Incus has auto generated api documentation](https://github.com/lxc/incus/blob/main/doc/rest-api.yaml), including on what I am assuming is an "object", [StoragePools](https://github.com/lxc/incus/blob/main/doc/rest-api.yaml#L6295).
+
+So I need a scriptlet that allows the Layer 8 Certificate, to access storage pool objects named
+
+If if I have to do this anyways, what was the point of trying to avoid the openid + openfga (I would have to write code) setup?!
+
+So here is my attempt at a scriplet that allows all access:
+
+```{.python filename='allowall.star'}
+def authorize(details, object, entitlement):
+  return True
+```
+
+`cat allowall.star | incus config set authorization.scriptlet=-`
+
+And it works! The Layer 8 Certificate can get access to all resources. 
+
+Now let's try to do it for real:
+
+```{.python filename='auth.star'}
+def authorize(details, object, entitlement):
+  if details.Username == "025a3516ca2c":
+    if object.name == "layer8":
+      return True
+  else:
+    return False
+```
+
+Okay. And now nothing has access to anything. It seems that these scriptlets happen _before_ the authorizations happen, and not after. Meaning that you have to actually write scriptlets to do something 
+
+
+```{.python}
+def authorize(details, object, entitlement):
+  if details.Username == "96bd207fe6a1":
+    return True
+  if details.Username == "025a3516ca2c":
+    if details.IsAllProjectsRequest:
+      return False
+    if details.ProjectName == "layer8":
+      return True
+    if object.name == "layer8":
+      return True
+  else:
+    return False
+```
+
+At first I get an error:
+
+`Failed to run: string has no .name field or method`
+
+So it seems that object doesn't actually have an atribute named anything. I can't seem to find any documentation on this.
+
+```{.python}
+def authorize(details, object, entitlement):
+  if details.Username == "96bd207fe6a1":
+    return True
+  if details.Username == "025a3516ca2c":
+    if details.IsAllProjectsRequest:
+      return False
+    if details.ProjectName == "layer8":
+      return True
+    if object.name == "layer8":
+      return True
+  else:
+    return False
+```
+
+And now the incus server hangs... Super annoying.
+
+
+```{.python}
+def authorize(details, object, entitlement):
+  if details.Username == "96bd207fe6a1":
+    return True
+  else:
+    return False
+```
+
+Okay, and this fails. At this point. I also tried logging, which only seems to work if it's a warning, and not an info level log. 
+
+```{.python}
+def authorize(details, object, entitlement):
+  log_warn(details.Username)
+  log_warn(object)
+  return True
+```
+
+and:
+
+```{.default}
+(clipped for brevity) server:incus"
+(clipped for brevity) horization scriptlet: 96bd207fe6a1b5ca48284f012e036fff43126870c52949479fe5647c61791db2"
+(clipped for brevity) horization scriptlet: server:incus"
+```
+
+It seems that the certificate that is used, is not the clipped version listed by `incus config trust list`
+
+```
+root@thoth:~# incus config trust list
++--------------+--------+-------------+--------------+----------------------+
+|     NAME     |  TYPE  | DESCRIPTION | FINGERPRINT  |     EXPIRY DATE      |
++--------------+--------+-------------+--------------+----------------------+
+| incus-ui.crt | client |             | 96bd207fe6a1 | 2027/12/31 19:33 PST |
++--------------+--------+-------------+--------------+----------------------+
+| layer8.crt   | client |             | 025a3516ca2c | 2027/12/31 19:54 PST |
++--------------+--------+-------------+--------------+----------------------+
+```
+
+But, I did figure out how storage pool is getting referred to:
+
+```{.default}
+orization scriptlet: 96bd207fe6a1b5ca48284f012e036fff43126870c52949479fe5647c61791db2"
+orization scriptlet: storage_pool:layer8"
+```
+
+So I think the entire "object" is actually just a string. But it's named object?!
+
+I [found the code, though](https://github.com/lxc/incus/blob/332ad420f963779f03f1eb25d9725372ac946fa9/internal/server/scriptlet/auth/auth.go#L17). And it seems like "object", is in fact a string. 
+
+`func AuthorizationRun(l logger.Logger, details *common.RequestDetails, object string, entitlement string) (bool, error) {`
+
+
+
+```{.python}
+def authorize(details, object, entitlement):
+  log_warn(details)
+  log_warn(object)
+  log_warn(entitlement)
+  return True
+```
+
+`journalctl -xeu incus`
+
+```{.default}
+horization scriptlet: {\"Username\": \"96bd207fe6a1b5ca48284f012e036fff43126870c52949479fe56>
+horization scriptlet: storage_pool:layer8"
+horization scriptlet: can_edit"
+horization scriptlet: {\"Username\": \"96bd207fe6a1b5ca48284f012e036fff43126870c52949479fe56>
+horization scriptlet: server:incus"
+horization scriptlet: can_view_resources"
+horization scriptlet: {\"Username\": \"96bd207fe6a1b5ca48284f012e036fff4312
+```
+
+With this, I can design an authorization function that actually works. 
+
+Also:
+
+```{.default}
+root@thoth:~# incus config trust show 96bd207fe6a1
+name: incus-ui.crt
+type: client
+restricted: false
+fingerprint: 96bd207fe6a1b5ca48284f012e036fff43126870c52949479fe5647c61791db2
+```
+
+By asking to show me information about the short version of the certificate, I can get the full version.
+
+
+```{.python}
+def authorize(details, object, entitlement):
+  if details.Username == "96bd207fe6a1b5ca48284f012e036fff43126870c52949479fe5647c61791db2":
+    return True
+  if details.Username == "025a3516ca2c622a93446548954e33d75eafa3e8173d0d6a435fc27d4072932e":
+    if details.ProjectName == "layer8":
+      return True
+    if object == "storage_pool:layer8":
+      return True
+    if details.IsAllProjectsRequest == True:
+      return False
+  else:
+    return False
+```
+
+But this doesn't work. It seems that the server api itself, and projects, are objects that are controlled by access control. I have to allow access.
+
+```{.python}
+def authorize(details, object, entitlement):
+  if details.Username == "96bd207fe6a1b5ca48284f012e036fff43126870c52949479fe5647c61791db2":
+    return True
+  if details.Username == "025a3516ca2c622a93446548954e33d75eafa3e8173d0d6a435fc27d4072932e":
+    if details.IsAllProjectsRequest == True:
+      return False
+    if object == "project:layer8":
+      if entitlement == "can_view":
+        return True
+    if details.ProjectName == "layer8":
+      return True
+    if details.ProjectName == "default":
+      if entitlement == "can_view_resources":
+        return True
+    if object == "storage_pool:layer8":
+      return True
+    if object == "server:incus":
+      if entitlement == "can_view_sensitive":
+        return True
+      if entitlement == "can_view":
+        return True
+  else:
+    return False
+```
+
+After this I do some testing, and it mostly works — except the Layer 8 certificate has access to the `default` storage pool, including being able to upload isos, which is not what I want. But, if I remove the `can_view_resources` bit, then the Layer 8 Certificate cannot see the disk space used in that storage pool — which I may want. 
+
+I also may need to give access to the objects `"profile:layer8/default"`, since that seems to exist in the `default` project.
+
+So I asked on the creators youtube stream, if there is any way to associate a storage pool to a project, for a restricted certificate. 
+
+He says that you can set a limit of 0 for the disk space of a storage pool, for a project, and then that project won't be able to access that storage pool. I don't like this solution, as I want my authorization logic to be deny by default, and explicitly allow access to certain resources. However, it does give me an idea:
+
+What if I deny access to storage pools not named layer8? Well, I would first have to filter for an object, a string that starts with "storage_pool:"
+
+```{.python}
+def authorize(details, object, entitlement):
+  if details.Username == "96bd207fe6a1b5ca48284f012e036fff43126870c52949479fe5647c61791db2":
+    return True
+  if details.Username == "025a3516ca2c622a93446548954e33d75eafa3e8173d0d6a435fc27d4072932e":
+    if object.startswith("storage_pool:"):
+      if object != "storage_pool:layer8":
+        return False
+      return True
+    if details.IsAllProjectsRequest == True:
+      return False
+    if object == "project:layer8":
+      if entitlement == "can_view":
+        return True 
+    if details.ProjectName == "layer8":
+      return True
+    if details.ProjectName == "default":
+      if entitlement == "can_view_resources":
+        return True
+    if object == "server:incus":
+      if entitlement == "can_view":
+        return True
+      if entitlement == "can_view_resources":
+        return True
+  else:
+    return False
+```
+
+This still doesn't restrict the Layer 8 certificate from uploading to the default storage pool. Actually now, Incus seems to crash/freeze, and I have to restart the systemd service in order to get back. 
+
+Okay. At this point, attempting to upload an ISO crashes Incus (testing with the allow all log script). The API won't load, and the command line just hangs as well. Systemd logs don't say anything, so I'm stuck. I can restart Incus, but this changes testing my authorization scriptlets from annoying to painful. 
+
+I'm going to update the website this, and make a post in the Incus forum. 

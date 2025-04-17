@@ -78,6 +78,11 @@ I also like resources maintained by some kind of organization, either the offici
 
 * Not interactive, but follow-along labs for Linux fundamentals, containers, and kubernetes.
 
+Exam Simulators:
+
+* <https://github.com/nishanb/CK-X>
+* <https://killer.sh/>
+
 
 [ProLug Linux Admin Course](https://professionallinuxusersgroup.github.io/lac/u9intro.html) Units 9 and 10. 
 
