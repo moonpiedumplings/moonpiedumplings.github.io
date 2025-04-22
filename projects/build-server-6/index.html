@@ -665,7 +665,7 @@ Aggregator ID: 2
 <span id="cb22-21"><a href="#cb22-21" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="va">True</span></span>
 <span id="cb22-22"><a href="#cb22-22" aria-hidden="true" tabindex="-1"></a>  <span class="cf">else</span>:</span>
 <span id="cb22-23"><a href="#cb22-23" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="va">False</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>After this I do some testing, and it mostly works — except the Layer 8 certificate has access to the <code>default</code> storage pool, including being able to upload isos, which is not what I want. But, if I remove the <code>can_view_resources</code> bit, then the Layer 8 Certificate cannot see the disk space used in that storage pool — which I may want.</p>
+<p>After this I do some testing, and it mostly works — except the Layer 8 certificate has access to the <code>default</code> storage pool, including being able to upload isos, which is not what I want. But, if I remove the <code>can_view_resources</code> bit, then the Layer 8 Certificate cannot see the disk space used in that storage pool — which I may not want.</p>
 <p>I also may need to give access to the objects <code>"profile:layer8/default"</code>, since that seems to exist in the <code>default</code> project.</p>
 <p>So I asked on the creators youtube stream, if there is any way to associate a storage pool to a project, for a restricted certificate.</p>
 <p>He says that you can set a limit of 0 for the disk space of a storage pool, for a project, and then that project won’t be able to access that storage pool. I don’t like this solution, as I want my authorization logic to be deny by default, and explicitly allow access to certain resources. However, it does give me an idea:</p>
@@ -698,6 +698,39 @@ Aggregator ID: 2
 <p>This still doesn’t restrict the Layer 8 certificate from uploading to the default storage pool. Actually now, Incus seems to crash/freeze, and I have to restart the systemd service in order to get back.</p>
 <p>Okay. At this point, attempting to upload an ISO crashes Incus (testing with the allow all log script). The API won’t load, and the command line just hangs as well. Systemd logs don’t say anything, so I’m stuck. I can restart Incus, but this changes testing my authorization scriptlets from annoying to painful.</p>
 <p>I’m going to update the website this, and make a post in the Incus forum.</p>
+<p>Post: <a href="https://discuss.linuxcontainers.org/t/authorization-scriptlet-how-to-allow-a-restricted-certificate-to-access-a-single-storage-pool/23497/2" class="uri">https://discuss.linuxcontainers.org/t/authorization-scriptlet-how-to-allow-a-restricted-certificate-to-access-a-single-storage-pool/23497/2</a></p>
+<p>But I need a solution now, pretty much.</p>
+<div class="sourceCode" id="cb24"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> authorize(details, <span class="bu">object</span>, entitlement):</span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> details.Username <span class="op">==</span> <span class="st">"96bd207fe6a1b5ca48284f012e036fff43126870c52949479fe5647c61791db2"</span>:</span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="va">True</span></span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> details.Username <span class="op">==</span> <span class="st">"025a3516ca2c622a93446548954e33d75eafa3e8173d0d6a435fc27d4072932e"</span>:</span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="bu">object</span>.startswith(<span class="st">"storage_pool:"</span>):</span>
+<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a>      <span class="cf">if</span> <span class="bu">object</span> <span class="op">!=</span> <span class="st">"storage_pool:layer8"</span>:</span>
+<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="va">False</span></span>
+<span id="cb24-8"><a href="#cb24-8" aria-hidden="true" tabindex="-1"></a>      <span class="cf">return</span> <span class="va">True</span></span>
+<span id="cb24-9"><a href="#cb24-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> details.IsAllProjectsRequest <span class="op">==</span> <span class="va">True</span>:</span>
+<span id="cb24-10"><a href="#cb24-10" aria-hidden="true" tabindex="-1"></a>      <span class="cf">return</span> <span class="va">False</span></span>
+<span id="cb24-11"><a href="#cb24-11" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="bu">object</span> <span class="op">==</span> <span class="st">"project:layer8"</span>:</span>
+<span id="cb24-12"><a href="#cb24-12" aria-hidden="true" tabindex="-1"></a>      <span class="cf">if</span> entitlement <span class="op">==</span> <span class="st">"can_view"</span>:</span>
+<span id="cb24-13"><a href="#cb24-13" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="va">True</span> </span>
+<span id="cb24-14"><a href="#cb24-14" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="bu">object</span> <span class="op">==</span> <span class="st">"profile:layer8/default"</span>:</span>
+<span id="cb24-15"><a href="#cb24-15" aria-hidden="true" tabindex="-1"></a>      <span class="cf">return</span> <span class="va">True</span></span>
+<span id="cb24-16"><a href="#cb24-16" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> details.ProjectName <span class="op">==</span> <span class="st">"layer8"</span>:</span>
+<span id="cb24-17"><a href="#cb24-17" aria-hidden="true" tabindex="-1"></a>      <span class="cf">return</span> <span class="va">True</span></span>
+<span id="cb24-18"><a href="#cb24-18" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> details.ProjectName <span class="op">==</span> <span class="st">"default"</span>:</span>
+<span id="cb24-19"><a href="#cb24-19" aria-hidden="true" tabindex="-1"></a>      <span class="cf">if</span> entitlement <span class="op">==</span> <span class="st">"can_view_resources"</span>:</span>
+<span id="cb24-20"><a href="#cb24-20" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="va">True</span></span>
+<span id="cb24-21"><a href="#cb24-21" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="bu">object</span> <span class="op">==</span> <span class="st">"server:incus"</span>:</span>
+<span id="cb24-22"><a href="#cb24-22" aria-hidden="true" tabindex="-1"></a>      <span class="cf">if</span> entitlement <span class="op">==</span> <span class="st">"can_view"</span>:</span>
+<span id="cb24-23"><a href="#cb24-23" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="va">True</span></span>
+<span id="cb24-24"><a href="#cb24-24" aria-hidden="true" tabindex="-1"></a>      <span class="cf">if</span> entitlement <span class="op">==</span> <span class="st">"can_view_resources"</span>:</span>
+<span id="cb24-25"><a href="#cb24-25" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="va">True</span></span>
+<span id="cb24-26"><a href="#cb24-26" aria-hidden="true" tabindex="-1"></a>  <span class="cf">else</span>:</span>
+<span id="cb24-27"><a href="#cb24-27" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="va">False</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>This, plus:</p>
+<p><code>incus project set layer8 limits.disk.pool.default=0</code></p>
+<p>are what I ending up using.</p>
+<p>Okay. It doesn’t work the way I want. But I’m close enough, so I guess I’ll just roll with it instead.</p>
 
 
 </section>
