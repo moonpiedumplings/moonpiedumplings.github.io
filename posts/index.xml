@@ -10,7 +10,47 @@
 <atom:link href="./posts/index.xml" rel="self" type="application/rss+xml"/>
 <description>All posts</description>
 <generator>quarto-1.6.42</generator>
-<lastBuildDate>Wed, 09 Apr 2025 07:00:00 GMT</lastBuildDate>
+<lastBuildDate>Sat, 24 May 2025 07:00:00 GMT</lastBuildDate>
+<item>
+  <title>Systemd is Basically One Node Kubernetes</title>
+  <link>./blog/systemk8s/</link>
+  <description><![CDATA[ 
+
+
+
+
+<p>Systemd, is essentially designed to replicate features of Kubernetes.</p>
+<p>Kubernetes is (buzzwords incoming), a clustered, highly available, multi tenant, declarative, service manager and job scheduler. To break down what that means:</p>
+<ul>
+<li>Multi tenant: There can be different “users” on a Kubernetes cluster, which can be granually given access to different resources or capabilities</li>
+<li>Declarative: All of the Kubernetes config, roles, users, and jobs, and can be declared as code, “yaml”.</li>
+<li>Service Manager: Kubernetes can run services, specifically containers (this is important to note).</li>
+<li>Job Scheduler: Users can start short or long running “jobs”</li>
+<li>Clustered: Kubernetes can combine resources from more than one physical or virtual server into a cluster. It does not literally combine them, but rather it shifts around services and jobs to make more room. Some services can take direct advantage of this though, where running multiple instances of them does let you combine resources.</li>
+<li>Highly Available: If any single “node” of a kubernetes cluster goes down, the services Kubernetes runs, and Kubernetes itself, stay active.</li>
+</ul>
+<p>Systemd is essentially trying to Kubernetes, without the clustering and highly available parts of Kubernetes. It is/has:</p>
+<ul>
+<li>Multi tenant: This is what polkit, and logind do. They give users the ability to run long running services, but control the resources and capabilities those users who have access to</li>
+<li>Declarative: Systemd doesn’t use yaml like kubernetes, but instead it uses the ini file format — but almost everything in Systemd can be declared as an ini file.</li>
+<li>Service Manager: This one is mostly self explanatory — but what’s important to note is the focus that systemd has on containers. There is support for OCI containers via <a href="https://blog.while-true-do.io/podman-quadlets/">podman quadlets</a>, but Systemd also has it’s <em>own</em> container format that it can <a href="https://github.com/systemd/systemd/issues/30239">launch rootlessly</a>, and built on top of this is <a href="https://systemd.io/PORTABLE_SERVICES/">systemd portablectl</a>, which is essentially an <a href="https://en.wikipedia.org/wiki/Application-level_virtualization">application container</a> format, similar to docker. You tell systemd to run a service with a root image of one of these containers, and it does so.</li>
+<li>Job Scheduler: Timers, but it’s not a full featureset. Perhaps Systemd doesn’t care about this because people can simply run commands after they are ssh’ed in.</li>
+</ul>
+<p>Now, based on the assumption, I can make some (possibly incorrect) predictions about what features systemd will add next:</p>
+<ul>
+<li>Firewall service: Kubernetes has something akin to a firewall, but mostly this prediction is because Linux doesn’t really have a declarative firewall. <a href="https://www.ctrl.blog/entry/systemd-application-firewall.html">Systemd kinda already has something similar</a> but it’s not complete.</li>
+<li>More advanced manipulation of user resource and capability constraints. It looks like there is some <a href="https://unix.stackexchange.com/questions/351466/set-a-default-resource-limit-for-all-users-with-systemd-cgroups">simple cgroup stuff</a>, but I do think we are going to eventually see Seccomp and other restrictions.</li>
+<li>A “container repo” for portable/nspawn services. I think they used to have one for <a href="https://en.wikipedia.org/wiki/OS-level_virtualization">OS containers</a> for machinectl, but I can’t find it. But If they are actually trying to be Kubernetes, then I would expect to see a setup where you can have a file declaring a service, and then it pulls the container image for that service and then runs it.</li>
+</ul>
+<p>Now, “one node Kubernetes” probably isn’t the best choice for a normal server or desktop distro. (Actually I love Kubernetes as a server but that’s a different discussion). But it’s the most popular choice, so I think people should be aware of the architecture and intent behind the software they use.</p>
+
+
+
+ ]]></description>
+  <category>blog</category>
+  <guid>./blog/systemk8s/</guid>
+  <pubDate>Sat, 24 May 2025 07:00:00 GMT</pubDate>
+</item>
 <item>
   <title>Build Server 6 — An easier HCI?</title>
   <link>./projects/build-server-6/</link>
@@ -19,11 +59,28 @@
 
 
 
+<section id="the-what" class="level1">
+<h1>The What</h1>
+<p>I want a whole “cloud” for myself and people around me. The services I want to host are:</p>
+<ul>
+<li>Authentik — Single Sign On and centralized accounts</li>
+<li>Incus — to provide VPS’s to people</li>
+<li>Coder — for remote development environments, but also Kali/Linux containers accessible via the browser</li>
+<li>Forgejo — Code forge, with CI/CD</li>
+<li>Nextcloud — a “cloud” with file sync, editing, and the like</li>
+<li>Element Server Suite — A complete discord alternative</li>
+<li>Something for Large Language Models
+<ul>
+<li>Preferably with history per OIDC user</li>
+<li>Probably: <a href="https://artifacthub.io/packages/helm/open-webui/open-webui" class="uri">https://artifacthub.io/packages/helm/open-webui/open-webui</a>, <a href="https://github.com/open-webui/open-webui/issues/483">see also</a></li>
+</ul></li>
+</ul>
+</section>
 <section id="the-why" class="level1">
 <h1>The Why</h1>
 <p>In my <a href="../build-server-5/">previous project</a>, I attempted to deploy <a href="https://en.wikipedia.org/wiki/OpenStack">Openstack</a> entirely with <a href="https://en.wikipedia.org/wiki/DevOps#GitOps">GitOps</a> methodologies, using <a href="https://fluxcd.io/">FluxCD</a>.</p>
 <p>I failed. Well, it didn’t fail, but I think I’ve spent too long on it and I need to move on.</p>
-<p>Recently, I’ve discovered a project that simeutaneously seems to be a distribution of OpenStack, Kubernetes, and Linux, called <a href="https://www.starlingx.io/">StarlingX</a>.</p>
+<p>Recently, I’ve discovered a project that simultaneously seems to be a distribution of OpenStack, Kubernetes, and Linux, called <a href="https://www.starlingx.io/">StarlingX</a>.</p>
 <p>Also:</p>
 <blockquote class="blockquote">
 <p><a href="https://docs.starlingx.io/system_configuration/index-sysconf-d511820651f0.html#starlingx-openstack">StarlingX OpenStack is installed and managed as an FluxCD application.</a></p>
@@ -39,8 +96,11 @@
 <p>But I install it on my physical server anyways. It doesn’t get an ip address via dhcp.</p>
 <p>I understand why people like turnkey solutions, like ESXI now.</p>
 <p>I look into another HCI solution: <a href="https://docs.harvesterhci.io/">Suse Harvester</a>. It’s actually a very good software, the UI is great and the install is easy. But if you want any kind of authorization and control over who can see what projects, you have to deploy rancher, which can then “consume” the harvester api and work with it. While excellent, I don’t really feel like having to set up rancher either on another server, or in a virtual machine.</p>
-<p>In addition to that, I could not figure out how networking works, and how to set up a bridged network.</p>
-<p>But I begin looking into something else, <a href="https://linuxcontainers.org/incus/docs/main/">Incus</a>.</p>
+<p>In addition to that, I could not figure out how networking works, and how to set up a bridged network. I did deploy a virtual machine, although at first I accidentally gave it 1000 Gi of ram and it would not run because my machine does not have 1000 Gi of ram.</p>
+<p><img src="./projects/build-server-6/images/allocate.jpg" class="img-fluid"></p>
+<p>Also, I did find something funny though:</p>
+<p><img src="./projects/build-server-6/images/editor.jpg" class="img-fluid"></p>
+<p>But at this point, I was done, and I began looking into something else, <a href="https://linuxcontainers.org/incus/docs/main/">Incus</a>.</p>
 <p>Incus:</p>
 <ul>
 <li>Can be installed on top of another distro</li>
@@ -240,7 +300,7 @@ Upload: 86.25 Mbit/s</code></pre>
 <p>I notice that the first packet seems to have a lot less information, and then it’s the stuff after that that usually hits near 100 mbit/s in speed.</p>
 <p>(I also ran a quick check with iperf to make sure that both interfaces actually worked, which they did, they both worked and got 70 mbit/s of bandwidth.).</p>
 <p>Round robin works by just rotating which interface gets the next packet. According to the internet, it can result in packets arriving out of order, which can lead to slower speeds than a single nic in some cases. I can’t find any posts on this that are newer than 3 years old, so I don’t know if it applies, but I wanted to avoid round robin for that reason.</p>
-<p>People say the best mode is LACP, but I don’t get any performance improvement — however, according to <a href="https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/9/html/configuring_and_managing_networking/configuring-network-bonding_configuring-and-managing-networking#configuring-a-network-bond-by-using-nmcli_configuring-network-bonding">Red Hat’s documentation</a>, this mode does seem to require some configuration on the side of the network switch — perhaps without that configuration can still <em>do</em> a bond and combine two interfaces into one, but you don’t get any performance out of it?</p>
+<p>People say the best mode is LACP, but I don’t get any performance improvement — however, according to <a href="https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/9/html/configuring_and_managing_networking/configuring-network-bonding_configuring-and-managing-networking#configuring-a-network-bond-by-using-nmcli_configuring-network-bonding">Red Hat’s documentation</a>, this mode does seem to require some configuration on the side of the network switch. Perhaps without that configuration can still <em>do</em> a bond and combine two interfaces into one, but you don’t get any performance out of it?</p>
 <p>But when I run iperf on each of the physical interfaces simeuataneously, perhaps there is some kind of cap? Maybe the “two” ethernet interfaces in the wall are actually only one? But then why does round robin have consistent, better performance, over the theoretical 100 mbit/s limit?</p>
 <p>I think it is the former issue:</p>
 <pre><code>root@thoth:~# cat /proc/net/bonding/bond0
@@ -1426,6 +1486,345 @@ font-style: inherit;">False</span></span></code></pre></div>
 <p><code>incus project set layer8 limits.disk.pool.default=0</code></p>
 <p>are what I ending up using.</p>
 <p>Okay. It doesn’t work the way I want. But I’m close enough, so I guess I’ll just roll with it instead.</p>
+</section>
+</section>
+<section id="kubernetes-again" class="level1">
+<h1>Kubernetes (Again)</h1>
+<p>Next up is the rest of the services I want to host. I still want to do a Kubernetes cluster, with everything GitOps though, but having Incus opens up another oppurtunity: I could do a multi node Kubernetes cluster, in virtual machines, instead of a single node.</p>
+<p>I know I still want SSO, and I actually want SSO for Incus as well. After watching looking at openfga, it doesn’t seem to be nightmarishly hard. I think I will do a one node kubernetes cluster, again with openebs, reusing that same flux config. But this time, the deployment will be done in a virtual machine, where I can snapshot the entire virtual machine, feed it the gpu, or the extra hard drive I have. ’</p>
+<p>Nah. I think I’m just gonna deploy bare metal.</p>
+<p>Disable RKE2 ingress-nginx:</p>
+<div class="code-with-filename">
+<div class="code-with-filename-file">
+<pre><strong>/etc/rancher/rke2/rke2.yaml</strong></pre>
+</div>
+<div class="sourceCode" id="cb25" data-filename="/etc/rancher/rke2/rke2.yaml" style="background: #f1f3f5;"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb25-1"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">disable</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span></span>
+<span id="cb25-2"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">  # Yeah so apparently this was kind of important. </span></span>
+<span id="cb25-3"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">  # - rke2-coredns</span></span>
+<span id="cb25-4"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">  </span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">-</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> rke2-ingress-nginx</span></span></code></pre></div>
+</div>
+<p>And then enable servicelb, to allow for the ingress service to actually serve on a port on the host:</p>
+<p><code>systemctl edit rke2-server.service</code></p>
+<pre><code>### Editing /etc/systemd/system/rke2-server.service.d/override.conf
+### Anything between here and the comment below will become the new contents of the file
+
+[Service]
+ExecStart=
+ExecStart=/usr/local/bin/rke2 server --enable-servicelb</code></pre>
+<p>Fix NetworkManager: <a href="https://docs.rke2.io/known_issues#networkmanager" class="uri">https://docs.rke2.io/known_issues#networkmanager</a></p>
+<p>And then RKE2 is set up.</p>
+<p>Flux:</p>
+<div class="sourceCode" id="cb27" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb27-1"></span>
+<span id="cb27-2">flux bootstrap git --url ssh://moonpie@moonpiedumpl.ing:22022/home/moonpie/flux-config --branch=main --private-key-file=/home/moonpie/.ssh/moonstack --verbose</span>
+<span id="cb27-3"></span>
+<span id="cb27-4">cat age.agekey | kubectl create secret generic sops-age --namespace flux-system --from-file=age.agekey=/dev/stdin</span></code></pre></div>
+<p>But none of this works, because for whatever reason, the remote git repo on my server does not have any commits, even after I push the git repo.</p>
+<p><code>git push origin origin/main</code></p>
+<p>Can I change this to be the default? But my stuff deploys at least. Authentik is up again.</p>
+<section id="coder" class="level2">
+<h2 class="anchored" data-anchor-id="coder">Coder</h2>
+<p><a href="https://coder.com/">coder</a> is an open source platform for remote desktop environments. The thing they seem to be most excited about is the VScode based environemnts, but I care the most about the terminal access, and the webvnc based environments.</p>
+<p>Also, looking at their <a href="https://github.com/coder/coder/blob/main/helm/coder/values.yaml">helm chart values</a>, and their <a href="https://coder.com/docs/admin/users/oidc-auth">OIDC documentation</a> it seems that environment variables are used to configure many aspects of coder.</p>
+<p>So, I need to set up secrets again.</p>
+<p><code>sops --encrypt --encrypted-regex '^(values.yaml)$' codersecrets.yaml</code></p>
+<p>To get secret content after it is applied, for testing:</p>
+<p><code>kubectl get secret secret -n namespace -o jsonpath="{.data.values\.yaml}" | base64 -d</code></p>
+<p>One hiccup: I fear taht I may need to set a list of valid email domains that it accepts as OIDC users, <a href="https://coder.com/docs/admin/users/oidc-auth#step-2-configure-coder-with-the-openid-connect-credentials">documented here</a>.</p>
+<p>But looking <a href="https://github.com/coder/coder/blob/4587082fcf84a92bda6413733371373acae2392f/coderd/userauth.go#L1357">through the code</a>, it looks like I can leave that config empty.</p>
+<p>So here are my two secrets, that I am encrypting (without the sensitive data, of course):</p>
+<div class="sourceCode" id="cb28" style="background: #f1f3f5;"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb28-1"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">apiVersion</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> v1</span></span>
+<span id="cb28-2"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">kind</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> Secret</span></span>
+<span id="cb28-3"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">metadata</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span></span>
+<span id="cb28-4"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">name</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> coder-pg-secrets</span></span>
+<span id="cb28-5"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">type</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> Opaque</span></span>
+<span id="cb28-6"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">stringData</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span></span>
+<span id="cb28-7"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">  values.yaml</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">: </span><span class="ch" style="color: #20794D;
+background-color: null;
+font-style: inherit;">|</span></span>
+<span id="cb28-8">    auth:</span>
+<span id="cb28-9">      username: coder</span>
+<span id="cb28-10">      password: "secretpassword"</span>
+<span id="cb28-11">      database: coder</span></code></pre></div>
+<div class="sourceCode" id="cb29" style="background: #f1f3f5;"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb29-1"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">apiVersion</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> v1</span></span>
+<span id="cb29-2"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">kind</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> Secret</span></span>
+<span id="cb29-3"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">metadata</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span></span>
+<span id="cb29-4"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">name</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> coder-secrets</span></span>
+<span id="cb29-5"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">type</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> Opaque</span></span>
+<span id="cb29-6"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">stringData</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span></span>
+<span id="cb29-7"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">  values.yaml</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">: </span><span class="ch" style="color: #20794D;
+background-color: null;
+font-style: inherit;">|</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> </span></span>
+<span id="cb29-8">    coder:</span>
+<span id="cb29-9">      env:</span>
+<span id="cb29-10">        - name: CODER_PG_CONNECTION_URL</span>
+<span id="cb29-11">          value: "postgres://coder:secretpassword@coder-db-postgresql.coder.svc.cluster.local:5432/coder?sslmode=disable"</span>
+<span id="cb29-12">        - name: CODER_OIDC_CLIENT_SECRET</span>
+<span id="cb29-13">          value: "OIDC Secret value here"</span></code></pre></div>
+<p><code>sops --encrypt --encrypted-regex '^(values.yaml)$' --in-place filename.yaml</code></p>
+<p>Whoops, this doesn’t deploy.</p>
+<p><code>kubectl create namespace coder</code></p>
+<p>It mostly worked, but I encountered an error:</p>
+<pre><code>Encountered an error running "coder server", see "coder server --help" for more information
+error: access-url must include a scheme (e.g. 'http://' or 'https://)</code></pre>
+<p>So I had to change that variable.</p>
+<p>One thing I decided to do is store the terraform configuration files in my git repo. They won’t be applied automatically,</p>
+<p>But eventually, I got it deployed. I even set up a workspace, using the starter “kubernetes” template.</p>
+<p>It doesn’t come with noVNC, which I really want. I’m looking at adapting the code from the <a href="https://github.com/bpmct/coder-templates/blob/main/desktop-container/main.tf">desktop container</a> in combination with <a href="https://docs.linuxserver.io/images/docker-kali-linux/">the Kali Linux webtop image</a> to get a web based Kali Linux environmet for CTF’s, workshops, and similar events.</p>
+<p>Okay, this is actually kinda difficult.</p>
+<p><code>s6-overlay-suexec: fatal: can only run as pid 1</code></p>
+<p>So the webtop docker containers work by launching a complex set of init scripts using s6, and if I try to start s6 via the <code>/init</code> script in a shell, then it complains about not being pid one. I might have to create a custom container to get around this, but I don’t want to do that.</p>
+<p>Another thing I can try is creating a <a href="https://github.com/linuxserver/docker-mods?tab=readme-ov-file#creating-and-maintaining-a-docker-mod">“docker mod”</a>, an extension to Linuxserver’s docker containers that can be called via an environment variable. <a href="https://docs.linuxserver.io/images/docker-webtop/#native-apps">Usage example here</a></p>
+<p>I could also try the <a href="https://hub.docker.com/r/codercom/enterprise-desktop/tags">enterprise-desktop</a> image by Coder themselves, but I really do want that kasmvnc and kali image.</p>
+</section>
+<section id="authentik" class="level2">
+<h2 class="anchored" data-anchor-id="authentik">Authentik</h2>
+<p>It’s deployed (see <a href="../build-server-5/">previous project</a>), but I am going to record my steps here. Firstly, it looks like I should configure from the “Application” page, and use “Create with Provider” in order to create the whole set of necessary things.</p>
+<p>There were some interesting hiccups though. The “Issuer url” for Coder should have a backslash, it seems to use strict string matching.</p>
+<pre><code>error: create oidc config: configure oidc provider: oidc: issuer did not match the issuer returned by provider, expected "https://sso.moonpiedumpl.ing/application/o/coder" got "https://sso.moonpiedumpl.ing/application/o/coder/"</code></pre>
+<p>Also, for Incus, it looks like I need to enable <a href="https://docs.goauthentik.io/docs/add-secure-apps/providers/oauth2/device_code">device code</a>, otherwise it won’t work.</p>
+<p>I’m now stuck for Incus, because it seems that single sign on only works if the services are on the same domain/subdomain. Incus is on a different domain, so it fails. I need to proxy a service external to Kubernetes, to something inside Kubernetes.</p>
+<p>This is actually more difficult than I thought it would be.</p>
+</section>
+<section id="openfga" class="level2">
+<h2 class="anchored" data-anchor-id="openfga">Openfga</h2>
+<p>Okay, I deployed it using the helm chart. I’m lookiing through the <a href="https://linuxcontainers.org/incus/docs/main/authorization/#open-fine-grained-authorization-openfga">Incus docs</a>. So it looks like Incus does the intial setup.</p>
+<p>Then, once I do that, I need to <a href="https://openfga.dev/docs/getting-started/update-tuples">call the API to update relations</a>.</p>
+<p>Also, I need to add a nodeport service so that Incus can access the server. After scrolling through <a href="https://tag-security.cncf.io/community/assessments/projects/openfga/joint-assessment/">a very interesting security audit</a>:</p>
+<blockquote class="blockquote">
+<p>The likelihood is rated low as OpenFGA is designed to be run within an intranet environment and not exposed to public internet.</p>
+</blockquote>
+<p>And this is somewhat difficult with my setup. I deployed it on Kubernetes, with no firewall, and now I want to expose the service — but only to localhost.</p>
+<p>Actually that also doesn’t work. It looks like coder instances are placed on the same ip address as my host machine, meaning they would have access to all network stuff that localhost would.</p>
+<p>No, looking further, it does look like openfga does use authentication, and the reason why an intranet is recommended is in case of ddos attacks.</p>
+<p>Here is my secret:</p>
+<div class="sourceCode" id="cb32" style="background: #f1f3f5;"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb32-1"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">apiVersion</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> v1</span></span>
+<span id="cb32-2"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">kind</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> Secret</span></span>
+<span id="cb32-3"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">metadata</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span></span>
+<span id="cb32-4"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">name</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> mysecret</span></span>
+<span id="cb32-5"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">type</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> Opaque</span></span>
+<span id="cb32-6"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">stringData</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span></span>
+<span id="cb32-7"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">  values.yaml</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">: </span><span class="ch" style="color: #20794D;
+background-color: null;
+font-style: inherit;">|</span></span>
+<span id="cb32-8">    postgresql:</span>
+<span id="cb32-9">      auth:</span>
+<span id="cb32-10">        postgresPassword: secretpassword</span>
+<span id="cb32-11">    datastore:</span>
+<span id="cb32-12">      uri: "postgres://postgres:secretpassword@openfga-postgresql.default.svc.cluster.local:5432/postgres?sslmode=disable"</span>
+<span id="cb32-13">    authn:</span>
+<span id="cb32-14">      preshared:</span>
+<span id="cb32-15">        keys: ["secretkeyhere"]</span></code></pre></div>
+</section>
+<section id="nextcloud" class="level2">
+<h2 class="anchored" data-anchor-id="nextcloud">Nextcloud</h2>
+<p>Before I deploy nextcloud I should probably format that 4 TB hard drive I have and make it accessible for stuff.</p>
+</section>
+<section id="forgejo" class="level2">
+<h2 class="anchored" data-anchor-id="forgejo">Forgejo</h2>
+</section>
+<section id="llm-stuff" class="level2">
+<h2 class="anchored" data-anchor-id="llm-stuff">LLM Stuff</h2>
+<section id="nvidia-container-toolkit" class="level3">
+<h3 class="anchored" data-anchor-id="nvidia-container-toolkit">Nvidia Container Toolkit</h3>
+<p>So firstly, I need to install the Nvidia container runtime on kuberntes.</p>
+<p><a href="https://wiki.debian.org/NvidiaGraphicsDrivers#bookworm-535">Here are the docs on the proprietary nvidia drivers</a>.</p>
+<p>Firstly, enable the nonfree repo:</p>
+<div class="code-with-filename">
+<div class="code-with-filename-file">
+<pre><strong>/etc/apt/sources.list</strong></pre>
+</div>
+<div class="sourceCode" id="cb33" data-filename="/etc/apt/sources.list" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb33-1">#deb cdrom:[Debian GNU/Linux 12.10.0 _Bookworm_ - Official amd64 NETINST with firmware 20250315-10:09]/ bookworm contrib main non-free-firmware</span>
+<span id="cb33-2"></span>
+<span id="cb33-3">deb http://deb.debian.org/debian/ bookworm main contrib non-free non-free-firmware</span>
+<span id="cb33-4">deb-src http://deb.debian.org/debian/ bookworm main contrib non-free non-free-firmware</span>
+<span id="cb33-5"></span>
+<span id="cb33-6">deb http://security.debian.org/debian-security bookworm-security main contrib non-free non-free-firmware</span>
+<span id="cb33-7">deb-src http://security.debian.org/debian-security bookworm-security main contrib non-free non-free-firmware</span>
+<span id="cb33-8"></span>
+<span id="cb33-9"># bookworm-updates, to get updates before a point release is made;</span>
+<span id="cb33-10"># see https://www.debian.org/doc/manuals/debian-reference/ch02.en.html#_updates_and_backports</span>
+<span id="cb33-11">deb http://deb.debian.org/debian/ bookworm-updates main contrib non-free non-free-firmware</span>
+<span id="cb33-12">deb-src http://deb.debian.org/debian/ bookworm-updates main contrib non-free non-free-firmware</span></code></pre></div>
+</div>
+<p><code>apt install nvidia-driver firmware-misc-nonfree</code></p>
+<p>Anyway, next is to install the Nvidia container toolkit, using the nvidia repo, and <a href="https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html">instructions from here</a>.</p>
+<p><code>curl -fsSL https://nvidia.github.io/libnvidia-container/gpgkey | sudo gpg --dearmor -o /usr/share/keyrings/nvidia-container-toolkit-keyring.gpg</code></p>
+<div class="code-with-filename">
+<div class="code-with-filename-file">
+<pre><strong>/etc/apt/sources.list.d/nvidia-container-toolkit.list</strong></pre>
+</div>
+<div class="sourceCode" id="cb34" data-filename="/etc/apt/sources.list.d/nvidia-container-toolkit.list" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb34-1">deb [signed-by=/usr/share/keyrings/nvidia-container-toolkit-keyring.gpg] https://nvidia.github.io/libnvidia-container/stable/deb/$(ARCH) /</span>
+<span id="cb34-2">#deb [signed-by=/usr/share/keyrings/nvidia-container-toolkit-keyring.gpg] https://nvidia.github.io/libnvidia-container/experimental/deb/$(ARCH) /</span></code></pre></div>
+</div>
+<p><code>apt update</code></p>
+<p><code>apt install nvidia-container-toolkit</code></p>
+<p>After this, I simply restart the rke2 service, and it the nvidia container runtime is autodetected and shows up in the <code>/var/lib/rancher/rke2/agent/etc/containerd/config.toml</code> file.</p>
+<p>After this, I should be able to simply set nvidia as a runtime for certain pods, according to the <a href="https://docs.k3s.io/advanced?_highlight=nvidia#alternative-container-runtime-support">k3s docs</a>.</p>
+<p>Another common step for Nvidia support in Kubernetes, is to install the <a href="https://github.com/NVIDIA/k8s-device-plugin">Nvidia K8s device plugin</a>, but this requires the Nvidia container runtime to be teh <em>default</em>. I don’t want this, because it gives services that don’t need an Nvidia GPU access to Nvidia GPU’s. I don’t think I need this, however, so I won’t bother.</p>
+</section>
+</section>
+<section id="ip-address-change" class="level2">
+<h2 class="anchored" data-anchor-id="ip-address-change">IP address change</h2>
+<p>In order to fix this error, which appears after changing my ip address:</p>
+<pre><code>May 28 20:45:34 thoth rke2[6657]: time="2025-05-28T20:45:34-07:00" level=info msg="Datastore using 7925760 of 7933952 bytes after defragment"
+May 28 20:45:34 thoth rke2[6657]: time="2025-05-28T20:45:34-07:00" level=info msg="Failed to test data store connection: this server is a not a member of the etcd cluster. Found [thoth-4d3eb158=https://130.166.90.206:2380], expect: thoth-4d3eb158=https://130.166.79.34:2380"</code></pre>
+<p>After changing my ip address, you just need:</p>
+<p><code>systemctl stop rke2-server</code></p>
+<p><code>rke2 server --cluster-reset</code></p>
+<p><code>systemctl restart rke2-server</code></p>
 
 
 </section>
@@ -9696,6 +10095,13 @@ GetWin: Get the amount of damage a winning attacker would do</code></pre>
 <li><a href="https://github.com/Fmstrat/winapps" class="uri">https://github.com/Fmstrat/winapps</a> and <a href="https://github.com/Fmstrat/loffice-365" class="uri">https://github.com/Fmstrat/loffice-365</a></li>
 </ul>
 </section>
+<section id="kubernetes" class="level1">
+<h1>Kubernetes</h1>
+<ul>
+<li><a href="https://github.com/freelensapp" class="uri">https://github.com/freelensapp</a></li>
+<li><a href="https://github.com/wiredoor/wiredoor" class="uri">https://github.com/wiredoor/wiredoor</a></li>
+</ul>
+</section>
 <section id="funny" class="level1">
 <h1>Funny</h1>
 <ul>
@@ -12171,181 +12577,6 @@ font-style: inherit;">}</span>:</span></code></pre></div>
   <category>writeups</category>
   <guid>./writeups/nice-challenge-5/</guid>
   <pubDate>Fri, 07 Jun 2024 07:00:00 GMT</pubDate>
-</item>
-<item>
-  <title>Reinstalling Cachyos</title>
-  <link>./playground/cachyos-install/</link>
-  <description><![CDATA[ 
-
-
-
-
-<p>I’ve decided to reinstall <a href="https://cachyos.org/">cachyos</a>, the Arch Linux fork I use on my laptop’s, because the config of my smaller laptop is getting crusty. In addition to not having any swap setup, <code>/nix</code> is part of the main btrfs subvolume, meaning it is included in snapshots, and my snapshots are far, far larger than they should be.</p>
-<section id="installation" class="level1">
-<h1>Installation</h1>
-<p>I downloaded the latest, ISO, but I had some troubles installing. I first attempted to set up an LVM2 Partition, but that crashed, and I don’t know why. The error log of the installer doesn’t have any relevant information.</p>
-<p>I tried again, but with a simpler partitioning setup, but it errored on another step, ranking the mirrors.</p>
-<p>An excerpt from the logs of the failed install:</p>
-<div class="sourceCode" id="cb1" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb1-1">--&gt; name 'arch'; mirrorlist_path '/etc/pacman.d/mirrorlist'; special_arch ''</span>
-<span id="cb1-2">/usr/bin/cachyos-rate-mirrors: line 97: /usr/bin/rate-mirrors: Input/output error</span></code></pre></div>
-<p>I tested the command independently, and found that it was broken. It seemed to be a bugged shell script.</p>
-<p>In order to fix this, I decided to update just the relevant packages: <code>pacman -Sy cachyos-rate-mirrors rate-mirrors</code>. Normally, you <a href="https://wiki.archlinux.org/title/System_maintenance#Partial_upgrades_are_unsupported">never want to do this</a>, as it is a partial upgrade, and can cause many issues down the road. However, I don’t really have a choice because the system is loaded in ram right now, and I can’t do a full upgrade as I don’t have enough ram to store all of those downloaded packages — especially since CachyOS comes with a full GUI.</p>
-<p>Once the install is done, I have to set up swap, and a separate subvolume for <code>/nix</code>.</p>
-<p>I use <code>arch-chroot</code> to chroot into the newly installed arch system, which is thankfully still mounted at <code>/tmp/calamares-root-ncjj4sta</code>.</p>
-<p>I start by following the instructions on the arch wiki for a <a href="https://wiki.archlinux.org/title/Btrfs#Swap_file">btrfs swap file</a>.</p>
-<p>I also attempted to create a subvolume for nix, but this failed. When I removed the relevant lines for the nix subvolume <code>/etc/fstab</code>, my system booted properly.</p>
-<p>However, since hibernate wasn’t working properly, I decided to set that up first.</p>
-<p>I still had more issues.</p>
-<p>I attempted to install using the Calamares installer, with a LVM setup, and a seperate swap “partition” on a logical volume… and calamares crashed. Apparently, <a href="https://github.com/calamares/calamares/issues/1564">Calameres + LVM is basically completely broken</a></p>
-<blockquote class="blockquote">
-<p>LVM support is broken, in fact, I have no idea why is there right now.</p>
-</blockquote>
-<p>So yeah.</p>
-<p>I also attempted to play around with a systemd based initramfs. According to <a href="https://wiki.archlinux.org/title/Power_management/Suspend_and_hibernate#Configure_the_initramfs">the archwiki</a></p>
-<blockquote class="blockquote">
-<p>When an initramfs with the systemd hook is used, a resume mechanism is already provided, and no further hooks need to be added</p>
-</blockquote>
-<p>Compared to a normal hibernate setup, you have to locate the swap partition/swapfile, and then pass it as a kernel parameter. However, systemd automatically detects a swap partition/swapfile to hibernate it. But this took me some time to get a systemd based initramfs set up properly.</p>
-<p>The hooks are in /etc/mkinitcpio.conf must be modified as follows:</p>
-<div class="code-with-filename">
-<div class="code-with-filename-file">
-<pre><strong>/etc/mkinitcpio.conf</strong></pre>
-</div>
-<div class="sourceCode" id="cb2" data-filename="/etc/mkinitcpio.conf" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb2-1">HOOKS=(base systemd autodetect microcode modconf kms keyboard sd-vconsole block sd-encrypt filesystems fsck)</span></code></pre></div>
-</div>
-<p>(No resume hook is needed).</p>
-<p>However, this still wouldn’t boot, and I couldn’t figure out why.</p>
-<p>Figured it out: <a href="https://wiki.archlinux.org/title/Dm-crypt/System_configuration#Using_systemd-cryptsetup-generator" class="uri">https://wiki.archlinux.org/title/Dm-crypt/System_configuration#Using_systemd-cryptsetup-generator</a></p>
-<p>By copying <code>/etc/crypttab</code> to <code>/etc/crypttab.initramfs</code>, it will be copied over the the initramfs, enabling the systemd based initramfs to read a version of the <code>crypttab</code> configuration file stored in the initramfs.</p>
-<p>Although, I am left with some questions, like why the non-systemd based initramfs doesn’t need this, it seems to work fine. Systemd automatically detects the swap file, even if it is stored in the encrypted btrfs partition.</p>
-<p>Another plus: A <a href="https://cachyos.org/blog/2406-june-release/">new cachyos iso</a> was released. This iso release, fixes the issues with the mirror software being broken.</p>
-<p>Now that Cachyos is installed, I need to figure out how to make a top level subvolume. According to the <a href="https://wiki.archlinux.org/title/Btrfs#Swap_file">arch wiki article on btrfs subvolumes</a></p>
-<blockquote class="blockquote">
-<p>Tip: Consider creating the subvolume directly below the top-level subvolume, e.g. <span class="citation" data-cites="swap">@swap</span>. Then, make sure the subvolume is mounted to /swap (or any other accessible location).</p>
-</blockquote>
-<p>Why is this setup better? And how do I create a subvoolume directly below the top level?</p>
-<p>When I run <code>btrfs su create /mnt/@nix</code> it doesn’t properly create a subvolume. Instead, it says <code>top level 256 path @nix</code>, meaning that this subvolume is nested in the subvolume with ID 256, the @ subvolume. However, <span class="citation" data-cites="home">@home</span>, <span class="citation" data-cites="var">@var</span>, and <span class="citation" data-cites="tmp">@tmp</span> aren’t like that, instead they have the top level 5, meaning they are directly on the top level subvolume, which is equivalent to the filesystem itself.</p>
-<p>Okay, I think I figured it out. In the chroot I make, I mount the btrfs filesystem with <code>@</code> as the root subvolume, meaning any subvolumes I create are nested below that. In order to properly create a subvolume under the top, I have to mount it first.</p>
-<p>I still don’t understand the benefit of having a subvolume under the top level subvolume, rather than another nested subvolume layout. Maybe because snapshots happen to nested subvolumes as well, and this avoids the swapfile accidentally getting snapshotted?</p>
-<p>I encountered another issue, after testing hibernate:</p>
-<p><img src="./playground/cachyos-install/images/noswap.jpg" class="img-fluid"></p>
-<p>Except… that UUID doesn’t exist. There is no mention of it in /etc/fstab. Then I remembered, according to the arch wiki article for hibernation, systemd stores the location where to resume from a hibernation in <code>/sys/firmware/vars/efivars/HibernateLocation</code>.</p>
-<div class="sourceCode" id="cb3" data-file="/sys/firmware/vars/efivars/HibernateLocation" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb3-1">{"uuid":"74fd980d-396b-46be-8123-ed41bcaa2713","offset":2269039,"kernelVersion":"6.9.3-4-cachyos","osReleaseId":"cachyos"}</span></code></pre></div>
-<p>Now this looks good… except whatever hibernate resume was trying to happen, failed. This is probably because I reinstalled linux, after I had just hibernated it, leaving that efivar in place.</p>
-<div class="sourceCode" id="cb4" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb4-1">[root@cachyos-x8664 efivars]# btrfs inspect-internal map-swapfile -r /swap/swapfile</span>
-<span id="cb4-2">2168766</span></code></pre></div>
-<p>The offset was wrong. To fix it? I just had to hibernate the system normally. Then this issue went away.</p>
-<p>With this, my setup is complete. But I still don’t understand the benefits of non-nested subvolumes. I ended up making a <a href="https://programming.dev/post/15458752">lemmy post</a> about it, but I haven’t gotten any conclusive answers yet.</p>
-</section>
-<section id="user-data" class="level1">
-<h1>User data</h1>
-<p>I backed up my entire home directory to a tar archive using ark, the archiver tool on KDE. However, since I was backing it up to a usb thumb drive, I used <a href="https://wiki.archlinux.org/title/Gocryptfs">gocryptfs</a> to encrypt the folder where the archive was stored. I encrypt sensitive data I put on my usb drives, that way, even if I lose the drive, nothing gets compromised.</p>
-</section>
-<section id="misc-config-changes" class="level1">
-<h1>Misc config changes</h1>
-<p>I also enabled the <a href="https://wiki.archlinux.org/title/Keyboard_shortcuts#Kernel_(SysRq)">Magic sysrq key</a> via a kernel parameter in my grub config file.</p>
-</section>
-<section id="nix-not-starting-on-boot." class="level1">
-<h1>Nix not starting on boot.</h1>
-<p>I encountered another issue where nix does not start on boot. The problem is probably that, because /nix is a seperate btrfs subvolume, and the systemd service is a symlink to the nix service on /nix, systemd cannot locate the proper service. I need to either move the nix service so it is located on the root subvolume, or adjust the nix daemon service so it requires /nix to be mounted.</p>
-<p>Thankfully, systemd unit files have an option for this: <a href="https://www.freedesktop.org/software/systemd/man/latest/systemd.unit.html#RequiresMountsFor=">RequiresMountsFor=</a>.</p>
-<p>And to adjust the nix daemon service, I can use override, as <a href="https://askubuntu.com/questions/659267/how-do-i-override-or-configure-systemd-services">mentioned on stackoverflow</a>. Although, I don’t like this solution. Since the original service is still a symlink, would systemd really be able to find it?</p>
-<p>I found a <a href="https://github.com/DeterminateSystems/nix-installer/issues/416">relevant GitHub issue</a> on the on the page for the Determinate Systems Nix installer, which is what I use. Just like me, another user wants to have /nix on a seperate btrfs subvolume. Although they first did a workaround of removing the symlink, and copying the service files to /etc instead. However, one of the developers chimed in, mentioning the solution for the Steam Deck (a Linux handheld which uses btrfs), which was a systemd oneshot service that runs after nix is mounted, and then reloads all systemd services, and then restarts the nix socket. This was a lot easier to implement on my system.</p>
-<p>The systemd service was stored in the source code of the installer.</p>
-<p>https://github.com/DeterminateSystems/nix-installer/blob/main/src/planner/steam_deck.rs#L270</p>
-<div class="code-with-filename">
-<div class="code-with-filename-file">
-<pre><strong>/etc/systemd/system/ensure-symlinked-units-resolve.service</strong></pre>
-</div>
-<div class="sourceCode" id="cb5" data-filename="/etc/systemd/system/ensure-symlinked-units-resolve.service" style="background: #f1f3f5;"><pre class="sourceCode ini code-with-copy"><code class="sourceCode ini"><span id="cb5-1"><span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">[Unit]</span></span>
-<span id="cb5-2"><span class="dt" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">Description</span><span class="ot" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">=</span><span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">Ensure Nix related units which are symlinked resolve</span></span>
-<span id="cb5-3"><span class="dt" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">After</span><span class="ot" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">=</span><span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">nix.mount</span></span>
-<span id="cb5-4"><span class="dt" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">Requires</span><span class="ot" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">=</span><span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">nix.mount</span></span>
-<span id="cb5-5"><span class="dt" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">DefaultDependencies</span><span class="ot" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">=</span><span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">no</span></span>
-<span id="cb5-6"></span>
-<span id="cb5-7"><span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">[Service]</span></span>
-<span id="cb5-8"><span class="dt" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">Type</span><span class="ot" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">=</span><span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">oneshot</span></span>
-<span id="cb5-9"><span class="dt" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">RemainAfterExit</span><span class="ot" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">=</span><span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">yes</span></span>
-<span id="cb5-10"><span class="dt" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">ExecStart</span><span class="ot" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">=</span><span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">/usr/bin/systemctl daemon-reload</span></span>
-<span id="cb5-11"><span class="dt" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">ExecStart</span><span class="ot" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">=</span><span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">/usr/bin/systemctl restart --no-block nix-daemon.socket</span></span>
-<span id="cb5-12"></span>
-<span id="cb5-13"><span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">[Install]</span></span>
-<span id="cb5-14"><span class="dt" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">WantedBy</span><span class="ot" style="color: #003B4F;
-background-color: null;
-font-style: inherit;">=</span><span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">sysinit.target</span></span></code></pre></div>
-</div>
-<p>And with this, the nix socket starts properly on boot.</p>
-
-
-</section>
-
- ]]></description>
-  <category>playground</category>
-  <guid>./playground/cachyos-install/</guid>
-  <pubDate>Tue, 04 Jun 2024 07:00:00 GMT</pubDate>
 </item>
 </channel>
 </rss>

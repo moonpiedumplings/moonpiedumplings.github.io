@@ -161,13 +161,27 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#the-why" id="toc-the-why" class="nav-link active" data-scroll-target="#the-why">The Why</a></li>
+  <li><a href="#the-what" id="toc-the-what" class="nav-link active" data-scroll-target="#the-what">The What</a></li>
+  <li><a href="#the-why" id="toc-the-why" class="nav-link" data-scroll-target="#the-why">The Why</a></li>
   <li><a href="#starlingx-attempt" id="toc-starlingx-attempt" class="nav-link" data-scroll-target="#starlingx-attempt">StarlingX Attempt</a></li>
   <li><a href="#installing-debian" id="toc-installing-debian" class="nav-link" data-scroll-target="#installing-debian">Installing Debian</a></li>
   <li><a href="#networking" id="toc-networking" class="nav-link" data-scroll-target="#networking">Networking</a></li>
   <li><a href="#incus-configuration" id="toc-incus-configuration" class="nav-link" data-scroll-target="#incus-configuration">Incus Configuration</a>
   <ul class="collapse">
   <li><a href="#authorization" id="toc-authorization" class="nav-link" data-scroll-target="#authorization">Authorization</a></li>
+  </ul></li>
+  <li><a href="#kubernetes-again" id="toc-kubernetes-again" class="nav-link" data-scroll-target="#kubernetes-again">Kubernetes (Again)</a>
+  <ul class="collapse">
+  <li><a href="#coder" id="toc-coder" class="nav-link" data-scroll-target="#coder">Coder</a></li>
+  <li><a href="#authentik" id="toc-authentik" class="nav-link" data-scroll-target="#authentik">Authentik</a></li>
+  <li><a href="#openfga" id="toc-openfga" class="nav-link" data-scroll-target="#openfga">Openfga</a></li>
+  <li><a href="#nextcloud" id="toc-nextcloud" class="nav-link" data-scroll-target="#nextcloud">Nextcloud</a></li>
+  <li><a href="#forgejo" id="toc-forgejo" class="nav-link" data-scroll-target="#forgejo">Forgejo</a></li>
+  <li><a href="#llm-stuff" id="toc-llm-stuff" class="nav-link" data-scroll-target="#llm-stuff">LLM Stuff</a>
+  <ul class="collapse">
+  <li><a href="#nvidia-container-toolkit" id="toc-nvidia-container-toolkit" class="nav-link" data-scroll-target="#nvidia-container-toolkit">Nvidia Container Toolkit</a></li>
+  </ul></li>
+  <li><a href="#ip-address-change" id="toc-ip-address-change" class="nav-link" data-scroll-target="#ip-address-change">IP address change</a></li>
   </ul></li>
   </ul>
 </nav>
@@ -203,11 +217,28 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </header>
 
 
+<section id="the-what" class="level1">
+<h1>The What</h1>
+<p>I want a whole “cloud” for myself and people around me. The services I want to host are:</p>
+<ul>
+<li>Authentik — Single Sign On and centralized accounts</li>
+<li>Incus — to provide VPS’s to people</li>
+<li>Coder — for remote development environments, but also Kali/Linux containers accessible via the browser</li>
+<li>Forgejo — Code forge, with CI/CD</li>
+<li>Nextcloud — a “cloud” with file sync, editing, and the like</li>
+<li>Element Server Suite — A complete discord alternative</li>
+<li>Something for Large Language Models
+<ul>
+<li>Preferably with history per OIDC user</li>
+<li>Probably: <a href="https://artifacthub.io/packages/helm/open-webui/open-webui" class="uri">https://artifacthub.io/packages/helm/open-webui/open-webui</a>, <a href="https://github.com/open-webui/open-webui/issues/483">see also</a></li>
+</ul></li>
+</ul>
+</section>
 <section id="the-why" class="level1">
 <h1>The Why</h1>
 <p>In my <a href="../build-server-5/">previous project</a>, I attempted to deploy <a href="https://en.wikipedia.org/wiki/OpenStack">Openstack</a> entirely with <a href="https://en.wikipedia.org/wiki/DevOps#GitOps">GitOps</a> methodologies, using <a href="https://fluxcd.io/">FluxCD</a>.</p>
 <p>I failed. Well, it didn’t fail, but I think I’ve spent too long on it and I need to move on.</p>
-<p>Recently, I’ve discovered a project that simeutaneously seems to be a distribution of OpenStack, Kubernetes, and Linux, called <a href="https://www.starlingx.io/">StarlingX</a>.</p>
+<p>Recently, I’ve discovered a project that simultaneously seems to be a distribution of OpenStack, Kubernetes, and Linux, called <a href="https://www.starlingx.io/">StarlingX</a>.</p>
 <p>Also:</p>
 <blockquote class="blockquote">
 <p><a href="https://docs.starlingx.io/system_configuration/index-sysconf-d511820651f0.html#starlingx-openstack">StarlingX OpenStack is installed and managed as an FluxCD application.</a></p>
@@ -223,8 +254,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>But I install it on my physical server anyways. It doesn’t get an ip address via dhcp.</p>
 <p>I understand why people like turnkey solutions, like ESXI now.</p>
 <p>I look into another HCI solution: <a href="https://docs.harvesterhci.io/">Suse Harvester</a>. It’s actually a very good software, the UI is great and the install is easy. But if you want any kind of authorization and control over who can see what projects, you have to deploy rancher, which can then “consume” the harvester api and work with it. While excellent, I don’t really feel like having to set up rancher either on another server, or in a virtual machine.</p>
-<p>In addition to that, I could not figure out how networking works, and how to set up a bridged network.</p>
-<p>But I begin looking into something else, <a href="https://linuxcontainers.org/incus/docs/main/">Incus</a>.</p>
+<p>In addition to that, I could not figure out how networking works, and how to set up a bridged network. I did deploy a virtual machine, although at first I accidentally gave it 1000 Gi of ram and it would not run because my machine does not have 1000 Gi of ram.</p>
+<p><img src="images/allocate.jpg" class="img-fluid"></p>
+<p>Also, I did find something funny though:</p>
+<p><img src="images/editor.jpg" class="img-fluid"></p>
+<p>But at this point, I was done, and I began looking into something else, <a href="https://linuxcontainers.org/incus/docs/main/">Incus</a>.</p>
 <p>Incus:</p>
 <ul>
 <li>Can be installed on top of another distro</li>
@@ -424,7 +458,7 @@ Upload: 86.25 Mbit/s</code></pre>
 <p>I notice that the first packet seems to have a lot less information, and then it’s the stuff after that that usually hits near 100 mbit/s in speed.</p>
 <p>(I also ran a quick check with iperf to make sure that both interfaces actually worked, which they did, they both worked and got 70 mbit/s of bandwidth.).</p>
 <p>Round robin works by just rotating which interface gets the next packet. According to the internet, it can result in packets arriving out of order, which can lead to slower speeds than a single nic in some cases. I can’t find any posts on this that are newer than 3 years old, so I don’t know if it applies, but I wanted to avoid round robin for that reason.</p>
-<p>People say the best mode is LACP, but I don’t get any performance improvement — however, according to <a href="https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/9/html/configuring_and_managing_networking/configuring-network-bonding_configuring-and-managing-networking#configuring-a-network-bond-by-using-nmcli_configuring-network-bonding">Red Hat’s documentation</a>, this mode does seem to require some configuration on the side of the network switch — perhaps without that configuration can still <em>do</em> a bond and combine two interfaces into one, but you don’t get any performance out of it?</p>
+<p>People say the best mode is LACP, but I don’t get any performance improvement — however, according to <a href="https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/9/html/configuring_and_managing_networking/configuring-network-bonding_configuring-and-managing-networking#configuring-a-network-bond-by-using-nmcli_configuring-network-bonding">Red Hat’s documentation</a>, this mode does seem to require some configuration on the side of the network switch. Perhaps without that configuration can still <em>do</em> a bond and combine two interfaces into one, but you don’t get any performance out of it?</p>
 <p>But when I run iperf on each of the physical interfaces simeuataneously, perhaps there is some kind of cap? Maybe the “two” ethernet interfaces in the wall are actually only one? But then why does round robin have consistent, better performance, over the theoretical 100 mbit/s limit?</p>
 <p>I think it is the former issue:</p>
 <pre><code>root@thoth:~# cat /proc/net/bonding/bond0
@@ -731,6 +765,186 @@ Aggregator ID: 2
 <p><code>incus project set layer8 limits.disk.pool.default=0</code></p>
 <p>are what I ending up using.</p>
 <p>Okay. It doesn’t work the way I want. But I’m close enough, so I guess I’ll just roll with it instead.</p>
+</section>
+</section>
+<section id="kubernetes-again" class="level1">
+<h1>Kubernetes (Again)</h1>
+<p>Next up is the rest of the services I want to host. I still want to do a Kubernetes cluster, with everything GitOps though, but having Incus opens up another oppurtunity: I could do a multi node Kubernetes cluster, in virtual machines, instead of a single node.</p>
+<p>I know I still want SSO, and I actually want SSO for Incus as well. After watching looking at openfga, it doesn’t seem to be nightmarishly hard. I think I will do a one node kubernetes cluster, again with openebs, reusing that same flux config. But this time, the deployment will be done in a virtual machine, where I can snapshot the entire virtual machine, feed it the gpu, or the extra hard drive I have. ’</p>
+<p>Nah. I think I’m just gonna deploy bare metal.</p>
+<p>Disable RKE2 ingress-nginx:</p>
+<div class="code-with-filename">
+<div class="code-with-filename-file">
+<pre><strong>/etc/rancher/rke2/rke2.yaml</strong></pre>
+</div>
+<div class="sourceCode" id="cb25" data-filename="/etc/rancher/rke2/rke2.yaml"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="fu">disable</span><span class="kw">:</span></span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a><span class="co">  # Yeah so apparently this was kind of important. </span></span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a><span class="co">  # - rke2-coredns</span></span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> rke2-ingress-nginx</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>And then enable servicelb, to allow for the ingress service to actually serve on a port on the host:</p>
+<p><code>systemctl edit rke2-server.service</code></p>
+<pre><code>### Editing /etc/systemd/system/rke2-server.service.d/override.conf
+### Anything between here and the comment below will become the new contents of the file
+
+[Service]
+ExecStart=
+ExecStart=/usr/local/bin/rke2 server --enable-servicelb</code></pre>
+<p>Fix NetworkManager: <a href="https://docs.rke2.io/known_issues#networkmanager" class="uri">https://docs.rke2.io/known_issues#networkmanager</a></p>
+<p>And then RKE2 is set up.</p>
+<p>Flux:</p>
+<div class="sourceCode" id="cb27"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>flux bootstrap git --url ssh://moonpie@moonpiedumpl.ing:22022/home/moonpie/flux-config --branch=main --private-key-file=/home/moonpie/.ssh/moonstack --verbose</span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a>cat age.agekey | kubectl create secret generic sops-age --namespace flux-system --from-file=age.agekey=/dev/stdin</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>But none of this works, because for whatever reason, the remote git repo on my server does not have any commits, even after I push the git repo.</p>
+<p><code>git push origin origin/main</code></p>
+<p>Can I change this to be the default? But my stuff deploys at least. Authentik is up again.</p>
+<section id="coder" class="level2">
+<h2 class="anchored" data-anchor-id="coder">Coder</h2>
+<p><a href="https://coder.com/">coder</a> is an open source platform for remote desktop environments. The thing they seem to be most excited about is the VScode based environemnts, but I care the most about the terminal access, and the webvnc based environments.</p>
+<p>Also, looking at their <a href="https://github.com/coder/coder/blob/main/helm/coder/values.yaml">helm chart values</a>, and their <a href="https://coder.com/docs/admin/users/oidc-auth">OIDC documentation</a> it seems that environment variables are used to configure many aspects of coder.</p>
+<p>So, I need to set up secrets again.</p>
+<p><code>sops --encrypt --encrypted-regex '^(values.yaml)$' codersecrets.yaml</code></p>
+<p>To get secret content after it is applied, for testing:</p>
+<p><code>kubectl get secret secret -n namespace -o jsonpath="{.data.values\.yaml}" | base64 -d</code></p>
+<p>One hiccup: I fear taht I may need to set a list of valid email domains that it accepts as OIDC users, <a href="https://coder.com/docs/admin/users/oidc-auth#step-2-configure-coder-with-the-openid-connect-credentials">documented here</a>.</p>
+<p>But looking <a href="https://github.com/coder/coder/blob/4587082fcf84a92bda6413733371373acae2392f/coderd/userauth.go#L1357">through the code</a>, it looks like I can leave that config empty.</p>
+<p>So here are my two secrets, that I am encrypting (without the sensitive data, of course):</p>
+<div class="sourceCode" id="cb28"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="fu">apiVersion</span><span class="kw">:</span><span class="at"> v1</span></span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a><span class="fu">kind</span><span class="kw">:</span><span class="at"> Secret</span></span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a><span class="fu">metadata</span><span class="kw">:</span></span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">name</span><span class="kw">:</span><span class="at"> coder-pg-secrets</span></span>
+<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a><span class="fu">type</span><span class="kw">:</span><span class="at"> Opaque</span></span>
+<span id="cb28-6"><a href="#cb28-6" aria-hidden="true" tabindex="-1"></a><span class="fu">stringData</span><span class="kw">:</span></span>
+<span id="cb28-7"><a href="#cb28-7" aria-hidden="true" tabindex="-1"></a><span class="fu">  values.yaml</span><span class="kw">: </span><span class="ch">|</span></span>
+<span id="cb28-8"><a href="#cb28-8" aria-hidden="true" tabindex="-1"></a>    auth:</span>
+<span id="cb28-9"><a href="#cb28-9" aria-hidden="true" tabindex="-1"></a>      username: coder</span>
+<span id="cb28-10"><a href="#cb28-10" aria-hidden="true" tabindex="-1"></a>      password: "secretpassword"</span>
+<span id="cb28-11"><a href="#cb28-11" aria-hidden="true" tabindex="-1"></a>      database: coder</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb29"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="fu">apiVersion</span><span class="kw">:</span><span class="at"> v1</span></span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a><span class="fu">kind</span><span class="kw">:</span><span class="at"> Secret</span></span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a><span class="fu">metadata</span><span class="kw">:</span></span>
+<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">name</span><span class="kw">:</span><span class="at"> coder-secrets</span></span>
+<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a><span class="fu">type</span><span class="kw">:</span><span class="at"> Opaque</span></span>
+<span id="cb29-6"><a href="#cb29-6" aria-hidden="true" tabindex="-1"></a><span class="fu">stringData</span><span class="kw">:</span></span>
+<span id="cb29-7"><a href="#cb29-7" aria-hidden="true" tabindex="-1"></a><span class="fu">  values.yaml</span><span class="kw">: </span><span class="ch">|</span><span class="at"> </span></span>
+<span id="cb29-8"><a href="#cb29-8" aria-hidden="true" tabindex="-1"></a>    coder:</span>
+<span id="cb29-9"><a href="#cb29-9" aria-hidden="true" tabindex="-1"></a>      env:</span>
+<span id="cb29-10"><a href="#cb29-10" aria-hidden="true" tabindex="-1"></a>        - name: CODER_PG_CONNECTION_URL</span>
+<span id="cb29-11"><a href="#cb29-11" aria-hidden="true" tabindex="-1"></a>          value: "postgres://coder:secretpassword@coder-db-postgresql.coder.svc.cluster.local:5432/coder?sslmode=disable"</span>
+<span id="cb29-12"><a href="#cb29-12" aria-hidden="true" tabindex="-1"></a>        - name: CODER_OIDC_CLIENT_SECRET</span>
+<span id="cb29-13"><a href="#cb29-13" aria-hidden="true" tabindex="-1"></a>          value: "OIDC Secret value here"</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p><code>sops --encrypt --encrypted-regex '^(values.yaml)$' --in-place filename.yaml</code></p>
+<p>Whoops, this doesn’t deploy.</p>
+<p><code>kubectl create namespace coder</code></p>
+<p>It mostly worked, but I encountered an error:</p>
+<pre><code>Encountered an error running "coder server", see "coder server --help" for more information
+error: access-url must include a scheme (e.g. 'http://' or 'https://)</code></pre>
+<p>So I had to change that variable.</p>
+<p>One thing I decided to do is store the terraform configuration files in my git repo. They won’t be applied automatically,</p>
+<p>But eventually, I got it deployed. I even set up a workspace, using the starter “kubernetes” template.</p>
+<p>It doesn’t come with noVNC, which I really want. I’m looking at adapting the code from the <a href="https://github.com/bpmct/coder-templates/blob/main/desktop-container/main.tf">desktop container</a> in combination with <a href="https://docs.linuxserver.io/images/docker-kali-linux/">the Kali Linux webtop image</a> to get a web based Kali Linux environmet for CTF’s, workshops, and similar events.</p>
+<p>Okay, this is actually kinda difficult.</p>
+<p><code>s6-overlay-suexec: fatal: can only run as pid 1</code></p>
+<p>So the webtop docker containers work by launching a complex set of init scripts using s6, and if I try to start s6 via the <code>/init</code> script in a shell, then it complains about not being pid one. I might have to create a custom container to get around this, but I don’t want to do that.</p>
+<p>Another thing I can try is creating a <a href="https://github.com/linuxserver/docker-mods?tab=readme-ov-file#creating-and-maintaining-a-docker-mod">“docker mod”</a>, an extension to Linuxserver’s docker containers that can be called via an environment variable. <a href="https://docs.linuxserver.io/images/docker-webtop/#native-apps">Usage example here</a></p>
+<p>I could also try the <a href="https://hub.docker.com/r/codercom/enterprise-desktop/tags">enterprise-desktop</a> image by Coder themselves, but I really do want that kasmvnc and kali image.</p>
+</section>
+<section id="authentik" class="level2">
+<h2 class="anchored" data-anchor-id="authentik">Authentik</h2>
+<p>It’s deployed (see <a href="../build-server-5/">previous project</a>), but I am going to record my steps here. Firstly, it looks like I should configure from the “Application” page, and use “Create with Provider” in order to create the whole set of necessary things.</p>
+<p>There were some interesting hiccups though. The “Issuer url” for Coder should have a backslash, it seems to use strict string matching.</p>
+<pre><code>error: create oidc config: configure oidc provider: oidc: issuer did not match the issuer returned by provider, expected "https://sso.moonpiedumpl.ing/application/o/coder" got "https://sso.moonpiedumpl.ing/application/o/coder/"</code></pre>
+<p>Also, for Incus, it looks like I need to enable <a href="https://docs.goauthentik.io/docs/add-secure-apps/providers/oauth2/device_code">device code</a>, otherwise it won’t work.</p>
+<p>I’m now stuck for Incus, because it seems that single sign on only works if the services are on the same domain/subdomain. Incus is on a different domain, so it fails. I need to proxy a service external to Kubernetes, to something inside Kubernetes.</p>
+<p>This is actually more difficult than I thought it would be.</p>
+</section>
+<section id="openfga" class="level2">
+<h2 class="anchored" data-anchor-id="openfga">Openfga</h2>
+<p>Okay, I deployed it using the helm chart. I’m lookiing through the <a href="https://linuxcontainers.org/incus/docs/main/authorization/#open-fine-grained-authorization-openfga">Incus docs</a>. So it looks like Incus does the intial setup.</p>
+<p>Then, once I do that, I need to <a href="https://openfga.dev/docs/getting-started/update-tuples">call the API to update relations</a>.</p>
+<p>Also, I need to add a nodeport service so that Incus can access the server. After scrolling through <a href="https://tag-security.cncf.io/community/assessments/projects/openfga/joint-assessment/">a very interesting security audit</a>:</p>
+<blockquote class="blockquote">
+<p>The likelihood is rated low as OpenFGA is designed to be run within an intranet environment and not exposed to public internet.</p>
+</blockquote>
+<p>And this is somewhat difficult with my setup. I deployed it on Kubernetes, with no firewall, and now I want to expose the service — but only to localhost.</p>
+<p>Actually that also doesn’t work. It looks like coder instances are placed on the same ip address as my host machine, meaning they would have access to all network stuff that localhost would.</p>
+<p>No, looking further, it does look like openfga does use authentication, and the reason why an intranet is recommended is in case of ddos attacks.</p>
+<p>Here is my secret:</p>
+<div class="sourceCode" id="cb32"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="fu">apiVersion</span><span class="kw">:</span><span class="at"> v1</span></span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a><span class="fu">kind</span><span class="kw">:</span><span class="at"> Secret</span></span>
+<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a><span class="fu">metadata</span><span class="kw">:</span></span>
+<span id="cb32-4"><a href="#cb32-4" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">name</span><span class="kw">:</span><span class="at"> mysecret</span></span>
+<span id="cb32-5"><a href="#cb32-5" aria-hidden="true" tabindex="-1"></a><span class="fu">type</span><span class="kw">:</span><span class="at"> Opaque</span></span>
+<span id="cb32-6"><a href="#cb32-6" aria-hidden="true" tabindex="-1"></a><span class="fu">stringData</span><span class="kw">:</span></span>
+<span id="cb32-7"><a href="#cb32-7" aria-hidden="true" tabindex="-1"></a><span class="fu">  values.yaml</span><span class="kw">: </span><span class="ch">|</span></span>
+<span id="cb32-8"><a href="#cb32-8" aria-hidden="true" tabindex="-1"></a>    postgresql:</span>
+<span id="cb32-9"><a href="#cb32-9" aria-hidden="true" tabindex="-1"></a>      auth:</span>
+<span id="cb32-10"><a href="#cb32-10" aria-hidden="true" tabindex="-1"></a>        postgresPassword: secretpassword</span>
+<span id="cb32-11"><a href="#cb32-11" aria-hidden="true" tabindex="-1"></a>    datastore:</span>
+<span id="cb32-12"><a href="#cb32-12" aria-hidden="true" tabindex="-1"></a>      uri: "postgres://postgres:secretpassword@openfga-postgresql.default.svc.cluster.local:5432/postgres?sslmode=disable"</span>
+<span id="cb32-13"><a href="#cb32-13" aria-hidden="true" tabindex="-1"></a>    authn:</span>
+<span id="cb32-14"><a href="#cb32-14" aria-hidden="true" tabindex="-1"></a>      preshared:</span>
+<span id="cb32-15"><a href="#cb32-15" aria-hidden="true" tabindex="-1"></a>        keys: ["secretkeyhere"]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
+<section id="nextcloud" class="level2">
+<h2 class="anchored" data-anchor-id="nextcloud">Nextcloud</h2>
+<p>Before I deploy nextcloud I should probably format that 4 TB hard drive I have and make it accessible for stuff.</p>
+</section>
+<section id="forgejo" class="level2">
+<h2 class="anchored" data-anchor-id="forgejo">Forgejo</h2>
+</section>
+<section id="llm-stuff" class="level2">
+<h2 class="anchored" data-anchor-id="llm-stuff">LLM Stuff</h2>
+<section id="nvidia-container-toolkit" class="level3">
+<h3 class="anchored" data-anchor-id="nvidia-container-toolkit">Nvidia Container Toolkit</h3>
+<p>So firstly, I need to install the Nvidia container runtime on kuberntes.</p>
+<p><a href="https://wiki.debian.org/NvidiaGraphicsDrivers#bookworm-535">Here are the docs on the proprietary nvidia drivers</a>.</p>
+<p>Firstly, enable the nonfree repo:</p>
+<div class="code-with-filename">
+<div class="code-with-filename-file">
+<pre><strong>/etc/apt/sources.list</strong></pre>
+</div>
+<div class="sourceCode" id="cb33" data-filename="/etc/apt/sources.list"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a>#deb cdrom:[Debian GNU/Linux 12.10.0 _Bookworm_ - Official amd64 NETINST with firmware 20250315-10:09]/ bookworm contrib main non-free-firmware</span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a>deb http://deb.debian.org/debian/ bookworm main contrib non-free non-free-firmware</span>
+<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a>deb-src http://deb.debian.org/debian/ bookworm main contrib non-free non-free-firmware</span>
+<span id="cb33-5"><a href="#cb33-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-6"><a href="#cb33-6" aria-hidden="true" tabindex="-1"></a>deb http://security.debian.org/debian-security bookworm-security main contrib non-free non-free-firmware</span>
+<span id="cb33-7"><a href="#cb33-7" aria-hidden="true" tabindex="-1"></a>deb-src http://security.debian.org/debian-security bookworm-security main contrib non-free non-free-firmware</span>
+<span id="cb33-8"><a href="#cb33-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-9"><a href="#cb33-9" aria-hidden="true" tabindex="-1"></a># bookworm-updates, to get updates before a point release is made;</span>
+<span id="cb33-10"><a href="#cb33-10" aria-hidden="true" tabindex="-1"></a># see https://www.debian.org/doc/manuals/debian-reference/ch02.en.html#_updates_and_backports</span>
+<span id="cb33-11"><a href="#cb33-11" aria-hidden="true" tabindex="-1"></a>deb http://deb.debian.org/debian/ bookworm-updates main contrib non-free non-free-firmware</span>
+<span id="cb33-12"><a href="#cb33-12" aria-hidden="true" tabindex="-1"></a>deb-src http://deb.debian.org/debian/ bookworm-updates main contrib non-free non-free-firmware</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p><code>apt install nvidia-driver firmware-misc-nonfree</code></p>
+<p>Anyway, next is to install the Nvidia container toolkit, using the nvidia repo, and <a href="https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html">instructions from here</a>.</p>
+<p><code>curl -fsSL https://nvidia.github.io/libnvidia-container/gpgkey | sudo gpg --dearmor -o /usr/share/keyrings/nvidia-container-toolkit-keyring.gpg</code></p>
+<div class="code-with-filename">
+<div class="code-with-filename-file">
+<pre><strong>/etc/apt/sources.list.d/nvidia-container-toolkit.list</strong></pre>
+</div>
+<div class="sourceCode" id="cb34" data-filename="/etc/apt/sources.list.d/nvidia-container-toolkit.list"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a>deb [signed-by=/usr/share/keyrings/nvidia-container-toolkit-keyring.gpg] https://nvidia.github.io/libnvidia-container/stable/deb/$(ARCH) /</span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a>#deb [signed-by=/usr/share/keyrings/nvidia-container-toolkit-keyring.gpg] https://nvidia.github.io/libnvidia-container/experimental/deb/$(ARCH) /</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p><code>apt update</code></p>
+<p><code>apt install nvidia-container-toolkit</code></p>
+<p>After this, I simply restart the rke2 service, and it the nvidia container runtime is autodetected and shows up in the <code>/var/lib/rancher/rke2/agent/etc/containerd/config.toml</code> file.</p>
+<p>After this, I should be able to simply set nvidia as a runtime for certain pods, according to the <a href="https://docs.k3s.io/advanced?_highlight=nvidia#alternative-container-runtime-support">k3s docs</a>.</p>
+<p>Another common step for Nvidia support in Kubernetes, is to install the <a href="https://github.com/NVIDIA/k8s-device-plugin">Nvidia K8s device plugin</a>, but this requires the Nvidia container runtime to be teh <em>default</em>. I don’t want this, because it gives services that don’t need an Nvidia GPU access to Nvidia GPU’s. I don’t think I need this, however, so I won’t bother.</p>
+</section>
+</section>
+<section id="ip-address-change" class="level2">
+<h2 class="anchored" data-anchor-id="ip-address-change">IP address change</h2>
+<p>In order to fix this error, which appears after changing my ip address:</p>
+<pre><code>May 28 20:45:34 thoth rke2[6657]: time="2025-05-28T20:45:34-07:00" level=info msg="Datastore using 7925760 of 7933952 bytes after defragment"
+May 28 20:45:34 thoth rke2[6657]: time="2025-05-28T20:45:34-07:00" level=info msg="Failed to test data store connection: this server is a not a member of the etcd cluster. Found [thoth-4d3eb158=https://130.166.90.206:2380], expect: thoth-4d3eb158=https://130.166.79.34:2380"</code></pre>
+<p>After changing my ip address, you just need:</p>
+<p><code>systemctl stop rke2-server</code></p>
+<p><code>rke2 server --cluster-reset</code></p>
+<p><code>systemctl restart rke2-server</code></p>
 
 
 </section>
