@@ -21,16 +21,18 @@ let
 
   quarto = pkgs.quarto.overrideAttrs (oldAttrs: rec {
     # 1.3 + newer (I think) has a weird bug with the text boxes where they are white on a black background. Readable, but ugly
-    version = "1.6.42";
+    version = "1.7.31";
     src = pkgs.fetchurl {
       url = "https://github.com/quarto-dev/quarto-cli/releases/download/v${version}/quarto-${version}-linux-amd64.tar.gz";
-      sha256 = "sha256-9mf1YfcfCWMZaYFlYyJN9WKlRHk8U2sq2ESb4mqz3sY=";
+      sha256 = "sha256-YRSe4MLcJCaqBDGwHiYxOxAGFcehZLIVCkXjTE0ezFc=";
     };
     preFixup = ''
       wrapProgram $out/bin/quarto \
         --prefix QUARTO_TYPST : ${pkgs.lib.makeBinPath [ pkgs.typst ]}/typst \
         --prefix QUARTO_ESBUILD ${pkgs.lib.makeBinPath [ pkgs.esbuild ]}/esbuild
     '';
+    patches = [
+    ];
     installPhase = ''
       runHook preInstall
 

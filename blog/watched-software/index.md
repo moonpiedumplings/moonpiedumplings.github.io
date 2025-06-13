@@ -140,6 +140,13 @@ Lots of similar software mentioned there.
 * <https://github.com/jordansissel/fpm> — Can convert packages from one type to another.
 * <https://github.com/Fmstrat/winapps> and <https://github.com/Fmstrat/loffice-365>
 
+
+# Kubernetes
+
+* <https://github.com/freelensapp>
+* <https://github.com/wiredoor/wiredoor>
+* <https://github.com/werf/nelm> — I want a helm alternative, helm has issues. 
+
 # Funny
 
 * <https://github.com/Daniel-Liu-c0deb0t/uwu>

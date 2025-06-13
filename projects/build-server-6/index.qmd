@@ -12,13 +12,28 @@ execute:
   freeze: false
 ---
 
+# The What
+
+I want a whole "cloud" for myself and people around me. The services I want to host are:
+
+* Authentik — Single Sign On and centralized accounts
+* Incus — to provide VPS's to people
+* Coder — for remote development environments, but also Kali/Linux containers accessible via the browser
+* Forgejo — Code forge, with CI/CD
+* Nextcloud — a "cloud" with file sync, editing, and the like
+* Element Server Suite — A complete discord alternative
+* Something for Large Language Models
+  * Preferably with history per OIDC user
+  * Probably: <https://artifacthub.io/packages/helm/open-webui/open-webui>, [see also](https://github.com/open-webui/open-webui/issues/483)
+
+
 # The Why
 
 In my [previous project](../build-server-5/), I attempted to deploy [Openstack](https://en.wikipedia.org/wiki/OpenStack) entirely with [GitOps](https://en.wikipedia.org/wiki/DevOps#GitOps) methodologies, using [FluxCD](https://fluxcd.io/).
 
 I failed. Well, it didn't fail, but I think I've spent too long on it and I need to move on.
 
-Recently, I've discovered a project that simeutaneously seems to be a distribution of OpenStack, Kubernetes, and Linux, called [StarlingX](https://www.starlingx.io/).
+Recently, I've discovered a project that simultaneously seems to be a distribution of OpenStack, Kubernetes, and Linux, called [StarlingX](https://www.starlingx.io/).
 
 Also:
 
@@ -42,9 +57,16 @@ I understand why people like turnkey solutions, like ESXI now.
 
 I look into another HCI solution: [Suse Harvester](https://docs.harvesterhci.io/). It's actually a very good software, the UI is great and the install is easy. But if you want any kind of authorization and control over who can see what projects, you have to deploy rancher, which can then "consume" the harvester api and work with it. While excellent, I don't really feel like having to set up rancher either on another server, or in a virtual machine.
 
-In addition to that, I could not figure out how networking works, and how to set up a bridged network.
+In addition to that, I could not figure out how networking works, and how to set up a bridged network. I did deploy a virtual machine, although at first I accidentally gave it 1000 Gi of ram and it would not run because my machine does not have 1000 Gi of ram.
 
-But I begin looking into something else, [Incus](https://linuxcontainers.org/incus/docs/main/).
+![](images/allocate.jpg)
+
+Also, I did find something funny though:
+
+![](images/editor.jpg)
+
+
+But at this point, I was done, and I began looking into something else, [Incus](https://linuxcontainers.org/incus/docs/main/).
 
 Incus:
 
@@ -200,7 +222,7 @@ I notice that the first packet seems to have a lot less information, and then it
 
 Round robin works by just rotating which interface gets the next packet. According to the internet, it can result in packets arriving out of order, which can lead to slower speeds than a single nic in some cases. I can't find any posts on this that are newer than 3 years old, so I don't know if it applies, but I wanted to avoid round robin for that reason.
 
-People say the best mode is LACP, but I don't get any performance improvement — however, according to [Red Hat's documentation](https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/9/html/configuring_and_managing_networking/configuring-network-bonding_configuring-and-managing-networking#configuring-a-network-bond-by-using-nmcli_configuring-network-bonding), this mode does seem to require some configuration on the side of the network switch — perhaps without that configuration can still _do_ a bond and combine two interfaces into one, but you don't get any performance out of it?
+People say the best mode is LACP, but I don't get any performance improvement — however, according to [Red Hat's documentation](https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/9/html/configuring_and_managing_networking/configuring-network-bonding_configuring-and-managing-networking#configuring-a-network-bond-by-using-nmcli_configuring-network-bonding), this mode does seem to require some configuration on the side of the network switch. Perhaps without that configuration can still _do_ a bond and combine two interfaces into one, but you don't get any performance out of it?
 
 But when I run iperf on each of the physical interfaces simeuataneously, perhaps there is some kind of cap? Maybe the "two" ethernet interfaces in the wall are actually only one? But then why does round robin have consistent, better performance, over the theoretical 100 mbit/s limit? 
 
@@ -624,4 +646,644 @@ This, plus:
 are what I ending up using. 
 
 Okay. It doesn't work the way I want. But I'm close enough, so I guess I'll just roll with it instead.
+
+# Kubernetes (Again)
+
+Next up is the rest of the services I want to host. I still want to do a Kubernetes cluster, with everything GitOps though, but having Incus opens up another oppurtunity: I could do a multi node Kubernetes cluster, in virtual machines, instead of a single node. 
+
+I know I still want SSO, and I actually want SSO for Incus as well. After watching looking at openfga, it doesn't seem to be nightmarishly hard. I think I will do a one node kubernetes cluster, again with openebs, reusing that same flux config. But this time, the deployment will be done in a virtual machine, where I can snapshot the entire virtual machine, feed it the gpu, or the extra hard drive I have. '
+
+Nah. I think I'm just gonna deploy bare metal. 
+
+Disable RKE2 ingress-nginx:
+
+```{.yaml filename='/etc/rancher/rke2/rke2.yaml'}
+disable:
+  # Yeah so apparently this was kind of important. 
+  # - rke2-coredns
+  - rke2-ingress-nginx
+```
+
+And then enable servicelb, to allow for the ingress service to actually serve on a port on the host:
+
+`systemctl edit rke2-server.service`
+
+```
+### Editing /etc/systemd/system/rke2-server.service.d/override.conf
+### Anything between here and the comment below will become the new contents of the file
+
+[Service]
+ExecStart=
+ExecStart=/usr/local/bin/rke2 server --enable-servicelb
+```
+
+Fix NetworkManager: <https://docs.rke2.io/known_issues#networkmanager>
+
+And then RKE2 is set up. 
+
+
+Flux:
+
+```{.default}
+
+flux bootstrap git --url ssh://moonpie@moonpiedumpl.ing:22022/home/moonpie/flux-config --branch=main --private-key-file=/home/moonpie/.ssh/moonstack --verbose
+
+cat age.agekey | kubectl create secret generic sops-age --namespace flux-system --from-file=age.agekey=/dev/stdin
+
+```
+
+But none of this works, because for whatever reason, the remote git repo on my server does not have any commits, even after I push the git repo. 
+
+`git push origin origin/main`
+
+Can I change this to be the default? But my stuff deploys at least. Authentik is up again. 
+
+## Coder
+
+[coder](https://coder.com/) is an open source platform for remote desktop environments. The thing they seem to be most excited about is the VScode based environemnts, but I care the most about the terminal access, and the webvnc based environments.
+
+Also, looking at their [helm chart values](https://github.com/coder/coder/blob/main/helm/coder/values.yaml), and their [OIDC documentation](https://coder.com/docs/admin/users/oidc-auth) it seems that environment variables are used to configure many aspects of coder. 
+
+So, I need to set up secrets again.
+
+`sops --encrypt --encrypted-regex '^(values.yaml)$' codersecrets.yaml`
+
+To get secret content after it is applied, for testing:
+
+`kubectl get secret secret -n namespace -o jsonpath="{.data.values\.yaml}" | base64 -d`
+
+One hiccup: I fear taht I may need to set a list of valid email domains that it accepts as OIDC users, [documented here](https://coder.com/docs/admin/users/oidc-auth#step-2-configure-coder-with-the-openid-connect-credentials). 
+
+But looking [through the code](https://github.com/coder/coder/blob/4587082fcf84a92bda6413733371373acae2392f/coderd/userauth.go#L1357), it looks like I can leave that config empty. 
+
+So here are my two secrets, that I am encrypting (without the sensitive data, of course):
+
+```{.yaml}
+apiVersion: v1
+kind: Secret
+metadata:
+  name: coder-pg-secrets
+type: Opaque
+stringData:
+  values.yaml: |
+    auth:
+      username: coder
+      password: "secretpassword"
+      database: coder
+```
+
+```{.yaml}
+apiVersion: v1
+kind: Secret
+metadata:
+  name: coder-secrets
+type: Opaque
+stringData:
+  values.yaml: | 
+    coder:
+      env:
+        - name: CODER_PG_CONNECTION_URL
+          value: "postgres://coder:secretpassword@coder-db-postgresql.coder.svc.cluster.local:5432/coder?sslmode=disable"
+        - name: CODER_OIDC_CLIENT_SECRET
+          value: "OIDC Secret value here"
+```
+
+`sops --encrypt --encrypted-regex '^(values.yaml)$' --in-place filename.yaml`
+
+Whoops, this doesn't deploy.
+
+`kubectl create namespace coder`
+
+It mostly worked, but I encountered an error:
+
+```
+Encountered an error running "coder server", see "coder server --help" for more information
+error: access-url must include a scheme (e.g. 'http://' or 'https://)
+```
+
+So I had to change that variable. 
+
+One thing I decided to do is store the terraform configuration files in my git repo. They won't be applied automatically, 
+
+
+But eventually, I got it deployed. I even set up a workspace, using the starter "kubernetes" template.
+
+It doesn't come with noVNC, which I really want. I'm looking at adapting the code from the [desktop container](https://github.com/bpmct/coder-templates/blob/main/desktop-container/main.tf) in combination with [the Kali Linux webtop image](https://docs.linuxserver.io/images/docker-kali-linux/) to get a web based Kali Linux environmet for CTF's, workshops, and similar events. 
+
+Okay, this is actually kinda difficult. 
+
+`s6-overlay-suexec: fatal: can only run as pid 1`
+
+So the webtop docker containers work by launching a complex set of init scripts using s6, and if I try to start s6 via the `/init` script in a shell, then it complains about not being pid one. I might have to create a custom container to get around this, but I don't want to do that. 
+
+Another thing I can try is creating a ["docker mod"](https://github.com/linuxserver/docker-mods?tab=readme-ov-file#creating-and-maintaining-a-docker-mod), an extension to Linuxserver's docker containers that can be called via an environment variable. [Usage example here](https://docs.linuxserver.io/images/docker-webtop/#native-apps)
+
+I could also try the [enterprise-desktop](https://hub.docker.com/r/codercom/enterprise-desktop/tags) image by Coder themselves, but I really do want that kasmvnc and kali image. 
+
+
+
+## Authentik
+
+It's deployed (see [previous project](../build-server-5/)), but I am going to record my steps here. Firstly, it looks like I should configure from the "Application" page, and use "Create with Provider" in order to create the whole set of necessary things. 
+
+There were some interesting hiccups though. The "Issuer url" for Coder should have a backslash, it seems to use strict string matching.
+
+```
+error: create oidc config: configure oidc provider: oidc: issuer did not match the issuer returned by provider, expected "https://sso.moonpiedumpl.ing/application/o/coder" got "https://sso.moonpiedumpl.ing/application/o/coder/"
+```
+
+Also, for Incus, it looks like I need to enable [device code](https://docs.goauthentik.io/docs/add-secure-apps/providers/oauth2/device_code), otherwise it won't work. 
+
+I'm now stuck for Incus, because it seems that single sign on only works if the services are on the same domain/subdomain. Incus is on a different domain, so it fails. I need to proxy a service external to Kubernetes, to something inside Kubernetes. 
+
+This is actually more difficult than I thought it would be. 
+
+```{.yaml}
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: incus
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    acme.cert-manager.io/http01-edit-in-place: "true"
+    nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
+  namespace: openfga
+spec:
+  rules:
+  - host: incus.moonpiedumpl.ing
+    http:
+      paths:
+      - pathType: Prefix
+        path: "/"
+        backend:
+          service:
+            name: incus-external-svc
+            port: 
+              number: 8443
+  tls:
+  - hosts: 
+    - "incus.moonpiedumpl.ing"
+    secretName: incus-tls
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: incus-external-svc
+  namespace: openfga
+spec:
+  ports:
+    - protocol: TCP
+      port: 8443
+      targetPort: 8443
+---
+apiVersion: v1
+kind: Endpoints
+metadata:
+  name: incus-external-svc
+  namespace: openfga
+subsets:
+  - addresses:
+      - ip: 130.166.79.34
+    ports:
+      - port: 8443
+```
+
+So this works, but it doesn't get an SSL certificate. It just uses the default kubernetes test certificate, rather than  a real one. To fix this, you have to remove these two annotations:
+
+```
+acme.cert-manager.io/http01-edit-in-place: "true"
+nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
+```
+
+Before readding them. But don't letsencrypt only last 90 days? But this works, however.
+
+Next thing is, I want to automatically create projects in Incus when users are invited, so people can have a private (publicly hosted) VPS for whatever they want.
+
+Right now, the most reasonable way to do this is to do a "stage" with an "expression policy", which can execute arbitrary python code, and then I can make a API call with the python request library (using my private admin certificate). 
+
+[Here are the Incus API docs on how to add a project](https://linuxcontainers.org/incus/docs/main/rest-api-spec/#/projects/projects_post).  [Here are the docs on how to bind an expression policy to a stage](https://docs.goauthentik.io/docs/customize/policies/working_with_policies#bind-a-policy-to-a-stage). 
+
+
+Okay apparently requests needs to read a certificate file in order to do TLS auth, and I don't have one. I can probably get around this by creating a tempfile or something of the sort.
+
+I may also need to make a python request to openfga... hmmm. I think this might be too complex. Firstly, let's figure out what actually needs to be done:
+
+* User does invite
+* Create incus project named after user (via api call, that passes uses a tls certificate to authenticate)
+* Add user to created project in openfga. I think this is giving a user either the operator or user relation to a project.
+
+According to one of the [test suites](https://github.com/lxc/incus/blob/1f61d85b164cdfd33600e7ce3b13154feea54de5/test/suites/openfga.sh#L273), it looks like the "user" of a project can interact with instances, but not edit them, whereas an [operator has control over project level resources](https://github.com/lxc/incus/blob/1f61d85b164cdfd33600e7ce3b13154feea54de5/test/suites/openfga.sh#L185) (but maybe is restricted by project restrictions.)
+
+```{.python}
+import tempfile
+import json
+
+ca_cert = ""
+
+# Compressed backups?
+
+incusdata = {
+    "config": {
+        "features.networks": "false",
+        "features.profiles": "true",
+        "restricted": {
+          "backups": "allow",
+          "networks.access": "public0, incus0"
+        }
+    }, 
+    "description": "Personal project for you", 
+    "name": request.user
+}
+
+# Write the certificate to a temporary file since this will be ran inside authentik
+with tempfile.NamedTemporaryFile(mode='w', delete=False) as tmp:
+    tmp.write(ca_cert)
+    tmp.flush()
+    response = requests.post('incus.moonpiedumpl.ing',json=data, verify=tmp.name)
+
+
+openfga_api_key = ""
+
+headers = {
+    "Authorization": f"Bearer {openfga_api_key}",
+    "content-type": "application/json"
+}
+
+
+openfgadata = {
+  "authorization_model_id": "stuff",  
+  "tuple_key": {
+        "user": f"user:{requests.user}",
+        "relation": "operator",
+        "object": f"project:{requests.user}"
+    }
+}
+
+openfgaresponse = response.post('openfga.moonpiedumpl.ing/stores/$FGA_STORE_ID/check', json=openfgadata, headers=headers)
+
+return true
+
+```
+
+I will have to collect some information, on the authorization model id, and the store id. I will also have to edit this with more . 
+
+### Postgres update
+
+So my authentik goes down, because I need to manually backup and restore the postgres database in order for an update to happen.
+
+<https://version-2023-10.goauthentik.io/docs/troubleshooting/postgres/upgrade_kubernetes>
+
+Except, since postgres updated automatically, it was crashing because it couldn't launch with oldder database files. Firstly, I edited the pod and downgraded postgres. 
+
+But I got an ImagePullBackOff error, so I firstly [listed all images running in the cluster](https://kubernetes.io/docs/tasks/access-application-cluster/list-all-running-container-images/), before seleccting the postgres image that was already there. 
+
+I have to get the secret myself:
+
+`cat /opt/bitnami/postgresql/secrets/postgres-password`
+
+
+It still says password authentication failed, but it does dump the file out. 
+
+
+I end with `mv data data-15`.
+
+```
+[moonpie@osiris ~]$ flux resume source git flux-system
+[moonpie@osiris ~]$ flux reconcile helmrelease -n authentik authentik
+```
+
+But then I still can't do things because I'm not root. 
+
+```
+ resources: {}
+    securityContext:
+      allowPrivilegeEscalation: true
+      capabilities:
+        drop:
+        - ALL
+      privileged: false
+      readOnlyRootFilesystem: true
+      # runAsGroup: 1001
+      runAsNonRoot: false
+      # runAsUser: 1001
+```
+
+So I edit the pod with that. Doesn't work, apparently only a few things can be changed. 
+
+I follow [this stackoverflow answer](), and come up with this:
+
+
+`root@thoth:/var/lib/rancher/rke2/bin# ./runc --root /run/containerd/runc/k8s.io/ exec -t -u 0 f2aedf564b6f43fc895fc84aeba2e7e7a02b4f59ea835de13b76bcade462adca bash`
+
+I'm root indeed, but I still am struggling to connect to the postgres server, and it is asking for a password. Actually, I can give it one — but my password contains special characters, making it difficult to enter manually. I can change the password, and then. 
+
+I encode special characters in the url, but it doesn't work:
+
+`I have no name!@authentik-postgresql-0:/bitnami/postgresql$ psql 'postgresql://postgres:secretpassword/@localhost/'
+psql: error: local user with ID 1001 does not exist`
+
+
+I could nuke authentik and reset it, but instaed, I think I am going to change the secret authentik uses for the password, while downgrading postgres at the same time. 
+
+So firstly I need to edit the sops file: 
+
+`export SOPS_AGE_KEY_FILE=~/vscode/flux-config/age.agekey`
+
+`sops edit --ignore-mac secrets.yaml` --ignore-mac is needed because sops thinks the file has been tampered with. 
+
+
+But even after editing the file, it still asks for a password, and it doesn't work.
+
+```{.default filename='/opt'}
+I have no name!@authentik-postgresql-0:/opt/bitnami/postgresql/conf$ cat pg_hba.conf
+host     all             all             0.0.0.0/0               md5
+host     all             all             ::/0                    md5
+local    all             all                                     md5
+host     all             all        127.0.0.1/32                 md5
+host     all             all        ::1/128                      md5
+```
+
+The container doesn't come with an editor. :/
+
+Trying something else, there is a docker container, [pgautoupgrade](https://github.com/pgautoupgrade/docker-pgautoupgrade) to automatically upgrade a database. 
+
+Firstly, I located the persistent volume in "/var/openebs" on the system. Then I ran the command:
+
+`root@thoth:/var/openebs/persistent/pvc-513c6021-afbb-410c-9c86-60fcf9d6089c# podman run -it -v "./data:/var/lib/postgresql/data" -e POSTGRES_PASSWORD=secretpassword -e PGAUTO_ONESHOT=yes docker.io/pgautoupgrade/pgautoupgrade:17-bookworm`
+
+The update works!
+
+But authentik still fails to access postgres via the password. The logs for both simply say that password authentiation failed. 
+
+I also try some debug pods:
+
+```
+kubectl debug -n authentik authentik-server-5dcc9c45f5-thllc -it --image=busybox --target=server
+kubectl debug -n authentik authentik-postgresql-0 -it --image=busybox --target=postgresql
+```
+
+Interesting and useful feature, but not helpful at the moment. `:(`
+
+The Bitnami postgresql chart, used here, seems to have something to [automatically update to the new passwords](https://github.com/bitnami/charts/tree/main/bitnami/postgresql#automated-update-using-a-password-update-job), but it requires the old passwords. 
+
+`mv pg_hba.conf pg_hba.conf.bac`
+
+`echo "local    all             all                                     trust" > pga.conf` (No text editor, and these config files don't seem to be mounted.)
+
+`/opt/bitnami/postgresql/bin/pg_ctl reload`
+
+Then I can get in. Now I have to change the password manually.
+
+`psql -U postgres`
+
+And then:
+
+```
+postgres=# ALTER USER authentik WITH PASSWORD 'secretpassword';
+ALTER ROLE
+postgres=# ALTER USER postgres WITH PASSWORD 'secretpassword';
+ALTER ROLE
+postgres=#
+```
+
+Then I put the original `pg_hba.conf` back, and run `pg_ctl reload`. 
+
+And it works!
+
+## Openfga
+
+Okay, I deployed it using the helm chart. I'm lookiing through the [Incus docs](https://linuxcontainers.org/incus/docs/main/authorization/#open-fine-grained-authorization-openfga). So it looks like Incus does the intial setup. 
+
+Then, once I do that, I need to [call the API to update relations](https://openfga.dev/docs/getting-started/update-tuples). 
+
+
+Also, I need to add a nodeport service so that Incus can access the server. After scrolling through [a very interesting security audit](https://tag-security.cncf.io/community/assessments/projects/openfga/joint-assessment/):
+
+> The likelihood is rated low as OpenFGA is designed to be run within an intranet environment and not exposed to public internet.
+
+And this is somewhat difficult with my setup. I deployed it on Kubernetes, with no firewall, and now I want to expose the service — but only to localhost. 
+
+Actually that also doesn't work. It looks like coder instances are placed on the same ip address as my host machine, meaning they would have access to all network stuff that localhost would. 
+
+No, looking further, it does look like openfga does use authentication, and the reason why an intranet is recommended is in case of ddos attacks. 
+
+Here is my secret:
+
+```{.yaml}
+apiVersion: v1
+kind: Secret
+metadata:
+  name: mysecret
+type: Opaque
+stringData:
+  values.yaml: |
+    postgresql:
+      auth:
+        postgresPassword: secretpassword
+    datastore:
+      uri: "postgres://postgres:secretpassword@openfga-postgresql.default.svc.cluster.local:5432/postgres?sslmode=disable"
+    authn:
+      preshared:
+        keys: ["secretkeyhere"]
+```
+
+Now that I've deployed it, I need to configure it. 
+
+Firstly, to get my preshared key:
+
+`kubectl get secrets -n openfga openfga-secrets -o jsonpath='{.data.values\.yaml}' | base64 -d`
+
+(I actually managed to remember this without looking at my notes. I don't know if I should be proud or scared).
+
+
+`nix-shell -p openfga-cli`,  or other methods of installing the openfga cli.
+
+[Configuration docs](https://openfga.dev/docs/getting-started/cli)
+
+`export FGA_API_URL=https://openfga.moonpiedumpl.ing`
+
+`export FGA_API_TOKEN=secretkeyhere`
+
+`fga create store incus` — only needs to be done once.
+
+```{.default}
+[nix-shell:~/vscode/moonpiedumplings.github.io]$ fga store list
+{
+  "continuation_token":"",
+  "stores": [
+    {
+      "created_at":"2025-05-30T22:28:45.160445043Z",
+      "id":"01JWHMZPF85VE8DWYHKV90QTCT",
+      "name":"incus",
+      "updated_at":"2025-05-30T22:28:45.160445043Z"
+    }
+  ]
+}
+```
+
+`export FGA_STORE_ID=01JWHMZPF85VE8DWYHKV90QTCT`
+
+`export FGA_MODEL_ID=01JWHN0RS0QTJ4JJPJ659XCSPG`
+
+
+And then, I fill out the incus configuration values: openfga.api.token, openfga.api.url, and openfga.store.id with the appropriate values. 
+
+After this, running this command: `fga model get --store-id=$FGA_STORE_ID` outputs the [incus openfga model](https://linuxcontainers.org/incus/docs/main/authorization/#openfga-model). 
+
+
+```{.default}
+[nix-shell:~/vscode/moonpiedumplings.github.io]$ fga tuple write --store-id=$FGA_STORE_ID group:layer8#member operator project:layer8
+{
+  "successful": [
+    {
+      "object":"project:layer8",
+      "relation":"operator",
+      "user":"group:layer8#member"
+    }
+  ]
+}
+[nix-shell:~/vscode/moonpiedumplings.github.io]$ fga query check --store-id=$FGA_STORE_ID --model-id=$FGA_MODEL_ID group:layer8#member operator project:layer8
+{
+  "allowed":true,
+  "resolution":""
+}
+```
+
+Neat!
+
+But this doesn't actually work. I attempt to sign on with single sign on, and it takes me back to the Incus logged out page, and the only information is a vague errorr: `Uncaught (in promise) TypeError: NetworkError when attempting to fetch resource. `
+
+I get a little more information when I authenticate with the command line: 
+
+```{.default}
+[nix-shell:~]$ incus remote add main https://incus.moonpiedumpl.ing --verbose --debug --auth-type=oidc
+DEBUG  [2025-06-02T23:19:06-07:00] Connecting to a remote Incus over HTTPS       url="https://incus.moonpiedumpl.ing:8443"
+DEBUG  [2025-06-02T23:19:06-07:00] Sending request to Incus                      etag= method=GET url="https://incus.moonpiedumpl.ing:8443/1.0"
+Certificate fingerprint: b78c9aa9b22398a2255e93e4ba6a2e7f431c3f2e55503adb59a32e57f0471292
+ok (y/n/[fingerprint])? y
+DEBUG  [2025-06-02T23:19:07-07:00] Connecting to a remote Incus over HTTPS       url="https://incus.moonpiedumpl.ing:8443"
+DEBUG  [2025-06-02T23:19:07-07:00] Sending request to Incus                      etag= method=GET url="https://incus.moonpiedumpl.ing:8443/1.0"
+URL: https://sso.moonpiedumpl.ing/device?code=828932864
+Code: 828932864
+
+Error: not authorized
+```
+
+This is also vague, but something interesting shows up in the journald logs:
+
+```
+Jun 02 23:15:34 thoth incusd[1286]: time="2025-06-02T23:15:34-07:00" level=warning msg="Rejecting request from untrusted client" ip="130.166.192.112:12998"
+```
+
+I found the [error in the source code](https://github.com/lxc/incus/blob/5efa7d369e6cf74f452ff5b298bc4687d2da66ae/cmd/incusd/daemon.go#L703), but I don't quite understand what's going on.
+
+After finding some [discussion posts](https://discuss.linuxcontainers.org/t/need-help-incus-oidc-with-zitadel/19812/4), I changed the oidc claim from `preferred_username` to `email`, and it works ­— kinda. It only works if I login and launch the web ui via the incus command line client (website still gets that error), and when I do so, I don't have access to anything at all.
+
+Also, incus seems to have an error in the logs, related to openfga:
+
+```
+Jun 09 17:33:15 thoth incusd[426476]: time="2025-06-09T17:33:15-07:00" level=error msg="Failed background OpenFGA resource sync" err="Failed to write tuple to OpenFGA store (user: \"server:incus\"; relation: \"server\"; object: \"certificate:025a3516ca2c622a93446548954e33d75eafa3e8173d0d6a435fc27d4072932e\"): Write validation error for POST Write with body {\"code\":\"validation_error\",\"message\":\"invalid TupleKey.Object: value does not match regex pattern \\\"^[^\\\\\\\\s]{2,256}$\\\"\"}\n with error code validation_error error message: invalid TupleKey.Object: value does not match regex pattern \"^[^\\\\s]{2,256}$\""
+```
+
+`fga tuple write --store-id=$FGA_STORE_ID group:layer8#member user server:incus`
+
+Still no dice. What about the admin role?  
+
+`fga tuple write --store-id=$FGA_STORE_ID group:layer8#member admin server:incus`
+
+I also tried:
+
+`fga tuple write --store-id=$FGA_STORE_ID user:testuser admin server:incus`, and variants including `test@gmail.com` (email address of my testuers). 
+
+Still doesn't work, but I did learn something. It seems that openfga is not reading groups from ldap/oidc to figure out what groups users are in, but instead it has it's own groups, that I have to add users to, as a relation.
+
+
+Also, I switched the oidc claim back to `preferred_username`, instead of `email`, and it does show up as a different `user:username` in the openfga logs, instead of `user:email`. 
+
+Wait, that's not true: If the user has server:admin permissions, then they can change server settings, even though they can't see any instances or projects.
+
+And if I give the user the operator relation to the layer8 project, then it can see only two of the 9 existing vitual machines `:(` 
+
+I have two theories:
+
+1. This is something to do with accessing certain networks, specifically the `public0` network I have, and the `default` disk pool. These aren't considered under the "layer8" project, so they aren't able to be accessed by the machine. It could also be the images, that are considered under project "default" and not 
+
+2. The Openfga relations are broken and need to be rebuilt. 
+
+Something else: Why am I trying to figure it out? It seems like sso users can access, view, create, and delete stuff, just not everything that is already there. 
+
+
+## Nextcloud
+
+Before I deploy nextcloud I should probably format that 4 TB hard drive I have and make it accessible for stuff.
+
+## Forgejo
+
+
+## LLM Stuff
+
+### Nvidia Container Toolkit
+
+So firstly, I need to install the Nvidia container runtime on kuberntes. 
+
+[Here are the docs on the proprietary nvidia drivers](https://wiki.debian.org/NvidiaGraphicsDrivers#bookworm-535). 
+
+Firstly, enable the nonfree repo:
+
+```{.default filename='/etc/apt/sources.list'}
+#deb cdrom:[Debian GNU/Linux 12.10.0 _Bookworm_ - Official amd64 NETINST with firmware 20250315-10:09]/ bookworm contrib main non-free-firmware
+
+deb http://deb.debian.org/debian/ bookworm main contrib non-free non-free-firmware
+deb-src http://deb.debian.org/debian/ bookworm main contrib non-free non-free-firmware
+
+deb http://security.debian.org/debian-security bookworm-security main contrib non-free non-free-firmware
+deb-src http://security.debian.org/debian-security bookworm-security main contrib non-free non-free-firmware
+
+# bookworm-updates, to get updates before a point release is made;
+# see https://www.debian.org/doc/manuals/debian-reference/ch02.en.html#_updates_and_backports
+deb http://deb.debian.org/debian/ bookworm-updates main contrib non-free non-free-firmware
+deb-src http://deb.debian.org/debian/ bookworm-updates main contrib non-free non-free-firmware
+```
+
+`apt install nvidia-driver firmware-misc-nonfree`
+
+
+
+Anyway, next is to install the Nvidia container toolkit, using the nvidia repo, and [instructions from here](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html).
+
+`curl -fsSL https://nvidia.github.io/libnvidia-container/gpgkey | sudo gpg --dearmor -o /usr/share/keyrings/nvidia-container-toolkit-keyring.gpg`
+
+```{.default filename='/etc/apt/sources.list.d/nvidia-container-toolkit.list'}
+deb [signed-by=/usr/share/keyrings/nvidia-container-toolkit-keyring.gpg] https://nvidia.github.io/libnvidia-container/stable/deb/$(ARCH) /
+#deb [signed-by=/usr/share/keyrings/nvidia-container-toolkit-keyring.gpg] https://nvidia.github.io/libnvidia-container/experimental/deb/$(ARCH) /
+```
+
+`apt update`
+
+`apt install nvidia-container-toolkit`
+
+After this, I simply restart the rke2 service, and it the nvidia container runtime is autodetected and shows up in the `/var/lib/rancher/rke2/agent/etc/containerd/config.toml` file.
+
+After this, I should be able to simply set nvidia as a runtime for certain pods, according to the [k3s docs](https://docs.k3s.io/advanced?_highlight=nvidia#alternative-container-runtime-support).
+
+
+Another common step for Nvidia support in Kubernetes, is to install the [Nvidia K8s device plugin](https://github.com/NVIDIA/k8s-device-plugin), but this requires the Nvidia container runtime to be teh *default*. I don't want this, because it gives services that don't need an Nvidia GPU access to Nvidia GPU's. I don't think I need this, however, so I won't bother.  
+
+## IP address change
+
+In order to fix this error, which appears after changing my ip address:
+
+```
+May 28 20:45:34 thoth rke2[6657]: time="2025-05-28T20:45:34-07:00" level=info msg="Datastore using 7925760 of 7933952 bytes after defragment"
+May 28 20:45:34 thoth rke2[6657]: time="2025-05-28T20:45:34-07:00" level=info msg="Failed to test data store connection: this server is a not a member of the etcd cluster. Found [thoth-4d3eb158=https://130.166.90.206:2380], expect: thoth-4d3eb158=https://130.166.79.34:2380"
+```
+
+After changing my ip address, you just need:
+
+`systemctl stop rke2-server`
+
+`rke2 server --cluster-reset`
+
+`systemctl restart rke2-server`
 
