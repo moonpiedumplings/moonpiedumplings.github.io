@@ -145,7 +145,8 @@ Lots of similar software mentioned there.
 
 * <https://github.com/freelensapp>
 * <https://github.com/wiredoor/wiredoor>
-* <https://github.com/werf/nelm> — I want a helm alternative, helm has issues. 
+* <https://github.com/werf/nelm> — I want a helm alternative, helm has certain issues
+* <https://yokecd.github.io/docs/>
 
 # Funny
 
