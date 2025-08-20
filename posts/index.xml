@@ -10,7 +10,107 @@
 <atom:link href="./posts/index.xml" rel="self" type="application/rss+xml"/>
 <description>All posts</description>
 <generator>quarto-1.7.31</generator>
-<lastBuildDate>Sat, 24 May 2025 07:00:00 GMT</lastBuildDate>
+<lastBuildDate>Thu, 07 Aug 2025 07:00:00 GMT</lastBuildDate>
+<item>
+  <title>My first Def Con</title>
+  <link>./blog/defcon-25/</link>
+  <description><![CDATA[ 
+
+
+
+
+
+<p>This year, I went to Def Con.</p>
+<section id="line-con" class="level1">
+<h1>Line Con</h1>
+<p>“LineCon” is when you join the line badges overnight, and hang out with people. It was a LOT of fun, kinda like the experience I would get at the Linux user group which runs from 6:30pm to 12am, but instead this one was all night.</p>
+<p>At the beginning, I got passed out this sick badge:</p>
+<p>It’s laser tag, but as a badge. There are few rules:</p>
+<ul>
+<li>If you shoot someone, they are temporarily unable to shoot (just like normal laser tag)
+<ul>
+<li>You do not lose points for getting shot</li>
+</ul></li>
+<li>You can only shoot someone and get points from each person 5 times every hour
+<ul>
+<li>This is signified by the LED’s in the middle lighting up. 1-5 of them will light up, before flashing red when “full”.</li>
+</ul></li>
+</ul>
+<p>There is actually, either intentionally or unintentionally, a very clever, ingenious design behind this. Because no points are lost when a player is hit, there is no downside to “trading” 5 hits with another player, you only gain points. The optimal strategy is not to compete and try to hit others without being hit, but instead to cooperate, and trade 5 hits with as many people as you can. The person who cooperates with the most wins.</p>
+<p>And the more people you cooperate with, the more people you meet, and the more friends you make. This badge, despite seeming competitive on the surface, is actually extremely pro-social.</p>
+<p>There is also a “home mode” which, of course, changes the rules to be more competitive, like removing the 5 hit rule. With the removal of the 5 hit per hour limit, sniping people while hiding becomes a much more viable strategy.</p>
+<p>Pizza was provided, Little Caesars, and it was pretty good.</p>
+<p>I slept twice, once at around 1 am, and once at around 4 am, taking one 3 hour one and one 90 minute one.</p>
+<p>Overall, I mostly chatted with people and hung out.</p>
+</section>
+<section id="talks" class="level1">
+<h1>Talks</h1>
+<section id="locked-down-workstations" class="level2">
+<h2 class="anchored" data-anchor-id="locked-down-workstations">Locked down workstations</h2>
+<p>Slides were broken lol.</p>
+<p>“We’re following the rules, not just the ones attackers play by” — there is often a “checklist” mentality when it comes to doing security. He went over there of some of the pitalls of this</p>
+<p>Techniques noted:</p>
+<ul>
+<li>Default passwords
+<ul>
+<li>Sometimes they just change the 1 to a 2 or some other non-change</li>
+</ul></li>
+<li>Login scripts that happen when admins log in and do stuff</li>
+<li>Desktops in the DMZ that can be used</li>
+<li>Privileged session managers
+<ul>
+<li>MobaXTerm, etc, which store keys encrypted in the registry</li>
+</ul></li>
+<li></li>
+</ul>
+<p>Q&amp;A:</p>
+<ul>
+<li>He argues that there is an overrliance of firewall rules and zones to try to be secure
+<ul>
+<li>This doesn’t work, because it’s <em>people</em> that need to reach these privileged resources, rather than 256 devices from a subnet</li>
+</ul></li>
+<li>The integrators have aggressive timelines and often value efficiency over security</li>
+<li>It’s not about technology but implementation
+<ul>
+<li>He has seen many, many vulnerable Distributed Control Questions</li>
+</ul></li>
+<li>when relying on simple physical security, have an alert when it is opened
+<ul>
+<li>“Prevention is ideal, detection is”</li>
+</ul></li>
+</ul>
+</section>
+<section id="c4-external-c2-framework" class="level2">
+<h2 class="anchored" data-anchor-id="c4-external-c2-framework">C4 — External C2 framework</h2>
+<ul>
+<li><p>Modern attackers often host their control centers from Github, Google, or other legitimate sites</p>
+<ul>
+<li>This makes them difficult to detect</li>
+</ul></li>
+<li><p>There exists <em>some</em> integration for workflows like this, with existing C2 frameworks, but the</p>
+<ul>
+<li>e.g: https://docs.mythic-c2.net/ has some stuff</li>
+<li>Another example given was: https://lolc2.github.io/ , a collection of C2 frameworks that use existing services as the controller</li>
+</ul></li>
+<li><p>Creator wanted their own solution</p></li>
+<li><p>So they found webassembly, which is able to compile from any langauge, to any WASM runtime</p>
+<ul>
+<li>The WASI — webassembly system interface, lets you interact with system components, if you are running outside of a browser</li>
+</ul></li>
+<li><p>They used Extism (by Dylibso), a universal wasm plugin system</p></li>
+<li><p>Final Product: https://github.com/scottctaylor12/C4</p></li>
+<li><p>This lets you</p></li>
+</ul>
+
+
+</section>
+</section>
+
+ ]]></description>
+  <category>blog</category>
+  <guid>./blog/defcon-25/</guid>
+  <pubDate>Thu, 07 Aug 2025 07:00:00 GMT</pubDate>
+</item>
 <item>
   <title>Systemd is Basically One Node Kubernetes</title>
   <link>./blog/systemk8s/</link>
@@ -514,8 +614,8 @@ font-style: inherit;">-</span><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;"> /1.0/profiles/default?project=layer8</span></span></code></pre></div>
 <p>There is no network named internal0 — instead I add one in after I create the project. With this, they would be limited to a single internal network, and public network.</p>
-<section id="authorization" class="level2">
-<h2 class="anchored" data-anchor-id="authorization">Authorization</h2>
+<section id="authorization-certscriptlet" class="level2">
+<h2 class="anchored" data-anchor-id="authorization-certscriptlet">Authorization — Cert/Scriptlet</h2>
 <p><code>incus config trust add-certificate --projects layer8 --restricted layer8.crt</code></p>
 <p><code>incus config trust add --projects layer8 --restricted layer8.crt</code></p>
 <p>And with this, my instance is restricted.</p>
@@ -1494,6 +1594,18 @@ font-style: inherit;">False</span></span></code></pre></div>
 <p>Okay, breaking change update: <a href="https://discuss.linuxcontainers.org/t/incus-0-5-1-has-been-released/18848" class="uri">https://discuss.linuxcontainers.org/t/incus-0-5-1-has-been-released/18848</a></p>
 <p>Now, people with Red Hat based distros (Alma, Rocky, Centos, etc), have to do something a little extra to get them to work. It didn’t work for me initially, until I enabled networking by default.</p>
 </section>
+<section id="authorization-openfga" class="level2">
+<h2 class="anchored" data-anchor-id="authorization-openfga">Authorization — Openfga</h2>
+<p>After</p>
+</section>
+<section id="bugs" class="level2">
+<h2 class="anchored" data-anchor-id="bugs">Bugs</h2>
+<p>I have found two, but haven’t really bothered replicating them to report them properly.</p>
+<ul>
+<li>ISO’s uploaded via the webui seem to always be put into the dfeault project instead of wahtever project I want them to be in .</li>
+<li>Only oidc.claim as email works (nickname or preferred_username or username) do not work for cli authentication to incus. Although they do work for webui auth.</li>
+</ul>
+</section>
 </section>
 <section id="kubernetes-again" class="level1">
 <h1>Kubernetes (Again)</h1>
@@ -1711,10 +1823,11 @@ error: access-url must include a scheme (e.g. 'http://' or 'https://)</code></pr
 <p>Also, apparently when coder does a release upgrade, it deletes all it’s data, and asks for a new admin account. Since I want to auto update coder, I wonder if I can GitOps the entire configuration?</p>
 <section id="oauth2" class="level3">
 <h3 class="anchored" data-anchor-id="oauth2">Oauth2</h3>
-<p>Another thing is that Oauth2/OIDC was not working. It seems that my method of secrets did not work, so instead I have to do something else, probably “envfrom”.</p>
+<p>Another thing is that Oauth2/OIDC was not working. It seems that my method of secrets did not work, so instead I have to do something else, “envfrom”.</p>
 <p><a href="https://artifacthub.io/packages/helm/coder-v2/coder" class="uri">https://artifacthub.io/packages/helm/coder-v2/coder</a></p>
 <p><a href="https://github.com/coder/coder/blob/main/helm/coder/values.yaml#L31" class="uri">https://github.com/coder/coder/blob/main/helm/coder/values.yaml#L31</a></p>
 <p>In addition to this, I also set CODER_PG_CONNECTION_URL. It seems that I wasn’t setting that, which caused me to lose all user data upon upgrades.</p>
+<p>But after this, I attempted to get OIDC role sync working. But it doesn’t work, as it seems that it’s a premium feature. And in addition to that, I cannot control what permissions OIDC users have from the UI, so I have to authenticate as the admin user from the command line, and then I can use <code>coder user edit-roles moonpiedumplings</code></p>
 </section>
 </section>
 <section id="authentik" class="level2">
@@ -2538,6 +2651,17 @@ postgres=#</code></pre>
 <p>Then I put the original <code>pg_hba.conf</code> back, and run <code>pg_ctl reload</code>.</p>
 <p>And it works!</p>
 </section>
+<section id="flows-and-stages" class="level3">
+<h3 class="anchored" data-anchor-id="flows-and-stages">Flows and Stages</h3>
+<p>Just some nice to have things that don’t seem to be there by default:</p>
+<ul>
+<li><del>Invitations</del></li>
+<li><del>Passwords on the same sign in page</del></li>
+<li>Recovery (password change flow)</li>
+</ul>
+<p>I managed to get the latter pretty simply, by selecting a “password stage” in the options for the <code>default-authentication-flow</code>. After that, users no longer need to click twice, they can sign in from a single page.</p>
+<p>Next up is password recovery. When I try to click on “Create recovery link” so I can create recovery links for users, I get an error “Recovery flow not applicable to user”.</p>
+</section>
 </section>
 <section id="openfga" class="level2">
 <h2 class="anchored" data-anchor-id="openfga">Openfga</h2>
@@ -2766,9 +2890,16 @@ font-style: inherit;">,</span></span></code></pre></div>
 <p>I nuked the setup and attempted to reset it up again, but I <a href="https://github.com/openfga/helm-charts/issues/211">ran into an issue</a>. I tried some of the fixes in that thread, but they did not work (probably because ArgoCD is different from Flux).</p>
 <p>What worked was <a href="https://github.com/fluxcd/flux2/discussions/1085#discussioncomment-473271">a thread about flux</a>, where essentially the problem is that flux waits for pods to be created before running post install jobs. But, sometimes pods can have a pod that doesn’t do anything but wait for the jobs to complete, so the waiting for the pods to be fully created must be disabled.</p>
 </section>
-<section id="nextcloud" class="level2">
-<h2 class="anchored" data-anchor-id="nextcloud">Nextcloud</h2>
-<p>Before I deploy nextcloud I should probably format that 4 TB hard drive I have and make it accessible for stuff.</p>
+<section id="drive" class="level2">
+<h2 class="anchored" data-anchor-id="drive">Drive</h2>
+<p>I am debating between Nextcloud, and other options.</p>
+<p>Nextcloud:</p>
+<ul>
+<li>Popular</li>
+<li>But it’s in PHP, with an older architecture</li>
+<li>Extremely extendable, with many extensions/apps in their “store”</li>
+</ul>
+<p>Opencloud</p>
 </section>
 <section id="forgejo" class="level2">
 <h2 class="anchored" data-anchor-id="forgejo">Forgejo</h2>
@@ -2869,22 +3000,20 @@ font-style: inherit;">"0"</span></span></code></pre></div>
 <p>Also, attempting to ask for the <code>preferred_username</code> claim, it also fails. But the <code>email</code> claim works. So essentially, nothing from the <code>profile</code> scope works, even when I explicitly ask for it.</p>
 <p><code>OPENID_CONNECT_SCOPES: "openid email groups"</code></p>
 <p>I think this was the problem, it doesn’t have the <code>profile</code> scope. After removing this config, the group mapping works (but I must create the organization and group in advance).</p>
-<pre><code> {"city": "", "continent": "NA", "country": "US", "lat": 34.0544, "long": -118.244}, "http_request": {"args": {"client_id": "dtyzYu6qbMGaoTmxSuUvth1shOcI9kPAhgXiOELp", "code_challenge": "a
-kGvMdTYNJx6IbCeYP2Ri12gzICoqpY-v34v_1KhTtU", "code_challenge_method": "S256", "redirect_uri": "https://forgejo.moonpiedumpl.ing/user/oauth2/Authentik/callback", "response_type": "code", "s
-cope": "email profile openid openid", "state": "825aa86d-46bf-4ce6-8565-3a92069a3780"}, "method": "GET", "path": "/application/o/authorize/", "request_id": "c59d08ff43a647da80c3037a453d9c4
+<pre><code>cope": "email profile openid openid", "state": "825aa86d-46bf-4ce6-8565-3a92069a3780"}, "method": "GET", "path": "/application/o/authorize/", "request_id": "c59d08ff43a647da80c3037a453d9c4
 a", "user_agent": "Mozilla/5.0 (X11; Linux x86_64; rv:141.0) Gecko/20100101 Firefox/141.0"}, "scopes": "email profile openid"}, "domain_url": "sso.moonpiedumpl.ing", "event": "Created Even
 t", "host": "sso.moonpiedumpl.ing", "level": "info", "logger": "authentik.events.models", "pid": 91040, "request_id": "c59d08ff43a647da80c3037a453d9c4a", "schema_name": "public", "timestam
 p": "2025-07-27T06:42:40.711920", "user": {"email": "test@gmail.com", "pk": 7, "username": "testuser"}}</code></pre>
-<p>It seems to try to get the openid scope twice though…</p>
+<p>It seems to try to get the openid scope twice though, so I removed it from the config again.</p>
 </section>
-<section id="llm-stuff" class="level2">
-<h2 class="anchored" data-anchor-id="llm-stuff">LLM Stuff</h2>
+<section id="llms" class="level2">
+<h2 class="anchored" data-anchor-id="llms">LLMs</h2>
 <p>I am currently looking into options. I want OIDC sign in, and RAG.</p>
 <p>I see for frontend options:</p>
 <ul>
 <li>Openwebui
 <ul>
-<li>Non open source license, but it’s only restricting the ability to change UI</li>
+<li>Non open source license, but it’s only restricting the ability to rebrand the UI</li>
 <li>Helm chart provided</li>
 </ul></li>
 <li>Librechat</li>
@@ -2916,6 +3045,17 @@ p": "2025-07-27T06:42:40.711920", "user": {"email": "test@gmail.com", "pk": 7, "
 <li>It also explicitly supports cpu only, intel, amd, and vulkan. Although not relevant to my usecase, this is very interesting.</li>
 </ul></li>
 </ul>
+<p>After some consideration, I decided to deploy Open Web UI. It appears to be the most comprehensive, and has an <a href="https://artifacthub.io/packages/helm/open-webui/open-webui">official helm chart</a>.</p>
+<p>Here are the helm chart values: <a href="https://github.com/open-webui/helm-charts/blob/main/charts/open-webui/values.yaml" class="uri">https://github.com/open-webui/helm-charts/blob/main/charts/open-webui/values.yaml</a></p>
+<p>It appears that a subchart of the ollama application is included in openwebui chart, as well. I deploy a fairly simple config, and then I get an error when attempting to use OIDC to sign in:</p>
+<p><code>"You do not have permission to access this resource. Please contact your administrator for assistance."</code></p>
+<p>This was fixed by ensuring that the users in groups I wanted to be able to connect were set in “allowedRoles”.</p>
+<section id="models" class="level3">
+<h3 class="anchored" data-anchor-id="models">Models</h3>
+<p>I do need to select a small set of good models. I am designing for a multi user system, meaning if too many people have too different models, I will run out of ram.</p>
+<p>One thing that is cool, is that I am not limited to using models from <a href="https://ollama.com/search">ollama’s repo</a>, as ollama can <a href="https://huggingface.co/mradermacher/DeepHat-V1-7B-GGUF/tree/main?show_file_info=DeepHat-V1-7B.Q8_0.gguf&amp;local-app=ollama">download models from huggingface</a> and OCI repos.</p>
+<p>Although, one irritating I have noticed is that the model download doesn’t continue if I close the tab. I must leave the tab open for the model download to complete, despite the fact taht the download is handled by ollama and doesn’t depend on anything from my browser session. Thankfully, it seems to save partial progress and does restore when I start it up.</p>
+</section>
 </section>
 <section id="ingress-nginx" class="level2">
 <h2 class="anchored" data-anchor-id="ingress-nginx">Ingress-Nginx</h2>
@@ -3289,7 +3429,7 @@ background-color: null;
 font-weight: bold;
 font-style: inherit;">:</span><span class="at" style="color: #657422;
 background-color: null;
-font-style: inherit;"> 25%</span></span>
+font-style: inherit;"> 100%</span></span>
 <span id="cb62-4"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
@@ -3299,7 +3439,7 @@ background-color: null;
 font-weight: bold;
 font-style: inherit;">:</span><span class="at" style="color: #657422;
 background-color: null;
-font-style: inherit;"> 25%</span></span>
+font-style: inherit;"> 100%</span></span>
 <span id="cb62-5"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
@@ -3311,6 +3451,88 @@ font-style: inherit;">:</span><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;"> RollingUpdate</span></span></code></pre></div>
 <p>With this “strategy”, the pods will be scaled down, but only to a certain amount… but I only have ONE pod. So it doesn’t get scaled down at all, and the new pod is never able to scale up to replace it. So these settings must be changed.</p>
+<p>But once this is done, I can patch the deployment to have extra ports going through:</p>
+<div class="sourceCode" id="cb63" style="background: #f1f3f5;"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb63-1"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">postRenderers</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span></span>
+<span id="cb63-2"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">  </span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">-</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">kustomize</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span></span>
+<span id="cb63-3"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">      </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">patches</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span></span>
+<span id="cb63-4"><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">        - </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">patch</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> </span><span class="ch" style="color: #20794D;
+background-color: null;
+font-style: inherit;">|</span></span>
+<span id="cb63-5">            - op:  add</span>
+<span id="cb63-6">              path: /spec/template/spec/containers/0/ports/-</span>
+<span id="cb63-7">              value:</span>
+<span id="cb63-8">                containerPort: 22</span>
+<span id="cb63-9">                hostPort: 22</span>
+<span id="cb63-10">                name: ssh</span>
+<span id="cb63-11">                protocol: TCP</span>
+<span id="cb63-12"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">          </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">target</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span></span>
+<span id="cb63-13"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">            </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">kind</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> Deployment</span></span>
+<span id="cb63-14"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">            </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">name</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> ingress-nginx-controller</span></span></code></pre></div>
+<p>And then I can forward the tcp service via the ingress nginx controller, by following the <a href="https://kubernetes.github.io/ingress-nginx/user-guide/exposing-tcp-udp-services/">ingress-nginx docs on this</a>.</p>
+<p>Another issue I encountered was “413 Request Entity Too Large” when trying to upload ISO’s to nginx. By default, nginx has a setting, <a href="https://nginx.org/en/docs/http/ngx_http_core_module.html#client_max_body_size">client.max_body_size</a> that limits the size of client requests, or in this case, the size of ISO’s that I can upload to Incus. To fix, you can add <a href="https://kubernetes.github.io/ingress-nginx/user-guide/nginx-configuration/annotations/#custom-max-body-size">annotation that changes this setting</a>.</p>
+</section>
+<section id="harvester" class="level2">
+<h2 class="anchored" data-anchor-id="harvester">Harvester</h2>
+<p>Yeah. Incus is frustrating — but at the same time, fun in many ways</p>
 </section>
 <section id="cert-manager" class="level2">
 <h2 class="anchored" data-anchor-id="cert-manager">Cert-Manager</h2>
@@ -3328,18 +3550,18 @@ font-style: inherit;"> RollingUpdate</span></span></code></pre></div>
 <div class="code-with-filename-file">
 <pre><strong>/etc/apt/sources.list</strong></pre>
 </div>
-<div class="sourceCode" id="cb63" data-filename="/etc/apt/sources.list" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb63-1">#deb cdrom:[Debian GNU/Linux 12.10.0 _Bookworm_ - Official amd64 NETINST with firmware 20250315-10:09]/ bookworm contrib main non-free-firmware</span>
-<span id="cb63-2"></span>
-<span id="cb63-3">deb http://deb.debian.org/debian/ bookworm main contrib non-free non-free-firmware</span>
-<span id="cb63-4">deb-src http://deb.debian.org/debian/ bookworm main contrib non-free non-free-firmware</span>
-<span id="cb63-5"></span>
-<span id="cb63-6">deb http://security.debian.org/debian-security bookworm-security main contrib non-free non-free-firmware</span>
-<span id="cb63-7">deb-src http://security.debian.org/debian-security bookworm-security main contrib non-free non-free-firmware</span>
-<span id="cb63-8"></span>
-<span id="cb63-9"># bookworm-updates, to get updates before a point release is made;</span>
-<span id="cb63-10"># see https://www.debian.org/doc/manuals/debian-reference/ch02.en.html#_updates_and_backports</span>
-<span id="cb63-11">deb http://deb.debian.org/debian/ bookworm-updates main contrib non-free non-free-firmware</span>
-<span id="cb63-12">deb-src http://deb.debian.org/debian/ bookworm-updates main contrib non-free non-free-firmware</span></code></pre></div>
+<div class="sourceCode" id="cb64" data-filename="/etc/apt/sources.list" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb64-1">#deb cdrom:[Debian GNU/Linux 12.10.0 _Bookworm_ - Official amd64 NETINST with firmware 20250315-10:09]/ bookworm contrib main non-free-firmware</span>
+<span id="cb64-2"></span>
+<span id="cb64-3">deb http://deb.debian.org/debian/ bookworm main contrib non-free non-free-firmware</span>
+<span id="cb64-4">deb-src http://deb.debian.org/debian/ bookworm main contrib non-free non-free-firmware</span>
+<span id="cb64-5"></span>
+<span id="cb64-6">deb http://security.debian.org/debian-security bookworm-security main contrib non-free non-free-firmware</span>
+<span id="cb64-7">deb-src http://security.debian.org/debian-security bookworm-security main contrib non-free non-free-firmware</span>
+<span id="cb64-8"></span>
+<span id="cb64-9"># bookworm-updates, to get updates before a point release is made;</span>
+<span id="cb64-10"># see https://www.debian.org/doc/manuals/debian-reference/ch02.en.html#_updates_and_backports</span>
+<span id="cb64-11">deb http://deb.debian.org/debian/ bookworm-updates main contrib non-free non-free-firmware</span>
+<span id="cb64-12">deb-src http://deb.debian.org/debian/ bookworm-updates main contrib non-free non-free-firmware</span></code></pre></div>
 </div>
 <p><code>apt install nvidia-driver firmware-misc-nonfree</code></p>
 <p>Anyway, next is to install the Nvidia container toolkit, using the nvidia repo, and <a href="https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html">instructions from here</a>.</p>
@@ -3348,8 +3570,8 @@ font-style: inherit;"> RollingUpdate</span></span></code></pre></div>
 <div class="code-with-filename-file">
 <pre><strong>/etc/apt/sources.list.d/nvidia-container-toolkit.list</strong></pre>
 </div>
-<div class="sourceCode" id="cb64" data-filename="/etc/apt/sources.list.d/nvidia-container-toolkit.list" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb64-1">deb [signed-by=/usr/share/keyrings/nvidia-container-toolkit-keyring.gpg] https://nvidia.github.io/libnvidia-container/stable/deb/$(ARCH) /</span>
-<span id="cb64-2">#deb [signed-by=/usr/share/keyrings/nvidia-container-toolkit-keyring.gpg] https://nvidia.github.io/libnvidia-container/experimental/deb/$(ARCH) /</span></code></pre></div>
+<div class="sourceCode" id="cb65" data-filename="/etc/apt/sources.list.d/nvidia-container-toolkit.list" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb65-1">deb [signed-by=/usr/share/keyrings/nvidia-container-toolkit-keyring.gpg] https://nvidia.github.io/libnvidia-container/stable/deb/$(ARCH) /</span>
+<span id="cb65-2">#deb [signed-by=/usr/share/keyrings/nvidia-container-toolkit-keyring.gpg] https://nvidia.github.io/libnvidia-container/experimental/deb/$(ARCH) /</span></code></pre></div>
 </div>
 <p><code>apt update</code></p>
 <p><code>apt install nvidia-container-toolkit</code></p>
@@ -3413,7 +3635,7 @@ May 28 20:45:34 thoth rke2[6657]: time="2025-05-28T20:45:34-07:00" level=info ms
 <p>Other things to consider are options for improving security.</p>
 <ul>
 <li>Kube Api and ssh behind the firewall, requiring me to VPN into the server to access those services.</li>
-<li>Some form of login banner/warning banner. If I’m going to be essentially becoming my own hosting provider/infra</li>
+<li>Some form of login banner/warning banner. If I’m going to be essentially becoming my own hosting provider/infra, it makes sense to have the legal protections in place.s</li>
 </ul>
 <p>Openstack instead of Incus. Incus is really good, but there are so many papercuts and issues when using it that are frustrating. I originally wanted Openstack because it was a whole “cloud” and had features like s3, databases as a service, firewall as a service, containers as a service, etc. But on the reddit, people are frustrated with those services as they aren’t maintained and truly reliable the way that the core openstack set of components is — for example, <a href="https://www.reddit.com/r/openstack/comments/1lelavr/is_openstack_zun_still_maintained_and_used/mywdhnj/">zun (containers) was deprecated and then undeprecated</a>.</p>
 <p>Despite that, the core Openstack components are extremely mature, with bugs ironed out, and features that Incus is lacking like the ability to create more complex networks via the UI. I totally understand why, as there isn’t really a reason to deploy pfsense when Incus’s ACL’s and build in monitoring can cover that use case in the real world, but for an educational use case it’s nice for people to be able to deploy virtual firewalls.</p>
@@ -3421,18 +3643,113 @@ May 28 20:45:34 thoth rke2[6657]: time="2025-05-28T20:45:34-07:00" level=info ms
 <p>But after investigating, it does look pretty gitops-able, where I should be able to take the data from <a href="https://github.com/openstack-k8s-operators/openstack-operator/tree/main/config">the config direcotry</a> and deploy that using GitOps. It also looks like I can select abitrary storage classes, instead of being locked to ceph. One disadvantage is that these operators don’t seem to support as many services as Openstack Helm, like there is no support for Zun or skyline.</p>
 <p>Another operatore option is <a href="https://docs.yaook.cloud">yaook</a>, but also no support for Zun or Skyline. Also, <a href="https://www.reddit.com/r/openstack/comments/1cyrz3a/if_management_compelled_you_to_use_a/l5bjzmx/">one reddit user says that updating the operator is painful</a>. I’ll probably go with Red Hat’s offering, if it works.</p>
 <p><a href="https://github.com/openstack-gitops/rhoso-gitops" class="uri">https://github.com/openstack-gitops/rhoso-gitops</a>. Huh. Officially developed Openstack on ArgoCD.</p>
-<p>Another thing worth looking at is <a href="https://github.com/rackerlabs/genestack">genestack</a>, where they managed to get longhorn support with openstack-helm, but I ccould not figure out how they did it.</p>
+<p>Another thing worth looking at is <a href="https://github.com/rackerlabs/genestack">genestack</a>, where they managed to get longhorn support with openstack-helm, but I could not figure out how they did it.</p>
 <p>Another option is Suse Harvester… but they only officially support an ISO install. But I can find people unofficially nabbing the helm charts into their gitops:</p>
 <ul>
 <li><a href="https://github.com/chifu1234/flux/blob/9ad745fbb9924c318a27c641d81b71478d46f72d/apps/base/harvester/release.yaml#L13" class="uri">https://github.com/chifu1234/flux/blob/9ad745fbb9924c318a27c641d81b71478d46f72d/apps/base/harvester/release.yaml#L13</a></li>
 <li><a href="https://github.com/remikeat/cluster/blob/3754e93b7d242ab384dac68e4206565e8ed9d6a5/argocd/vm/harvester/application.yaml#L4" class="uri">https://github.com/remikeat/cluster/blob/3754e93b7d242ab384dac68e4206565e8ed9d6a5/argocd/vm/harvester/application.yaml#L4</a></li>
 </ul>
-<p>I would have to deploy Rancher with the <a href="https://github.com/harvester/harvester-ui-extension">harvester UI extension</a></p>
+<p>Harvester does have a <a href="https://harvesterhci.io/development/dev-mode/">development mode install</a>, which documents using helm to install it.</p>
+<p>I would have to deploy Rancher with the <a href="https://github.com/harvester/harvester-ui-extension">harvester UI extension</a>.</p>
 <p>Argo instead of Flux: Probably not. But I am considering changing the way flux is deployed, like using the flux operator instead.</p>
 <p>One thing I really, really want to do is get my own ASN and become my own hosting platform. But this is a far future type thing.</p>
-
-
 </section>
+</section>
+<section id="incident-outage" class="level1">
+<h1>Incident: Outage</h1>
+<p>I was informed by a user of my services, that Incus has been taken slow to load, and generally broken. It was when I attempted to ssh into the server, and my connection was booted, that I became concerned.</p>
+<pre><code>                                              19.1Mb                                         38.1Mb                                         57.2Mb                                         76.3Mb                                   95.4Mb
+└─────────────────────────────────────────────┴──────────────────────────────────────────────┴──────────────────────────────────────────────┴──────────────────────────────────────────────┴──────────────────────────────────────────────
+130.166.79.34                                                                                           =&gt; images.linuxcontainers.org                                                                                 0b    534Kb   245Kb
+                                                                                                        &lt;=                                                                                                            0b      0b      0b
+130.166.79.34                                                                                           =&gt; 172.56.243.240                                                                                           638Kb   185Kb   108Kb
+                                                                                                        &lt;=                                                                                                            0b      0b      0b
+130.166.79.34                                                                                           =&gt; cdn-185-199-109-154.github.com                                                                          73.0Kb  58.4Kb   145Kb
+                                                                                                        &lt;=                                                                                                            0b      0b      0b
+130.166.79.34                                                                                           =&gt; 130.166.105.7                                                                                              0b    170b    446b
+                                                                                                        &lt;=                                                                                                            0b      0b      0b
+130.166.79.234                                                                                          =&gt; ec2-18-144-3-89.us-west-1.compute.amazonaws.com                                                            0b    109b     27b
+                                                                                                        &lt;=                                                                                                            0b      0b      0b
+130.166.79.34                                                                                           =&gt; ec2-18-144-3-89.us-west-1.compute.amazonaws.com                                                            0b    109b     27b
+                                                                                                        &lt;=                                                                                                            0b      0b      0b
+130.166.79.234                                                                                          =&gt; ec2-35-91-81-30.us-west-2.compute.amazonaws.com                                                            0b     54b     41b
+                                                                                                        &lt;=                                                                                                            0b      0b      0b
+130.166.79.34                                                                                           =&gt; ec2-35-91-81-30.us-west-2.compute.amazonaws.com                                                            0b     54b     41b
+                                                                                                        &lt;=                                                                                                            0b      0b      0b
+130.166.79.34                                                                                           =&gt; ec2-52-81-34-218.cn-north-1.compute.amazonaws.com.cn                                                       0b     54b     14b
+                                                                                                        &lt;=                                                                                                            0b      0b      0b
+130.166.79.35                                                                                           =&gt; ec2-52-81-34-218.cn-north-1.compute.amazonaws.com.cn                                                       0b     54b     14b
+                                                                                                        &lt;=                                                                                                            0b      0b      0b
+130.166.79.34                                                                                           =&gt; ec2-52-81-249-152.cn-north-1.compute.amazonaws.com.cn                                                      0b     54b     14b
+                                                                                                        &lt;=                                                                                                            0b      0b      0b
+130.166.79.35                                                                                           =&gt; ec2-52-81-249-152.cn-north-1.compute.amazonaws.com.cn                                                      0b     54b     14b
+                                                                                                        &lt;=                                                                                                            0b      0b      0b
+130.166.79.34                                                                                           =&gt; ec2-35-92-1-89.us-west-2.compute.amazonaws.com                                                             0b      0b     54b
+                                                                                                        &lt;=                                                                                                            0b      0b      0b
+130.166.79.34                                                                                           =&gt; lb-140-82-116-34-sea.github.com                                                                            0b      0b     42b
+                                                                                                        &lt;=                                                                                                            0b      0b      0b
+130.166.79.234                                                                                          =&gt; ec2-35-92-1-89.us-west-2.compute.amazonaws.com                                                             0b      0b     41b
+                                                                                                        &lt;=                                                                                                            0b      0b      0b
+130.166.79.234                                                                                          =&gt; ec2-35-89-225-142.us-west-2.compute.amazonaws.com                                                          0b      0b     41b
+                                                                                                        &lt;=                                                                                                            0b      0b      0b
+130.166.79.34                                                                                           =&gt; ec2-35-89-225-142.us-west-2.compute.amazonaws.com                                                          0b      0b     41b
+                                                                                                        &lt;=                                                                                                            0b      0b      0b
+130.166.79.234                                                                                          =&gt; ec2-54-67-69-159.us-west-1.compute.amazonaws.com                                                           0b      0b     41b
+                                                                                                        &lt;=                                                                                                            0b      0b      0b
+130.166.79.34                                                                                           =&gt; ec2-54-67-69-159.us-west-1.compute.amazonaws.com                                                           0b      0b     41b
+                                                                                                        &lt;=                                                                                                            0b      0b      0b
+130.166.79.234                                                                                          =&gt; ec2-35-94-27-60.us-west-2.compute.amazonaws.com                                                            0b      0b     27b
+                                                                                                        &lt;=                                                                                                            0b      0b      0b
+130.166.79.234                                                                                          =&gt; ec2-3-101-22-123.us-west-1.compute.amazonaws.com                                                           0b      0b     27b
+                                                                                                        &lt;=                                                                                                            0b      0b      0b
+130.166.79.34                                                                                           =&gt; ec2-35-94-27-60.us-west-2.compute.amazonaws.com                                                            0b      0b     27b
+                                                                                                        &lt;=                                                                                                            0b      0b      0b
+130.166.79.234                                                                                          =&gt; ec2-13-57-210-23.us-west-1.compute.amazonaws.com                                                           0b      0b     27b
+                                                                                                        &lt;=                                                                                                            0b      0b      0b
+130.166.79.34                                                                                           =&gt; ec2-3-101-22-123.us-west-1.compute.amazonaws.com                                                           0b      0b     27b
+                                                                                                        &lt;=                                                                                                            0b      0b      0b
+130.166.79.234                                                                                          =&gt; ec2-35-88-121-77.us-west-2.compute.amazonaws.com                                                           0b      0b     27b
+                                                                                                        &lt;=                                                                                                            0b      0b      0b
+130.166.79.34                                                                                           =&gt; 52.82.36.134                                                                                               0b      0b     27b
+                                                                                                        &lt;=                                                                                                            0b</code></pre>
+<p>This is the result of <code>iftop</code>, which shows network traffic. Most of these seem to be scraper bots of some kind, and they are eating up my traffic.</p>
+<p>I deployed anubis to my forgejo service, to avoid overconsumption of CPU, but I neglected another problem: With a total of only 200 mb/s, it could easily get saturated, even by simpler requests.</p>
+<p>Here is an example domain that affected me: <code>azpdegt2l5yb.stretchoid.com</code>. This site, stretchoid, is as port scanning service, that scans websites for vulnerabilities. And they are eating up all my bandwidth, in what is essentially a ddos attack. Similarly, <code>scan-13f.shadowserver.org</code> belongs to a port scanning as a service platform.</p>
+<p>Although I thought I was being clever with my bonding setup, the problem with it, is that even though I get more performance out of it, it becomes possible to saturate both network interfaces via enough connections. If I was using a seperate “management” interface, that was not exposed publicly except for ssh, then it could not get saturated, enabling me to reliably connect.</p>
+<p>Another unlucky thing: This happened exactly when I went back to San Diego. I am not currently physically with my server to handle things if I want to take it truly offline.</p>
+<p>Possible temp solutions:</p>
+<ul>
+<li>Change my mac address (in order to get a different one from DHCP)
+<ul>
+<li>This may not work if they are scanning domains</li>
+<li>This may not work if they are scanning the whole internet, and just happened to find me. If they can find me once, they can find me again.</li>
+</ul></li>
+<li>Change my domain
+<ul>
+<li>Yeah. Same thing as above. Perhaps changing my domain, along with my ip address will let me keep my service up.</li>
+</ul></li>
+</ul>
+<p>Possible long term solutions:</p>
+<ul>
+<li>Ip based blocklists
+<ul>
+<li>Something like crowdsec could block ip addresses… although I’m worried they</li>
+</ul></li>
+<li>Cloudfare
+<ul>
+<li>Maybe one of the cloudfare ingress controllers:
+<ul>
+<li><a href="https://github.com/STRRL/cloudflare-tunnel-ingress-controller" class="uri">https://github.com/STRRL/cloudflare-tunnel-ingress-controller</a></li>
+<li><a href="https://blog.cloudflare.com/cloudflare-ingress-controller/" class="uri">https://blog.cloudflare.com/cloudflare-ingress-controller/</a></li>
+</ul></li>
+</ul></li>
+<li>VPS + Reverse Proxy (+ WAF?)
+<ul>
+<li>Something like <a href="https://github.com/fosrl/pangolin">pangolin</a></li>
+</ul></li>
+</ul>
+
+
 </section>
 
  ]]></description>
@@ -14244,80 +14561,6 @@ font-style: inherit;">}</span>:</span></code></pre></div>
   <category>playground</category>
   <guid>./playground/flake-shell/</guid>
   <pubDate>Fri, 21 Jun 2024 07:00:00 GMT</pubDate>
-</item>
-<item>
-  <title>Nice Challenge 5</title>
-  <dc:creator>Jeffrey Fonseca</dc:creator>
-  <link>./writeups/nice-challenge-5/</link>
-  <description><![CDATA[ 
-
-
-
-
-
-<p>This is for the <a href="https://nice-challenge.com/">NICE</a> challenge, and this would be my fifth one (not counting repeats).</p>
-<p>As usual, it started out with a simulated chatroom:</p>
-<p><img src="./writeups/nice-challenge-5/images/chatroom.png" class="img-fluid"></p>
-<p>And, there were also some empty checks.</p>
-<p><img src="./writeups/nice-challenge-5/images/emptychecks.png" class="img-fluid"></p>
-<p>Based on this, it seems like I will be working on the “Production Web Server”, primarily.</p>
-<section id="prod-web" class="level1">
-<h1>Prod-Web</h1>
-<section id="users" class="level2">
-<h2 class="anchored" data-anchor-id="users">Users</h2>
-<p>First, I created user accounts for the relevant users.</p>
-<div class="sourceCode" id="cb1" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb1-1">useradd gthatcher</span>
-<span id="cb1-2"></span>
-<span id="cb1-3">useradd rob</span></code></pre></div>
-<p>Since <code>gthatcher</code> is going to be an admin, I added them to the <code>wheel</code> user group, since that is often used as an administrator group on Linux systems.</p>
-<p><code>usermod -aG wheel gthatcher</code></p>
-<p>Then, I used the <code>visudo</code> command to edit the sudoer’s file and add wheel as a group that could use all commands with sudo:</p>
-<div class="code-with-filename">
-<div class="code-with-filename-file">
-<pre><strong>/etc/sudoers</strong></pre>
-</div>
-<div class="sourceCode" id="cb2" data-filename="/etc/sudoers" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb2-1">## Allows people in group wheel to run all commands</span>
-<span id="cb2-2">%wheel  ALL=(ALL)   ALL</span></code></pre></div>
-</div>
-<p>The other thing I added was for user <code>rob</code> to be able to run certain commands as sudo, without a password, but only those commands.</p>
-<div class="code-with-filename">
-<div class="code-with-filename-file">
-<pre><strong>/etc/sudoers</strong></pre>
-</div>
-<div class="sourceCode" id="cb3" data-filename="/etc/sudoers" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb3-1">rob ALL=NOPASSWD : /bin/sudoedit /var/www/html/*, /bin/systemctl status httpd, /bin/systemctl stop httpd, /bin/systemctl start httpd, /bin/systemctl restart httpd, /bin/systemctl enable httpd, /bin/systemctl disable httpd</span></code></pre></div>
-</div>
-</section>
-<section id="update-apache" class="level2">
-<h2 class="anchored" data-anchor-id="update-apache">Update Apache</h2>
-<p>Also, I needed to update apache. However, the repos completely broken on this machine, so I deleted them, and made way for new repos.</p>
-<div class="sourceCode" id="cb4" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb4-1">mv /etc/yum.repos.d /etc/yum.repos.bac # Back up old yum repos just in case</span>
-<span id="cb4-2"></span>
-<span id="cb4-3">mkdir /etc/yum.repos.d</span>
-<span id="cb4-4"></span>
-<span id="cb4-5">curl http://mirror.centos.org/centos/7/atomic/x86_64/repo/CentOS-Base.repo -o /etc/yum.repos.d/CentOS-Base.repo</span>
-<span id="cb4-6"></span>
-<span id="cb4-7">yum update</span></code></pre></div>
-<p>And with this, Apache is updated.</p>
-</section>
-<section id="ssh-config" class="level2">
-<h2 class="anchored" data-anchor-id="ssh-config">Ssh Config</h2>
-<p>Ssh needs to be configured to use key based authentication, instead of password based authentication.</p>
-<p>On the Prod-Web server:</p>
-<div class="sourceCode" id="cb5" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb5-1">ssh-keygen # this generates an ssh key in the default location. I did not set a passphrase.</span>
-<span id="cb5-2"></span>
-<span id="cb5-3">scp .ssh/id_rsa.pub playerone@172.16.20.11:/home/playerone/.ssh/authorized_keys # use password to authenticate the connection</span></code></pre></div>
-<p>This creates a key and authorizes it for use on the Dev-Web server.</p>
-<p>And with this, all checks are green:</p>
-<p><img src="./writeups/nice-challenge-5/images/greenchecks.png" class="img-fluid"></p>
-
-
-</section>
-</section>
-
- ]]></description>
-  <category>writeups</category>
-  <guid>./writeups/nice-challenge-5/</guid>
-  <pubDate>Fri, 07 Jun 2024 07:00:00 GMT</pubDate>
 </item>
 </channel>
 </rss>
