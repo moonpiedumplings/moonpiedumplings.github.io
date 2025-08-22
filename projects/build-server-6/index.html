@@ -1874,7 +1874,16 @@ May 28 20:45:34 thoth rke2[6657]: time="2025-05-28T20:45:34-07:00" level=info ms
 <p>Here is an example domain that affected me: <code>azpdegt2l5yb.stretchoid.com</code>. This site, stretchoid, is as port scanning service, that scans websites for vulnerabilities. And they are eating up all my bandwidth, in what is essentially a ddos attack. Similarly, <code>scan-13f.shadowserver.org</code> belongs to a port scanning as a service platform.</p>
 <p>Although I thought I was being clever with my bonding setup, the problem with it, is that even though I get more performance out of it, it becomes possible to saturate both network interfaces via enough connections. If I was using a seperate “management” interface, that was not exposed publicly except for ssh, then it could not get saturated, enabling me to reliably connect.</p>
 <p>Another unlucky thing: This happened exactly when I went back to San Diego. I am not currently physically with my server to handle things if I want to take it truly offline.</p>
-<p>Possible temp solutions:</p>
+<p>The temporary mitigation I have implemented to ensure continued remote access (albeit, at the cost of uptime):</p>
+<ul>
+<li>Taking my services offline (just stopping the systemd services)</li>
+<li>Pointing moonpiedumpl.ing to 1.1.1.1 instead of my original domain
+<ul>
+<li>This does not seem to have stopped the scanners though</li>
+</ul></li>
+</ul>
+<p>After my services have been offline for a while, the traffic seems to have slowed. Although <code>iftop</code> still reports many connections, I’m not seeing a constant 90 mbit/s all the time.</p>
+<p>Possible temporary solutions (which keep my services online):</p>
 <ul>
 <li>Change my mac address (in order to get a different one from DHCP)
 <ul>
