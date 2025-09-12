@@ -10,7 +10,55 @@
 <atom:link href="./feed.xml" rel="self" type="application/rss+xml"/>
 <description>All posts, intended to be used in an RSS feed. Can be found at feed.xml</description>
 <generator>quarto-1.7.31</generator>
-<lastBuildDate>Sat, 24 May 2025 07:00:00 GMT</lastBuildDate>
+<lastBuildDate>Tue, 26 Aug 2025 07:00:00 GMT</lastBuildDate>
+<item>
+  <title>Templating Engine with Quarto</title>
+  <link>./playground/quarto-templates/</link>
+  <description><![CDATA[ 
+
+
+
+
+
+<p>I recently read a very good blogpost <a href="https://deadsimpletech.com/blog/notes_teaching_coding">We should rethink how we teach people to code</a>. It argues that instead of starting on something like python, it’s better to start at HTML, and introduce programming concepts via a templating engine in a static site generator.</p>
+<p>I really like this idea. I already have <a href="../../talks/self-site/">a presentation/tutorial</a> about setting up your own website with Quarto.</p>
+<p>But Quarto does not have a templating engine.</p>
+<section id="liquidjs" class="level1">
+<h1>LiquidJS</h1>
+<p>So now I am trying to see if I can get LiquidJS, the templating engine that Jekyll uses, to work in Quarto. The most promising option is to execute actual javascript, which then does the templating. Although, I think it is a bit disappointed that it requires javascript.</p>
+<script type="text/template">
+{{ name | capitalize | prepend: "Welcome to "}}
+</script>
+<div id="result">
+
+</div>
+<script type="text/template">
+{% assign foo = "FOO" %}
+{% if foo == "FOO" %}
+    Variable `foo` equals "FOO"
+{% else %}
+    Variable `foo` not equals "FOO"
+{% endif %}
+</script>
+<div id="result">
+
+</div>
+</section>
+<section id="ejs" class="level1">
+<h1>EJS</h1>
+<script>
+  let people = ['geddy', 'neil', 'alex'];
+  let html = ejs.render('<%= people.join(", "); %>', {people: people});
+</script>
+
+
+</section>
+
+ ]]></description>
+  <category>playground</category>
+  <guid>./playground/quarto-templates/</guid>
+  <pubDate>Tue, 26 Aug 2025 07:00:00 GMT</pubDate>
+</item>
 <item>
   <title>Systemd is Basically One Node Kubernetes</title>
   <link>./blog/systemk8s/</link>
@@ -2905,6 +2953,112 @@ a", "user_agent": "Mozilla/5.0 (X11; Linux x86_64; rv:141.0) Gecko/20100101 Fire
 t", "host": "sso.moonpiedumpl.ing", "level": "info", "logger": "authentik.events.models", "pid": 91040, "request_id": "c59d08ff43a647da80c3037a453d9c4a", "schema_name": "public", "timestam
 p": "2025-07-27T06:42:40.711920", "user": {"email": "test@gmail.com", "pk": 7, "username": "testuser"}}</code></pre>
 <p>It seems to try to get the openid scope twice though, so I removed it from the config again.</p>
+<p>Okay, I tried to start forgejo today and I got an error about not being able to find the database. What happened, is that the <a href="https://programming.dev/post/34498219">Bitnami Helm Charts</a> that deploy the databases, are no longer publicly available for use. <a href="https://artifacthub.io/packages/helm/forgejo-helm/forgejo#external-database">Forgejo’s Helm Chart now recommends operators for databases</a>.</p>
+<p>So I am searching for some options for operators for postgres:</p>
+<ul>
+<li><a href="https://cloudnative-pg.io/">CloudNativePG</a>
+<ul>
+<li>Most promising, also newest</li>
+<li>Semi-automatic major version upgrades are appealing to me: <a href="https://cloudnative-pg.io/documentation/1.26/postgres_upgrades/#offline-in-place-major-upgrades" class="uri">https://cloudnative-pg.io/documentation/1.26/postgres_upgrades/#offline-in-place-major-upgrades</a></li>
+</ul></li>
+<li><a href="https://github.com/CrunchyData/postgres-operator">Crunchy Postgres Operator</a></li>
+<li><a href="https://github.com/zalando/postgres-operator">Zalando</a></li>
+</ul>
+<p>For redis… I think I am going to switch to the internal cache implementation instead. The</p>
+</section>
+<section id="cloud-native-postgres" class="level2">
+<h2 class="anchored" data-anchor-id="cloud-native-postgres">Cloud Native Postgres</h2>
+<p><a href="https://artifacthub.io/packages/helm/cloudnative-pg/cloudnative-pg" class="uri">https://artifacthub.io/packages/helm/cloudnative-pg/cloudnative-pg</a></p>
+<p>I started out by just copying the repo and helm release templates that I have previously used. It works easily, without me passing in any values. It seems that postgres does not require any configuration.</p>
+<p>Firstly, deployed a test database using an example from their <a href="https://cloudnative-pg.io/documentation/1.25/quickstart/#part-3-deploy-a-postgresql-cluster">quick start</a>. However, I deployed only one instance, instead of 3, because I only have one physical server.</p>
+<p>Although cool, that’s not enough. I also need to ensure it has the correct username/password, and that it restores the information that was previously in older postgres database that forgejo was using.</p>
+<p><code>forgejo     data-forgejo-postgresql-0                         Bound    pvc-9a77499a-71d8-4a7b-bda4-fd8d66c1c86c   10Gi       RWO            openebs-persistent-hostpath   &lt;unset&gt;                 25d</code></p>
+<p>Thankfully, using openebs local paths, makes it easy to actually go in and fine the database files.</p>
+<div class="sourceCode" id="cb58" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb58-1">root@thoth:/var/openebs/persistent/pvc-9a77499a-71d8-4a7b-bda4-fd8d66c1c86c/data# ls</span>
+<span id="cb58-2">base    pg_commit_ts  pg_ident.conf  pg_multixact  pg_replslot  pg_snapshots  pg_stat_tmp  pg_tblspc    PG_VERSION  pg_xact               postmaster.opts</span>
+<span id="cb58-3">global  pg_dynshmem   pg_logical     pg_notify     pg_serial    pg_stat       pg_subtrans  pg_twophase  pg_wal      postgresql.auto.conf</span></code></pre></div>
+<p>Now, I need to figure out how to import from this. I think what I’m going to have to do, is run a <a href="https://hub.docker.com/_/postgres">postgres docker container</a>, and then dump the database, so I can import into a new database.</p>
+<p>Firstly, I will backup the files to ensure that anythign I do doesn’t nuke all my data.</p>
+<p><code>root@thoth:/var/openebs/persistent/pvc-9a77499a-71d8-4a7b-bda4-fd8d66c1c86c# tar -czf data.tar.gz data/</code></p>
+<p>I also ran a test to extract the archive, to make sure that worked. Now that I’ve done this.</p>
+<p>In addition to that, I will need to create a cluster and a database to import the data into.</p>
+<p>But when I attempt to start a database using the postgres docker container, it complains that certain config files (like postgres.conf, pg_hba.conf) are not found. Bitnami’s helm version of postgres seems to automatically create these files somewhere else than the data directory.</p>
+<p>Although possible to create those, I think an easier way might be to deploy the older version of forgejo, and then export the data from there using the pgsql cli. It errored due to ownership at first, so I had to run chown.</p>
+<p><code>root@thoth:/var/openebs/persistent/pvc-9a77499a-71d8-4a7b-bda4-fd8d66c1c86c# chown -R 1001:1001 data</code></p>
+<p>And with this, forgejo (and the database I care about) is finally up. I can shell into it, and run pg_dump.</p>
+<div class="sourceCode" id="cb59" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb59-1">I have no name!@forgejo-postgresql-0:/bitnami/postgresql/backupdir$ pg_dump -U forgejo -f dump.sql</span>
+<span id="cb59-2">Password:</span>
+<span id="cb59-3">I have no name!@forgejo-postgresql-0:/bitnami/postgresql/backupdir$ ls</span>
+<span id="cb59-4">dump.sql</span></code></pre></div>
+<p>Next up is to deploy the new database. One of the interesting things about cloudnativepg is that it doesn’t just deploy a database, it deploys a cluster, and then deploys databases to that cluster. But, is it better to deploy one cluster with multiple databases, or multiple clusters?</p>
+<p>Architecture of postgres cluster/database:</p>
+<ul>
+<li><a href="https://cloudnative-pg.io/documentation/1.17/architecture/" class="uri">https://cloudnative-pg.io/documentation/1.17/architecture/</a></li>
+<li><a href="https://www.cncf.io/blog/2023/09/29/recommended-architectures-for-postgresql-in-kubernetes/" class="uri">https://www.cncf.io/blog/2023/09/29/recommended-architectures-for-postgresql-in-kubernetes/</a></li>
+</ul>
+<p>One thing I found via some preliminary research is that CloudNativePG’s backup solutions seem to be cluster based, rather than database based. <a href="https://cloudnative-pg.io/documentation/1.27/backup/#backup">They have some harsh words about database dumps, anyways</a>:</p>
+<blockquote class="blockquote">
+<p>This section covers physical backups in PostgreSQL. While PostgreSQL also supports logical backups using the pg_dump utility, these are not suitable for business continuity and are not managed by CloudNativePG. If you still wish to use pg_dump, refer to the Troubleshooting / Emergency backup section for guidance.</p>
+</blockquote>
+<p>I think the best option is to have a cluster for each app. This way I could back up each app’s database/cluster, using CloudNativePG’s tools. This backup might not just be for recovery purposes, but also I might want an older version of the database at some point.</p>
+<p>Another thing is that it seems that the Cluster resource can automatically initialize a database, using configuration <a href="https://cloudnative-pg.io/documentation/1.27/cloudnative-pg.v1/#postgresql-cnpg-io-v1-BootstrapInitDB">found here</a>. <a href="https://cloudnative-pg.io/documentation/1.27/bootstrap/#bootstrap-an-empty-cluster-initdb">The way that secrets work is documented here</a>.</p>
+<p>Also, when cloudnativepg deploys a cluster, it automatically creates <a href="https://cloudnative-pg.io/documentation/1.27/service_management/">kubernetes services for the database</a>.</p>
+<pre><code>NAME                  TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)    AGE
+anubis-forgejo        ClusterIP   10.43.225.133   &lt;none&gt;        80/TCP     42d
+forgejo-postgres-r    ClusterIP   10.43.188.149   &lt;none&gt;        5432/TCP   5s
+forgejo-postgres-ro   ClusterIP   10.43.26.224    &lt;none&gt;        5432/TCP   5s
+forgejo-postgres-rw   ClusterIP   10.43.254.130   &lt;none&gt;        5432/TCP   4s</code></pre>
+<p>This is pretty neat, you can have readwrite and readonly versions of services. I think I will disable everything but the readwrite serivce, however.</p>
+<p>Although cool, I found that even though cloudnativepg creates a persistentvolumeclaim, it deletes it when it is done. This is bad because it means that if I delete the postgres cluster I lose the data. It looks like what you are expected to do, is to backup the</p>
+<p>Another thing to not about storage, is that <a href="https://www.postgresql.org/docs/current/wal-intro.html">postgre does not need journaling</a>. I should probably create a custom PersistentVolumeClass that has writeback/journaling disabled for that folder only. But that seems to not be possible, so instead I will use openebs <a href="https://openebs.io/docs/user-guides/local-storage-user-guide/local-pv-lvm/advanced-operations/lvm-raw-block-volume">block volumes</a>, which are designed for this use case.</p>
+<p>Also, it turns out that the <code>local.csi.openebs.io</code> is the newer provisioner, and supports more features than the older <code>openebs.io/local</code> that I was using. It also looks like migration is not trivial, so I will probably only use the newer interface for just this.</p>
+<p>It does look like I need to have an actual LVM partition/disk available on my host. In addition to that, I also think I may need to update openebs to get access to the newer openebs.io/local chart.</p>
+<p>Okay, this really sucks, but <a href="https://github.com/bitnami/charts">Bitnami helm charts break tomorrow</a> (today is 8/27/2025). I need something to keep these services up, and that means forgoing an OpenEBS update, and using a journaled filesystem for my databases. I do at least want backups, so I will investigate how to do those. When combined with simultaneously trying to figure out why my network is wonky, I just don’t have enough time. I suppose stuff like this is why real engineers work as teams.</p>
+<p>The problem is backups. <a href="https://cloudnative-pg.io/documentation/1.27/backup/">CNPG</a> supports two methods, one of which is an object store, and another is via volume snapshots. I wanted to avoid setting up an external object store, especially from the paid platforms.</p>
+<p>I wanted to use snapshots, but openebs hostpath does not support volume snapshots. And I don’t have enough time to build and test backups. I think I will use <code>pg_dump</code>, despite them “not being suitable for business continuity”.</p>
+<p>It looks like <a href="https://github.com/cloudnative-pg/cloudnative-pg/discussions/5253">there is no easy way to have the PVC’s not delete themselves</a> either. It seems that what you are expected to do is really to bootstrap a new cluster from the backups, like <a href="https://cloudnative-pg.io/documentation/1.27/recovery/#recover">documented here</a>.</p>
+<p>Okay, I think I could use <a href="https://github.com/openebs/rawfile-localpv">openebs-rawfile</a> for some of those features like snapshots.</p>
+<div class="sourceCode" id="cb61" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb61-1">03:21 &lt; moonpie&gt; okay I get a little bit more time to think</span>
+<span id="cb61-2">03:22 &lt; moonpie&gt; Like I am considering either zfs or lvm on my extra 4 tb hard drive and then using that for both incus storage and k8s volumes</span>
+<span id="cb61-3">03:22 &lt; moonpie&gt; (wait no I don't actually get time to think they want forgejo up)</span>
+<span id="cb61-4">05:27 &lt; moonpie&gt; dumbmf_: okay now it says I need to enable javascript...</span>
+<span id="cb61-5">05:51 &lt; moonpie&gt; okay</span>
+<span id="cb61-6">05:51 &lt; moonpie&gt; except for openebs rawfile, I cannot find any solution for block/no filesystem based csi's</span>
+<span id="cb61-7">05:51 &lt; moonpie&gt; it's kinda weird</span>
+<span id="cb61-8">05:52 &lt; moonpie&gt; because if you are hosting a dtabase on k8s, it makes sense to not uses a clustered filesystem, because db's do it better</span>
+<span id="cb61-9">05:52 &lt; moonpie&gt; and they also recommend no journaling/copy on write for performance, and again, because dbs do it better</span>
+<span id="cb61-10">05:52 &lt; moonpie&gt; but all of the raw block csi options I have found require lvm, zfs, or other partitions/disks to be provisioned</span>
+<span id="cb61-11">05:53 &lt; moonpie&gt; Like.. why can't I just have one disk and you create loopback devices?</span>
+<span id="cb61-12">05:53 &lt; moonpie&gt; that's what openebs rawfile does, but it's not cooked yet</span>
+<span id="cb61-13">05:53 &lt; moonpie&gt; I guess you could say it's a bit... raw</span>
+<span id="cb61-14">05:54 &lt; moonpie&gt; but the thing is</span>
+<span id="cb61-15">05:54 &lt; moonpie&gt; even if I forgo no-filesystem based setups</span>
+<span id="cb61-16">05:55 &lt; moonpie&gt; I still want a hostpath storage class that uses CSI's, so I can use the CSI snapshot/backup feature to handle databases</span>
+<span id="cb61-17">05:55 &lt; moonpie&gt; CloudnativePostgres attempts to delete the persistentvolume even if you have the policy set to retain — what they expect you do when you spin up a new cluster is just restore from backup, not reattatch an existing</span>
+<span id="cb61-18">                 volume</span>
+<span id="cb61-19">05:55 &lt; moonpie&gt; But I haven't been able to find a hostpath based CSI either</span>
+<span id="cb61-20">05:57 &lt; moonpie&gt; There is a reference implementation, but it says it's "not production ready"</span>
+<span id="cb61-21">05:57 &lt; moonpie&gt; https://github.com/kubernetes-csi/csi-driver-host-path</span>
+<span id="cb61-22">05:57 &lt; moonpie&gt; well, it actually does seem to be less usable, then say, alpha software</span>
+<span id="cb61-23">06:00 &lt; moonpie&gt; I didn't want to use either zfs or lvm</span>
+<span id="cb61-24">06:00 &lt; moonpie&gt; my main concern was configuration as code</span>
+<span id="cb61-25">06:00 &lt; moonpie&gt; I want as much as my config in the git repo as possible</span>
+<span id="cb61-26">06:01 &lt; moonpie&gt; creating a zfs/lvm pool is not that. I can do it ofc, but it's not really what I want</span>
+<span id="cb61-27">06:02 &lt; moonpie&gt; I was thinking, if I had to redo this setup in the future, I could use Nixos for declarative config of incus and then use https://nixos.wiki/wiki/Disko</span>
+<span id="cb61-28">06:03 &lt; moonpie&gt; Idk. I feel like there is something i am missing</span>
+<span id="cb61-29">06:04 &lt; moonpie&gt; like if you have one disk and you want to run a database on k8s, what are you dong?</span>
+<span id="cb61-30">06:04 &lt; moonpie&gt; Does everybody just use lvm or zfs on their root?</span></code></pre></div>
+<p>I think the correct choice here, is to deploy longhorn, <a href="https://cloudnative-pg.io/documentation/current/storage/">with a single replica</a>. And then use that for block storage. That’s also probably what people are doing in the real world. Such a setup reuses the clustered storage you are already using, but in a slighly different configuration that enables you do maximize the performance of your databases.</p>
+<p>I also ran an intemediary check, to make sure that openebs hostpath does not support block volumes, and it does not. I attempt to create a longhorn block device for cloudnativepg, and that fails, because I guess it expects a filesystem.</p>
+<p>This doesn’t really make sense to me. But I did get cloudnativepg deployed. I can even request a backup via a volumeshapshot:</p>
+<p><code>kubectl cnpg backup -m volumeSnapshot -n forgejo forgejo-postgres</code></p>
+<p><a href="https://github.com/cloudnative-pg/cloudnative-pg/issues/5203">They don’t seem to have a command to restore from a backup though</a>. It seems like you are expected to bootstrap a cluster from a backup instead.</p>
+<p>To load the database, first I cp the dump in from my laptop:</p>
+<pre><code>[moonpie@cachyos-x8664 dormlab]$ kubectl cp dump.sql -n forgejo forgejo-postgres-1:/var/lib/postgresql/data/dump.sql
+Defaulted container "postgres" out of: postgres, bootstrap-controller (init)</code></pre>
+<p>Then, inside the container I load the dump:</p>
+<div class="sourceCode" id="cb63" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb63-1">postgres@forgejo-postgres-1:~/data$ psql -U postgres -d forgejo -f dump.sql</span></code></pre></div>
+<p>And then I spin up forgejo again, pointing to the new database, and it’s finally up.</p>
 </section>
 <section id="llms" class="level2">
 <h2 class="anchored" data-anchor-id="llms">LLMs</h2>
@@ -2950,11 +3104,50 @@ p": "2025-07-27T06:42:40.711920", "user": {"email": "test@gmail.com", "pk": 7, "
 <p>It appears that a subchart of the ollama application is included in openwebui chart, as well. I deploy a fairly simple config, and then I get an error when attempting to use OIDC to sign in:</p>
 <p><code>"You do not have permission to access this resource. Please contact your administrator for assistance."</code></p>
 <p>This was fixed by ensuring that the users in groups I wanted to be able to connect were set in “allowedRoles”.</p>
+<p>Another concern I have is that <a href="https://github.com/ollama/ollama/issues/849">ollama does not have any form of authentication</a> Although less of a concern in the real world, wehre the inside fo teh kubernetes cluster is considered trusted, in my lab, I give people access to the internal subnet. I could restrict traffic flows to this service via Network Policies, but I would rather add some form of authentication to the service. <a href="https://github.com/ollama/ollama/issues/903">Here is an example using caddy</a>.</p>
+<p>I decided to use Caddy. I stopped using the ollama subchart, because I wanted to manually feed an ollama url to openwebui instead of letting openwebui guess.</p>
+<div class="sourceCode" id="cb64" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb64-1">[moonpie@cachyos-x8664 flux-config]$ nix-shell -p caddy genpass</span>
+<span id="cb64-2">[nix-shell:~/vscode/flux-config]$ genpass -dlu</span>
+<span id="cb64-3">generatedpassword</span>
+<span id="cb64-4">[nix-shell:~/vscode/flux-config]$ caddy hash-password</span>
+<span id="cb64-5">Enter password:</span>
+<span id="cb64-6">Confirm password:</span>
+<span id="cb64-7">$2a$14$LdqC7FEIx2w6arGCNw7Pi.qxe2kFSvBecz.IvtdcdLvJe4V.xeyhi</span></code></pre></div>
+<p>This gets me a password and a hash to use. I feed that to the config, and my default ollama url looks something like this: <code>http://ollama:secretpassword@ollama.owui.svc.cluster.local:11434</code>.</p>
+<p>One concern I have is that PVC’s seem to get deleted when I delete the helm chart. This is despite the fact that I have a policy of <code>Retain</code> for the spcific persistentvolume class.</p>
+<p>Uh oh. Upon further inspection, it seems that every PVC, even if they are deleted, the data stays there on the disk. This is somewhat concerning, as it means that nothing but manually deleting the volumes can be done. This isn’t really that big of an issue though.</p>
+<p>Although, it seems that it’s not that PVC’s are being deleted, but instead that the persistenvolumes are not being rebound when the new iteration of openwebui/ollama are deployed. It looks like both create a persistentvolumeclaim by default, and you have to explicitly set if you would like to reuse an existing one. But first, I need to nuke all persistentvolumes.</p>
+<p><code>[moonpie@cachyos-x8664 flux-config]$ kubectl get persistentvolume -n owui | grep owui | awk '{print $1}' &gt; deadpvcs.txt</code></p>
+<p>This feeds the name of all the dead pvc’s into a text file. Then, I will iterate over this to delete.</p>
+<p><code>[moonpie@cachyos-x8664 flux-config]$ xargs -L 1 -I {} kubectl delete persistentvolumes "{}" &lt; deadpvcs.txt</code></p>
+<p>And then I have to delete the actual pvc from <code>/var/openebs/persistent</code>. On the remote server:</p>
+<p><code>root@thoth:/var/openebs/persistent# xargs -L 1 -I {} rm -rf "{}" &lt; deadpvcs.txt</code></p>
+<div class="sourceCode" id="cb65" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb65-1">[moonpie@cachyos-x8664 flux-config]$ kubectl get statefulsets.apps -A</span>
+<span id="cb65-2">NAMESPACE   NAME                     READY   AGE</span>
+<span id="cb65-3">authentik   authentik-postgresql     1/1     63d</span>
+<span id="cb65-4">authentik   authentik-redis-master   1/1     63d</span>
+<span id="cb65-5">coder       coder-pg-postgresql      1/1     62d</span>
+<span id="cb65-6">openfga     openfga-postgresql       1/1     51d</span></code></pre></div>
+<p>Okay. I think the issue is that only kubernetes statefulsets keep a pvc if you delete the pods. It looks like deployments, and replicasets don’t. I think the best option is to declare a seperate PVC and then point the helm charts of ollama and openwebui to them. I tried experiement with the pvc name itself, the <code>pvc-0d7939f6-feaa-47cb-9b7f-9d0d359ab9c0</code> format, or the shortname, <code>owui/open-webui</code>, but neither work.</p>
+<p>I rebooted and am trying to test if this is a one off issue by me installing longhorn.</p>
+<div class="sourceCode" id="cb66" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb66-1">[moonpie@cachyos-x8664 openwebui]$ kubectl get persistentvolumeclaims -n owui</span>
+<span id="cb66-2">NAME                   STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS                  VOLUMEATTRIBUTESCLASS   AGE</span>
+<span id="cb66-3">ollama                 Bound    pvc-73cd5afc-5a8c-4ffb-9b92-669ee5189870   30Gi       RWO            openebs-persistent-hostpath   &lt;unset&gt;                 6m18s</span>
+<span id="cb66-4">open-webui             Bound    pvc-4f5abcc0-cbe1-4809-a22c-49959d747900   2Gi        RWO            openebs-persistent-hostpath   &lt;unset&gt;                 6m19s</span>
+<span id="cb66-5">open-webui-pipelines   Bound    pvc-027c493b-aed8-4a42-a7bb-599b724835b3   2Gi        RWO            openebs-persistent-hostpath   &lt;unset&gt;                 6m19s</span></code></pre></div>
+<div class="sourceCode" id="cb67" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb67-1">[moonpie@cachyos-x8664 openwebui]$ kubectl get persistentvolumeclaims -n owui</span>
+<span id="cb67-2">NAME                   STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS                  VOLUMEATTRIBUTESCLASS   AGE</span>
+<span id="cb67-3">ollama                 Bound    pvc-3efedee6-11c1-4f19-961d-b5fcbee4879f   30Gi       RWO            openebs-persistent-hostpath   &lt;unset&gt;                 25s</span>
+<span id="cb67-4">open-webui             Bound    pvc-4c68d492-bf04-455c-bb51-652bb4268234   2Gi        RWO            openebs-persistent-hostpath   &lt;unset&gt;                 25s</span>
+<span id="cb67-5">open-webui-pipelines   Bound    pvc-0f6ce1b4-8928-449d-8a05-a2006eb533c9   2Gi        RWO            openebs-persistent-hostpath   &lt;unset&gt;                 25s</span></code></pre></div>
+<p>Next thing is to test that it is not unique to openwebui/ollama. It seems that this is related to openwebui being a deployment, but not having an easy way to pin the persistent volume for deployments is annoying.</p>
+<p>I tried with a persistentvolume at first, but apparently it wants a full persistentvolumeclaim instead.</p>
 <section id="models" class="level3">
 <h3 class="anchored" data-anchor-id="models">Models</h3>
 <p>I do need to select a small set of good models. I am designing for a multi user system, meaning if too many people have too different models, I will run out of ram.</p>
 <p>One thing that is cool, is that I am not limited to using models from <a href="https://ollama.com/search">ollama’s repo</a>, as ollama can <a href="https://huggingface.co/mradermacher/DeepHat-V1-7B-GGUF/tree/main?show_file_info=DeepHat-V1-7B.Q8_0.gguf&amp;local-app=ollama">download models from huggingface</a> and OCI repos.</p>
-<p>Although, one irritating I have noticed is that the model download doesn’t continue if I close the tab. I must leave the tab open for the model download to complete, despite the fact taht the download is handled by ollama and doesn’t depend on anything from my browser session. Thankfully, it seems to save partial progress and does restore when I start it up.</p>
+<p>Although, one irritating I have noticed is that the model download doesn’t continue if I close the tab. I must leave the tab open for the model download to complete, despite the fact that the download is handled by ollama and doesn’t depend on anything from my browser session. Thankfully, it seems to save partial progress and does restore when I start it up.</p>
+<p>I’m also interested in the new-ish <a href="https://ollama.com/library/embeddinggemma:300m">embeddinggemma:300m</a> model.</p>
 </section>
 </section>
 <section id="ingress-nginx" class="level2">
@@ -2988,13 +3181,13 @@ p": "2025-07-27T06:42:40.711920", "user": {"email": "test@gmail.com", "pk": 7, "
 NAMESPACE       NAME                                    TYPE           CLUSTER-IP      EXTERNAL-IP        PORT(S)                      AGE
 blog            blog-nginx                              LoadBalancer   10.43.227.101   130.166.79.34      80:31748/TCP,443:31264/TCP   65d</code></pre>
 <p>Much content ommited. But, it looks like my blog attempted to eat my main ingress ports. Okay, it looks like Bitnami’s nginx was creating a Loadbalancer service. I considered changing the ports it served on (there doesn’t appear to be a built in option to disable the service), but I wanted to learn how to patch helm charts so I did something else.</p>
-<div class="sourceCode" id="cb59" style="background: #f1f3f5;"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb59-1"><span class="fu" style="color: #4758AB;
+<div class="sourceCode" id="cb69" style="background: #f1f3f5;"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb69-1"><span class="fu" style="color: #4758AB;
 background-color: null;
 font-style: inherit;">spec</span><span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">:</span></span>
-<span id="cb59-2"><span class="at" style="color: #657422;
+<span id="cb69-2"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -3002,7 +3195,7 @@ font-style: inherit;">chart</span><span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">:</span></span>
-<span id="cb59-3"><span class="at" style="color: #657422;
+<span id="cb69-3"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -3010,7 +3203,7 @@ font-style: inherit;">spec</span><span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">:</span></span>
-<span id="cb59-4"><span class="at" style="color: #657422;
+<span id="cb69-4"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">      </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -3020,7 +3213,7 @@ font-weight: bold;
 font-style: inherit;">:</span><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;"> nginx</span></span>
-<span id="cb59-5"><span class="at" style="color: #657422;
+<span id="cb69-5"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">      </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -3030,7 +3223,7 @@ font-weight: bold;
 font-style: inherit;">:</span><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;"> ChartVersion</span></span>
-<span id="cb59-6"><span class="at" style="color: #657422;
+<span id="cb69-6"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">      </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -3038,7 +3231,7 @@ font-style: inherit;">sourceRef</span><span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">:</span></span>
-<span id="cb59-7"><span class="at" style="color: #657422;
+<span id="cb69-7"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">        </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -3048,7 +3241,7 @@ font-weight: bold;
 font-style: inherit;">:</span><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;"> HelmRepository</span></span>
-<span id="cb59-8"><span class="at" style="color: #657422;
+<span id="cb69-8"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">        </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -3058,7 +3251,7 @@ font-weight: bold;
 font-style: inherit;">:</span><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;"> nginx</span></span>
-<span id="cb59-9"><span class="at" style="color: #657422;
+<span id="cb69-9"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">      </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -3070,7 +3263,7 @@ background-color: null;
 font-style: inherit;"> </span><span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">"18.3.1"</span></span>
-<span id="cb59-10"><span class="at" style="color: #657422;
+<span id="cb69-10"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -3078,7 +3271,7 @@ font-style: inherit;">postRenderers</span><span class="kw" style="color: #003B4F
 background-color: null;
 font-weight: bold;
 font-style: inherit;">:</span></span>
-<span id="cb59-11"><span class="at" style="color: #657422;
+<span id="cb69-11"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">    </span><span class="kw" style="color: #003B4F;
 background-color: null;
@@ -3091,7 +3284,7 @@ font-style: inherit;">kustomize</span><span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">:</span></span>
-<span id="cb59-12"><span class="at" style="color: #657422;
+<span id="cb69-12"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">        </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -3099,7 +3292,7 @@ font-style: inherit;">patches</span><span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">:</span></span>
-<span id="cb59-13"><span class="at" style="color: #657422;
+<span id="cb69-13"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">          </span><span class="kw" style="color: #003B4F;
 background-color: null;
@@ -3112,7 +3305,7 @@ font-style: inherit;">target</span><span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">:</span></span>
-<span id="cb59-14"><span class="at" style="color: #657422;
+<span id="cb69-14"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">              </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -3122,7 +3315,7 @@ font-weight: bold;
 font-style: inherit;">:</span><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;"> Service</span></span>
-<span id="cb59-15"><span class="at" style="color: #657422;
+<span id="cb69-15"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">              </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -3132,7 +3325,7 @@ font-weight: bold;
 font-style: inherit;">:</span><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;"> blog-nginx </span></span>
-<span id="cb59-16"><span class="fu" style="color: #4758AB;
+<span id="cb69-16"><span class="fu" style="color: #4758AB;
 background-color: null;
 font-style: inherit;">            patch</span><span class="kw" style="color: #003B4F;
 background-color: null;
@@ -3140,22 +3333,22 @@ font-weight: bold;
 font-style: inherit;">: </span><span class="ch" style="color: #20794D;
 background-color: null;
 font-style: inherit;">|-</span></span>
-<span id="cb59-17">              $patch: delete</span>
-<span id="cb59-18">              apiversion: v1</span>
-<span id="cb59-19">              kind: Service</span>
-<span id="cb59-20">              metadata:</span>
-<span id="cb59-21">                name: not-used</span></code></pre></div>
+<span id="cb69-17">              $patch: delete</span>
+<span id="cb69-18">              apiversion: v1</span>
+<span id="cb69-19">              kind: Service</span>
+<span id="cb69-20">              metadata:</span>
+<span id="cb69-21">                name: not-used</span></code></pre></div>
 <p>And with this, there is no more loadbalancer service created.</p>
 <p>Oh, and it turns out that coder also creates a loadbalancer service, but thankfully there is a build in option, to change it to ClusterIP, since the ingress coder creates still wants to look at the service.</p>
 <p>And yeah. Now, wien I sign in to Authentik, the actual ip address of the users who log in shows up.</p>
 <p>Next up is to enable port 22 for the deployment. In addition to this, I also had to change the deployment strategy, otherwise the pods would not recreate.</p>
-<div class="sourceCode" id="cb60" style="background: #f1f3f5;"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb60-1"><span class="fu" style="color: #4758AB;
+<div class="sourceCode" id="cb70" style="background: #f1f3f5;"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb70-1"><span class="fu" style="color: #4758AB;
 background-color: null;
 font-style: inherit;">postRenderers</span><span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">:</span></span>
-<span id="cb60-2"><span class="at" style="color: #657422;
+<span id="cb70-2"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">    </span><span class="kw" style="color: #003B4F;
 background-color: null;
@@ -3168,7 +3361,7 @@ font-style: inherit;">kustomize</span><span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">:</span></span>
-<span id="cb60-3"><span class="at" style="color: #657422;
+<span id="cb70-3"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">        </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -3176,7 +3369,7 @@ font-style: inherit;">patches</span><span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">:</span></span>
-<span id="cb60-4"><span class="kw" style="color: #003B4F;
+<span id="cb70-4"><span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">          - </span><span class="fu" style="color: #4758AB;
@@ -3189,14 +3382,14 @@ background-color: null;
 font-style: inherit;"> </span><span class="ch" style="color: #20794D;
 background-color: null;
 font-style: inherit;">|</span></span>
-<span id="cb60-5">              - op:  add</span>
-<span id="cb60-6">                path: /spec/template/spec/containers/0/ports/-</span>
-<span id="cb60-7">                value:</span>
-<span id="cb60-8">                  containerPort: 22</span>
-<span id="cb60-9">                  hostPort: 22</span>
-<span id="cb60-10">                  name: ssh</span>
-<span id="cb60-11">                  protocol: TCP</span>
-<span id="cb60-12"><span class="at" style="color: #657422;
+<span id="cb70-5">              - op:  add</span>
+<span id="cb70-6">                path: /spec/template/spec/containers/0/ports/-</span>
+<span id="cb70-7">                value:</span>
+<span id="cb70-8">                  containerPort: 22</span>
+<span id="cb70-9">                  hostPort: 22</span>
+<span id="cb70-10">                  name: ssh</span>
+<span id="cb70-11">                  protocol: TCP</span>
+<span id="cb70-12"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">            </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -3204,7 +3397,7 @@ font-style: inherit;">target</span><span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">:</span></span>
-<span id="cb60-13"><span class="at" style="color: #657422;
+<span id="cb70-13"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">              </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -3214,7 +3407,7 @@ font-weight: bold;
 font-style: inherit;">:</span><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;"> Deployment</span></span>
-<span id="cb60-14"><span class="at" style="color: #657422;
+<span id="cb70-14"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">              </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -3224,7 +3417,7 @@ font-weight: bold;
 font-style: inherit;">:</span><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;"> ingress-nginx-controller</span></span>
-<span id="cb60-15"><span class="at" style="color: #657422;
+<span id="cb70-15"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -3234,7 +3427,7 @@ font-weight: bold;
 font-style: inherit;">:</span><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;"> 1m0s</span></span>
-<span id="cb60-16"><span class="at" style="color: #657422;
+<span id="cb70-16"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -3242,7 +3435,7 @@ font-style: inherit;">values</span><span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">:</span></span>
-<span id="cb60-17"><span class="at" style="color: #657422;
+<span id="cb70-17"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -3250,7 +3443,7 @@ font-style: inherit;">controller</span><span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">:</span></span>
-<span id="cb60-18"><span class="at" style="color: #657422;
+<span id="cb70-18"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">      </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -3258,7 +3451,7 @@ font-style: inherit;">updateStategy</span><span class="kw" style="color: #003B4F
 background-color: null;
 font-weight: bold;
 font-style: inherit;">:</span></span>
-<span id="cb60-19"><span class="at" style="color: #657422;
+<span id="cb70-19"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">        </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -3268,7 +3461,7 @@ font-weight: bold;
 font-style: inherit;">:</span><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;"> rollingUpdate</span></span>
-<span id="cb60-20"><span class="at" style="color: #657422;
+<span id="cb70-20"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">        </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -3276,7 +3469,7 @@ font-style: inherit;">rollingUpdate</span><span class="kw" style="color: #003B4F
 background-color: null;
 font-weight: bold;
 font-style: inherit;">:</span></span>
-<span id="cb60-21"><span class="at" style="color: #657422;
+<span id="cb70-21"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">          </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -3286,7 +3479,7 @@ font-weight: bold;
 font-style: inherit;">:</span><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;"> 100%</span></span>
-<span id="cb60-22"><span class="at" style="color: #657422;
+<span id="cb70-22"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">          </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -3304,7 +3497,7 @@ font-style: inherit;"> 100%</span></span></code></pre></div>
   ----     ------            ----               ----               -------
   Warning  FailedScheduling  93s (x3 over 11m)  default-scheduler  0/1 nodes are available: 1 node(s) didn't have free ports for the requested pod ports. preemption: 0/1 nodes are available: 1 No preemption victims found for incoming pod.</code></pre>
 <p>I don’t think the ssh server is already in use, because I can run services using port 22. But Kubernetes refuses to schedule pods that use that port. It could be that it’s actually the other ports that are having issues:</p>
-<div class="sourceCode" id="cb62" style="background: #f1f3f5;"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb62-1"><span class="at" style="color: #657422;
+<div class="sourceCode" id="cb72" style="background: #f1f3f5;"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb72-1"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;"> </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -3312,7 +3505,7 @@ font-style: inherit;">strategy</span><span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">:</span></span>
-<span id="cb62-2"><span class="at" style="color: #657422;
+<span id="cb72-2"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -3320,7 +3513,7 @@ font-style: inherit;">rollingUpdate</span><span class="kw" style="color: #003B4F
 background-color: null;
 font-weight: bold;
 font-style: inherit;">:</span></span>
-<span id="cb62-3"><span class="at" style="color: #657422;
+<span id="cb72-3"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -3330,7 +3523,7 @@ font-weight: bold;
 font-style: inherit;">:</span><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;"> 100%</span></span>
-<span id="cb62-4"><span class="at" style="color: #657422;
+<span id="cb72-4"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -3340,7 +3533,7 @@ font-weight: bold;
 font-style: inherit;">:</span><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;"> 100%</span></span>
-<span id="cb62-5"><span class="at" style="color: #657422;
+<span id="cb72-5"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -3352,13 +3545,13 @@ background-color: null;
 font-style: inherit;"> RollingUpdate</span></span></code></pre></div>
 <p>With this “strategy”, the pods will be scaled down, but only to a certain amount… but I only have ONE pod. So it doesn’t get scaled down at all, and the new pod is never able to scale up to replace it. So these settings must be changed.</p>
 <p>But once this is done, I can patch the deployment to have extra ports going through:</p>
-<div class="sourceCode" id="cb63" style="background: #f1f3f5;"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb63-1"><span class="fu" style="color: #4758AB;
+<div class="sourceCode" id="cb73" style="background: #f1f3f5;"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb73-1"><span class="fu" style="color: #4758AB;
 background-color: null;
 font-style: inherit;">postRenderers</span><span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">:</span></span>
-<span id="cb63-2"><span class="at" style="color: #657422;
+<span id="cb73-2"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">  </span><span class="kw" style="color: #003B4F;
 background-color: null;
@@ -3371,7 +3564,7 @@ font-style: inherit;">kustomize</span><span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">:</span></span>
-<span id="cb63-3"><span class="at" style="color: #657422;
+<span id="cb73-3"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">      </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -3379,7 +3572,7 @@ font-style: inherit;">patches</span><span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">:</span></span>
-<span id="cb63-4"><span class="kw" style="color: #003B4F;
+<span id="cb73-4"><span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">        - </span><span class="fu" style="color: #4758AB;
@@ -3392,14 +3585,14 @@ background-color: null;
 font-style: inherit;"> </span><span class="ch" style="color: #20794D;
 background-color: null;
 font-style: inherit;">|</span></span>
-<span id="cb63-5">            - op:  add</span>
-<span id="cb63-6">              path: /spec/template/spec/containers/0/ports/-</span>
-<span id="cb63-7">              value:</span>
-<span id="cb63-8">                containerPort: 22</span>
-<span id="cb63-9">                hostPort: 22</span>
-<span id="cb63-10">                name: ssh</span>
-<span id="cb63-11">                protocol: TCP</span>
-<span id="cb63-12"><span class="at" style="color: #657422;
+<span id="cb73-5">            - op:  add</span>
+<span id="cb73-6">              path: /spec/template/spec/containers/0/ports/-</span>
+<span id="cb73-7">              value:</span>
+<span id="cb73-8">                containerPort: 22</span>
+<span id="cb73-9">                hostPort: 22</span>
+<span id="cb73-10">                name: ssh</span>
+<span id="cb73-11">                protocol: TCP</span>
+<span id="cb73-12"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">          </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -3407,7 +3600,7 @@ font-style: inherit;">target</span><span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">:</span></span>
-<span id="cb63-13"><span class="at" style="color: #657422;
+<span id="cb73-13"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">            </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -3417,7 +3610,7 @@ font-weight: bold;
 font-style: inherit;">:</span><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;"> Deployment</span></span>
-<span id="cb63-14"><span class="at" style="color: #657422;
+<span id="cb73-14"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">            </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -3428,11 +3621,8 @@ font-style: inherit;">:</span><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;"> ingress-nginx-controller</span></span></code></pre></div>
 <p>And then I can forward the tcp service via the ingress nginx controller, by following the <a href="https://kubernetes.github.io/ingress-nginx/user-guide/exposing-tcp-udp-services/">ingress-nginx docs on this</a>.</p>
+<p><a href="https://www.reddit.com/r/kubernetes/comments/1n5bypk/tcp_external_load_balancer_nodeport_and_istio/">Related reddit post</a>. It seems like even Istio has stimilar issues.</p>
 <p>Another issue I encountered was “413 Request Entity Too Large” when trying to upload ISO’s to nginx. By default, nginx has a setting, <a href="https://nginx.org/en/docs/http/ngx_http_core_module.html#client_max_body_size">client.max_body_size</a> that limits the size of client requests, or in this case, the size of ISO’s that I can upload to Incus. To fix, you can add <a href="https://kubernetes.github.io/ingress-nginx/user-guide/nginx-configuration/annotations/#custom-max-body-size">annotation that changes this setting</a>.</p>
-</section>
-<section id="harvester" class="level2">
-<h2 class="anchored" data-anchor-id="harvester">Harvester</h2>
-<p>Yeah. Incus is frustrating — but at the same time, fun in many ways</p>
 </section>
 <section id="cert-manager" class="level2">
 <h2 class="anchored" data-anchor-id="cert-manager">Cert-Manager</h2>
@@ -3450,18 +3640,18 @@ font-style: inherit;"> ingress-nginx-controller</span></span></code></pre></div>
 <div class="code-with-filename-file">
 <pre><strong>/etc/apt/sources.list</strong></pre>
 </div>
-<div class="sourceCode" id="cb64" data-filename="/etc/apt/sources.list" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb64-1">#deb cdrom:[Debian GNU/Linux 12.10.0 _Bookworm_ - Official amd64 NETINST with firmware 20250315-10:09]/ bookworm contrib main non-free-firmware</span>
-<span id="cb64-2"></span>
-<span id="cb64-3">deb http://deb.debian.org/debian/ bookworm main contrib non-free non-free-firmware</span>
-<span id="cb64-4">deb-src http://deb.debian.org/debian/ bookworm main contrib non-free non-free-firmware</span>
-<span id="cb64-5"></span>
-<span id="cb64-6">deb http://security.debian.org/debian-security bookworm-security main contrib non-free non-free-firmware</span>
-<span id="cb64-7">deb-src http://security.debian.org/debian-security bookworm-security main contrib non-free non-free-firmware</span>
-<span id="cb64-8"></span>
-<span id="cb64-9"># bookworm-updates, to get updates before a point release is made;</span>
-<span id="cb64-10"># see https://www.debian.org/doc/manuals/debian-reference/ch02.en.html#_updates_and_backports</span>
-<span id="cb64-11">deb http://deb.debian.org/debian/ bookworm-updates main contrib non-free non-free-firmware</span>
-<span id="cb64-12">deb-src http://deb.debian.org/debian/ bookworm-updates main contrib non-free non-free-firmware</span></code></pre></div>
+<div class="sourceCode" id="cb74" data-filename="/etc/apt/sources.list" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb74-1">#deb cdrom:[Debian GNU/Linux 12.10.0 _Bookworm_ - Official amd64 NETINST with firmware 20250315-10:09]/ bookworm contrib main non-free-firmware</span>
+<span id="cb74-2"></span>
+<span id="cb74-3">deb http://deb.debian.org/debian/ bookworm main contrib non-free non-free-firmware</span>
+<span id="cb74-4">deb-src http://deb.debian.org/debian/ bookworm main contrib non-free non-free-firmware</span>
+<span id="cb74-5"></span>
+<span id="cb74-6">deb http://security.debian.org/debian-security bookworm-security main contrib non-free non-free-firmware</span>
+<span id="cb74-7">deb-src http://security.debian.org/debian-security bookworm-security main contrib non-free non-free-firmware</span>
+<span id="cb74-8"></span>
+<span id="cb74-9"># bookworm-updates, to get updates before a point release is made;</span>
+<span id="cb74-10"># see https://www.debian.org/doc/manuals/debian-reference/ch02.en.html#_updates_and_backports</span>
+<span id="cb74-11">deb http://deb.debian.org/debian/ bookworm-updates main contrib non-free non-free-firmware</span>
+<span id="cb74-12">deb-src http://deb.debian.org/debian/ bookworm-updates main contrib non-free non-free-firmware</span></code></pre></div>
 </div>
 <p><code>apt install nvidia-driver firmware-misc-nonfree</code></p>
 <p>Anyway, next is to install the Nvidia container toolkit, using the nvidia repo, and <a href="https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html">instructions from here</a>.</p>
@@ -3470,8 +3660,8 @@ font-style: inherit;"> ingress-nginx-controller</span></span></code></pre></div>
 <div class="code-with-filename-file">
 <pre><strong>/etc/apt/sources.list.d/nvidia-container-toolkit.list</strong></pre>
 </div>
-<div class="sourceCode" id="cb65" data-filename="/etc/apt/sources.list.d/nvidia-container-toolkit.list" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb65-1">deb [signed-by=/usr/share/keyrings/nvidia-container-toolkit-keyring.gpg] https://nvidia.github.io/libnvidia-container/stable/deb/$(ARCH) /</span>
-<span id="cb65-2">#deb [signed-by=/usr/share/keyrings/nvidia-container-toolkit-keyring.gpg] https://nvidia.github.io/libnvidia-container/experimental/deb/$(ARCH) /</span></code></pre></div>
+<div class="sourceCode" id="cb75" data-filename="/etc/apt/sources.list.d/nvidia-container-toolkit.list" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb75-1">deb [signed-by=/usr/share/keyrings/nvidia-container-toolkit-keyring.gpg] https://nvidia.github.io/libnvidia-container/stable/deb/$(ARCH) /</span>
+<span id="cb75-2">#deb [signed-by=/usr/share/keyrings/nvidia-container-toolkit-keyring.gpg] https://nvidia.github.io/libnvidia-container/experimental/deb/$(ARCH) /</span></code></pre></div>
 </div>
 <p><code>apt update</code></p>
 <p><code>apt install nvidia-container-toolkit</code></p>
@@ -3489,6 +3679,7 @@ May 28 20:45:34 thoth rke2[6657]: time="2025-05-28T20:45:34-07:00" level=info ms
 <p><code>systemctl stop rke2-server</code></p>
 <p><code>rke2 server --cluster-reset</code></p>
 <p><code>systemctl restart rke2-server</code></p>
+<p>I also had to replicate this process again when I moved to a different dorm from fall for my summer dorm.</p>
 </section>
 <section id="useful-stuff-for-the-future" class="level2">
 <h2 class="anchored" data-anchor-id="useful-stuff-for-the-future">Useful Stuff For the Future</h2>
@@ -3514,6 +3705,8 @@ May 28 20:45:34 thoth rke2[6657]: time="2025-05-28T20:45:34-07:00" level=info ms
 <li>Prometheus/Grafana</li>
 </ul>
 <p>Add ssh keys in authentik: <a href="https://github.com/goauthentik/authentik/issues/2145" class="uri">https://github.com/goauthentik/authentik/issues/2145</a></p>
+<p><a href="https://kamaji.clastix.io/getting-started/kamaji-kind/" class="uri">https://kamaji.clastix.io/getting-started/kamaji-kind/</a></p>
+<p>Kamaji is a virtual cluster setup, but unlike the similar vcluster, it seems to allow for different CNI’s to be used in tenant clusters. I think this could be usefult o deploy openstack, openshift, or harvester, inside my actual cluster, in such a way that it doesn’t break my existing configuration.</p>
 </section>
 <section id="notes-for-iteration-two" class="level2">
 <h2 class="anchored" data-anchor-id="notes-for-iteration-two">Notes for iteration two</h2>
@@ -3522,6 +3715,11 @@ May 28 20:45:34 thoth rke2[6657]: time="2025-05-28T20:45:34-07:00" level=info ms
 <ul>
 <li>Have my Identity Management/Provider be hosted on idp.domainname, instead of sso.moonpiedumpl.ing</li>
 <li>Have secrets be set up in such a way that people can copy the configs with minimal effort.</li>
+<li>Use more than one kustomization instead of one big one
+<ul>
+<li>I edited the file that says “do not edit”</li>
+<li>Kustomizations would let me do variable substitutions from secrets, allowing me to have things like the database password be private, but the url be public. Currently, I hide the entire database url (it includes the password).</li>
+</ul></li>
 </ul>
 <p>One thing I am considering is using <a href="https://zitadel.com/">Zitadel</a> instead of authentik, because Zitadel supports <a href="https://zitadel.com/docs/apis/actions/introduction">actions</a> which are arbitrary scripts and probably cleaner to do than hacking an authentik policy to do api calls and requests.</p>
 <p>But, Zitadel doesn’t seem to supply something akin to authentik blueprints. Also, it seems to be more designed for developers</p>
@@ -3558,6 +3756,7 @@ May 28 20:45:34 thoth rke2[6657]: time="2025-05-28T20:45:34-07:00" level=info ms
 <section id="incident-outage" class="level1">
 <h1>Incident: Outage</h1>
 <p>I was informed by a user of my services, that Incus has been taken slow to load, and generally broken. It was when I attempted to ssh into the server, and my connection was booted, that I became concerned.</p>
+<p>My first theory was that it was a DDOS attack of some kind.</p>
 <pre><code>                                              19.1Mb                                         38.1Mb                                         57.2Mb                                         76.3Mb                                   95.4Mb
 └─────────────────────────────────────────────┴──────────────────────────────────────────────┴──────────────────────────────────────────────┴──────────────────────────────────────────────┴──────────────────────────────────────────────
 130.166.79.34                                                                                           =&gt; images.linuxcontainers.org                                                                                 0b    534Kb   245Kb
@@ -3657,8 +3856,125 @@ May 28 20:45:34 thoth rke2[6657]: time="2025-05-28T20:45:34-07:00" level=info ms
 <li>Something like <a href="https://github.com/fosrl/pangolin">pangolin</a></li>
 </ul></li>
 </ul>
+<p>Okay, I will say that I have been forced to change my ip address, because I moved from one dorm to another. So now, I am debating if I should change my domain or not. I think I will change it and keep the new one secret, using variables like</p>
+<p>One thing I think would be cool would are <a href="https://letsencrypt.org/2025/01/16/6-day-and-ip-certs">letsencrypt’s ip address based certificates</a>, but I think Coder needs subdomains in order to work, and I can’t have a subdomain on an ip address. But with something like this, I could just move my ip address and keep going.</p>
+<p>I could also consider just… not changing my domain. This service needs to be up by tomorrow, which is not a lot of time. But if I do so, then I risk exposing my new IP address and domain.</p>
+<p>In order to test this, I connected my laptop (so I got a different IP address) and pointed my domain to my laptop. Although I see a lot of port scans, I don’t see any major usage of traffic. I suspect that attempts to pop open forgejo, in combination with Incus doing something like Image pulling, ate up all my traffic. I think I’m just going to put this online as is, and if I see too much traffic, I can put the entirity of forgejo behind a login wall.</p>
+<p>However, after putting my server back up, I see Incus eating up around 80-90 mbit/s of bandwidth. The connection is to <code>images.linuxcontainers.org</code>, which is where the images are stored. Apparently, Incus auto updating cached images was eating up all my network. Thankfully, I can disable the feature.</p>
+<p>So it’s not <em>quite</em> a DDOS. But I was able to access the server while forgejo was offline, even with that high bandwidth usage, so I think it was a double whammy, and a combination of the two resulted in a much worse problem.</p>
+<p>I saw almost no traffic, but when I put forgejo online again, I saw a lot more traffic and port scanners. Not DDOS, but I guess it was enough to fill up my network when combined with Incus. The way bonding works, is that the it doesn’t split a single connection, so individual connections are limited. Hence why it’s a “Distributed” Denial of Service, instead of a just a normal machine.</p>
+<section id="new-dorm" class="level2">
+<h2 class="anchored" data-anchor-id="new-dorm">New Dorm</h2>
+<p>Except, I’m not quite sure there is no issue. Despite seeing no network traffic from Incus or scanners on forgejo, the server still suffered from intermittment connections. But, apparently the new building I am, has bad wiring and issues, according to someone else who was previously here. In addition to that, my dorm has the wifi router. My guess is what is happening is that despite having 100 mbit/s connection limits on all cables, the switch behind everything (or something further up the chain), cannot actualloy handle all that traffic. I’m reminded of a <a href="https://home.robusta.dev/blog/stop-using-cpu-limits">blog post I recently read about cpu limits on kubernetes</a>, where they note that setting a CPU limit does not actually guarantee that pods will get access to that level of CPU. Instead, requests are needed, which actually does do the work to figure out a setup where all pods get the cpu they request.</p>
+<p>And it’s really bad.</p>
+<p>I switched to <a href="https://github.com/mobile-shell/mosh">mosh</a>, and despite no traffic running through my server except ssh, I see this:</p>
+<p>`mosh: Last contact 1:00 ago. [To quit: Ctrl-^ .]</p>
+<pre><code>
+Eventually it reconnects. But this is really annoying. And for users, it must be extra annoying. But first, I need to ensure that both my ethernet interfaces in the bond are actually being used.
+
+```{.default}
+moonpie@thoth:~$ sudo cat /proc/net/bonding/bond0
+Ethernet Channel Bonding Driver: v6.1.0-38-amd64
+
+Bonding Mode: adaptive load balancing
+Primary Slave: None
+Currently Active Slave: enp9s0
+MII Status: up
+MII Polling Interval (ms): 100
+Up Delay (ms): 0
+Down Delay (ms): 0
+Peer Notification Delay (ms): 0
+
+Slave Interface: enp0s25
+MII Status: up
+Speed: 100 Mbps
+Duplex: full
+Link Failure Count: 1
+Permanent HW addr: 48:4d:7e:ec:54:2f
+Slave queue ID: 0
+
+Slave Interface: enp9s0
+MII Status: up
+Speed: 100 Mbps
+Duplex: full
+Link Failure Count: 0
+Permanent HW addr: 48:4d:7e:ec:54:31
+Slave queue ID: 0</code></pre>
+<p>The <code>Link Failure Count: 1</code> is probably due to me unplugging it to plug my laptop in, but it did come back up again, which is a good sign.</p>
+<div class="sourceCode" id="cb79" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb79-1">root@thoth:~# ifstat -i enp9s0,enp0s25,eth0,bond0,internal0,public0</span>
+<span id="cb79-2">      enp9s0             enp0s25               eth0               bond0             internal0            public0</span>
+<span id="cb79-3"> KB/s in  KB/s out   KB/s in  KB/s out   KB/s in  KB/s out   KB/s in  KB/s out   KB/s in  KB/s out   KB/s in  KB/s out</span>
+<span id="cb79-4">    1.87      2.46      0.00      0.00      1.22      2.95      1.87      2.46      0.00      0.00      1.11      0.00</span>
+<span id="cb79-5">    1.16      1.62      0.00      0.00      0.76      2.33      1.16      1.62      0.00      0.00      0.67      0.00</span>
+<span id="cb79-6">    2.11      1.63      0.00      0.00      1.23      1.92      2.11      1.63      0.00      0.00      1.09      0.00</span>
+<span id="cb79-7">    1.81      1.65      0.00      0.00      1.31      2.33      1.81      1.65      0.00      0.00      1.21      0.00</span>
+<span id="cb79-8">    2.40      1.67      0.00      0.00      1.99      2.00      2.40      1.67      0.06      1.40      0.51      0.00</span>
+<span id="cb79-9">    1.16      1.71      0.00      0.00      0.82      2.00      1.16      1.71      0.00      0.00      0.58      0.00</span>
+<span id="cb79-10">    1.16      1.67      0.00      0.00      0.73      3.03      1.16      1.67      0.00      0.00      0.64      0.00</span>
+<span id="cb79-11">    1.00      1.66      0.00      0.00      0.73      1.84      1.00      1.66      0.05      0.00      0.63      0.00</span>
+<span id="cb79-12">    2.60      2.54      0.00      0.00      2.11      2.62      2.60      2.54      0.07      0.00      0.69      0.00</span></code></pre></div>
+<p>So it looks like despite having a bond, only one of my interfaces is actually used. Both say up though, but this probably contributes to not getting enough network speeds.</p>
+<p>After a reboot, it works fine, however:</p>
+<div class="sourceCode" id="cb80" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb80-1">root@thoth:~# ifstat -i enp9s0,enp0s25,eth0,bond0,internal0,public0</span>
+<span id="cb80-2">      enp9s0             enp0s25               eth0               bond0             internal0            public0</span>
+<span id="cb80-3"> KB/s in  KB/s out   KB/s in  KB/s out   KB/s in  KB/s out   KB/s in  KB/s out   KB/s in  KB/s out   KB/s in  KB/s out</span>
+<span id="cb80-4">11989.63     52.37      1.37    124.69  11654.08    171.83  11989.74    177.06     39.22   1938.29      0.99      0.00</span>
+<span id="cb80-5">11946.43     49.93      1.87    138.25  11614.61    182.29  11948.30    188.25     38.44   1828.08      1.42      0.00</span>
+<span id="cb80-6">11959.60     45.93      1.56    145.35  11625.44    185.09  11959.90    191.29     35.43   1556.25      1.03      0.00</span>
+<span id="cb80-7">11922.62     42.51      1.62    151.77  11592.51    187.73  11928.02    194.21     32.27   1440.24      1.22      0.00</span>
+<span id="cb80-8">11848.59     35.80      1.25    160.06  11509.07    188.90  11847.45    195.96     25.35   1181.13      0.90      0.00</span>
+<span id="cb80-9">11854.63     40.43      1.62    145.73  11528.21    179.70  11858.91    186.06     30.50   1410.89      1.09      0.00</span>
+<span id="cb80-10">11926.80     45.38      1.12    145.14  11593.25    184.30  11925.13    190.51     34.03   1589.40      0.89      0.00</span></code></pre></div>
+<p>But, when I log in a few hours later:</p>
+<div class="sourceCode" id="cb81" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb81-1">root@thoth:~# ifstat -i enp9s0,enp0s25</span>
+<span id="cb81-2">      enp9s0             enp0s25</span>
+<span id="cb81-3"> KB/s in  KB/s out   KB/s in  KB/s out</span>
+<span id="cb81-4">    3.07      5.95      0.00      0.00</span>
+<span id="cb81-5">    2.01      2.97      0.00      0.00</span>
+<span id="cb81-6">   62.43      6.41      0.00      0.00</span>
+<span id="cb81-7">    1.82      3.16      0.00      0.00</span>
+<span id="cb81-8">    1.81      3.02      0.00      0.00</span>
+<span id="cb81-9">   21.44     11.37      0.00      0.00</span>
+<span id="cb81-10">   16.05      3.42      0.00      0.00</span>
+<span id="cb81-11">    1.11      0.06      0.00      0.00</span>
+<span id="cb81-12">    1.82      0.12      0.00      0.00</span>
+<span id="cb81-13">    1.10      0.06      0.00      0.00</span>
+<span id="cb81-14">    0.99      0.06      0.00      0.00</span>
+<span id="cb81-15">    0.94      0.06      0.00      0.00</span>
+<span id="cb81-16">   16.15      3.75      0.00      0.00</span>
+<span id="cb81-17">   27.99      6.11      0.00      0.00</span>
+<span id="cb81-18">10650.43    210.02      0.00      0.00</span>
+<span id="cb81-19">11952.08    213.10      0.00      0.00</span>
+<span id="cb81-20">11996.47    213.79      0.00      0.00</span>
+<span id="cb81-21">11987.28    208.43      0.00      0.00</span>
+<span id="cb81-22"> 4684.25     75.68      0.00      0.00</span>
+<span id="cb81-23">    1.45      0.06      0.00      0.00</span>
+<span id="cb81-24">    3.79      0.06      0.00      0.00</span>
+<span id="cb81-25">    1.25      0.87      0.00      0.00</span>
+<span id="cb81-26">    3.04      0.30      0.00      0.00</span>
+<span id="cb81-27">    2.33      0.06      0.00      0.00</span></code></pre></div>
+<p>I also see repeated disconnections again. But what causes these disconnections?</p>
+<p>Also, I suspect this issue may have happened previously, which is why I ran out of network when Incus was downloading images.</p>
+<div class="sourceCode" id="cb82" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb82-1">e1000e 0000:00:19.0 enp0s25: Detected Hardware Unit Hang:</span>
+<span id="cb82-2">  TDH                  &lt;e0&gt;</span>
+<span id="cb82-3">  TDT                  &lt;1e&gt;</span>
+<span id="cb82-4">  next_to_use          &lt;1e&gt;</span>
+<span id="cb82-5">  next_to_clean        &lt;df&gt;</span>
+<span id="cb82-6">buffer_info[next_to_clean]:</span>
+<span id="cb82-7">  time_stamp           &lt;1002e4bf0&gt;</span>
+<span id="cb82-8">  next_to_watch        &lt;e0&gt;</span>
+<span id="cb82-9">  jiffies              &lt;10049d328&gt;</span>
+<span id="cb82-10">  next_to_watch.status &lt;0&gt;</span>
+<span id="cb82-11">MAC Status             &lt;80043&gt;</span>
+<span id="cb82-12">PHY Status             &lt;796d&gt;</span>
+<span id="cb82-13">PHY 1000BASE-T Status  &lt;0&gt;</span>
+<span id="cb82-14">PHY Extended Status    &lt;3000&gt;</span>
+<span id="cb82-15">PCI Status             &lt;10&gt;</span></code></pre></div>
+<p>I see this error in the cockpit logs, probably from dmesg. However, although rebooting fixes the problem temporarily, I lose these logs. I think</p>
+<p>Also, apparently the sober people dorms get 1g links up/down. I will do those next summer/year.</p>
 
 
+</section>
 </section>
 
  ]]></description>
@@ -6311,9 +6627,11 @@ Expand/Collapse Testing
 
 
 
-<p>My browser bookmarks bar is massive. I basically bookmark anything interesting I come across, and now I have a lot of resources accumulated, and I think it’s worth it to write them down, although formatting is still a work in progress.</p>
+<p>I’m in college now, and one of my frustrations is the usage of textbooks I cannot reshare or reference once I am done with the class. In my opinion, one of the goals of college is not just to learn things, or learn how to learn, but also to learn how to teach things. It’s because of this, that I usually try to find alternate sources for the information taught in the classes, that I can reference</p>
 <p>I have a heavy preference for Free and Open Source resources, because I believe that things like wikibooks will be much more resilient in the long run, and stay up. I’ve seen similar lists of learning, and it is frustrating when I’m no longer able to buy or view one of the textbooks on the list.</p>
 <p>I also like resources maintained by some kind of organization, either the official organzition behind the software (think Microsoft and powershell), or a nonprofit, (Overthewire), because again, I think they will be more resilient in the long run.</p>
+<p>I try to avoid video or audio resources, because of unclear copyright, and because they are difficult to reference on the go.</p>
+<p>The idea behind this list is that I should be able to pull it up on my phone, and show specific things to people.f</p>
 <section id="linux" class="level1">
 <h1>Linux</h1>
 <p><a href="https://linuxupskillchallenge.org/">Linux Up Skill Challenge</a></p>
@@ -6444,6 +6762,10 @@ Expand/Collapse Testing
 </ul>
 <p><a href="https://jamesg.blog/book.pdf">Software Technical Writings — A guidebook (pdf)</a> — nitty gritty technical writing details.</p>
 </section>
+<section id="networking" class="level1">
+<h1>Networking</h1>
+<p><a href="https://intronetworks.cs.luc.edu/" class="uri">https://intronetworks.cs.luc.edu/</a></p>
+</section>
 <section id="teaching" class="level1">
 <h1>Teaching</h1>
 <p><a href="https://pages.gseis.ucla.edu/faculty/agre/how-to-help.html">How to help someone use a computer (1996)</a></p>
@@ -6560,6 +6882,7 @@ Expand/Collapse
 Expand/Collapse
 </summary>
 <p>https://gotchas.salusa.dev/GettingStarted.html https://soatok.blog/2020/06/10/how-to-learn-cryptography-as-a-programmer/ https://cryptopals.com/ https://cryptohack.org/ https://www.youtube.com/watch?v=iqSMRO78UD0&amp;list=PLUl4u3cNGP61EZllk7zwgvPbI4kbnKhWz</p>
+<p><a href="https://swenson.io/2022_01_25_modern_cryptanalysis_v11_available_for_free.html" class="uri">https://swenson.io/2022_01_25_modern_cryptanalysis_v11_available_for_free.html</a></p>
 </details>
 </section>
 <section id="cert-preparation" class="level1">
@@ -11886,6 +12209,14 @@ GetWin: Get the amount of damage a winning attacker would do</code></pre>
 </ul>
 <p>Somewhat related: <a href="https://github.com/udevbe/greenfield" class="uri">https://github.com/udevbe/greenfield</a> — it’s an html5 wayland compositor.</p>
 <p>Also related: <a href="https://github.com/giongto35/cloud-morph">cloud-morph</a> and <a href="https://github.com/giongto35/cloud-game">cloud-game</a></p>
+<section id="browser-based-ide-javascriptwasm" class="level2">
+<h2 class="anchored" data-anchor-id="browser-based-ide-javascriptwasm">Browser Based IDE (javascript/wasm)</h2>
+<ul>
+<li><a href="https://github.com/styfle/awesome-online-ide" class="uri">https://github.com/styfle/awesome-online-ide</a></li>
+</ul>
+<p><a href="https://github.com/live-codes/livecodes">Livecodes</a> from this list is pretty cool.</p>
+<p>There is also this one project: <a href="https://github.com/lucademenego99/icp-bundle">Interactive Code Playgrounds</a>. This one is the best thing I have found so far for generally embedding code snippets into blogposts or slides I might make. <a href="https://lucademenego99.github.io/icp-slides/editors.html#/">Example slides here</a>.</p>
+</section>
 </section>
 <section id="intrustion-detection-system-wazuh" class="level1">
 <h1>Intrustion Detection System (Wazuh)</h1>
@@ -11953,9 +12284,49 @@ GetWin: Get the amount of damage a winning attacker would do</code></pre>
 <ul>
 <li><a href="https://github.com/freelensapp" class="uri">https://github.com/freelensapp</a></li>
 <li><a href="https://github.com/wiredoor/wiredoor" class="uri">https://github.com/wiredoor/wiredoor</a></li>
-<li><a href="https://github.com/werf/nelm" class="uri">https://github.com/werf/nelm</a> — I want a helm alternative, helm has certain issues</li>
+<li><a href="https://github.com/werf/nelm" class="uri">https://github.com/werf/nelm</a> — I want a helm alternative, helm has certain issues
+<ul>
+<li><a href="https://www.reddit.com/r/kubernetes/comments/1jqd4pb/werfnelm_nelm_is_a_helm_3_alternative/">Reddit post</a></li>
+</ul></li>
 <li><a href="https://yokecd.github.io/docs/" class="uri">https://yokecd.github.io/docs/</a></li>
 </ul>
+</section>
+<section id="nix" class="level1">
+<h1>Nix</h1>
+<p>Sandboxing solutions:</p>
+<ul>
+<li><a href="https://github.com/Naxdy/nix-bwrapper" class="uri">https://github.com/Naxdy/nix-bwrapper</a></li>
+<li><a href="https://github.com/nixpak/nixpak" class="uri">https://github.com/nixpak/nixpak</a></li>
+</ul>
+<p>These are similar solutions, although they have slightly different goals.</p>
+</section>
+<section id="openbsd" class="level1">
+<h1>OpenBSD</h1>
+<p><a href="https://learnbchs.org/" class="uri">https://learnbchs.org/</a></p>
+<p>Unique web development framework using C and openbsd.</p>
+</section>
+<section id="cyber-ranges" class="level1">
+<h1>Cyber Ranges</h1>
+<p>A cyber range is a set of virtual machines for you to hack into and around.</p>
+<p><a href="https://github.com/Orange-Cyberdefense/GOAD" class="uri">https://github.com/Orange-Cyberdefense/GOAD</a></p>
+<p><a href="https://orange-cyberdefense.github.io/GOAD/" class="uri">https://orange-cyberdefense.github.io/GOAD/</a></p>
+<p><a href="https://mayfly277.github.io/posts/GOADv2/#installation" class="uri">https://mayfly277.github.io/posts/GOADv2/#installation</a></p>
+<p><a href="https://docs.ludus.cloud/" class="uri">https://docs.ludus.cloud/</a></p>
+<p><a href="https://docs.platform.cyberrange.cz/" class="uri">https://docs.platform.cyberrange.cz/</a></p>
+<p><a href="https://github.com/stratosphereips/stratocyberlab" class="uri">https://github.com/stratosphereips/stratocyberlab</a></p>
+<p><a href="https://github.com/GSI-Fing-Udelar/tectonic" class="uri">https://github.com/GSI-Fing-Udelar/tectonic</a></p>
+<p>Just a single virtual machine:</p>
+<p><a href="https://www.vulnhub.com/" class="uri">https://www.vulnhub.com/</a></p>
+<p><a href="https://github.com/cliffe/SecGen">Secgen</a> — randomly generate vulnerable VM’s.</p>
+<p>Related: Scoring engine/inject software:</p>
+<p><a href="https://github.com/dbaseqp/Quotient" class="uri">https://github.com/dbaseqp/Quotient</a></p>
+<p><a href="https://docs.openbas.io/latest/deployment/ecosystem/executors/" class="uri">https://docs.openbas.io/latest/deployment/ecosystem/executors/</a></p>
+</section>
+<section id="hardware" class="level1">
+<h1>Hardware</h1>
+<p><a href="https://www.raptorcs.com/">Raptor Computing Systems</a>.</p>
+<p><a href="https://us.starlabs.systems/?shpxid=e8451cdf-7b0a-4505-967f-f75f00144a4a">Starlabs</a> — Arm laptops</p>
+<p>Thinkpad X13s</p>
 </section>
 <section id="funny" class="level1">
 <h1>Funny</h1>
@@ -14470,80 +14841,6 @@ font-style: inherit;">}</span>:</span></code></pre></div>
   <category>playground</category>
   <guid>./playground/flake-shell/</guid>
   <pubDate>Fri, 21 Jun 2024 07:00:00 GMT</pubDate>
-</item>
-<item>
-  <title>Nice Challenge 5</title>
-  <dc:creator>Jeffrey Fonseca</dc:creator>
-  <link>./writeups/nice-challenge-5/</link>
-  <description><![CDATA[ 
-
-
-
-
-
-<p>This is for the <a href="https://nice-challenge.com/">NICE</a> challenge, and this would be my fifth one (not counting repeats).</p>
-<p>As usual, it started out with a simulated chatroom:</p>
-<p><img src="./writeups/nice-challenge-5/images/chatroom.png" class="img-fluid"></p>
-<p>And, there were also some empty checks.</p>
-<p><img src="./writeups/nice-challenge-5/images/emptychecks.png" class="img-fluid"></p>
-<p>Based on this, it seems like I will be working on the “Production Web Server”, primarily.</p>
-<section id="prod-web" class="level1">
-<h1>Prod-Web</h1>
-<section id="users" class="level2">
-<h2 class="anchored" data-anchor-id="users">Users</h2>
-<p>First, I created user accounts for the relevant users.</p>
-<div class="sourceCode" id="cb1" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb1-1">useradd gthatcher</span>
-<span id="cb1-2"></span>
-<span id="cb1-3">useradd rob</span></code></pre></div>
-<p>Since <code>gthatcher</code> is going to be an admin, I added them to the <code>wheel</code> user group, since that is often used as an administrator group on Linux systems.</p>
-<p><code>usermod -aG wheel gthatcher</code></p>
-<p>Then, I used the <code>visudo</code> command to edit the sudoer’s file and add wheel as a group that could use all commands with sudo:</p>
-<div class="code-with-filename">
-<div class="code-with-filename-file">
-<pre><strong>/etc/sudoers</strong></pre>
-</div>
-<div class="sourceCode" id="cb2" data-filename="/etc/sudoers" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb2-1">## Allows people in group wheel to run all commands</span>
-<span id="cb2-2">%wheel  ALL=(ALL)   ALL</span></code></pre></div>
-</div>
-<p>The other thing I added was for user <code>rob</code> to be able to run certain commands as sudo, without a password, but only those commands.</p>
-<div class="code-with-filename">
-<div class="code-with-filename-file">
-<pre><strong>/etc/sudoers</strong></pre>
-</div>
-<div class="sourceCode" id="cb3" data-filename="/etc/sudoers" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb3-1">rob ALL=NOPASSWD : /bin/sudoedit /var/www/html/*, /bin/systemctl status httpd, /bin/systemctl stop httpd, /bin/systemctl start httpd, /bin/systemctl restart httpd, /bin/systemctl enable httpd, /bin/systemctl disable httpd</span></code></pre></div>
-</div>
-</section>
-<section id="update-apache" class="level2">
-<h2 class="anchored" data-anchor-id="update-apache">Update Apache</h2>
-<p>Also, I needed to update apache. However, the repos completely broken on this machine, so I deleted them, and made way for new repos.</p>
-<div class="sourceCode" id="cb4" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb4-1">mv /etc/yum.repos.d /etc/yum.repos.bac # Back up old yum repos just in case</span>
-<span id="cb4-2"></span>
-<span id="cb4-3">mkdir /etc/yum.repos.d</span>
-<span id="cb4-4"></span>
-<span id="cb4-5">curl http://mirror.centos.org/centos/7/atomic/x86_64/repo/CentOS-Base.repo -o /etc/yum.repos.d/CentOS-Base.repo</span>
-<span id="cb4-6"></span>
-<span id="cb4-7">yum update</span></code></pre></div>
-<p>And with this, Apache is updated.</p>
-</section>
-<section id="ssh-config" class="level2">
-<h2 class="anchored" data-anchor-id="ssh-config">Ssh Config</h2>
-<p>Ssh needs to be configured to use key based authentication, instead of password based authentication.</p>
-<p>On the Prod-Web server:</p>
-<div class="sourceCode" id="cb5" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb5-1">ssh-keygen # this generates an ssh key in the default location. I did not set a passphrase.</span>
-<span id="cb5-2"></span>
-<span id="cb5-3">scp .ssh/id_rsa.pub playerone@172.16.20.11:/home/playerone/.ssh/authorized_keys # use password to authenticate the connection</span></code></pre></div>
-<p>This creates a key and authorizes it for use on the Dev-Web server.</p>
-<p>And with this, all checks are green:</p>
-<p><img src="./writeups/nice-challenge-5/images/greenchecks.png" class="img-fluid"></p>
-
-
-</section>
-</section>
-
- ]]></description>
-  <category>writeups</category>
-  <guid>./writeups/nice-challenge-5/</guid>
-  <pubDate>Fri, 07 Jun 2024 07:00:00 GMT</pubDate>
 </item>
 </channel>
 </rss>

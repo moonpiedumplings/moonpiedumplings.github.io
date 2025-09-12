@@ -6,9 +6,9 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
-<meta name="description" content="Playground, where I experiment with technology. Often with quarto itself.">
+<meta name="dcterms.date" content="2025-08-26">
 
-<title>Playground – Jeffrey Fonseca</title>
+<title>Templating Engine with Quarto – Jeffrey Fonseca</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -24,29 +24,27 @@ ul.task-list li input[type="checkbox"] {
 </style>
 
 
-<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
-<script src="../site_libs/quarto-nav/headroom.min.js"></script>
-<script src="../site_libs/clipboard/clipboard.min.js"></script>
-<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
-<script src="../site_libs/quarto-search/fuse.min.js"></script>
-<script src="../site_libs/quarto-search/quarto-search.js"></script>
-<meta name="quarto:offset" content="../">
-<script src="../site_libs/quarto-listing/list.min.js"></script>
-<script src="../site_libs/quarto-listing/quarto-listing.js"></script>
-<script src="../site_libs/quarto-html/quarto.js" type="module"></script>
-<script src="../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
-<script src="../site_libs/quarto-html/popper.min.js"></script>
-<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
-<script src="../site_libs/quarto-html/anchor.min.js"></script>
-<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../site_libs/quarto-html/quarto-syntax-highlighting-e1a5c8363afafaef2c763b6775fbf3ca.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="../site_libs/quarto-html/quarto-syntax-highlighting-dark-8ef56b68f8fa1e9d2ba328e99e439f80.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<link href="../site_libs/quarto-html/quarto-syntax-highlighting-e1a5c8363afafaef2c763b6775fbf3ca.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
-<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
-<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../site_libs/bootstrap/bootstrap-2d2c3c1dc8fcebd689918bbad00a5354.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../site_libs/bootstrap/bootstrap-dark-61fddf1775f8cf983c184c2ec9e6a10f.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../site_libs/bootstrap/bootstrap-2d2c3c1dc8fcebd689918bbad00a5354.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-e1a5c8363afafaef2c763b6775fbf3ca.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-8ef56b68f8fa1e9d2ba328e99e439f80.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-e1a5c8363afafaef2c763b6775fbf3ca.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-acd93b68611026bc8580406adc16ace6.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-02253d7198cac1b77226bd36e7b410c7.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-acd93b68611026bc8580406adc16ace6.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -74,65 +72,9 @@ ul.task-list li input[type="checkbox"] {
     "search-label": "Search"
   }
 }</script>
-<script>
+<script src="https://cdn.jsdelivr.net/npm/liquidjs/dist/liquid.browser.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/ejs@3.1.10/ejs.min.js "></script>
 
-  window.document.addEventListener("DOMContentLoaded", function (_event) {
-    const listingTargetEl = window.document.querySelector('#listing-listing .list');
-    if (!listingTargetEl) {
-      // No listing discovered, do not attach.
-      return; 
-    }
-
-    const options = {
-      valueNames: ['listing-date','listing-title','listing-author',{ data: ['index'] },{ data: ['categories'] },{ data: ['listing-date-sort'] },{ data: ['listing-title-sort'] }],
-      
-      searchColumns: ["listing-date","listing-title","listing-author"],
-    };
-
-    window['quarto-listings'] = window['quarto-listings'] || {};
-    window['quarto-listings']['listing-listing'] = new List('listing-listing', options);
-
-    if (window['quarto-listing-loaded']) {
-      window['quarto-listing-loaded']();
-    }
-  });
-
-  window.addEventListener('hashchange',() => {
-    if (window['quarto-listing-loaded']) {
-      window['quarto-listing-loaded']();
-    }
-  })
-  </script>
-
-  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
-  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
-
-<script type="text/javascript">
-const typesetMath = (el) => {
-  if (window.MathJax) {
-    // MathJax Typeset
-    window.MathJax.typeset([el]);
-  } else if (window.katex) {
-    // KaTeX Render
-    var mathElements = el.getElementsByClassName("math");
-    var macros = [];
-    for (var i = 0; i < mathElements.length; i++) {
-      var texText = mathElements[i].firstChild;
-      if (mathElements[i].tagName == "SPAN") {
-        window.katex.render(texText.data, mathElements[i], {
-          displayMode: mathElements[i].classList.contains('display'),
-          throwOnError: false,
-          macros: macros,
-          fleqn: false
-        });
-      }
-    }
-  }
-}
-window.Quarto = {
-  typesetMath
-};
-</script>
 
 </head>
 
@@ -301,11 +243,11 @@ window.Quarto = {
   </script>
 
 <div id="quarto-search-results"></div>
-  <header id="quarto-header" class="headroom fixed-top quarto-banner">
+  <header id="quarto-header" class="headroom fixed-top">
     <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
       <div class="navbar-container container-fluid">
       <div class="navbar-brand-container mx-auto">
-    <a class="navbar-brand" href="../index.html">
+    <a class="navbar-brand" href="../../index.html">
     <span class="navbar-title">Jeffrey Fonseca</span>
     </a>
   </div>
@@ -316,17 +258,17 @@ window.Quarto = {
           <div class="collapse navbar-collapse" id="navbarCollapse">
             <ul class="navbar-nav navbar-nav-scroll me-auto">
   <li class="nav-item">
-    <a class="nav-link" href="../posts/index.html"> 
+    <a class="nav-link" href="../../posts/index.html"> 
 <span class="menu-text">Posts</span></a>
   </li>  
   <li class="nav-item">
-    <a class="nav-link" href="../resume/index.html"> 
+    <a class="nav-link" href="../../resume/index.html"> 
 <span class="menu-text">Resume</span></a>
   </li>  
 </ul>
             <ul class="navbar-nav navbar-nav-scroll ms-auto">
   <li class="nav-item compact">
-    <a class="nav-link" href="../../feed.xml"> <i class="bi bi-rss" role="img">
+    <a class="nav-link" href="../../../feed.xml"> <i class="bi bi-rss" role="img">
 </i> 
 <span class="menu-text"></span></a>
   </li>  
@@ -344,330 +286,86 @@ window.Quarto = {
     </nav>
 </header>
 <!-- content -->
-<header id="title-block-header" class="quarto-title-block default page-columns page-full">
-  <div class="quarto-title-banner page-columns page-full">
-    <div class="quarto-title column-page-left">
-      <h1 class="title">Playground</h1>
-                  <div>
-        <div class="description">
-          Playground, where I experiment with technology. Often with quarto itself.
-        </div>
-      </div>
-                </div>
-  </div>
-    
-  
-  <div class="quarto-title-meta column-page-left">
-
-      
-    
-      
-    </div>
-    
-  
-  </header><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-full page-navbar">
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
 <!-- sidebar -->
 <!-- margin-sidebar -->
     <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
-        
-    <h5 class="quarto-listing-category-title">Categories</h5><div class="quarto-listing-category category-default"><div class="category" data-category="">All <span class="quarto-category-count">(20)</span></div><div class="category" data-category="cGxheWdyb3VuZA==">playground <span class="quarto-category-count">(20)</span></div></div></div>
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#liquidjs" id="toc-liquidjs" class="nav-link active" data-scroll-target="#liquidjs">LiquidJS</a></li>
+  <li><a href="#ejs" id="toc-ejs" class="nav-link" data-scroll-target="#ejs">EJS</a></li>
+  </ul>
+</nav>
+    </div>
 <!-- main -->
-<main class="content quarto-banner-title-block column-page-left" id="quarto-document-content">
+<main class="content" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Templating Engine with Quarto</h1>
+  <div class="quarto-categories">
+    <div class="quarto-category">playground</div>
+  </div>
+  </div>
 
 
 
+<div class="quarto-title-meta">
+
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">August 26, 2025</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
 
 
+</header>
 
 
+<p>I recently read a very good blogpost <a href="https://deadsimpletech.com/blog/notes_teaching_coding">We should rethink how we teach people to code</a>. It argues that instead of starting on something like python, it’s better to start at HTML, and introduce programming concepts via a templating engine in a static site generator.</p>
+<p>I really like this idea. I already have <a href="../../talks/self-site/">a presentation/tutorial</a> about setting up your own website with Quarto.</p>
+<p>But Quarto does not have a templating engine.</p>
+<section id="liquidjs" class="level1">
+<h1>LiquidJS</h1>
+<p>So now I am trying to see if I can get LiquidJS, the templating engine that Jekyll uses, to work in Quarto. The most promising option is to execute actual javascript, which then does the templating. Although, I think it is a bit disappointed that it requires javascript.</p>
+<script type="text/template">
+{{ name | capitalize | prepend: "Welcome to "}}
+</script>
+<div id="result">
+
+</div>
+<script type="text/template">
+{% assign foo = "FOO" %}
+{% if foo == "FOO" %}
+    Variable `foo` equals "FOO"
+{% else %}
+    Variable `foo` not equals "FOO"
+{% endif %}
+</script>
+<div id="result">
+
+</div>
+</section>
+<section id="ejs" class="level1">
+<h1>EJS</h1>
+<script>
+  let people = ['geddy', 'neil', 'alex'];
+  let html = ejs.render('<%= people.join(", "); %>', {people: people});
+</script>
 
 
+</section>
 
-<div class="quarto-listing quarto-listing-container-table" id="listing-listing">
-<table class="quarto-listing-table table">
-<thead>
-<tr>
-
-<th>
-Date
-</th>
-
-<th>
-Title
-</th>
-
-<th>
-Author
-</th>
-
-</tr>
-</thead>
-<tbody class="list">
-
-<tr data-index="0" data-categories="cGxheWdyb3VuZA==" data-listing-date-sort="1756191600000" data-listing-file-modified-sort="1756340077737" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="1" data-listing-word-count-sort="178" data-listing-title-sort="Templating Engine with Quarto" data-listing-filename-sort="index.qmd">
-<td>
-<span class="listing-date">Aug 26, 2025</span>
-</td>
-<td>
-<a href="../playground/quarto-templates/index.html" class="title listing-title">Templating Engine with Quarto</a>
-</td>
-<td>
-<span class="listing-author">&nbsp;</span>
-</td>
-
-</tr>
-
-<tr data-index="1" data-categories="cGxheWdyb3VuZA==" data-listing-date-sort="1743490800000" data-listing-file-modified-sort="1753521731287" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="16" data-listing-word-count-sort="3127" data-listing-title-sort="Portable executable experiments for CCDC" data-listing-filename-sort="index.md">
-<td>
-<span class="listing-date">Apr 1, 2025</span>
-</td>
-<td>
-<a href="../playground/ape-experiments/index.html" class="title listing-title">Portable executable experiments for CCDC</a>
-</td>
-<td>
-<span class="listing-author">&nbsp;</span>
-</td>
-
-</tr>
-
-<tr data-index="2" data-categories="cGxheWdyb3VuZA==" data-listing-date-sort="1739865600000" data-listing-file-modified-sort="1753521731289" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="7" data-listing-word-count-sort="1215" data-listing-title-sort="Logging solutions for CCDC" data-listing-filename-sort="index.qmd">
-<td>
-<span class="listing-date">Feb 18, 2025</span>
-</td>
-<td>
-<a href="../playground/ccdc-logs/index.html" class="title listing-title">Logging solutions for CCDC</a>
-</td>
-<td>
-<span class="listing-author">&nbsp;</span>
-</td>
-
-</tr>
-
-<tr data-index="3" data-categories="cGxheWdyb3VuZA==" data-listing-date-sort="1726124400000" data-listing-file-modified-sort="1753521731288" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="24" data-listing-word-count-sort="4779" data-listing-title-sort="The Ultimate Card Game" data-listing-filename-sort="index.qmd">
-<td>
-<span class="listing-date">Sep 12, 2024</span>
-</td>
-<td>
-<a href="../playground/cardgame/index.html" class="title listing-title">The Ultimate Card Game</a>
-</td>
-<td>
-<span class="listing-author">&nbsp;</span>
-</td>
-
-</tr>
-
-<tr data-index="4" data-categories="cGxheWdyb3VuZA==" data-listing-date-sort="1724914800000" data-listing-file-modified-sort="1753521731286" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="3" data-listing-word-count-sort="462" data-listing-title-sort="Connecting Linux machines to Active Directory" data-listing-filename-sort="index.qmd">
-<td>
-<span class="listing-date">Aug 29, 2024</span>
-</td>
-<td>
-<a href="../playground/ad-linux/index.html" class="title listing-title">Connecting Linux machines to Active Directory</a>
-</td>
-<td>
-<span class="listing-author">&nbsp;</span>
-</td>
-
-</tr>
-
-<tr data-index="5" data-categories="cGxheWdyb3VuZA==" data-listing-date-sort="1718953200000" data-listing-file-modified-sort="1753521731290" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="98" data-listing-word-count-sort="19531" data-listing-title-sort="Creating a nix flake shell, the &quot;proper&quot; way" data-listing-filename-sort="index.md">
-<td>
-<span class="listing-date">Jun 21, 2024</span>
-</td>
-<td>
-<a href="../playground/flake-shell/index.html" class="title listing-title">Creating a nix flake shell, the “proper” way</a>
-</td>
-<td>
-<span class="listing-author">&nbsp;</span>
-</td>
-
-</tr>
-
-<tr data-index="6" data-categories="cGxheWdyb3VuZA==" data-listing-date-sort="1717484400000" data-listing-file-modified-sort="1753521731288" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="7" data-listing-word-count-sort="1280" data-listing-title-sort="Reinstalling Cachyos" data-listing-filename-sort="index.md">
-<td>
-<span class="listing-date">Jun 4, 2024</span>
-</td>
-<td>
-<a href="../playground/cachyos-install/index.html" class="title listing-title">Reinstalling Cachyos</a>
-</td>
-<td>
-<span class="listing-author">&nbsp;</span>
-</td>
-
-</tr>
-
-<tr data-index="7" data-categories="cGxheWdyb3VuZA==" data-listing-date-sort="1714633200000" data-listing-file-modified-sort="1753521731291" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="3" data-listing-word-count-sort="526" data-listing-title-sort="Container images and setuid binaries" data-listing-filename-sort="index.md">
-<td>
-<span class="listing-date">May 2, 2024</span>
-</td>
-<td>
-<a href="../playground/setuid-containers/index.html" class="title listing-title">Container images and setuid binaries</a>
-</td>
-<td>
-<span class="listing-author">&nbsp;</span>
-</td>
-
-</tr>
-
-<tr data-index="8" data-categories="cGxheWdyb3VuZA==" data-listing-date-sort="1710140400000" data-listing-file-modified-sort="1753521731290" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="3" data-listing-word-count-sort="486" data-listing-title-sort="Experiments with Running python in the browser" data-listing-filename-sort="index.qmd">
-<td>
-<span class="listing-date">Mar 11, 2024</span>
-</td>
-<td>
-<a href="../playground/interactive-python-tutorial/index.html" class="title listing-title">Experiments with Running python in the browser</a>
-</td>
-<td>
-<span class="listing-author">&nbsp;</span>
-</td>
-
-</tr>
-
-<tr data-index="9" data-categories="cGxheWdyb3VuZA==" data-listing-date-sort="1708416000000" data-listing-file-modified-sort="1753521731291" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="6" data-listing-word-count-sort="1114" data-listing-title-sort="Automatically provisioning VMs from OVAs" data-listing-filename-sort="index.qmd">
-<td>
-<span class="listing-date">Feb 20, 2024</span>
-</td>
-<td>
-<a href="../playground/ova-automation/index.html" class="title listing-title">Automatically provisioning VMs from OVAs</a>
-</td>
-<td>
-<span class="listing-author">&nbsp;</span>
-</td>
-
-</tr>
-
-<tr data-index="10" data-categories="cGxheWdyb3VuZA==" data-listing-date-sort="1704528000000" data-listing-file-modified-sort="1753521731287" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="6" data-listing-word-count-sort="1025" data-listing-title-sort="Ansible: Defined is not Truthy" data-listing-filename-sort="index.qmd">
-<td>
-<span class="listing-date">Jan 6, 2024</span>
-</td>
-<td>
-<a href="../playground/ansible-truthy/index.html" class="title listing-title">Ansible: Defined is not Truthy</a>
-</td>
-<td>
-<span class="listing-author">&nbsp;</span>
-</td>
-
-</tr>
-
-<tr data-index="11" data-categories="cGxheWdyb3VuZA==" data-listing-date-sort="1696402800000" data-listing-file-modified-sort="1737946377473" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="9" data-listing-word-count-sort="1696" data-listing-title-sort="A notes format that I can automatically convert to flashcards?" data-listing-filename-sort="index.qmd">
-<td>
-<span class="listing-date">Oct 4, 2023</span>
-</td>
-<td>
-<a href="../playground/flashcards/index.html" class="title listing-title">A notes format that I can automatically convert to flashcards?</a>
-</td>
-<td>
-<span class="listing-author">&nbsp;</span>
-</td>
-
-</tr>
-
-<tr data-index="12" data-categories="cGxheWdyb3VuZA==" data-listing-date-sort="1693724400000" data-listing-file-modified-sort="1753521731291" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="32" data-listing-word-count-sort="6273" data-listing-title-sort="Podman vs Docker" data-listing-filename-sort="index.qmd">
-<td>
-<span class="listing-date">Sep 3, 2023</span>
-</td>
-<td>
-<a href="../playground/podman-docker/index.html" class="title listing-title">Podman vs Docker</a>
-</td>
-<td>
-<span class="listing-author">&nbsp;</span>
-</td>
-
-</tr>
-
-<tr data-index="13" data-categories="cGxheWdyb3VuZA==" data-listing-date-sort="1693292400000" data-listing-file-modified-sort="1753521731287" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="4" data-listing-word-count-sort="775" data-listing-title-sort="Attempting to get secure boot and bootable BTRFS snapshots" data-listing-filename-sort="index.qmd">
-<td>
-<span class="listing-date">Aug 29, 2023</span>
-</td>
-<td>
-<a href="../playground/arch-secureboot/index.html" class="title listing-title">Attempting to get secure boot and bootable BTRFS snapshots</a>
-</td>
-<td>
-<span class="listing-author">&nbsp;</span>
-</td>
-
-</tr>
-
-<tr data-index="14" data-categories="cGxheWdyb3VuZA==" data-listing-date-sort="1693206000000" data-listing-file-modified-sort="1753521731289" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="4" data-listing-word-count-sort="699" data-listing-title-sort="The CSUN game room has pretty locked down computers..." data-listing-filename-sort="index.qmd">
-<td>
-<span class="listing-date">Aug 28, 2023</span>
-</td>
-<td>
-<a href="../playground/csun-computers/index.html" class="title listing-title">The CSUN game room has pretty locked down computers…</a>
-</td>
-<td>
-<span class="listing-author">&nbsp;</span>
-</td>
-
-</tr>
-
-<tr data-index="15" data-categories="cGxheWdyb3VuZA==" data-listing-date-sort="1687330800000" data-listing-file-modified-sort="1753521731289" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="4" data-listing-word-count-sort="628" data-listing-title-sort="The cruise ship I am on has very locked down computers" data-listing-filename-sort="index.qmd">
-<td>
-<span class="listing-date">Jun 21, 2023</span>
-</td>
-<td>
-<a href="../playground/cruise-ship-computers/index.html" class="title listing-title">The cruise ship I am on has very locked down computers</a>
-</td>
-<td>
-<span class="listing-author">&nbsp;</span>
-</td>
-
-</tr>
-
-<tr data-index="16" data-categories="cGxheWdyb3VuZA==" data-listing-date-sort="1686553200000" data-listing-file-modified-sort="1753521731289" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="2" data-listing-word-count-sort="227" data-listing-title-sort="Dorking around" data-listing-filename-sort="index.qmd">
-<td>
-<span class="listing-date">Jun 12, 2023</span>
-</td>
-<td>
-<a href="../playground/dorking/index.html" class="title listing-title">Dorking around</a>
-</td>
-<td>
-<span class="listing-author">&nbsp;</span>
-</td>
-
-</tr>
-
-<tr data-index="17" data-categories="cGxheWdyb3VuZA==" data-listing-date-sort="1686466800000" data-listing-file-modified-sort="1753521731289" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="3" data-listing-word-count-sort="559" data-listing-title-sort="A very clever crypto scam" data-listing-filename-sort="index.qmd">
-<td>
-<span class="listing-date">Jun 11, 2023</span>
-</td>
-<td>
-<a href="../playground/crypto-scam/index.html" class="title listing-title">A very clever crypto scam</a>
-</td>
-<td>
-<span class="listing-author">&nbsp;</span>
-</td>
-
-</tr>
-
-<tr data-index="18" data-categories="cGxheWdyb3VuZA==" data-listing-date-sort="1686466800000" data-listing-file-modified-sort="1753521731290" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="2" data-listing-word-count-sort="238" data-listing-title-sort="Can I include text from other files in quarto?" data-listing-filename-sort="index.qmd">
-<td>
-<span class="listing-date">Jun 11, 2023</span>
-</td>
-<td>
-<a href="../playground/include-text-in-quarto/index.html" class="title listing-title">Can I include text from other files in quarto?</a>
-</td>
-<td>
-<span class="listing-author">&nbsp;</span>
-</td>
-
-</tr>
-
-<tr data-index="19" data-categories="cGxheWdyb3VuZA==" data-listing-date-sort="1686466800000" data-listing-file-modified-sort="1737946377467" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="3" data-listing-word-count-sort="432" data-listing-title-sort="Can I write my resume in python?" data-listing-filename-sort="index.qmd">
-<td>
-<span class="listing-date">Jun 11, 2023</span>
-</td>
-<td>
-<a href="../playground/resume/index.html" class="title listing-title">Can I write my resume in python?</a>
-</td>
-<td>
-<span class="listing-author">&nbsp;</span>
-</td>
-
-</tr>
-
-</tbody>
-</table>
-<div class="listing-no-matching d-none">No matching items</div>
-</div></main> <!-- /main -->
+</main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">
   window.document.addEventListener("DOMContentLoaded", function (event) {
     // Ensure there is a toggle, if there isn't float one in the top right
@@ -1081,6 +779,7 @@ Author
   });
   </script>
 </div> <!-- /content -->
+<script src="script.js"></script>
 
 
 
