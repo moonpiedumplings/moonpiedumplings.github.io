@@ -1,0 +1,61 @@
+---
+title: "Templating Engine with Quarto"
+date: "2025-8-26"
+categories: [playground]
+format:
+  html:
+    code-fold: true
+    code-summary: "Show the code"
+    code-block-background: true
+    code-overflow: wrap
+    include-in-header:
+      - text: |
+          <script src="https://cdn.jsdelivr.net/npm/liquidjs/dist/liquid.browser.min.js"></script>
+          <script src="https://cdn.jsdelivr.net/npm/ejs@3.1.10/ejs.min.js "></script>
+    include-after-body:
+      - text: |
+          <script src="script.js"></script>
+
+execute:
+  freeze: false
+---
+
+I recently read a very good blogpost [We should rethink how we teach people to code](https://deadsimpletech.com/blog/notes_teaching_coding). It argues that instead of starting on something like python, it's better to start at HTML, and introduce programming concepts via a templating engine in a static site generator. 
+
+I really like this idea. I already have [a presentation/tutorial](../../talks/self-site/) about setting up your own website with Quarto.
+
+But Quarto does not have a templating engine. 
+
+# LiquidJS
+
+So now I am trying to see if I can get LiquidJS, the templating engine that Jekyll uses, to work in Quarto. The most promising option is to execute actual javascript, which then does the templating. Although, I think it is a bit disappointed that it requires javascript. 
+
+
+
+
+
+<script type="text/template">
+{{ name | capitalize | prepend: "Welcome to "}}
+</script>
+<div id="result"></div>
+
+
+<script type="text/template">
+{% assign foo = "FOO" %}
+{% if foo == "FOO" %}
+    Variable `foo` equals "FOO"
+{% else %}
+    Variable `foo` not equals "FOO"
+{% endif %}
+</script>
+<div id="result"></div>
+
+# EJS
+
+
+```{=html}
+<script>
+  let people = ['geddy', 'neil', 'alex'];
+  let html = ejs.render('<%= people.join(", "); %>', {people: people});
+</script>
+```

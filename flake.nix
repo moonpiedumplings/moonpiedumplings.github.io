@@ -27,8 +27,6 @@
       packages = forAllSystems (pkgs: {
         default = pkgs.buildEnv {
           name = "dev-shell";
-          # TEST_ENV = "test environment variable";
-          paths = with pkgs; [ hello ];
           postBuild = ''
               export SHELL='/bin/bash'
             '';

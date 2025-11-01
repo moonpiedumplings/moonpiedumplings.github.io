@@ -14,17 +14,18 @@ let
   texEnv = (pkgs.texlive.combine {
     inherit (pkgs.texlive) scheme-infraonly
       collection-latex collection-latexrecommended
-      fontawesome5
+      fontawesome6
+      lualatex-math
+      luatex
       framed
       xetex;
   });
 
   quarto = pkgs.quarto.overrideAttrs (oldAttrs: rec {
-    # 1.3 + newer (I think) has a weird bug with the text boxes where they are white on a black background. Readable, but ugly
-    version = "1.7.31";
+    version = "1.8.25";
     src = pkgs.fetchurl {
       url = "https://github.com/quarto-dev/quarto-cli/releases/download/v${version}/quarto-${version}-linux-amd64.tar.gz";
-      sha256 = "sha256-YRSe4MLcJCaqBDGwHiYxOxAGFcehZLIVCkXjTE0ezFc=";
+      sha256 = "sha256-E9RDAooKgnshdXs3+etS26+PBiPr/KxEFi++o62fwf8=";
     };
     preFixup = ''
       wrapProgram $out/bin/quarto \
@@ -52,17 +53,11 @@ in
 pkgs.mkShellNoCC {
   PYTHONPATH = "${pkgs.python3.withPackages pythonDeps}/bin/python3";
   QUARTO_PYTHON = "${pkgs.python3.withPackages pythonDeps}/bin/python3";
-  # LOCALE_ARCHIVE_2_39 = "${pkgs.glibcLocalesUtf8}/lib/locale/locale-archive";
-  # LANGUAGE = "en_US.UTF-8";
-  # LC_ALL = "en_US.UTF-8";
-  # LOCALE_ARCHIVE_2_39 = "/usr/lib/locale/locale-archive";
-  # LOCALE_ARCHIVE = "/usr/lib/locale/locale-archive";
 
   packages = with pkgs; [
     bashInteractive
     (python3.withPackages pythonDeps)
     quarto
-    # (texlive.withPackages texDeps)
     texEnv
     font-awesome
   ];

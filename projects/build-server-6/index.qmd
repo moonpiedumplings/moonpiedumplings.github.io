@@ -21,6 +21,7 @@ I want a whole "cloud" for myself and people around me. The services I want to h
 * Coder — for remote development environments, but also Kali/Linux containers accessible via the browser
 * Forgejo — Code forge, with CI/CD
 * Nextcloud — a "cloud" with file sync, editing, and the like
+  * I am also considering alternatives, like OpenCloud or Cryptpad for the features I may want from nextcloud
 * Element Server Suite — A complete discord alternative
 * Something for Large Language Models
   * Preferably with history per OIDC user
@@ -344,7 +345,7 @@ used_by:
 
 There is no network named internal0 — instead I add one in after I create the project. With this, they would be limited to a single internal network, and public network.
 
-## Authorization
+## Authorization — Cert/Scriptlet
 
 `incus config trust add-certificate --projects layer8 --restricted layer8.crt`
 
@@ -651,6 +652,18 @@ Okay, breaking change update: <https://discuss.linuxcontainers.org/t/incus-0-5-1
 
 Now, people with Red Hat based distros (Alma, Rocky, Centos, etc), have to do something a little extra to get them to work. It didn't work for me initially, until I enabled networking by default. 
 
+## Authorization — Openfga
+
+After 
+
+## Bugs
+
+I have found two, but haven't really bothered replicating them to report them properly.
+
+* ISO's uploaded via the webui seem to always be put into the dfeault project instead of whatever project I want them to be in .
+* ~~Only oidc.claim as email works (nickname or preferred_username or username) do not work for cli authentication to incus. Although they do work for webui auth.~~
+  * Fixed. Either a newer update, or the decision to set up OIDC and Openfga from the get go have fixed this for me. 
+
 # Kubernetes (Again)
 
 Next up is the rest of the services I want to host. I still want to do a Kubernetes cluster, with everything GitOps though, but having Incus opens up another oppurtunity: I could do a multi node Kubernetes cluster, in virtual machines, instead of a single node. 
@@ -661,7 +674,7 @@ Nah. I think I'm just gonna deploy bare metal.
 
 Disable RKE2 ingress-nginx:
 
-```{.yaml filename='/etc/rancher/rke2/rke2.yaml'}
+```{.yaml filename='/etc/rancher/rke2/config.yaml'}
 disable:
   # Yeah so apparently this was kind of important. 
   # - rke2-coredns
@@ -822,19 +835,21 @@ Next up is to inject the environment variables via secrets.
 
 It took some tinkering but I got it working in the repo. Apparently, the postgres process doesn't actually need the secret url I gave it, so I got rid of it.
 
-Also, apparently when coder does a release upgrade, it deletes all it's data, and asks for a new admin account. Since I want to auto update coder, I wonder if I can GitOps the entire configuration?
+I have now migrated to cloudnativepg. 
 
-
+But after this, I want to migrate away from my little injection hack to something more stable. I should be able to create a configmap, and then mount that into the container. I started working on this, and it looks like the command is not truly templated, but instead that many of the things like the api key are generated from environment variables. 
 
 ### Oauth2
 
-Another thing is that Oauth2/OIDC was not working. It seems that my method of secrets did not work, so instead I have to do something else, probably "envfrom".
+Another thing is that Oauth2/OIDC was not working. It seems that my method of secrets did not work, so instead I have to do something else, "envfrom".
 
 <https://artifacthub.io/packages/helm/coder-v2/coder>
 
 <https://github.com/coder/coder/blob/main/helm/coder/values.yaml#L31>
 
 In addition to this, I also set CODER_PG_CONNECTION_URL. It seems that I wasn't setting that, which caused me to lose all user data upon upgrades.
+
+But after this, I attempted to get OIDC role sync working. But it doesn't work, as it seems that it's a premium feature. And in addition to that, I cannot control what permissions OIDC users have from the UI, so I have to authenticate as the admin user from the command line, and then I can use `coder user edit-roles moonpiedumplings`
 
 
 
@@ -1027,6 +1042,99 @@ With this, users can sign up, and then they automatically get added as a "member
 
 People have complimented me, saying that this setup is much, much easier to use than the previous setup, in which people had to import certificates.
 
+But now it is time to update it. I think I will change it so that it happens not just on invites, but on logins, and it automatically adds and removes users. 
+
+
+So something like this:
+
+```{.python}
+import json
+from authentik.core.models import Group
+
+system_groups = ["authentik Read-only", "authentik Admins"]
+
+all_groups = [group.name for group in Group.objects.all()]
+
+all_groups = list(set(all_groups) - set(system_groups))
+
+user_groups = [group.name for group in request.user.all_groups()]
+
+openfga_api_key = "secretkey"
+
+writes = {
+    "writes": {
+        "tuple_keys": [
+            {
+                "user": f"user:{request.user.username}",
+                "relation": "member",
+                "object": "group"
+            }
+        ]
+    },
+    "authorization_model_id": "01K70P5HAQ8K2J3AN978F7Y1EC"
+}
+
+deletes = {
+    "deletes": {
+        "tuple_keys": [
+            {
+                "user": f"user:{request.user.username}",
+                "relation": "member",
+                "object": "group"
+            }
+        ]
+    },
+    "authorization_model_id": "01K70P5HAQ8K2J3AN978F7Y1EC"
+}
+
+
+headers = {
+    "Authorization": f"Bearer {openfga_api_key}",
+    "content-type": "application/json"
+}
+
+
+for group in list(set(all_groups) - set(user_groups)):
+  deletes["deletes"]["tuple_keys"][0]["object"] = f"group:{group}"
+  requests.post('https://openfga.moonpiedumpl.ing/stores/01K70P3ZX9DJEHF85XDJS4PXN2/write', data=json.dumps(deletes), headers=headers)
+
+
+for group in user_groups:
+    writes["writes"]["tuple_keys"][0]["object"] = f"group:{group}"
+    requests.post('https://openfga.moonpiedumpl.ing/stores/01K70P3ZX9DJEHF85XDJS4PXN2/write', data=json.dumps(writes), headers=headers)
+    
+return True
+```
+
+
+And this works beatifully. I assign this expression policy to the `Incus` application, and now groups of a user are automatically synchronized when they login. And then I do:
+
+`fga tuple write --store-id $FGA_STORE_ID group:admins#member admin server:incus` — this gives the admins authentik group admin access to the server.
+
+And then 
+
+`fga tuple write --store-id $FGA_STORE_ID group:layer8#member operator project:layer8`
+
+And so on for each project I want a group to have access to. 
+
+In the future, I am thinking I could use this for CTF's and the like, where I have a group with read only access to an Incus project and then I have multiple projects for a PvP ctf. 
+
+
+I also created a custom policy to enforce ascii usernames:
+
+```{.python}
+if not request.context.get("prompt_data").get("username").isalnum():
+    ak_message("Only numbers and letters in usernames allowed")
+    return False
+elif (len(request.context.get("prompt_data").get("username")) > 16):
+    ak_message("Username too long, 16 character max")
+    return False
+else:
+    return True
+```
+
+
+
 ### Postgres update
 
 So my authentik goes down, because I need to manually backup and restore the postgres database in order for an update to happen.
@@ -1149,6 +1257,19 @@ postgres=#
 Then I put the original `pg_hba.conf` back, and run `pg_ctl reload`. 
 
 And it works!
+
+### Flows and Stages
+
+Just some nice to have things that don't seem to be there by default:
+
+* ~~Invitations~~
+* ~~Passwords on the same sign in page~~
+* Recovery (password change flow)
+
+
+I managed to get the latter pretty simply, by selecting a "password stage" in the options for the `default-authentication-flow`. After that, users no longer need to click twice, they can sign in from a single page. 
+
+Next up is password recovery. When I try to click on "Create recovery link" so I can create recovery links for users, I get an error "Recovery flow not applicable to user". 
 
 ## Openfga
 
@@ -1381,9 +1502,17 @@ I nuked the setup and attempted to reset it up again, but I [ran into an issue](
 
 What worked was [a thread about flux](https://github.com/fluxcd/flux2/discussions/1085#discussioncomment-473271), where essentially the problem is that flux waits for pods to be created before running post install jobs. But, sometimes pods can have a pod that doesn't do anything but wait for the jobs to complete, so the waiting for the pods to be fully created must be disabled.
 
-## Nextcloud
+## Drive
 
-Before I deploy nextcloud I should probably format that 4 TB hard drive I have and make it accessible for stuff.
+I am debating between Nextcloud, and other options. 
+
+Nextcloud:
+
+* Popular
+* But it's in PHP, with an older architecture
+* Extremely extendable, with many extensions/apps in their "store"
+
+Opencloud
 
 ## Forgejo
 
@@ -1466,19 +1595,209 @@ Also, I think that the configuration settings are not changed to the default if 
 2025/07/25 06:52:20 .../auth/linkaccount.go:294:LinkAccountPostRegister() [E] SyncGroupsToTeams: ReadMapCB: expect { or n, but found m, error found in #1 byte of ...|map[layer8:|..., bigger context ...|map[layer8:map[csun:[layer8]]]|...
 ```
 
-This error happened becasue the oauth "group mappings" where wrong. 
+This error happened becasue the oauth "group mappings" where wrong. I quote them and it works.
+
+But the group mappings are not actually replied. When I configure authentik to restrict logins to anybody who has a groups claim in their scope, my test user cannot log in at all. Either Forgejo is not collecting the groups claim, or authentik is not giving it. 
 
 
+From the authentik logs:
+
+```
+{"auth_via": "session", "domain_url": "sso.moonpiedumpl.ing", "event": "Application requested scopes not configured, setting to overlap", "host": "sso.moonpiedumpl.ing", "level": "info", "logger": "authentik.providers.oauth2.views.authorize", "pid": 70086, "request_id": "aabf16600fcb46e587f201bdec77a769", "schema_name": "public", "scope_allowed": "{'email', 'profile', 'openid'}", "scope_given": "{'email', 'groups', 'openid'}", "timestamp": "2025-07-26T11:23:10.187861"}
+```
+
+Also, attempting to ask for the `preferred_username` claim, it also fails. But the `email` claim works. So essentially, nothing from the `profile` scope works, even when I explicitly ask for it. 
+
+`OPENID_CONNECT_SCOPES: "openid email groups"`
+
+I think this was the problem, it doesn't have the `profile` scope. After removing this config, the group mapping works (but I must create the organization and group in advance). 
 
 
-## LLM Stuff
+```
+cope": "email profile openid openid", "state": "825aa86d-46bf-4ce6-8565-3a92069a3780"}, "method": "GET", "path": "/application/o/authorize/", "request_id": "c59d08ff43a647da80c3037a453d9c4
+a", "user_agent": "Mozilla/5.0 (X11; Linux x86_64; rv:141.0) Gecko/20100101 Firefox/141.0"}, "scopes": "email profile openid"}, "domain_url": "sso.moonpiedumpl.ing", "event": "Created Even
+t", "host": "sso.moonpiedumpl.ing", "level": "info", "logger": "authentik.events.models", "pid": 91040, "request_id": "c59d08ff43a647da80c3037a453d9c4a", "schema_name": "public", "timestam
+p": "2025-07-27T06:42:40.711920", "user": {"email": "test@gmail.com", "pk": 7, "username": "testuser"}}
+```
+
+It seems to try to get the openid scope twice though, so I removed it from the config again.
+
+Okay, I tried to start forgejo today and I got an error about not being able to find the database. What happened, is that the [Bitnami Helm Charts](https://programming.dev/post/34498219) that deploy the databases, are no longer publicly available for use. [Forgejo's Helm Chart now recommends operators for databases](https://artifacthub.io/packages/helm/forgejo-helm/forgejo#external-database). 
+
+
+So I am searching for some options for operators for postgres:
+
+* [CloudNativePG](https://cloudnative-pg.io/)
+  * Most promising, also newest
+  * Semi-automatic major version upgrades are appealing to me: <https://cloudnative-pg.io/documentation/1.26/postgres_upgrades/#offline-in-place-major-upgrades>
+* [Crunchy Postgres Operator](https://github.com/CrunchyData/postgres-operator)
+* [Zalando](https://github.com/zalando/postgres-operator)
+
+For redis... I think I am going to switch to the internal cache implementation instead. The 
+
+## Cloud Native Postgres
+
+<https://artifacthub.io/packages/helm/cloudnative-pg/cloudnative-pg>
+
+I started out by just copying the repo and helm release templates that I have previously used. It works easily, without me passing in any values. It seems that postgres does not require any configuration. 
+
+Firstly, deployed a test database using an example from their [quick start](https://cloudnative-pg.io/documentation/1.25/quickstart/#part-3-deploy-a-postgresql-cluster). However, I deployed only one instance, instead of 3, because I only have one physical server. 
+
+Although cool, that's not enough. I also need to ensure it has the correct username/password, and that it restores the information that was previously in older postgres database that forgejo was using. 
+
+`forgejo     data-forgejo-postgresql-0                         Bound    pvc-9a77499a-71d8-4a7b-bda4-fd8d66c1c86c   10Gi       RWO            openebs-persistent-hostpath   <unset>                 25d`
+
+
+Thankfully, using openebs local paths, makes it easy to actually go in and fine the database files.
+
+```{.default}
+root@thoth:/var/openebs/persistent/pvc-9a77499a-71d8-4a7b-bda4-fd8d66c1c86c/data# ls
+base    pg_commit_ts  pg_ident.conf  pg_multixact  pg_replslot  pg_snapshots  pg_stat_tmp  pg_tblspc    PG_VERSION  pg_xact               postmaster.opts
+global  pg_dynshmem   pg_logical     pg_notify     pg_serial    pg_stat       pg_subtrans  pg_twophase  pg_wal      postgresql.auto.conf
+```
+
+Now, I need to figure out how to import from this. I think what I'm going to have to do, is run a [postgres docker container](https://hub.docker.com/_/postgres), and then dump the database, so I can import into a new database.
+
+Firstly, I will backup the files to ensure that anythign I do doesn't nuke all my data.
+
+`root@thoth:/var/openebs/persistent/pvc-9a77499a-71d8-4a7b-bda4-fd8d66c1c86c# tar -czf data.tar.gz data/`
+
+I also ran a test to extract the archive, to make sure that worked. Now that I've done this. 
+
+In addition to that, I will need to create a cluster and a database to import the data into. 
+
+But when I attempt to start a database using the postgres docker container, it complains that certain config files (like postgres.conf, pg_hba.conf) are not found. Bitnami's helm version of postgres seems to automatically create these files somewhere else than the data directory.
+
+Although possible to create those, I think an easier way might be to deploy the older version of forgejo, and then export the data from there using the pgsql cli. It errored due to ownership at first, so I had to run chown.
+
+`root@thoth:/var/openebs/persistent/pvc-9a77499a-71d8-4a7b-bda4-fd8d66c1c86c# chown -R 1001:1001 data`
+
+And with this, forgejo (and the database I care about) is finally up. I can shell into it, and run pg_dump.
+
+```{.default}
+I have no name!@forgejo-postgresql-0:/bitnami/postgresql/backupdir$ pg_dump -U forgejo -f dump.sql
+Password:
+I have no name!@forgejo-postgresql-0:/bitnami/postgresql/backupdir$ ls
+dump.sql
+``` 
+
+
+Next up is to deploy the new database. One of the interesting things about cloudnativepg is that it doesn't just deploy a database, it deploys a cluster, and then deploys databases to that cluster. But, is it better to deploy one cluster with multiple databases, or multiple clusters?
+
+Architecture of postgres cluster/database:
+
+* <https://cloudnative-pg.io/documentation/1.17/architecture/>
+* <https://www.cncf.io/blog/2023/09/29/recommended-architectures-for-postgresql-in-kubernetes/>
+
+One thing I found via some preliminary research is that CloudNativePG's backup solutions seem to be cluster based, rather than database based. [They have some harsh words about database dumps, anyways](https://cloudnative-pg.io/documentation/1.27/backup/#backup): 
+
+> This section covers physical backups in PostgreSQL. While PostgreSQL also supports logical backups using the pg_dump utility, these are not suitable for business continuity and are not managed by CloudNativePG. If you still wish to use pg_dump, refer to the Troubleshooting / Emergency backup section for guidance.
+
+I think the best option is to have a cluster for each app. This way I could back up each app's database/cluster, using CloudNativePG's tools. This backup might not just be for recovery purposes, but also I might want an older version of the database at some point.
+
+Another thing is that it seems that the Cluster resource can automatically initialize a database, using configuration [found here](https://cloudnative-pg.io/documentation/1.27/cloudnative-pg.v1/#postgresql-cnpg-io-v1-BootstrapInitDB). [The way that secrets work is documented here](https://cloudnative-pg.io/documentation/1.27/bootstrap/#bootstrap-an-empty-cluster-initdb). 
+
+Also, when cloudnativepg deploys a cluster, it automatically creates [kubernetes services for the database](https://cloudnative-pg.io/documentation/1.27/service_management/). 
+
+```
+NAME                  TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)    AGE
+anubis-forgejo        ClusterIP   10.43.225.133   <none>        80/TCP     42d
+forgejo-postgres-r    ClusterIP   10.43.188.149   <none>        5432/TCP   5s
+forgejo-postgres-ro   ClusterIP   10.43.26.224    <none>        5432/TCP   5s
+forgejo-postgres-rw   ClusterIP   10.43.254.130   <none>        5432/TCP   4s
+```
+
+This is pretty neat, you can have readwrite and readonly versions of services. I think I will disable everything but the readwrite serivce, however.
+
+Although cool, I found that even though cloudnativepg creates a persistentvolumeclaim, it deletes it when it is done. This is bad because it means that if I delete the postgres cluster I lose the data. It looks like what you are expected to do, is to backup the 
+
+Another thing to not about storage, is that [postgre does not need journaling](https://www.postgresql.org/docs/current/wal-intro.html). I should probably create a custom PersistentVolumeClass that has writeback/journaling disabled for that folder only. But that seems to not be possible, so instead I will use openebs [block volumes](https://openebs.io/docs/user-guides/local-storage-user-guide/local-pv-lvm/advanced-operations/lvm-raw-block-volume), which are designed for this use case. 
+
+Also, it turns out that the `local.csi.openebs.io` is the newer provisioner, and supports more features than the older `openebs.io/local` that I was using. It also looks like migration is not trivial, so I will probably only use the newer interface for just this.
+
+It does look like I need to have an actual LVM partition/disk available on my host. In addition to that, I also think I may need to update openebs to get access to the newer openebs.io/local chart. 
+
+Okay, this really sucks, but [Bitnami helm charts break tomorrow](https://github.com/bitnami/charts) (today is 8/27/2025). I need something to keep these services up, and that means forgoing an OpenEBS update, and using a journaled filesystem for my databases. I do at least want backups, so I will investigate how to do those. When combined with simultaneously trying to figure out why my network is wonky, I just don't have enough time. I suppose stuff like this is why real engineers work as teams.
+
+The problem is backups. [CNPG](https://cloudnative-pg.io/documentation/1.27/backup/) supports two methods, one of which is an object store, and another is via volume snapshots. I wanted to avoid setting up an external object store, especially from the paid platforms. 
+
+I wanted to use snapshots, but openebs hostpath does not support volume snapshots. And I don't have enough time to build and test backups. I think I will use `pg_dump`, despite them "not being suitable for business continuity".
+
+It looks like [there is no easy way to have the PVC's not delete themselves](https://github.com/cloudnative-pg/cloudnative-pg/discussions/5253) either. It seems that what you are expected to do is really to bootstrap a new cluster from the backups, like [documented here](https://cloudnative-pg.io/documentation/1.27/recovery/#recover). 
+
+Okay, I think I could use [openebs-rawfile](https://github.com/openebs/rawfile-localpv) for some of those features like snapshots. 
+
+```{.default}
+03:21 < moonpie> okay I get a little bit more time to think
+03:22 < moonpie> Like I am considering either zfs or lvm on my extra 4 tb hard drive and then using that for both incus storage and k8s volumes
+03:22 < moonpie> (wait no I don't actually get time to think they want forgejo up)
+05:27 < moonpie> dumbmf_: okay now it says I need to enable javascript...
+05:51 < moonpie> okay
+05:51 < moonpie> except for openebs rawfile, I cannot find any solution for block/no filesystem based csi's
+05:51 < moonpie> it's kinda weird
+05:52 < moonpie> because if you are hosting a dtabase on k8s, it makes sense to not uses a clustered filesystem, because db's do it better
+05:52 < moonpie> and they also recommend no journaling/copy on write for performance, and again, because dbs do it better
+05:52 < moonpie> but all of the raw block csi options I have found require lvm, zfs, or other partitions/disks to be provisioned
+05:53 < moonpie> Like.. why can't I just have one disk and you create loopback devices?
+05:53 < moonpie> that's what openebs rawfile does, but it's not cooked yet
+05:53 < moonpie> I guess you could say it's a bit... raw
+05:54 < moonpie> but the thing is
+05:54 < moonpie> even if I forgo no-filesystem based setups
+05:55 < moonpie> I still want a hostpath storage class that uses CSI's, so I can use the CSI snapshot/backup feature to handle databases
+05:55 < moonpie> CloudnativePostgres attempts to delete the persistentvolume even if you have the policy set to retain — what they expect you do when you spin up a new cluster is just restore from backup, not reattatch an existing
+                 volume
+05:55 < moonpie> But I haven't been able to find a hostpath based CSI either
+05:57 < moonpie> There is a reference implementation, but it says it's "not production ready"
+05:57 < moonpie> https://github.com/kubernetes-csi/csi-driver-host-path
+05:57 < moonpie> well, it actually does seem to be less usable, then say, alpha software
+06:00 < moonpie> I didn't want to use either zfs or lvm
+06:00 < moonpie> my main concern was configuration as code
+06:00 < moonpie> I want as much as my config in the git repo as possible
+06:01 < moonpie> creating a zfs/lvm pool is not that. I can do it ofc, but it's not really what I want
+06:02 < moonpie> I was thinking, if I had to redo this setup in the future, I could use Nixos for declarative config of incus and then use https://nixos.wiki/wiki/Disko
+06:03 < moonpie> Idk. I feel like there is something i am missing
+06:04 < moonpie> like if you have one disk and you want to run a database on k8s, what are you dong?
+06:04 < moonpie> Does everybody just use lvm or zfs on their root?
+```
+
+I think the correct choice here, is to deploy longhorn, [with a single replica](https://cloudnative-pg.io/documentation/current/storage/). And then use that for block storage. That's also probably what people are doing in the real world. Such a setup reuses the clustered storage you are already using, but in a slighly different configuration that enables you do maximize the performance of your databases.
+
+I also ran an intemediary check, to make sure that openebs hostpath does not support block volumes, and it does not. I attempt to create a longhorn block device for cloudnativepg, and that fails, because I guess it expects a filesystem. 
+
+This doesn't really make sense to me. But I did get cloudnativepg deployed. I can even request a backup via a volumeshapshot:
+
+`kubectl cnpg backup -m volumeSnapshot -n forgejo forgejo-postgres`
+
+[They don't seem to have a command to restore from a backup though](https://github.com/cloudnative-pg/cloudnative-pg/issues/5203). It seems like you are expected to bootstrap a cluster from a backup instead.
+
+To load the database, first I cp the dump in from my laptop:
+
+
+```
+[moonpie@cachyos-x8664 dormlab]$ kubectl cp dump.sql -n forgejo forgejo-postgres-1:/var/lib/postgresql/data/dump.sql
+Defaulted container "postgres" out of: postgres, bootstrap-controller (init)
+```
+
+Then, inside the container I load the dump:
+
+```{.default}
+postgres@forgejo-postgres-1:~/data$ psql -U postgres -d forgejo -f dump.sql
+```
+
+And then I spin up forgejo again, pointing to the new database, and it's finally up. 
+
+I have decided to forgo automatic backups, because there [there is no easy way to have a retention policy with volumesnapshots](https://aleksac.me/til/cloudnativepg-volumesnapshot-retention-policy-enforcement/). 
+
+Instead, I will just do occasional manual snapshots. 
+
+## LLMs
 
 I am currently looking into options. I want OIDC sign in, and RAG.
 
 I see for frontend options:
 
 * Openwebui
-  * Non open source license, but it's only restricting the ability to change UI
+  * Non open source license, but it's only restricting the ability to rebrand the UI
   * Helm chart provided
 * Librechat
 * <https://github.com/Mintplex-Labs/anything-llm>
@@ -1501,7 +1820,46 @@ For backend options:
   * It also explicitly supports cpu only, intel, amd, and vulkan. Although not relevant to my usecase, this is very interesting. 
 
 
+After some consideration, I decided to deploy Open Web UI. It appears to be the most comprehensive, and has an [official helm chart](https://artifacthub.io/packages/helm/open-webui/open-webui). 
 
+Here are the helm chart values: <https://github.com/open-webui/helm-charts/blob/main/charts/open-webui/values.yaml>
+
+It appears that a subchart of the ollama application is included in openwebui chart, as well. I deploy a fairly simple config, and then I get an error when attempting to use OIDC to sign in:
+
+`"You do not have permission to access this resource. Please contact your administrator for assistance."` 
+
+This was fixed by ensuring that the users in groups I wanted to be able to connect were set in "allowedRoles". 
+
+Another concern I have is that [ollama does not have any form of authentication](https://github.com/ollama/ollama/issues/849) Although less of a concern in the real world, wehre the inside fo teh kubernetes cluster is considered trusted, in my lab, I give people access to the internal subnet. I could restrict traffic flows to this service via Network Policies, but I would rather add some form of authentication to the service. [Here is an example using caddy](https://github.com/ollama/ollama/issues/903). 
+
+I decided to use Caddy. I stopped using the ollama subchart, because I wanted to manually feed an ollama url to openwebui instead of letting openwebui guess.
+
+```{.default}
+[moonpie@cachyos-x8664 flux-config]$ nix-shell -p caddy genpass
+[nix-shell:~/vscode/flux-config]$ genpass -dlu
+generatedpassword
+[nix-shell:~/vscode/flux-config]$ caddy hash-password
+Enter password:
+Confirm password:
+$2a$14$LdqC7FEIx2w6arGCNw7Pi.qxe2kFSvBecz.IvtdcdLvJe4V.xeyhi
+```
+
+This gets me a password and a hash to use. I feed that to the config, and my default ollama url looks something like this: `http://ollama:secretpassword@ollama.owui.svc.cluster.local:11434`. 
+
+
+
+
+Another thing that annoyed me is changing the openwebui pipelines api key to something more secure by deafault. The necessary environment variable, `PIPELINES_API_KEY` does not seem to be documented, but I found it on a [github issue](https://github.com/open-webui/pipelines/issues/311). 
+
+### Models
+
+I do need to select a small set of good models. I am designing for a multi user system, meaning if too many people have too different models, I will run out of ram.
+
+One thing that is cool, is that I am not limited to using models from [ollama's repo](https://ollama.com/search), as ollama can [download models from huggingface](https://huggingface.co/mradermacher/DeepHat-V1-7B-GGUF/tree/main?show_file_info=DeepHat-V1-7B.Q8_0.gguf&local-app=ollama) and OCI repos. 
+
+Although, one irritating I have noticed is that the model download doesn't continue if I close the tab. I must leave the tab open for the model download to complete, despite the fact that the download is handled by ollama and doesn't depend on anything from my browser session. Thankfully, it seems to save partial progress and does restore when I start it up. 
+
+I'm also interested in the new-ish [embeddinggemma:300m](https://ollama.com/library/embeddinggemma:300m) model.
 
 
 ## Ingress-Nginx
@@ -1621,12 +1979,39 @@ I don't think the ssh server is already in use, because I can run services using
 ```{.yaml}
  strategy:
   rollingUpdate:
-    maxSurge: 25%
-    maxUnavailable: 25%
+    maxSurge: 100%
+    maxUnavailable: 100%
   type: RollingUpdate
 ```
 
 With this "strategy", the pods will be scaled down, but only to a certain amount... but I only have ONE pod. So it doesn't get scaled down at all, and the new pod is never able to scale up to replace it. So these settings must be changed.
+
+But once this is done, I can patch the deployment to have extra ports going through:
+
+```{.yaml}
+postRenderers:
+  - kustomize:
+      patches:
+        - patch: |
+            - op:  add
+              path: /spec/template/spec/containers/0/ports/-
+              value:
+                containerPort: 22
+                hostPort: 22
+                name: ssh
+                protocol: TCP
+          target:
+            kind: Deployment
+            name: ingress-nginx-controller
+```
+
+And then I can forward the tcp service via the ingress nginx controller, by following the [ingress-nginx docs on this](https://kubernetes.github.io/ingress-nginx/user-guide/exposing-tcp-udp-services/). 
+
+[Related reddit post](https://www.reddit.com/r/kubernetes/comments/1n5bypk/tcp_external_load_balancer_nodeport_and_istio/). It seems like even Istio has stimilar issues.
+
+Another issue I encountered was "413 Request Entity Too Large" when trying to upload ISO's to nginx. By default, nginx has a setting, [client.max_body_size](https://nginx.org/en/docs/http/ngx_http_core_module.html#client_max_body_size) that limits the size of client requests, or in this case, the size of ISO's that I can upload to Incus. To fix, you can add [annotation that changes this setting](https://kubernetes.github.io/ingress-nginx/user-guide/nginx-configuration/annotations/#custom-max-body-size). 
+
+
 
 
 ## Cert-Manager
@@ -1688,11 +2073,113 @@ After this, I should be able to simply set nvidia as a runtime for certain pods,
 
 Another common step for Nvidia support in Kubernetes, is to install the [Nvidia K8s device plugin](https://github.com/NVIDIA/k8s-device-plugin), but this requires the Nvidia container runtime to be teh *default*. I don't want this, because it gives services that don't need an Nvidia GPU access to Nvidia GPU's. I don't think I need this, however, so I won't bother.  
 
+## Storage
+
+# OpenEBS
+
+Kubernetes storage is fairly complex, and I have encountered issues with it multiple times in the subprojects I have used, so I am moving them here to this section instead from where they originally where. 
+
+One concern I have is that PVC's seem to get deleted when I delete the helm chart. This is despite the fact that I have a policy of `Retain` for the spcific persistentvolume class.
+
+Uh oh. Upon further inspection, it seems that every PVC, even if they are deleted, the data stays there on the disk. This is somewhat concerning, as it means that nothing but manually deleting the volumes can be done. This isn't really that big of an issue though.
+
+Although, it seems that it's not that PVC's are being deleted, but instead that the persistenvolumes are not being rebound when the new iteration of openwebui/ollama are deployed. It looks like both create a persistentvolumeclaim by default, and you have to explicitly set if you would like to reuse an existing one. But first, I need to nuke all persistentvolumes.
+
+`[moonpie@cachyos-x8664 flux-config]$ kubectl get persistentvolume -n owui | grep owui | awk '{print $1}' > deadpvcs.txt`
+
+This feeds the name of all the dead pvc's into a text file. Then, I will iterate over this to delete.
+
+`[moonpie@cachyos-x8664 flux-config]$ xargs -L 1 -I {} kubectl delete persistentvolumes "{}" < deadpvcs.txt`
+
+And then I have to delete the actual pvc from `/var/openebs/persistent`. On the remote server:
+
+`root@thoth:/var/openebs/persistent# xargs -L 1 -I {} rm -rf "{}" < deadpvcs.txt`
+
+```{.default}
+[moonpie@cachyos-x8664 flux-config]$ kubectl get statefulsets.apps -A
+NAMESPACE   NAME                     READY   AGE
+authentik   authentik-postgresql     1/1     63d
+authentik   authentik-redis-master   1/1     63d
+coder       coder-pg-postgresql      1/1     62d
+openfga     openfga-postgresql       1/1     51d
+```
+
+Okay. I think the issue is that only kubernetes statefulsets keep a pvc if you delete the pods. It looks like deployments, and replicasets don't. I think the best option is to declare a seperate PVC and then point the helm charts of ollama and openwebui to them. I tried experiement with the pvc name itself, the `pvc-0d7939f6-feaa-47cb-9b7f-9d0d359ab9c0` format, or the shortname, `owui/open-webui`, but neither work. 
+
+I rebooted and am trying to test if this is a one off issue by me installing longhorn.
+
+```{.default}
+[moonpie@cachyos-x8664 openwebui]$ kubectl get persistentvolumeclaims -n owui
+NAME                   STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS                  VOLUMEATTRIBUTESCLASS   AGE
+ollama                 Bound    pvc-73cd5afc-5a8c-4ffb-9b92-669ee5189870   30Gi       RWO            openebs-persistent-hostpath   <unset>                 6m18s
+open-webui             Bound    pvc-4f5abcc0-cbe1-4809-a22c-49959d747900   2Gi        RWO            openebs-persistent-hostpath   <unset>                 6m19s
+open-webui-pipelines   Bound    pvc-027c493b-aed8-4a42-a7bb-599b724835b3   2Gi        RWO            openebs-persistent-hostpath   <unset>                 6m19s
+```
+
+```{.default}
+[moonpie@cachyos-x8664 openwebui]$ kubectl get persistentvolumeclaims -n owui
+NAME                   STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS                  VOLUMEATTRIBUTESCLASS   AGE
+ollama                 Bound    pvc-3efedee6-11c1-4f19-961d-b5fcbee4879f   30Gi       RWO            openebs-persistent-hostpath   <unset>                 25s
+open-webui             Bound    pvc-4c68d492-bf04-455c-bb51-652bb4268234   2Gi        RWO            openebs-persistent-hostpath   <unset>                 25s
+open-webui-pipelines   Bound    pvc-0f6ce1b4-8928-449d-8a05-a2006eb533c9   2Gi        RWO            openebs-persistent-hostpath   <unset>                 25s
+```
+
+Next thing is to test that it is not unique to openwebui/ollama. It seems that this is related to openwebui being a deployment, but not having an easy way to pin the persistent volume for deployments is annoying. 
+
+I tried with a persistentvolume at first, but apparently it wants a full persistentvolumeclaim instead. (openwebui)
+
+
+After this issue, I start working on the openstack with cinder and openebs-lvm for those.
+
+
+First I carved out a 2TB partition on the disk (using cockpit). Then:
+
+```{.default}
+root@thoth:~# pvcreate /dev/sde1
+
+root@thoth:~# vgcreate cinder-volumes /dev/sde1
+
+
+```
 
 
 
+### Longhorn
 
-## IP address change
+On the host system:
+
+`apt install open-iscsi`
+
+I did have to uninstall for testing purposes, where you have to set a deletion confirmation flag.
+
+`kubectl -n longhorn-system edit settings.longhorn.io deleting-confirmation-flag`
+
+
+### Issues Todo
+
+Todo in the meantime:
+
+
+Due to an issue with openebs [not deleted host folders are deleted when PV's are deleted](https://github.com/openebs/openebs/issues/2824), I decided to use openebs-lvm instead. So my layout is the 4 TB disk has another parition allocated, on which I have another lvm partition, with it's own volume group. 
+
+
+`/var/lib/rancher/rke2/agent/containerd/io.containerd.snapshotter.v1.overlayfs` is eating up all my disk space. 
+
+Carrying on with ceph, I have decided it is probably best to use it as a default for my system. 
+
+
+## Networking
+
+
+I install rke2 again, (due to my SSD dying), and my pods cannot do any form of more complex networking. They can ping each other and external sites, but they cannot wget or use any other protocols. They also can't use DNS, but I am assuming that is because the coredns fails to start because of this issue. 
+
+Maybe what's missing is iptables?
+
+`apt install iptables` ­— the version that debian comes with is actually a wrapper for nftables. 
+
+
+
+# IP address change
 
 In order to fix this error, which appears after changing my ip address:
 
@@ -1709,6 +2196,8 @@ After changing my ip address, you just need:
 
 `systemctl restart rke2-server`
 
+
+I also had to replicate this process again when I moved to a different dorm from fall for my summer dorm.
 
 
 ## Useful Stuff For the Future
@@ -1734,14 +2223,660 @@ Monitoring:
 
 Add ssh keys in authentik: <https://github.com/goauthentik/authentik/issues/2145>
 
-## Notes for iteration two
+<https://kamaji.clastix.io/getting-started/kamaji-kind/>
+
+Kamaji is a virtual cluster setup, but unlike the similar vcluster, it seems to allow for different CNI's to be used in tenant clusters. I think this could be usefult o deploy openstack, openshift, or harvester, inside my actual cluster, in such a way that it doesn't break my existing configuration.
+
+
+
+# Openstack
+
+Yeah. I looked at some deployment options.
+
+It should be noted that I have gitops as a requirement, so kolla-ansible, and genestack have been ruled out. 
+
+* [(Upstream of) Red Hat Openstack Services on Openshift](https://openstack-k8s-operators.github.io/openstack-operator/)
+* [Yet another openstack on kubernetes](https://docs.yaook.cloud/)
+* [Mirantis Rockoon](https://mirantis.github.io/rockoon/)
+  * Upstream of Mirantis Openstack on Kubernetes
+  * Most all in one, where it's a single "openstackdeployment" custom resource
+* [Openstack-helm](https://docs.openstack.org/openstack-helm/latest/readme.html)
+  * I am probably going to use openstack-helm again
+
+Basics of what I want:
+
+[Keystone mappings](https://docs.openstack.org/keystone/latest/admin/federation/mapping_combinations.html) — these let me automatically create projects per user and group, which is one of the features I want. 
+
+And then it looks like cinder CANNOT use a pvc to deploy storage, instead it must manage it's own storage backend pretty much. So the most popular option is ceph, but I had trouble installing that due to the fact that my "cluster" is only a single node. I could use a virtual machine, like on Incus, but I don't really want to do that.
+
+As far as I can tell, I only really have two (viable) options
+
+## Rook-ceph
+
+* Rook-ceph (single node)
+* Ceph (single node)
+* LVM backend
+
+Hmmm.
+
+Also, I have only 4 days to do this.
+
+First I will try rook-ceph again, to make sure there wasn't anything obvious I missed.
+
+<https://rook.io/docs/rook/latest-release/Getting-Started/intro/>
+
+I think another thing I missed was that ceph wants a storage system that exposes block volumes, which my openebs-persistent-hostpath cannot do. But longhorn can! So I will create a storage class just for ceph.
+
+[Here is Openstack-helms test script for deploying ceph](https://opendev.org/openstack/openstack-helm/src/branch/master/tools/deployment/ceph/ceph-rook.sh).
+
+### Cleanup
+
+Also, when I need to nuke ceph, the cleanup of the ceph cluster requires [some manual steps](https://rook.io/docs/rook/latest/Storage-Configuration/ceph-teardown/). 
+
+First delete the object store and ceph block store. I had to edit them, removing the finalizers in order for them to delete properly. Then I have to `rm -rf /var/lib/rook` to delete the data directory on the host.
+
+First thing, first, edit the cephcluster customresources deletion policy. 
+
+`kubectl -n rook-ceph patch cephcluster rook-ceph --type merge -p '{"spec":{"cleanupPolicy":{"confirmation":"yes-really-destroy-data"}}}'`
+
+Then, delete the ceph objecstore and cephblockpool objects in ceph.
+
+Then find the cephcluster cr itself. 
+
+## Openstack install (cont)
+
+Firstly, I have to [label the nodes](https://docs.openstack.org/openstack-helm/latest/install/prerequisites.html#), since openstack won't schedule pods on nodes that aren't explicitly labeled to have those workloads.
+
+I also had to add one more label to make ovn work:
+
+`kubectl label --overwrite nodes --all openstack-network-node=enabled`
+
+I also need to install lioadm for openstack cinder, since it needs either that or tgtadm (although the former seems to be better). 
+
+
+`root@thoth:/# apt install python3-rtslib-fb targetcli-fb`
+
+
+And then for neutron/nova, I have to create ANOTHER veth device, since the one I have is already being used for Incus. 
+
+`root@thoth:/t# nmcli con add type veth ifname veth2 con-name veth2 veth.peer eth2`
+
+And then I go into cockpit and add veth2 as a port to my bridge, but disable autoconfiguration of eth2.
+
+I'm getting an error when I attempt to deploy neutron:
+
+```{.default}
+2025-09-18 17:11:54.899 67 CRITICAL neutron.plugins.ml2.managers [-] The following mechanism drivers were not found: {'linuxbridge'}                                                                                             │
+│ The following mechanism drivers were not found: {'linuxbridge'}
+```
+
+[It turns out that linuxbridge has been removed](https://docs.openstack.org/releasenotes/networking-bagpipe/2025.1.html).
+
+So I try OVN instead.
+
+`root@thoth:/# apt install openvswitch-switch python3-openvswitch`
+
+`root@thoth:/# systemctl disable --now openvswitch-switch.service`
+
+And then I rebooted the node, just to be safe.
+
+I hit a bug when attempting to deploy ovn.
+
+> NotFoundException: 404: Client Error for url: https://neutron.my-cluster.whatever/v2.0/networks, AvailabilityZone nova could not be found.
+
+I figure out that this is a bug by finding a slack message in the #openstack-helm channel.
+
+> Hi, I see this [commit](https://opendev.org/openstack/openstack-helm/commit/84aa51f4d9011014a92cd0299a1f14d253dba9b1) has been merged last week, but this is breaking neutron-server on 2024.1 (fresh) deployment. After neutron-server starts, when I try to create a network (for Octavia deployment) I get the message below
+
+Which then leads me to [this bug report for ovn](https://bugs.launchpad.net/neutron/+bug/1912359). 
+
+So I disable OVN and switch to normal openvswitch (default lmao) and it works. 
+
+Next up is the ingress controller. One of the metadata services fails to start, because I didn't bother to deploy a kubernetes ingress in the openstack namespace. 
+
+After digging through some messages on slack, it looks like openstack-helm expects for two ingress classes to exist. One is "nginx-cluster", and another is just "nginx", where they have a cluster ingress and one that is "namespace scoped" (but not really.). So I first rename my existing ingress class from nginx to nginx-cluster, and then I recreate another ingress, inside the openstack namespace, following [the openstack-helm install docs](https://docs.openstack.org/openstack-helm/latest/install/prerequisites.html).
+
+Why are two ingresses required? Why not just one cluster ingress?
+
+Well, according to some messages in the Slack, this is a very easy way to achieve TLS between all the services. All the services get an internal ingress, and that uses tls certs, and then the internal traffic cluster stays encrypted. But I would probably rather have an actual service mesh like istio or cilium that provides mtls for services. 
+
+
+Also, I give up on my goal of not deploying ceph. It seems that they only bother to test/document the most common use cases, which is ceph in this case. Trying to use cinder directly for LVM just isn't working, but now at least I know how to deploy ceph on a single node...
+
+
+Another thing I need to set up is keystone with OIDC for authentication. I found [an example](https://github.com/rackerlabs/understack/blob/ed777008f2cf28b7bda7676997b0cb2e21e1a43f/components/keystone/values.yaml#L179) for doing so with openstack-helm. I also found [an article on medium](https://www.reddit.com/r/openstack/comments/1nphg5p/integrating_red_hat_openstack_171_with_azure/) ([archive](https://archive.ph/1AFxx)).
+
+I start by attempting to rotate all the credentials in use, by putting them in a single secret that flux reads using valuesFrom, but it doesn't work:
+
+![transcription of relevant part from slack: ... cinder and neutron charts have loops over .Values.endpoints.identity.auth and assume values only contain necessary credentials. So common file just does not work for this case.](images/helmloops.jpg)
+
+It was probably better to use Flux's Kustomizations and their variable substitutions anyways. I use a [github codesearch](https://github.com/search?utf8=%E2%9C%93&q=path%3A*.y*ml+%22kind%3A+Kustomization%22+%22substitutefrom%22&type=code) to find examples of other people with similar setups to copy.
+
+Another frustration is that the ingresses are not getting the certificates they are supposed to get. Instead, they get the kubernetes default certificate. I am copying the [format used in rackspace's understack](https://github.com/rackerlabs/understack/blob/731b742ea0585d4be04121a2b25b7583d87f9619/components/horizon/values.yaml#L41), and the certificate is not there. But at least the endpoints are being exposed publicly.
+
+Another current problem, is that jobs are not always recreated when I reapply the helm charts. I asked about this on the openstack-helm slack, and I got:
+
+> Because they don’t mutate so they don’t get re-created. Cause they are suppose to go away after a run based on their annotations. 
+
+But I don't undestand why if I delete all the jobs and delete the helm release, then the jobs still do not come back. Is there some other form of tracking whether or not jobs have ran? I may have to end up nuking the whole thing and starting over, which is frustrating. I at least wanted to leave the backing infra up (mariadb, rabbitmq, memcached, libvirt), because I have figured those out and how to rotate passwords there. 
+
+After some investigation, it's that one of the jobs fails. Of course, it still shows "completed", but the containers went into crashloopbackoffs. They are failing to connect to the database server.
+
+```{.default}
+/ # mysql -h mariadb.openstack -u nova -p --skip-ssl nova
+mysql: Deprecated program name. It will be removed in a future release, use '/usr/bin/mariadb' instead
+Enter password:
+Welcome to the MariaDB monitor.  Commands end with ; or \g.
+Your MariaDB connection id is 2602
+Server version: 10.11.6-MariaDB-1:10.11.6+maria~ubu2204 mariadb.org binary distribution
+
+Copyright (c) 2000, 2018, Oracle, MariaDB Corporation Ab and others.
+
+Type 'help;' or '\h' for help. Type '\c' to clear the current input statement.
+
+MariaDB [nova]>
+```
+
+Note that I have to skip ssl connections. But it works otherwise. 
+
+I did figure out the problem, that Nova had extra database connections I was missing. Once I added oslo_cell0 and oslo_nova_api to the endpoints, it worked with the correct passowrd. 
+
+Next things I need to figure out:
+
+* Ingresses
+  * Public ingresses for glance and cinder
+  * Getting TLS certs for those public ingresses
+* SSO
+  * Does horizon or keystone do it?
+  * Keystone mappings
+* Cinder not deployed yet
+* Nova, try to get serial console *in addition* to novnc console
+  * I don't know if this is possible, plus windows users would still need rdp in order to get their remote desktop. Although I could do terraform + a coder agent for environments in their project?
+  * Probably will take too long
+
+Okay. Cinder deployment is done. That was pretty easy, all I had to do was delete the client key secret that the ceph adapter jobs create. Once that is done, cinder finds the ceph deployment and can create volumes there. 
+
+I also don't know if glance and cinder are *supposed* to have public endpoints, and instead if the requests to them are proxied through Horizon or something like that. But when I try to upload an image, it just stays on queuing and doesn't activates.
+
+I am probably going to give up on the serial console and try to do VPNaaS of some sort instead. Either via openstack, or I could use netbird. 
+
+
+## Keystone
+
+Next is SSO. So my understanding is a few things. 
+
+Firstly, Keystone does "federation", which is backed by multiple identity providers. It can be ldap, oidc/saml, or even another keystone. In this case I want SAML. Horizon has knobs to enable it to see those and offer them as an option.
+
+Secondly, keystone does Openid connect via [mod_auth_openid](https://github.com/OpenIDC/mod_auth_openidc) — but it's not included in all versions of the keystone container. It's not in the default container, or the starlingx container, or rackerlab's genestack container. I only found a version that included it via rackerlab's [understack](ghcr.io/rackerlabs/understack/keystone:2024.2-ubuntu_jammy) container. 
+
+But, the understack containers latest version is 2024.2, whereas I am on the 2025.1 release. So I have two options for this:
+
+* Modify the container to include mod auth
+  * I'm probably going to do this, because it's simple. 
+* Use a proxy in front that has openid auth
+* Maybe saml is supported?
+
+Also, I suspect the way that image overriding is so trivial is to account for usecases like this. 
+
+
+I tracked down how the images are built. They are built using a tool [openstack loci](https://opendev.org/openstack/loci), which seems to be fairly flexible. I think if I feed it a "DIST_PACKAGES" argument after feeding it the prerequisite builds, I can have something that comes with mod_oauth installed. I could then push this to my kubernetes cluster, tag it, and have my openstack helm deployment use that. 
+
+
+```{.default}
+podman build . -f Dockerfile.base --build-arg FROM:ubuntu:noble --build-arg CEPH_REPO='deb https://download.ceph.com/debian-reef/ jammy main' --tag base:ubuntu_noble
+
+podman build . -f Dockerfile --target requirements --build-arg FROM=base:ubuntu_noble --build-arg PROJECT=requirements --tag requirements:master-ubuntu_noble
+
+
+ERROR: Could not open requirements file: [Errno 2] No such file or directory: '""'
+Error: building at STEP "RUN /opt/loci/scripts/install.sh": while running runtime: exit status 1
+```
+
+And then this errors. I will try docker.  
+
+```{.default}
+---> 583b9bca7698
+Step 44/44 : RUN /opt/loci/scripts/install.sh
+ ---> Running in 57eb5670a12d
++ source /etc/lsb-release
+++ DISTRIB_ID=Ubuntu
+++ DISTRIB_RELEASE=22.04
+++ DISTRIB_CODENAME=jammy
+++ DISTRIB_DESCRIPTION='Ubuntu 22.04.5 LTS'
++ export LC_CTYPE=C.UTF-8
++ LC_CTYPE=C.UTF-8
++ echo 'APT::Get::AllowUnauthenticated "true";'
++ mv /etc/apt/sources.list /etc/apt/sources.list.bak
++ cat
++ apt-get update
+E: Malformed entry 1 in list file /etc/apt/sources.list (URI parse)
+E: The list of sources could not be read.
+The command '/bin/sh -c /opt/loci/scripts/install.sh' returned a non-zero code: 100
+[moonpie@cachyos-x8664 loci]$ docker build . -f Dockerfile --target requirements --build-arg FROM=base:ubuntu_noble 
+```
+
+Docker also errors on the second step, albeit for a different reason. This is somewhat strange, because I should be trying to use Ubuntu noble rather than jammy.
+
+
+Or... I could just do what understack *actually* did which was literally just installing mod auth openid. From [their dockerfile](https://github.com/rackerlabs/understack/blob/main/containers/keystone/Dockerfile). 
+
+```{.default}
+# syntax=docker/dockerfile:1
+
+ARG OPENSTACK_VERSION="required_argument"
+FROM quay.io/airshipit/keystone:${OPENSTACK_VERSION}-ubuntu_jammy
+
+ADD --checksum=sha256:deb52ea8304a41ee0331e4ba87a9f82ff643464b6d34084e161f58ec11c25a69 https://github.com/OpenIDC/mod_auth_openidc/releases/download/v2.4.16.5/libapache2-mod-auth-openidc_2.4.16.5-1.jammy_amd64.deb /tmp
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        /tmp/libapache2-mod-auth-openidc_2.4.16.5-1.jammy_amd64.deb \
+    && apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/*.deb
+```
+
+
+I think the simplest thing is to clone this and then push it to Dockerhub, and then use that one. ALthough one thing I am concerned about is that the version in the Ubuntu Noble resources seems to use be an older version than the one they get. 
+
+
+```{.default}
+root@b0fd9560e5c2:/# apt search libapache2-mod-auth-openidc
+Sorting... Done
+Full Text Search... Done
+libapache2-mod-auth-openidc/noble-updates,noble-security 2.4.15.1-1ubuntu0.1 amd64
+  OpenID Connect Relying Party implementation for Apache
+```
+
+```{.Dockerfile}
+# syntax=docker/dockerfile:1
+
+FROM quay.io/airshipit/keystone:2025.1-ubuntu_noble
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends libapache2-mod-auth-openidc \
+    && apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/*.deb
+```
+
+I then push this image to dockerhub. It can be [found here](https://hub.docker.com/r/moonpiedumplings/keystone). 
+
+
+Then, the next thing is to [set up keystone federation](https://docs.openstack.org/keystone/latest/admin/federation/configure_federation.html). 
+
+This one was actuall pretty easy to do. After putting a sample mapping in, it worked. 
+
+`openstack identity provider create --remote-id https://idp.moonpiedumpl.ing/app openstack openid`
+
+Create a mapping.
+
+`openstack federation protocol create openid --mapping openid_mapping --identity-provider openid`
+
+
+
+## Nova
+
+And then I get this error in my nova container.
+
+```{.default}
++ exec nova-compute --config-file /etc/nova/nova.conf --config-file /tmp/pod-shared/nova-console.conf --config-file /tmp/pod-shared/nova-libvirt.conf --config-file /tmp/pod-shared/nova-compute-fqdn.conf --config-file /tmp/pod-shared /nova-hypervisor.conf --config-dir /etc/nova/nova.conf.d 2025-10-01 21:33:31.610 2068907 INFO nova.virt.driver [None req-949165f9-c5bc-4527-af02-15ad7ab73875 - - - - - -] Lo ading compute driver 'libvirt.LibvirtDriver' 2025-10-01 21:33:32.074 2068907 INFO nova.compute.provider_config [None req-949165f9-c5bc-4527-af02-15ad7ab73875 - - - - - -[] No provider configs found in /etc/nova/provider_config/. If files are present, ensure the Nova process has access. 2025-10-01 21:33:32.597 2068907 INFO nova.service [-] Starting compute node (version 31.1.1) libvirt: error : internal error: could not initialize domain event timer 2025-10-01 21:33:33.112 2068907 WARNING nova.virt.libvirt.host [None req-d6e2b665-7aa3-4f75-bc91-8e7c07d7536a - - - - -[] URI qemu+unix:///system?socket=/run/libvirt/libvirt-sock does not support events: internal error: could not i nitialize domain event timer: libvirt.libvirtError: internal error: could not initialize domain event timer
+```
+
+
+This issue is most likely caused by a mismatch of the libvirtd in the libvirt container and the libvirt-python that is being used in the
+
+```{.default}
+<<K9s-Shell>> Pod: openstack/libvirt-libvirt-default-rzp2k | Container: libvirt
+root@thoth:/# libvirtd --version
+libvirtd (libvirt) 10.0.0
+```
+
+
+```{.default}
+<<K9s-Shell>> Pod: openstack/nova-compute-default-6ls4j | Container: nova-compute
+nova@thoth:/$ pip show libvirt-python
+Name: libvirt-python
+Version: 11.0.0
+Summary: The libvirt virtualization API python binding
+Home-page: http://www.libvirt.org
+Author:
+Author-email:
+License:
+Location: /var/lib/openstack/lib/python3.12/site-packages
+Requires:
+Required-by:
+```
+
+I find this kinda weird because I am using 2025.1 for both. But actually, upon further investigation, when I download older images of nova, they all still have libvirt-python 11.0. 
+
+I think this issue could also be similar to something I had with OVN earlier on, where /run is mounted into the container and it keeps the sockets and other cruft from the deleted containers. 
+
+I found the [pinned requirements](https://opendev.org/openstack/requirements/src/commit/92137b98daed9be790ba7df71748d6d80207043c/upper-constraints.txt), and it looks like even 7 months ago the version of libvirt-python in use was still 10. 
+
+The issue has to be seperate from that. One concern I have is that my host's system is too old — I haven't updated to the current Debian Trixie yet, I am still on bookworm. 
+
+Okay. I updated to Trixie. No dice.
+
+Next, I change edit the daemonset, changing the command to `tail -f /dev/null`, changing the filesystem to be writable, and the user it runs as to be root.
+
+```{.yaml}
+...
+command:
+  - tail
+  - -f
+  - /dev/null
+...
+securityContext:
+  privileged: true
+  readOnlyRootFilesystem: false
+  runAsUser: 0
+```
+
+I test to see if virsh can connect without complaining, which is seems to be able to . 
+
+
+Meanwhile, I spot this in libvirt logs.
+
+```{.default}
+2025-10-02 22:32:22.949+0000: 1577326: error : dnsmasqCapsNewFromBinary:672 : Unable to find 'dnsmasq' binary in $PATH: No such file or directory
+2025-10-02 22:32:25.043+0000: 1577449: info : libvirt version: 10.0.0, package: 10.0.0-2ubuntu8.6 (Ubuntu)
+2025-10-02 22:32:25.043+0000: 1577449: info : hostname: thoth
+2025-10-02 22:32:25.043+0000: 1577449: error : dnsmasqCapsNewFromBinary:672 : Unable to find 'dnsmasq' binary in $PATH: No such file or directory
+```
+
+Although installing dnsmasq on the host doesn't really do anything. 
+
+I also see more errors after I start nova:
+
+```{.default}
+2025-10-03 12:01:24.689+0000: 3156564: error : dnsmasqCapsNewFromBinary:672 : Unable to find 'dnsmasq' binary in $PATH: No such file or directory
+2025-10-03 12:05:13.111+0000: 3156520: error : virNetSocketReadWire:1781 : End of file while reading data: Input/output error
+2025-10-03 12:05:24.116+0000: 3156520: error : virNetSocketReadWire:1781 : End of file while reading data: Input/output error
+2025-10-03 12:05:53.393+0000: 3156520: error : virNetSocketReadWire:1781 : End of file while reading data: Input/output error
+^[[B2025-10-03 12:06:35.354+0000: 3156520: error : virNetSocketReadWire:1781 : End of file while reading data: Input/output error
+2025-10-03 12:07:30.381+0000: 3156520: error : virNetSocketReadWire:1781 : End of file while reading data: Input/output error
+```
+
+But apparently, these are [harmless](https://forums.unraid.net/topic/131240-libvirt-error-virnetsocketreadwire1791-end-of-file-while-reading-data-inputoutput-error-after-upgrading-to-6115/). 
+
+>  This is the feedback from Libvirt developers. The socket connection to libvirtd / other daemons was abruptly
+closed. Essentially you can almost always ignore this error
+message as being mostly harmless.
+
+The problem was that some cruft wasn't getting deleted, but interfered with a new run. I had to delete the `/etc/libvirt` and `/run/libvirt` directories from the host.
+
+
+## Novnc
+
+It is possible to modify the container and add copy and paste: https://www.reddit.com/r/openstack/comments/1nueogz/the_solution_to_novnc_copy_paste_for_kolla/
+
+https://github.com/Vishwamithra37/galam_nonvc_copypaste/tree/CopyPasteWorking_NoVnc_OpenStack
+
+However, I discover something very disappointing in my testing:
+
+```{.default}
+[moonpie@cachyos-x8664 flux-config]$ nmap -A 130.166.84.86
+Starting Nmap 7.98 ( https://nmap.org ) at 2025-10-09 22:14 -0700
+Nmap scan report for s084n086.csun.edu (130.166.84.86)
+Host is up (0.0076s latency).
+Not shown: 990 closed tcp ports (conn-refused)
+PORT     STATE    SERVICE      VERSION
+22/tcp   open     ssh          Golang x/crypto/ssh server (protocol 2.0)
+| ssh-hostkey: 
+|_  4096 97:2f:18:c7:7c:b4:7e:72:55:02:6e:d9:46:7c:33:69 (RSA)
+80/tcp   open     http         nginx (reverse proxy)
+443/tcp  open     ssl/http     nginx (reverse proxy)
+|_ssl-date: TLS randomness does not represent time
+| ssl-cert: Subject: commonName=Kubernetes Ingress Controller Fake Certificate/organizationName=Acme Co
+| Subject Alternative Name: DNS:ingress.local
+| Not valid before: 2025-10-07T17:00:03
+|_Not valid after:  2026-10-07T17:00:03
+|_http-title: 404 Not Found
+445/tcp  filtered microsoft-ds
+3300/tcp open     ceph         Ceph distributed filesystem msgr2 protocol
+5900/tcp open     vnc          VNC (protocol 3.8)
+| vnc-info: 
+|   Protocol version: 3.8
+|   Security types: 
+|     None (1)
+|_  WARNING: Server does not require authentication
+6789/tcp open     ceph         Ceph distributed filesystem protocol v027 (ipv4)
+8080/tcp open     http         FRITZ!Box TR-069 service
+|_http-server-header: Ceph Object Gateway (squid)
+|_http-open-proxy: Proxy might be redirecting requests
+8443/tcp open     ssl/http     LXD container manager REST API
+|_http-title: Site doesn't have a title (application/json).
+|_ssl-date: TLS randomness does not represent time
+| ssl-cert: Subject: commonName=root@thoth/organizationName=Linux Containers
+| Subject Alternative Name: DNS:thoth, IP Address:127.0.0.1, IP Address:0:0:0:0:0:0:0:1
+| Not valid before: 2025-10-07T17:10:18
+|_Not valid after:  2035-10-05T17:10:18
+9091/tcp open     http         Golang net/http server (Go-IPFS json-rpc or InfluxDB API)
+Service Info: Device: broadband router
+
+Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 50.35 seconds
+```
+
+There is an unauthenticated, unencrypted VNC server on my server. And sure enough, when I connect to it, I am greeted with the interface of the test virtual machine I have created. 
+
+It seems that the novnc-proxy pod uses host networking by default, and you have to disable via values in the helm chart. And the VNC server is still exposed :/.
+
+One thing I need to test is if pods can access services on the host that are only served on localhost.
+
+Okay, there is an easier way to do this. I could also encrypt the traffic with tls certs, *and* use the certificate for authentication to the VNC service. This seems to be fairly simple, and wouldn't require any complex changes to the kubernetes networking config. 
+
+
+[There is an openstack-helm commit where they officially added support for this](https://opendev.org/openstack/openstack-helm/commit/bee2353cae1ed375ab3705e8e5039bc8fc5dc40a?style=unified&whitespace=ignore-change&show-outdated).
+
+The values I want look pretty easy, but it does look like I need to spin up a self signed certificate authority and certificate. I do that, and then it still doesn't connect. It looks like I failed to configure novnc to expect https, and was expecting http instead. I found the [relevant endpoints config](https://github.com/vexxhost/atmosphere/blob/25c4962e898db266f6844bce60ef0ef86abcaab5/roles/openstack_helm_endpoints/vars/main.yml#L270), in openstack atmosphere's code. 
+
+
+Another thing I want to do is to deploy the serial console in addition to the novnc console. This is difficult because the nova helm chart only supports one console kind at a time, but I think a potential way I could get around this is by deploying nova twice, but disabling all the manifests except for the relevant ones I care about. 
+
+
+Oh, and here is the cloud-init config I use to give the Rocky server a default username and password. This only works when I select "configuration drive", probably for reasons similar to the issues I was having with Incus. I just wanted an operating system that came with NetworkManager by default, as I have the most familiarity with the internals of that as opposed to other solutions. 
+
+```{.yaml}
+#cloud-config
+users:
+  - name: myuser
+    plain_text_passwd: "mypassword"
+    lock_passwd: false
+    shell: /bin/bash
+    groups: sudo
+    sudo: ['ALL=(ALL) ALL']
+    ssh_pwauth: true
+```
+
+## Neutron
+
+I started with Linuxbridge, which errored. It turns out that [linuxbridge was removed](https://lists.openstack.org/archives/list/openstack-discuss@lists.openstack.org/message/PJJZFMAC7MUJ5RXNRUP747N6IBOEJ3SW/), which sucks because Linuxbridge was in the kernel, whereas OVS required an extra (albeit default), component. 
+
+With OVS, I did something from the UI, but I seem to have something that works.
+
+But interestingly, what floating ip's do is get IP addresses via DHCP. Then, you can give it to a virtual machine via a NAT setup. This is a really appealing setup to me, because it means I could give users only access to internal subnets, then me or other administrators could assign indivual virtual machines public ip's for things like public services members want to host, or vpn access into internal subnets. 
+
+Right now, I am having trouble, because any vm's I attempt to put on the provider network, do not actaully get an ip address. They report as having one, but I cannot ping them and they don't have internet access.
+
+Intestlingly enough, when I put a router on the provider network, I *could* ping it. And when I deleted that router I could no longer ping it. But any vm's I created on NATed subnets behind that router had no internet access either, which is weird. It could be a default route issue?
+
+One possibility is firewall rules. The default security group doesn't allow for any traffic to on the ingress, only egress. Disabling this still had issues, but I think I am a step in the right direction. 
+
+Next thing to consider is port security. Port security is typically good where you control the subnet, as it ensures that ports attatched to VM's only get the ip address you want them to have. But it probably breaks things if you try to access an external dhcp server, as the virtual machine tries to change it's own ip address after figuring out what has been assigned. 
+
+So after some research, it looks like neutron is responsible for assigning ip addresses, and it uses port security to ensure that virtual machines get the correct one. So I try to create a "port" that is free from those restrictions, and get this:
+
+```{.default}
+(venv) [moonpie@cachyos-x8664 openstack]$ openstack server add port testlocal vm-bridge
+BadRequestException: 400: Client Error for url: https://nova.openstack.moonpiedumpl.ing/v2.1/7edd8553fb2f46bb86e33d4a67249cf6/servers/4f64ca58-4716-42f1-8974-e58dc353064c/os-interface, Network requires port_security_enabled and subnet associated in order to apply security groups.
+```
+
+What I'm trying to do is to put a router/firewall type operating system in front of a the subnet so that I can just attatch ports to that network with the same controls. 
+
+As a backup plan, I could also consider replicating what [libvirt does for it's NAT based networking](https://jamielinux.com/docs/libvirt-networking-handbook/custom-nat-based-network.html) and then using that as an external bridge. VM's would get traffic forwarded through to the main interface. No public VM's though.
+
+Although this gives me another interesting idea. What if I just put them on an Incus bridge? Although sadly, linuxbridge isn't supported, but Incus does seem to be able to create an openvswitch bridge. This also might explain why the undercloud-overcloud setup is popular. 
+
+And if I do this, I could use [Incus's network forwards](https://linuxcontainers.org/incus/docs/main/howto/network_forwards) with a veth in order to have public virtual machines on this subnet. 
+
+Okay, but when I put a *Rocky* Linux virtual machine on the public subnet, it does in fact get an IP address. And internet! DNS doesn't work but that's okay. 
+
+Except, this IP address was not given via DHCP. It looks liike *openstack* assigned it a static ip address, using cloud-init. But the static ip address does work... it's just not what I want. But, this should if I am using Incus's NATed bridge, since I do have control over that network. 
+
+It looks like, since I disabled DHCP, the ip address was given to the Rocky server via Cloud Init and a static ip address instead. So, I enable automatic networking in the NetworkManager config, and now the virtaul machine does not get internet at all. 
+
+Two possible causes:
+
+* Security Groups preventing ingress DHCP traffic
+  * But I enabled accepting all ingress traffic
+  * And then I disabled the ingress group
+* Port security
+  * Probably this, when I attempt to disable port security, it just fails and doesn't change anything. 
+
+It seems that it's somewhat difficult to disable port security if you are simply adding a virtual machine to a network. I have to explicitly create a port attached to the network. 
+
+Another option is a "dhcp relay". Neutron gets dhcp from the external subnet, before passing them onto it. But it's not supported, all I can find is [some scaffolding for it](https://launchpad.net/bugs/2119647), but no working code. Despite the fact that this claims the feauture is implemented in OVN, I can't find any related documentation.
+
+What I am thinking of doing is twofold:
+
+* Use an allocation range of IP addresses from .30-.69 from the public subnet (this seems to be the range not given out via DHCP)
+* **And** use a NATe'd OVN Incus network. 
+
+The problem is that openstack really wants each project to have it's own router on an external subnet. In theory I could do double NAT or things like that, but that breaks floating ip address setups. But with this setup, I have two external networks, one with 255 addresses, and one with 49 ip addresses.
+
+I created a bridge using the Incus UI. Here is the yaml config of the Incus network, so I can easily recreate it.
+
+```{.yaml}
+project: default
+name: br-inc
+description: For openstack
+type: bridge
+config:
+  bridge.driver: openvswitch
+  ipv4.address: 10.88.0.1/24
+  ipv4.dhcp: 'false'
+  ipv4.nat: 'true'
+  ipv6.address: none
+```
+
+And then after I enable ICMP traffic through the default security group, I am able to ping the virtual machine on the Incus network, and vice versa. But only the Incus virtual machine gets traffic through to the internet, the openstack virtual machine does not. 
+
+Testing:
+
+* Not security groups/ACL's on either side
+* Not ipv4 forwarding
+* Traffic other than ICMP can go from incus virtual machine to openstack vm and vice versa. 
+* Promiscious mode was enabled for br-inc, but nothing else yet
+
+One possibility I am thinking of is that traffic from openstack doesn't leave the subnet, but instead routes from another bridge, *into* br-inc, where it gets stuck. It looks like openstack doesn't directly attatch 
+
+Two other possibilites:
+
+* Iptables rules created by canal get in the way
+  * I should try cilium instead, which uses epbf for it's rules
+* Networkmanager attempts to manage the ovs bridges when it shouldn't be
+  * When I look into the 
+
+## Glance
+
+Firstly, I think the 2Gi default pvc it gets for images is too small. I will probably have more than that.
+
+Secondly, when I attempt to upload an image via horizon it just sits there on pending forever instead of uploading. But I think I [came across the solution here](https://www.reddit.com/r/openstack/comments/1o2r5ra/glance_images_and_nova_instances_taking_so_long/). 
+
+> Right, don't do that. It drastically slows down provisioning time because glance has to convert the image from qcow to raw and import back into glance on-demand, and it uses the local disk and memory of the compute host the VM is launched on, to do that.
+
+Also, it looks like copy on write snapshots with ceph only work with raw images as well.
+
+:/
+
+So I convert the image into a img using qemu-img and it turns out to be a 3 gb image uncompressed, even though the qcow was 415 mb compressed. So maybe openstack reads the first bit and then dies because glance doesn't have enough storage.
+
+But even when I attempt to load up a small alpine image, I get other errors:  
+
+> Error: Unable to retrieve the images.
+
+> Error: Unable to get the Glance service version.
+
+It could also be because the glance endpoint is not being exposed publicly, even though that might be what is expected of the service. This was caused by a typo, I put "images" instead of "image" which  was what was expected in the endpoints config. 
+
+After fixing this, and exposing glance with TLS, I am able to upload an image using the openstack cli.
+
+`openstack image create --disk-format raw --file nocloud_alpine-3.22.2-x86_64-bios-tiny-r0.img alpine2 --verbose`
+
+But the GUI still does not work, and stays on pending forever. I see an error in the glance service:
+
+`OSError: unable to receive chunked part`
+
+This appears to be a [known issue](https://lists.openstack.org/archives/list/openstack-discuss@lists.openstack.org/thread/UU5XE3TOHCIBQZ7O5TVNZ6MPN3CX27HI/), where the solution is to increase the number of uwsgi worker threads. I increased to 2, then 4, then 40, and then 80 with no luck. `:/`. 
+
+I take a look at what Atmosphere, a deployment tool for helm [is doing](https://github.com/vexxhost/atmosphere/blob/main/charts/glance/values.yaml#L392C2-L412C56). It looks like there exist [uwsgi options related to chunked input](https://uwsgi-docs.readthedocs.io/en/latest/Chunked.html). 
+
+After setting a uwsgi config of:
+
+```{.yaml}
+glance_api_uwsgi:
+  uwsgi:
+    chunked-input-limit: "4096000"
+    http-auto-chunked: true
+    http-raw-body: true
+    socket-timeout: 10
+```
+
+Uploading via the UI works now. For the alpine image. But for the debian image (3.2 gigabytes), I get "Request Entity Too Large". This issue happens when an HTTP server cannot handle the size of a POST request sent to it. To fix a similar issue with Incus. I suspect this issue is the Apache httpd in front of openstack Horizon having a limit. 
+
+[For example, the default is 1 GB](https://access.redhat.com/articles/6975397). Since this requires auth, I will just extract the interesting parts:
+
+>  A new default for the LimitRequestBody directive in httpd configuration 
+
+> On systems where the value of LimitRequestBody is not explicitly specified in an httpd configuration file, updating the httpd package will set LimitRequestBody to the new default value of 1 GiB. As a consequence, if the total size of the HTTP request body exceeds this new 1 GiB default limit, httpd will return the 413 Request Entity Too Large error code.
+
+This new default is to fix [this CVE](https://nvd.nist.gov/vuln/detail/CVE-2022-29404), which I am not affected on becasue I am on 2.4.58 instead of the affected 2.4.53. 
+
+After setting `LimitRequestBody 0`, it works and I can upload larger images from the UI. It looks like atmosphere's openstack helm doesn't have this, because the default apache2 version they use in their container, `docker.io/openstackhelm/horizon:stein-ubuntu_bionic`, is older than the patch.
+
+```{.default}
+root@9971ffb9219b:/var/lib/python# apache2 -v
+Server version: Apache/2.4.29 (Ubuntu)
+Server built:   2020-08-12T21:33:25
+```
+
+## Cleanup
+
+Here are the commands I use to cleanup after doing a deploy.
+
+`kubectl delete -f apps/`
+
+Delete the OVN bridge from Incus's networks
+
+`kubectl delete -f infra/`
+
+`kubectl delete -n openstack jobs.batch --all`
+
+`kubectl delete configmaps -n openstack mariadb-mariadb-state`
+
+`kubectl delete secrets -n openstack pvc-ceph-client-key keystone-fernet-keys keystone-credential-keys`
+
+`kubectl delete pvc -n openstack --all`
+
+And then on the compute node, I needed to:
+
+`rm -rf /run/libvirt`
+
+`rm -rf /etc/libvirt`
+
+If this isn't done, then the nova-compute-default pod fails to start. 
+
+# Notes for iteration two
 
 I will eventually tear down everything and rebuild it. Some of the stuff is not worth changing right now, but when I do a rebuild I may end up making these changes.
 
 Here's some minor stuff on the more nitpicky side:
 
-* Have my Identity Management/Provider be hosted on idp.domainname, instead of sso.moonpiedumpl.ing
+* ~~Have my Identity Management/Provider be hosted on idp.domainname, instead of sso.moonpiedumpl.ing~~
+  * Done!
 * Have secrets be set up in such a way that people can copy the configs with minimal effort.
+* Use more than one kustomization instead of one big one
+  * I edited the file that says "do not edit"
+  * Kustomizations would let me do variable substitutions from secrets, allowing me to have things like the database password be private, but the url be public. Currently, I hide the entire database url (it includes the password).
+* Move to endpointslices instead of endpoints
 
 
 One thing I am considering is using [Zitadel](https://zitadel.com/) instead of authentik, because Zitadel supports [actions](https://zitadel.com/docs/apis/actions/introduction) which are arbitrary scripts and probably cleaner to do than hacking an authentik policy to do api calls and requests.
@@ -1766,7 +2901,7 @@ Also, I would probably rather use Cilium or Calico instead of RKE2's combo of Fl
 Other things to consider are options for improving security.
 
 * Kube Api and ssh behind the firewall, requiring me to VPN into the server to access those services.
-* Some form of login banner/warning banner. If I'm going to be essentially becoming my own hosting provider/infra
+* Some form of login banner/warning banner. If I'm going to be essentially becoming my own hosting provider/infra, it makes sense to have the legal protections in place.s
 
 
 Openstack instead of Incus. Incus is really good, but there are so many papercuts and issues when using it that are frustrating. I originally wanted Openstack because it was a whole "cloud" and had features like s3, databases as a service, firewall as a service, containers as a service, etc. But on the reddit, people are frustrated with those services as they aren't maintained and truly reliable the way that the core openstack set of components is — for example, [zun (containers) was deprecated and then undeprecated](https://www.reddit.com/r/openstack/comments/1lelavr/is_openstack_zun_still_maintained_and_used/mywdhnj/). 
@@ -1781,14 +2916,16 @@ Another operatore option is [yaook](https://docs.yaook.cloud), but also no suppo
 
 <https://github.com/openstack-gitops/rhoso-gitops>. Huh. Officially developed Openstack on ArgoCD.
 
-Another thing worth looking at is [genestack](https://github.com/rackerlabs/genestack), where they managed to get longhorn support with openstack-helm, but I ccould not figure out how they did it. 
+Another thing worth looking at is [genestack](https://github.com/rackerlabs/genestack), where they managed to get longhorn support with openstack-helm, but I could not figure out how they did it. 
 
 Another option is Suse Harvester... but they only officially support an ISO install. But I can find people unofficially nabbing the helm charts into their gitops:
 
 * <https://github.com/chifu1234/flux/blob/9ad745fbb9924c318a27c641d81b71478d46f72d/apps/base/harvester/release.yaml#L13>
 * <https://github.com/remikeat/cluster/blob/3754e93b7d242ab384dac68e4206565e8ed9d6a5/argocd/vm/harvester/application.yaml#L4>
 
-I would have to deploy Rancher with the [harvester UI extension](https://github.com/harvester/harvester-ui-extension)
+Harvester does have a [development mode install](https://harvesterhci.io/development/dev-mode/), which documents using helm to install it. 
+
+I would have to deploy Rancher with the [harvester UI extension](https://github.com/harvester/harvester-ui-extension). 
 
 Argo instead of Flux: Probably not. But I am considering changing the way flux is deployed, like using the flux operator instead.
 
@@ -1796,5 +2933,302 @@ Argo instead of Flux: Probably not. But I am considering changing the way flux i
 One thing I really, really want to do is get my own ASN and become my own hosting platform. But this is a far future type thing.
 
 
+# Incident: Outage
+
+I was informed by a user of my services, that Incus has been taken slow to load, and generally broken. It was when I attempted to ssh into the server, and my connection was booted, that I became concerned.
+
+My first theory was that it was a DDOS attack of some kind. 
+
+
+```
+                                              19.1Mb                                         38.1Mb                                         57.2Mb                                         76.3Mb                                   95.4Mb
+└─────────────────────────────────────────────┴──────────────────────────────────────────────┴──────────────────────────────────────────────┴──────────────────────────────────────────────┴──────────────────────────────────────────────
+130.166.79.34                                                                                           => images.linuxcontainers.org                                                                                 0b    534Kb   245Kb
+                                                                                                        <=                                                                                                            0b      0b      0b
+130.166.79.34                                                                                           => 172.56.243.240                                                                                           638Kb   185Kb   108Kb
+                                                                                                        <=                                                                                                            0b      0b      0b
+130.166.79.34                                                                                           => cdn-185-199-109-154.github.com                                                                          73.0Kb  58.4Kb   145Kb
+                                                                                                        <=                                                                                                            0b      0b      0b
+130.166.79.34                                                                                           => 130.166.105.7                                                                                              0b    170b    446b
+                                                                                                        <=                                                                                                            0b      0b      0b
+130.166.79.234                                                                                          => ec2-18-144-3-89.us-west-1.compute.amazonaws.com                                                            0b    109b     27b
+                                                                                                        <=                                                                                                            0b      0b      0b
+130.166.79.34                                                                                           => ec2-18-144-3-89.us-west-1.compute.amazonaws.com                                                            0b    109b     27b
+                                                                                                        <=                                                                                                            0b      0b      0b
+130.166.79.234                                                                                          => ec2-35-91-81-30.us-west-2.compute.amazonaws.com                                                            0b     54b     41b
+                                                                                                        <=                                                                                                            0b      0b      0b
+130.166.79.34                                                                                           => ec2-35-91-81-30.us-west-2.compute.amazonaws.com                                                            0b     54b     41b
+                                                                                                        <=                                                                                                            0b      0b      0b
+130.166.79.34                                                                                           => ec2-52-81-34-218.cn-north-1.compute.amazonaws.com.cn                                                       0b     54b     14b
+                                                                                                        <=                                                                                                            0b      0b      0b
+130.166.79.35                                                                                           => ec2-52-81-34-218.cn-north-1.compute.amazonaws.com.cn                                                       0b     54b     14b
+                                                                                                        <=                                                                                                            0b      0b      0b
+130.166.79.34                                                                                           => ec2-52-81-249-152.cn-north-1.compute.amazonaws.com.cn                                                      0b     54b     14b
+                                                                                                        <=                                                                                                            0b      0b      0b
+130.166.79.35                                                                                           => ec2-52-81-249-152.cn-north-1.compute.amazonaws.com.cn                                                      0b     54b     14b
+                                                                                                        <=                                                                                                            0b      0b      0b
+130.166.79.34                                                                                           => ec2-35-92-1-89.us-west-2.compute.amazonaws.com                                                             0b      0b     54b
+                                                                                                        <=                                                                                                            0b      0b      0b
+130.166.79.34                                                                                           => lb-140-82-116-34-sea.github.com                                                                            0b      0b     42b
+                                                                                                        <=                                                                                                            0b      0b      0b
+130.166.79.234                                                                                          => ec2-35-92-1-89.us-west-2.compute.amazonaws.com                                                             0b      0b     41b
+                                                                                                        <=                                                                                                            0b      0b      0b
+130.166.79.234                                                                                          => ec2-35-89-225-142.us-west-2.compute.amazonaws.com                                                          0b      0b     41b
+                                                                                                        <=                                                                                                            0b      0b      0b
+130.166.79.34                                                                                           => ec2-35-89-225-142.us-west-2.compute.amazonaws.com                                                          0b      0b     41b
+                                                                                                        <=                                                                                                            0b      0b      0b
+130.166.79.234                                                                                          => ec2-54-67-69-159.us-west-1.compute.amazonaws.com                                                           0b      0b     41b
+                                                                                                        <=                                                                                                            0b      0b      0b
+130.166.79.34                                                                                           => ec2-54-67-69-159.us-west-1.compute.amazonaws.com                                                           0b      0b     41b
+                                                                                                        <=                                                                                                            0b      0b      0b
+130.166.79.234                                                                                          => ec2-35-94-27-60.us-west-2.compute.amazonaws.com                                                            0b      0b     27b
+                                                                                                        <=                                                                                                            0b      0b      0b
+130.166.79.234                                                                                          => ec2-3-101-22-123.us-west-1.compute.amazonaws.com                                                           0b      0b     27b
+                                                                                                        <=                                                                                                            0b      0b      0b
+130.166.79.34                                                                                           => ec2-35-94-27-60.us-west-2.compute.amazonaws.com                                                            0b      0b     27b
+                                                                                                        <=                                                                                                            0b      0b      0b
+130.166.79.234                                                                                          => ec2-13-57-210-23.us-west-1.compute.amazonaws.com                                                           0b      0b     27b
+                                                                                                        <=                                                                                                            0b      0b      0b
+130.166.79.34                                                                                           => ec2-3-101-22-123.us-west-1.compute.amazonaws.com                                                           0b      0b     27b
+                                                                                                        <=                                                                                                            0b      0b      0b
+130.166.79.234                                                                                          => ec2-35-88-121-77.us-west-2.compute.amazonaws.com                                                           0b      0b     27b
+                                                                                                        <=                                                                                                            0b      0b      0b
+130.166.79.34                                                                                           => 52.82.36.134                                                                                               0b      0b     27b
+                                                                                                        <=                                                                                                            0b
+```
+
+This is the result of `iftop`, which shows network traffic. Most of these seem to be scraper bots of some kind, and they are eating up my traffic. 
+
+I deployed anubis to my forgejo service, to avoid overconsumption of CPU, but I neglected another problem: With a total of only 200 mb/s, it could easily get saturated, even by simpler requests.
+
+Here is an example domain that affected me: `azpdegt2l5yb.stretchoid.com`. This site, stretchoid, is as port scanning service, that scans websites for vulnerabilities.  And they are eating up all my bandwidth, in what is essentially a ddos attack. Similarly, `scan-13f.shadowserver.org` belongs to a port scanning as a service platform.
+
+Although I thought I was being clever with my bonding setup, the problem with it, is that even though I get more performance out of it, it becomes possible to saturate both network interfaces via enough connections. If I was using a seperate "management" interface, that was not exposed publicly except for ssh, then it could not get saturated, enabling me to reliably connect. 
+
+Another unlucky thing: This happened exactly when I went back to San Diego. I am not currently physically with my server to handle things if I want to take it truly offline. 
+
+The temporary mitigation I have implemented to ensure continued remote access (albeit, at the cost of uptime):
+
+* Taking my services offline (just stopping the systemd services)
+* Pointing moonpiedumpl.ing to 1.1.1.1 instead of my original domain
+  * This does not seem to have stopped the scanners though
+
+After my services have been offline for a while, the traffic seems to have slowed. Although `iftop` still reports many connections, I'm not seeing a constant 90 mbit/s all the time.  
+
+Possible temporary solutions (which keep my services online):
+
+* Change my mac address (in order to get a different one from DHCP)
+  * This may not work if they are scanning domains
+  * This may not work if they are scanning the whole internet, and just happened to find me. If they can find me once, they can find me again.
+* Change my domain
+  * Yeah. Same thing as above. Perhaps changing my domain, along with my ip address will let me keep my service up.
+
+Possible long term solutions:
+
+* Ip based blocklists
+  * Something like crowdsec could block ip addresses... although I'm worried they
+* Cloudfare
+  * Maybe one of the cloudfare ingress controllers:
+    * <https://github.com/STRRL/cloudflare-tunnel-ingress-controller>
+    * <https://blog.cloudflare.com/cloudflare-ingress-controller/>
+* VPS + Reverse Proxy (+ WAF?)
+  * Something like [pangolin](https://github.com/fosrl/pangolin)
+
+
+Okay, I will say that I have been forced to change my ip address, because I moved from one dorm to another. So now, I am debating if I should change my domain or not. I think I will change it and keep the new one secret, using variables like 
+
+One thing I think would be cool would are [letsencrypt's ip address based certificates](https://letsencrypt.org/2025/01/16/6-day-and-ip-certs), but I think Coder needs subdomains in order to work, and I can't have a subdomain on an ip address. But with something like this, I could just move my ip address and keep going. 
+
+I could also consider just... not changing my domain. This service needs to be up by tomorrow, which is not a lot of time. But if I do so, then I risk exposing my new IP address and domain. 
+
+In order to test this, I connected my laptop (so I got a different IP address) and pointed my domain to my laptop. Although I see a lot of port scans, I don't see any major usage of traffic. I suspect that attempts to pop open forgejo, in combination with Incus doing something like Image pulling, ate up all my traffic. I think I'm just going to put this online as is, and if I see too much traffic, I can put the entirity of forgejo behind a login wall.
+
+However, after putting my server back up, I see Incus eating up around 80-90 mbit/s of bandwidth. The connection is to `images.linuxcontainers.org`, which is where the images are stored. Apparently, Incus auto updating cached images was eating up all my network. Thankfully, I can disable the feature.
+
+So it's not *quite* a DDOS. But I was able to access the server while forgejo was offline, even with that high bandwidth usage, so I think it was a double whammy, and a combination of the two resulted in a much worse problem. 
+
+I saw almost no traffic, but when I put forgejo online again, I saw a lot more traffic and port scanners. Not DDOS, but I guess it was enough to fill up my network when combined with Incus. The way bonding works, is that the it doesn't split a single connection, so individual connections are limited. Hence why it's a "Distributed" Denial of Service, instead of a just a normal machine.  
+
+## New Dorm
+
+Except, I'm not quite sure there is no issue. Despite seeing no network traffic from Incus or scanners on forgejo, the server still suffered from intermittment connections. But, apparently the new building I am, has bad wiring and issues, according to someone else who was previously here. In addition to that, my dorm has the wifi router. My guess is what is happening is that despite having 100 mbit/s connection limits on all cables, the switch behind everything (or something further up the chain), cannot actualloy handle all that traffic. I'm reminded of a [blog post I recently read about cpu limits on kubernetes](https://home.robusta.dev/blog/stop-using-cpu-limits), where they note that setting a CPU limit does not actually guarantee that pods will get access to that level of CPU. Instead, requests are needed, which actually does do the work to figure out a setup where all pods get the cpu they request.
+
+And it's really bad. 
+
+I switched to [mosh](https://github.com/mobile-shell/mosh), and despite no traffic running through my server except ssh, I see this:
+
+`mosh: Last contact 1:00 ago. [To quit: Ctrl-^ .]                                                                                                                                                                 
+```
+
+Eventually it reconnects. But this is really annoying. And for users, it must be extra annoying. But first, I need to ensure that both my ethernet interfaces in the bond are actually being used.
+
+```{.default}
+moonpie@thoth:~$ sudo cat /proc/net/bonding/bond0
+Ethernet Channel Bonding Driver: v6.1.0-38-amd64
+
+Bonding Mode: adaptive load balancing
+Primary Slave: None
+Currently Active Slave: enp9s0
+MII Status: up
+MII Polling Interval (ms): 100
+Up Delay (ms): 0
+Down Delay (ms): 0
+Peer Notification Delay (ms): 0
+
+Slave Interface: enp0s25
+MII Status: up
+Speed: 100 Mbps
+Duplex: full
+Link Failure Count: 1
+Permanent HW addr: 48:4d:7e:ec:54:2f
+Slave queue ID: 0
+
+Slave Interface: enp9s0
+MII Status: up
+Speed: 100 Mbps
+Duplex: full
+Link Failure Count: 0
+Permanent HW addr: 48:4d:7e:ec:54:31
+Slave queue ID: 0
+```
+
+The `Link Failure Count: 1` is probably due to me unplugging it to plug my laptop in, but it did come back up again, which is a good sign.  
+
+```{.default}
+root@thoth:~# ifstat -i enp9s0,enp0s25,eth0,bond0,internal0,public0
+      enp9s0             enp0s25               eth0               bond0             internal0            public0
+ KB/s in  KB/s out   KB/s in  KB/s out   KB/s in  KB/s out   KB/s in  KB/s out   KB/s in  KB/s out   KB/s in  KB/s out
+    1.87      2.46      0.00      0.00      1.22      2.95      1.87      2.46      0.00      0.00      1.11      0.00
+    1.16      1.62      0.00      0.00      0.76      2.33      1.16      1.62      0.00      0.00      0.67      0.00
+    2.11      1.63      0.00      0.00      1.23      1.92      2.11      1.63      0.00      0.00      1.09      0.00
+    1.81      1.65      0.00      0.00      1.31      2.33      1.81      1.65      0.00      0.00      1.21      0.00
+    2.40      1.67      0.00      0.00      1.99      2.00      2.40      1.67      0.06      1.40      0.51      0.00
+    1.16      1.71      0.00      0.00      0.82      2.00      1.16      1.71      0.00      0.00      0.58      0.00
+    1.16      1.67      0.00      0.00      0.73      3.03      1.16      1.67      0.00      0.00      0.64      0.00
+    1.00      1.66      0.00      0.00      0.73      1.84      1.00      1.66      0.05      0.00      0.63      0.00
+    2.60      2.54      0.00      0.00      2.11      2.62      2.60      2.54      0.07      0.00      0.69      0.00
+```
+
+So it looks like despite having a bond, only one of my interfaces is actually used. Both say up though, but this probably contributes to not getting enough network speeds. 
+
+After a reboot, it works fine, however:
+
+```{.default}
+root@thoth:~# ifstat -i enp9s0,enp0s25,eth0,bond0,internal0,public0
+      enp9s0             enp0s25               eth0               bond0             internal0            public0
+ KB/s in  KB/s out   KB/s in  KB/s out   KB/s in  KB/s out   KB/s in  KB/s out   KB/s in  KB/s out   KB/s in  KB/s out
+11989.63     52.37      1.37    124.69  11654.08    171.83  11989.74    177.06     39.22   1938.29      0.99      0.00
+11946.43     49.93      1.87    138.25  11614.61    182.29  11948.30    188.25     38.44   1828.08      1.42      0.00
+11959.60     45.93      1.56    145.35  11625.44    185.09  11959.90    191.29     35.43   1556.25      1.03      0.00
+11922.62     42.51      1.62    151.77  11592.51    187.73  11928.02    194.21     32.27   1440.24      1.22      0.00
+11848.59     35.80      1.25    160.06  11509.07    188.90  11847.45    195.96     25.35   1181.13      0.90      0.00
+11854.63     40.43      1.62    145.73  11528.21    179.70  11858.91    186.06     30.50   1410.89      1.09      0.00
+11926.80     45.38      1.12    145.14  11593.25    184.30  11925.13    190.51     34.03   1589.40      0.89      0.00
+```
+
+But, when I log in a few hours later:
+
+```{.default}
+root@thoth:~# ifstat -i enp9s0,enp0s25
+      enp9s0             enp0s25
+ KB/s in  KB/s out   KB/s in  KB/s out
+    3.07      5.95      0.00      0.00
+    2.01      2.97      0.00      0.00
+   62.43      6.41      0.00      0.00
+    1.82      3.16      0.00      0.00
+    1.81      3.02      0.00      0.00
+   21.44     11.37      0.00      0.00
+   16.05      3.42      0.00      0.00
+    1.11      0.06      0.00      0.00
+    1.82      0.12      0.00      0.00
+    1.10      0.06      0.00      0.00
+    0.99      0.06      0.00      0.00
+    0.94      0.06      0.00      0.00
+   16.15      3.75      0.00      0.00
+   27.99      6.11      0.00      0.00
+10650.43    210.02      0.00      0.00
+11952.08    213.10      0.00      0.00
+11996.47    213.79      0.00      0.00
+11987.28    208.43      0.00      0.00
+ 4684.25     75.68      0.00      0.00
+    1.45      0.06      0.00      0.00
+    3.79      0.06      0.00      0.00
+    1.25      0.87      0.00      0.00
+    3.04      0.30      0.00      0.00
+    2.33      0.06      0.00      0.00
+```
+
+I also see repeated disconnections again. But what causes these disconnections? 
+
+Also, I suspect this issue may have happened previously, which is why I ran out of network when Incus was downloading images.
+
+
+```{.default}
+e1000e 0000:00:19.0 enp0s25: Detected Hardware Unit Hang:
+  TDH                  <e0>
+  TDT                  <1e>
+  next_to_use          <1e>
+  next_to_clean        <df>
+buffer_info[next_to_clean]:
+  time_stamp           <1002e4bf0>
+  next_to_watch        <e0>
+  jiffies              <10049d328>
+  next_to_watch.status <0>
+MAC Status             <80043>
+PHY Status             <796d>
+PHY 1000BASE-T Status  <0>
+PHY Extended Status    <3000>
+PCI Status             <10>
+```
+
+I see this error in the cockpit logs, probably from dmesg.  However, although rebooting fixes the problem temporarily, I lose these logs. I think 
+
+
+Also, apparently the sober people dorms get 1g links up/down. I will do those next summer/year. 
+
+
+## Outage 2: Electric Boogalo
+
+I wake up and attempt to ssh in and I cannot ssh in. I also cannot kubectl anything, even though ingress-nginx appears to be up and I can access it — although everything 502's. 
+
+So I reboot. And my server doesn't come online. I plug in the monitor, and get no boot devices found. I try to add one in the bios and I get "no filesystems found". 
+
+One likely cause for this issue is the the EFI partition is full. To fix this,
+
+1. Boot from a live ISO. 
+
+2. Chroot in to the existing debian install 
+
+3. Mount partitions in the chroot
+
+4. Delete the cruft from the partition.
+
+5. Update the system and reinstall kernels and the bootloader.
+
+
+Well I try to boot and it doesn't even find the SSD. So I take out the SSD and use a USB adapter, and it doesn't show up there. 
+
+Actually, it does show up, as SATAFIRM 11, which is an error code indicating a firmware issue. This issue seems to be unfixable, based on some basic research. Even recovery seems to be difficult, because the issue exists at a lower level.
+
+But anyway. The new SSD I bought shows up fine. I also bought a new 4TB hard drive, because I don't trust the existing one. 
+
+But I repeat the bridge/bond and now I'm back with a fresh install. 
+
+### Update to Debian Trixie
+
+I have reinstalled and I am on Debian trixie. I am documented the steps of what i need on the host.
+
+`open-iscsi`, `iptables` (actually the wrapper for nftables)
+
+*additional* (meaning, keep non-free-firmware enabled) enabled repos: `non-free`, `contrib`, `backports`
+
+Another annoying error I get is: `Failed to allocate manager object: Too many open files`
+
+It seems like when there is a limit on the maximum number of file descriptors, so I increased that.
+
+```{.default filename='/etc/security/limits.conf'}
+*    soft    nofile    65536
+*    hard    nofile    65536
+```
 
 

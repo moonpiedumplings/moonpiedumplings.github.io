@@ -83,6 +83,16 @@ Somewhat related: <https://github.com/udevbe/greenfield> — it's an html5 wayla
 
 Also related: [cloud-morph](https://github.com/giongto35/cloud-morph) and [cloud-game](https://github.com/giongto35/cloud-game)
 
+<https://eclipse.dev/che/> — seems to be a promising alternative to Coder.
+
+
+## Browser Based IDE (javascript/wasm)
+
+* <https://github.com/styfle/awesome-online-ide>
+
+[Livecodes](https://github.com/live-codes/livecodes) from this list is pretty cool.
+
+There is also this one project: [Interactive Code Playgrounds](https://github.com/lucademenego99/icp-bundle). This one is the best thing I have found so far for generally embedding code snippets into blogposts or slides I might make. [Example slides here](https://lucademenego99.github.io/icp-slides/editors.html#/).
 
 # Intrustion Detection System (Wazuh)
 
@@ -146,7 +156,99 @@ Lots of similar software mentioned there.
 * <https://github.com/freelensapp>
 * <https://github.com/wiredoor/wiredoor>
 * <https://github.com/werf/nelm> — I want a helm alternative, helm has certain issues
+  * [Reddit post](https://www.reddit.com/r/kubernetes/comments/1jqd4pb/werfnelm_nelm_is_a_helm_3_alternative/)
 * <https://yokecd.github.io/docs/>
+* <https://github.com/ctrox/zeropod> — container pause and save to memory, then resume. Comes with an experimental in memory
+
+# Openstack
+
+* [Substation TUI](https://substation.cloud/)
+  * Code: <https://github.com/cloudnull/substation>
+
+Known deployment solutions:
+
+Kubernetes:
+
+* Openstack-helm
+  * Genestack
+  * Understack
+  * Atmosphere
+* Yaook
+* Openstack k8s operators
+* Mirantis Rockoon
+
+Not kubernetes:
+
+* Debian
+* Kolla-ansible
+* Openstack-ansible
+* Canonical Sunbeam
+
+# Nix
+
+Sandboxing solutions:
+
+* <https://github.com/Naxdy/nix-bwrapper>
+* <https://github.com/nixpak/nixpak>
+
+These are similar solutions, although they have slightly different goals.
+
+# OpenBSD
+
+<https://learnbchs.org/>
+
+Unique web development framework using C and openbsd.
+
+# Cyber Ranges
+
+A cyber range is a set of virtual machines for you to hack into and around.
+
+<https://github.com/Orange-Cyberdefense/GOAD>
+
+<https://orange-cyberdefense.github.io/GOAD/>
+
+<https://mayfly277.github.io/posts/GOADv2/#installation>
+
+<https://docs.ludus.cloud/>
+
+<https://docs.platform.cyberrange.cz/>
+
+
+<https://github.com/stratosphereips/stratocyberlab>
+
+<https://github.com/GSI-Fing-Udelar/tectonic>
+
+
+Just a single virtual machine:
+
+<https://www.vulnhub.com/>
+
+[Secgen](https://github.com/cliffe/SecGen) — randomly generate vulnerable VM's. 
+
+
+Related: Scoring engine/inject software:
+
+<https://github.com/dbaseqp/Quotient>
+
+<https://docs.openbas.io/latest/deployment/ecosystem/executors/>
+
+
+# Music
+
+[Tidalcycles](https://en.wikipedia.org/wiki/TidalCycles) — haskell based language for generating music.
+
+
+[https://patterns.slab.org](Strudel) — Javascript based runtime for the above.
+
+
+
+# Hardware
+
+[Raptor Computing Systems](https://www.raptorcs.com/).
+
+[Starlabs](https://us.starlabs.systems/?shpxid=e8451cdf-7b0a-4505-967f-f75f00144a4a) — Arm laptops
+
+Thinkpad X13s
 
 # Funny
 

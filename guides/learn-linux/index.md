@@ -11,11 +11,17 @@ execute:
   freeze: false
 ---
 
-My browser bookmarks bar is massive. I basically bookmark anything interesting I come across, and now I have a lot of resources accumulated, and I think it's worth it to write them down, although formatting is still a work in progress. 
+
+I'm in college now, and one of my frustrations is the usage of textbooks I cannot reshare or reference once I am done with the class. In my opinion, one of the goals of college is not just to learn things, or learn how to learn, but also to learn how to teach things. It's because of this, that I usually try to find alternate sources for the information taught in the classes, that I can reference 
 
 I have a heavy preference for Free and Open Source resources, because I believe that things like wikibooks will be much more resilient in the long run, and stay up. I've seen similar lists of learning, and it is frustrating when I'm no longer able to buy or view one of the textbooks on the list.
 
 I also like resources maintained by some kind of organization, either the official organzition behind the software (think Microsoft and powershell), or a nonprofit, (Overthewire), because again, I think they will be more resilient in the long run.
+
+I try to avoid video or audio resources, because of unclear copyright, and because they are difficult to reference on the go.
+
+
+The idea behind this list is that I should be able to pull it up on my phone, and show specific things to people.f
 
 
 # Linux
@@ -164,6 +170,11 @@ https://wellarchitectedlabs.com/security/
 [Software Technical Writings — A guidebook (pdf)](https://jamesg.blog/book.pdf) — nitty gritty technical writing details.
 
 
+# Networking
+
+<https://intronetworks.cs.luc.edu/>
+
+
 # Teaching
 
 [How to help someone use a computer (1996)](https://pages.gseis.ucla.edu/faculty/agre/how-to-help.html)
@@ -184,6 +195,12 @@ https://wellarchitectedlabs.com/security/
 <https://ohmygit.org/> — Computer game to learn git
 
 [Pro Git book](https://git-scm.com/book/en/v2)
+
+https://learngitbranching.js.org/
+
+https://ohmygit.org/
+
+https://github.com/git-game/git-game
 
 # Computer Science
 
@@ -328,6 +345,8 @@ https://soatok.blog/2020/06/10/how-to-learn-cryptography-as-a-programmer/
 https://cryptopals.com/
 https://cryptohack.org/
 https://www.youtube.com/watch?v=iqSMRO78UD0&list=PLUl4u3cNGP61EZllk7zwgvPbI4kbnKhWz
+
+<https://swenson.io/2022_01_25_modern_cryptanalysis_v11_available_for_free.html>
 
 </details>
 
