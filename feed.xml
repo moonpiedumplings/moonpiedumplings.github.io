@@ -10,55 +10,7 @@
 <atom:link href="./feed.xml" rel="self" type="application/rss+xml"/>
 <description>All posts, intended to be used in an RSS feed. Can be found at feed.xml</description>
 <generator>quarto-1.8.25</generator>
-<lastBuildDate>Tue, 26 Aug 2025 07:00:00 GMT</lastBuildDate>
-<item>
-  <title>Templating Engine with Quarto</title>
-  <link>./playground/quarto-templates/</link>
-  <description><![CDATA[ 
-
-
-
-
-
-<p>I recently read a very good blogpost <a href="https://deadsimpletech.com/blog/notes_teaching_coding">We should rethink how we teach people to code</a>. It argues that instead of starting on something like python, it’s better to start at HTML, and introduce programming concepts via a templating engine in a static site generator.</p>
-<p>I really like this idea. I already have <a href="../../talks/self-site/">a presentation/tutorial</a> about setting up your own website with Quarto.</p>
-<p>But Quarto does not have a templating engine.</p>
-<section id="liquidjs" class="level1">
-<h1>LiquidJS</h1>
-<p>So now I am trying to see if I can get LiquidJS, the templating engine that Jekyll uses, to work in Quarto. The most promising option is to execute actual javascript, which then does the templating. Although, I think it is a bit disappointed that it requires javascript.</p>
-<script type="text/template">
-{{ name | capitalize | prepend: "Welcome to "}}
-</script>
-<div id="result">
-
-</div>
-<script type="text/template">
-{% assign foo = "FOO" %}
-{% if foo == "FOO" %}
-    Variable `foo` equals "FOO"
-{% else %}
-    Variable `foo` not equals "FOO"
-{% endif %}
-</script>
-<div id="result">
-
-</div>
-</section>
-<section id="ejs" class="level1">
-<h1>EJS</h1>
-<script>
-  let people = ['geddy', 'neil', 'alex'];
-  let html = ejs.render('<%= people.join(", "); %>', {people: people});
-</script>
-
-
-</section>
-
- ]]></description>
-  <category>playground</category>
-  <guid>./playground/quarto-templates/</guid>
-  <pubDate>Tue, 26 Aug 2025 07:00:00 GMT</pubDate>
-</item>
+<lastBuildDate>Sat, 24 May 2025 07:00:00 GMT</lastBuildDate>
 <item>
   <title>Systemd is Basically One Node Kubernetes</title>
   <link>./blog/systemk8s/</link>
@@ -3283,7 +3235,12 @@ p": "2025-07-27T06:42:40.711920", "user": {"email": "test@gmail.com", "pk": 7, "
 <li><a href="https://github.com/CrunchyData/postgres-operator">Crunchy Postgres Operator</a></li>
 <li><a href="https://github.com/zalando/postgres-operator">Zalando</a></li>
 </ul>
-<p>For redis… I think I am going to switch to the internal cache implementation instead. The</p>
+<p>For redis… I think I am going to switch to the internal cache implementation instead. Although this results in an error, and I have to put a puase on forgejo for now.</p>
+</section>
+<section id="pangolin" class="level2">
+<h2 class="anchored" data-anchor-id="pangolin">Pangolin</h2>
+<p><a href="https://github.com/fosrl/pangolin">Pangolin</a>, is a reverse proxy similar to cloudfare tunnels, and also offers VPN capabilities, similar to Netbird. I am very interested in it becuase it offers a multi-tenant VPN solution, which is a paid feature in Netbird.</p>
+<p>But, they offer no kubernetes deployment by default. I will be converting their docker compose deploy to a k8s deployment.</p>
 </section>
 <section id="cloud-native-postgres" class="level2">
 <h2 class="anchored" data-anchor-id="cloud-native-postgres">Cloud Native Postgres</h2>
@@ -3444,6 +3401,9 @@ Defaulted container "postgres" out of: postgres, bootstrap-controller (init)</co
 <p>I’m also interested in the new-ish <a href="https://ollama.com/library/embeddinggemma:300m">embeddinggemma:300m</a> model.</p>
 </section>
 </section>
+</section>
+<section id="ingress" class="level1">
+<h1>Ingress</h1>
 <section id="ingress-nginx" class="level2">
 <h2 class="anchored" data-anchor-id="ingress-nginx">Ingress-Nginx</h2>
 <p>Okay, I thought I was done configuring Ingress-Nginx, until I logged into my Authentik and saw that all the logins appeared to be coming from the IP address of my host machine rather than the actual client IP of people who are connecting.</p>
@@ -3918,6 +3878,30 @@ font-style: inherit;"> ingress-nginx-controller</span></span></code></pre></div>
 <p><a href="https://www.reddit.com/r/kubernetes/comments/1n5bypk/tcp_external_load_balancer_nodeport_and_istio/">Related reddit post</a>. It seems like even Istio has stimilar issues.</p>
 <p>Another issue I encountered was “413 Request Entity Too Large” when trying to upload ISO’s to nginx. By default, nginx has a setting, <a href="https://nginx.org/en/docs/http/ngx_http_core_module.html#client_max_body_size">client.max_body_size</a> that limits the size of client requests, or in this case, the size of ISO’s that I can upload to Incus. To fix, you can add <a href="https://kubernetes.github.io/ingress-nginx/user-guide/nginx-configuration/annotations/#custom-max-body-size">annotation that changes this setting</a>.</p>
 </section>
+<section id="gateway-api" class="level2">
+<h2 class="anchored" data-anchor-id="gateway-api">Gateway API</h2>
+<p>So now, <a href="https://www.reddit.com/r/kubernetes/comments/1ove0t5/ingress_nginx_retirement_what_you_need_to_know/">ingress nginx is being deprecated</a>.</p>
+<p>I have a few options, but I do think I have to switch off. One problem is almost all of the helm charts I use, create resources of type ingress. Thankfully, I have been very, very careful to intentionally avoid specifying what ingress class they use, meaning that all I really have to do is delete the ingress, and then I would iterate over the ingresses and delete their current ingress class. I have switched ingress class names before, and according to my testing, all it requires is that I delete the <code>spec.ingressClassName</code> resource from the ingress object, and then the ingress will work with the new cluster ingress.</p>
+<p>So I want something that supports both ingress, and gateway API, in addition to that. Another fear I have, is that the annotations nginx uses may not be supported.</p>
+<ul>
+<li>Traefik
+<ul>
+<li><a href="https://old.reddit.com/r/kubernetes/comments/1ove0t5/ingress_nginx_retirement_what_you_need_to_know/nolru3s/">relevant reddit comment</a></li>
+<li>Supports gateway api as well as ingress</li>
+<li><a href="https://www.reddit.com/r/kubernetes/comments/1ove0t5/ingress_nginx_retirement_what_you_need_to_know/nojhw78/">They are trying to make a compat layer for nginx’s annotations</a>
+<ul>
+<li><a href="https://doc.traefik.io/traefik/master/reference/routing-configuration/kubernetes/ingress-nginx/">original link</a></li>
+</ul></li>
+</ul></li>
+<li>Cilium/Envoy</li>
+</ul>
+<p>Both traefik and Cilium support gateway api.</p>
+<p>Some big caveats:</p>
+<ul>
+<li>No support for oauth2-proxy, which</li>
+</ul>
+<p>I actually don’t think I am going to switch yet. The problem is that I don’t really want to use Traefik, but at the same time, Openstack-helm depends on ingress-nginx’s annotations.So I kinda just have to leave it for now.</p>
+</section>
 <section id="cert-manager" class="level2">
 <h2 class="anchored" data-anchor-id="cert-manager">Cert-Manager</h2>
 <p>I also didn’t think I would need to revisit cert-manager either. But for Coder, it needs a wildcard certificate for the service to deploy, and if you want a wildcard cert you need to use the DNS01 resolver, rather than the http01 one I am currently using.</p>
@@ -3966,10 +3950,8 @@ font-style: inherit;"> ingress-nginx-controller</span></span></code></pre></div>
 </section>
 <section id="storage" class="level2">
 <h2 class="anchored" data-anchor-id="storage">Storage</h2>
-</section>
-</section>
-<section id="openebs" class="level1">
-<h1>OpenEBS</h1>
+<section id="openebs" class="level3">
+<h3 class="anchored" data-anchor-id="openebs">OpenEBS</h3>
 <p>Kubernetes storage is fairly complex, and I have encountered issues with it multiple times in the subprojects I have used, so I am moving them here to this section instead from where they originally where.</p>
 <p>One concern I have is that PVC’s seem to get deleted when I delete the helm chart. This is despite the fact that I have a policy of <code>Retain</code> for the spcific persistentvolume class.</p>
 <p>Uh oh. Upon further inspection, it seems that every PVC, even if they are deleted, the data stays there on the disk. This is somewhat concerning, as it means that nothing but manually deleting the volumes can be done. This isn’t really that big of an issue though.</p>
@@ -4005,6 +3987,7 @@ font-style: inherit;"> ingress-nginx-controller</span></span></code></pre></div>
 <span id="cb78-2"></span>
 <span id="cb78-3">root@thoth:~# vgcreate cinder-volumes /dev/sde1</span>
 <span id="cb78-4"></span></code></pre></div></div>
+</section>
 <section id="longhorn" class="level3">
 <h3 class="anchored" data-anchor-id="longhorn">Longhorn</h3>
 <p>On the host system:</p>
@@ -4019,11 +4002,192 @@ font-style: inherit;"> ingress-nginx-controller</span></span></code></pre></div>
 <p><code>/var/lib/rancher/rke2/agent/containerd/io.containerd.snapshotter.v1.overlayfs</code> is eating up all my disk space.</p>
 <p>Carrying on with ceph, I have decided it is probably best to use it as a default for my system.</p>
 </section>
+</section>
 <section id="networking-1" class="level2">
 <h2 class="anchored" data-anchor-id="networking-1">Networking</h2>
 <p>I install rke2 again, (due to my SSD dying), and my pods cannot do any form of more complex networking. They can ping each other and external sites, but they cannot wget or use any other protocols. They also can’t use DNS, but I am assuming that is because the coredns fails to start because of this issue.</p>
 <p>Maybe what’s missing is iptables?</p>
 <p><code>apt install iptables</code> ­— the version that debian comes with is actually a wrapper for nftables.</p>
+<p>I have decided to switch to Cilium and istio, to prepare for a potential kubeflow deployment.</p>
+<div class="code-with-filename">
+<div class="code-with-filename-file">
+<pre><strong>/etc/rancher/rke2/config.yaml</strong></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb79" data-filename="/etc/rancher/rke2/config.yaml" style="background: #f1f3f5;"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb79-1"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">disable</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span></span>
+<span id="cb79-2"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">  # Yeah so apparently this was kind of important.</span></span>
+<span id="cb79-3"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">  # - rke2-coredns</span></span>
+<span id="cb79-4"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">  </span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">-</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> rke2-ingress-nginx</span></span>
+<span id="cb79-5"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">cni</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span></span>
+<span id="cb79-6"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">  </span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">-</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> multus</span></span>
+<span id="cb79-7"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">  </span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">-</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> cilium</span></span></code></pre></div></div>
+</div>
+<p>I encountered some issues, so I started by nuking <code>/etc/cni</code> and <code>/var/lib/cni</code> (well actually, moving them to a backup). But I still had issues, specifically <a href="https://github.com/cilium/cilium/issues/38222">this one</a>.</p>
+<p>To fix, I adjusted the config:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb80" style="background: #f1f3f5;"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb80-1"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">apiVersion</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> helm.cattle.io/v1</span></span>
+<span id="cb80-2"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">kind</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> HelmChartConfig</span></span>
+<span id="cb80-3"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">metadata</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span></span>
+<span id="cb80-4"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">name</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> rke2-cilium</span></span>
+<span id="cb80-5"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">namespace</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> kube-system</span></span>
+<span id="cb80-6"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">spec</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span></span>
+<span id="cb80-7"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">  valuesContent</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">: </span><span class="ch" style="color: #20794D;
+background-color: null;
+font-style: inherit;">|-</span></span>
+<span id="cb80-8">    kubeProxyReplacement: true</span>
+<span id="cb80-9">    socketLB:</span>
+<span id="cb80-10">      hostNamespaceOnly: true</span>
+<span id="cb80-11">    cluster:</span>
+<span id="cb80-12">      name: "default"</span>
+<span id="cb80-13">      id: 0</span>
+<span id="cb80-14">    cni:</span>
+<span id="cb80-15">      exclusive: false</span>
+<span id="cb80-16">    hostFirewall:</span>
+<span id="cb80-17">      enabled: false</span>
+<span id="cb80-18">    envoy:</span>
+<span id="cb80-19">      prometheus:</span>
+<span id="cb80-20">        enabled: false</span>
+<span id="cb80-21">    bpf:</span>
+<span id="cb80-22">      monitorAggregation: medium </span>
+<span id="cb80-23">      monitorAggregationInterval: 5s   </span>
+<span id="cb80-24">    l2announcements:</span>
+<span id="cb80-25">      enabled: false</span>
+<span id="cb80-26">    tunnelProtocol: geneve</span>
+<span id="cb80-27">    operator:</span>
+<span id="cb80-28">      replicas: 1</span>
+<span id="cb80-29">      updateStrategy:</span>
+<span id="cb80-30">        type: RollingUpdate</span>
+<span id="cb80-31">        rollingUpdate:</span>
+<span id="cb80-32">          maxSurge: 100%</span>
+<span id="cb80-33">          maxUnavailable: 100%</span></code></pre></div></div>
+<p>I get further errors, probably because I have a weird bridge setup and cilium doesn’t know what to do:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb81" style="background: #f1f3f5;"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb81-1"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">routingMode</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> native</span></span>
+<span id="cb81-2"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">nodePort</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span></span>
+<span id="cb81-3"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">directRoutingDevice</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> eth0</span></span></code></pre></div></div>
+<p>Still errors. I needed something different:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb82" style="background: #f1f3f5;"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb82-1"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">extraConfig</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span></span>
+<span id="cb82-2"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">  #direct-routing-device: "eth0"</span></span>
+<span id="cb82-3"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">devices</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> </span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"eth0"</span></span></code></pre></div></div>
+<p>And then I enable the host firewall, and have a deny by default firewall. Of course, before doing this I apply a configuration that gives me access, so I don’t lock myself out.</p>
 </section>
 </section>
 <section id="ip-address-change" class="level1">
@@ -4098,14 +4262,20 @@ May 28 20:45:34 thoth rke2[6657]: time="2025-05-28T20:45:34-07:00" level=info ms
 <p><a href="https://rook.io/docs/rook/latest-release/Getting-Started/intro/" class="uri">https://rook.io/docs/rook/latest-release/Getting-Started/intro/</a></p>
 <p>I think another thing I missed was that ceph wants a storage system that exposes block volumes, which my openebs-persistent-hostpath cannot do. But longhorn can! So I will create a storage class just for ceph.</p>
 <p><a href="https://opendev.org/openstack/openstack-helm/src/branch/master/tools/deployment/ceph/ceph-rook.sh">Here is Openstack-helms test script for deploying ceph</a>.</p>
+<p>I copied something similar and got it working. But after a reboot, I noticed that my disk devices had been moved around. <code>:/</code> To avoid this, I should reference the disk device by part-id or by it’s path. Both of these can be found by typing <code>ls -l</code> in <code>/dev/disk/by-id</code> or <code>/dev/disk/by-path</code>, which shows the id or path as a file that is a symlink to the “standard” way of referring to disk devices.</p>
 <section id="cleanup" class="level3">
 <h3 class="anchored" data-anchor-id="cleanup">Cleanup</h3>
 <p>Also, when I need to nuke ceph, the cleanup of the ceph cluster requires <a href="https://rook.io/docs/rook/latest/Storage-Configuration/ceph-teardown/">some manual steps</a>.</p>
 <p>First delete the object store and ceph block store. I had to edit them, removing the finalizers in order for them to delete properly. Then I have to <code>rm -rf /var/lib/rook</code> to delete the data directory on the host.</p>
 <p>First thing, first, edit the cephcluster customresources deletion policy.</p>
 <p><code>kubectl -n rook-ceph patch cephcluster rook-ceph --type merge -p '{"spec":{"cleanupPolicy":{"confirmation":"yes-really-destroy-data"}}}'</code></p>
-<p>Then, delete the ceph objecstore and cephblockpool objects in ceph.</p>
-<p>Then find the cephcluster cr itself.</p>
+<p>Then, delete the cephcluster cr. It might not work, so you might have to delete the ceph objecstore and cephblockpool objects in ceph.</p>
+<p>Actually, it’s easier to just nuke the entire <code>ceph</code> and <code>rook-ceph</code> namespaces.</p>
+<p>Then <code>kubectl edit clientprofiles.csi.ceph.io -n rook-ceph ceph</code> and remove the finalizer, because it doesn’t delete properly.</p>
+<p>On the host, wipe the disk and <code>rm -rf /var/lib/rook</code>. Also, format the disk device:</p>
+<p><a href="https://rook.io/docs/rook/latest/Getting-Started/ceph-teardown/?h=cleanu#zapping-devices" class="uri">https://rook.io/docs/rook/latest/Getting-Started/ceph-teardown/?h=cleanu#zapping-devices</a></p>
+<p><code>sgdisk --zap-all /dev/disk/by-id/ata-WDC_WD40EZAX-00C8UB0_WD-WX22D556K14P</code></p>
+<p><code>partprobe /dev/disk/by-id/ata-WDC_WD40EZAX-00C8UB0_WD-WX22D556K14P</code></p>
 </section>
 </section>
 <section id="openstack-install-cont" class="level2">
@@ -4119,8 +4289,8 @@ May 28 20:45:34 thoth rke2[6657]: time="2025-05-28T20:45:34-07:00" level=info ms
 <p><code>root@thoth:/t# nmcli con add type veth ifname veth2 con-name veth2 veth.peer eth2</code></p>
 <p>And then I go into cockpit and add veth2 as a port to my bridge, but disable autoconfiguration of eth2.</p>
 <p>I’m getting an error when I attempt to deploy neutron:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb80" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb80-1">2025-09-18 17:11:54.899 67 CRITICAL neutron.plugins.ml2.managers [-] The following mechanism drivers were not found: {'linuxbridge'}                                                                                             │</span>
-<span id="cb80-2">│ The following mechanism drivers were not found: {'linuxbridge'}</span></code></pre></div></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb84" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb84-1">2025-09-18 17:11:54.899 67 CRITICAL neutron.plugins.ml2.managers [-] The following mechanism drivers were not found: {'linuxbridge'}                                                                                             │</span>
+<span id="cb84-2">│ The following mechanism drivers were not found: {'linuxbridge'}</span></code></pre></div></div>
 <p><a href="https://docs.openstack.org/releasenotes/networking-bagpipe/2025.1.html">It turns out that linuxbridge has been removed</a>.</p>
 <p>So I try OVN instead.</p>
 <p><code>root@thoth:/# apt install openvswitch-switch python3-openvswitch</code></p>
@@ -4157,18 +4327,18 @@ May 28 20:45:34 thoth rke2[6657]: time="2025-05-28T20:45:34-07:00" level=info ms
 </blockquote>
 <p>But I don’t undestand why if I delete all the jobs and delete the helm release, then the jobs still do not come back. Is there some other form of tracking whether or not jobs have ran? I may have to end up nuking the whole thing and starting over, which is frustrating. I at least wanted to leave the backing infra up (mariadb, rabbitmq, memcached, libvirt), because I have figured those out and how to rotate passwords there.</p>
 <p>After some investigation, it’s that one of the jobs fails. Of course, it still shows “completed”, but the containers went into crashloopbackoffs. They are failing to connect to the database server.</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb81" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb81-1">/ # mysql -h mariadb.openstack -u nova -p --skip-ssl nova</span>
-<span id="cb81-2">mysql: Deprecated program name. It will be removed in a future release, use '/usr/bin/mariadb' instead</span>
-<span id="cb81-3">Enter password:</span>
-<span id="cb81-4">Welcome to the MariaDB monitor.  Commands end with ; or \g.</span>
-<span id="cb81-5">Your MariaDB connection id is 2602</span>
-<span id="cb81-6">Server version: 10.11.6-MariaDB-1:10.11.6+maria~ubu2204 mariadb.org binary distribution</span>
-<span id="cb81-7"></span>
-<span id="cb81-8">Copyright (c) 2000, 2018, Oracle, MariaDB Corporation Ab and others.</span>
-<span id="cb81-9"></span>
-<span id="cb81-10">Type 'help;' or '\h' for help. Type '\c' to clear the current input statement.</span>
-<span id="cb81-11"></span>
-<span id="cb81-12">MariaDB [nova]&gt;</span></code></pre></div></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb85" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb85-1">/ # mysql -h mariadb.openstack -u nova -p --skip-ssl nova</span>
+<span id="cb85-2">mysql: Deprecated program name. It will be removed in a future release, use '/usr/bin/mariadb' instead</span>
+<span id="cb85-3">Enter password:</span>
+<span id="cb85-4">Welcome to the MariaDB monitor.  Commands end with ; or \g.</span>
+<span id="cb85-5">Your MariaDB connection id is 2602</span>
+<span id="cb85-6">Server version: 10.11.6-MariaDB-1:10.11.6+maria~ubu2204 mariadb.org binary distribution</span>
+<span id="cb85-7"></span>
+<span id="cb85-8">Copyright (c) 2000, 2018, Oracle, MariaDB Corporation Ab and others.</span>
+<span id="cb85-9"></span>
+<span id="cb85-10">Type 'help;' or '\h' for help. Type '\c' to clear the current input statement.</span>
+<span id="cb85-11"></span>
+<span id="cb85-12">MariaDB [nova]&gt;</span></code></pre></div></div>
 <p>Note that I have to skip ssl connections. But it works otherwise.</p>
 <p>I did figure out the problem, that Nova had extra database connections I was missing. Once I added oslo_cell0 and oslo_nova_api to the endpoints, it worked with the correct passowrd.</p>
 <p>Next things I need to figure out:</p>
@@ -4203,70 +4373,71 @@ May 28 20:45:34 thoth rke2[6657]: time="2025-05-28T20:45:34-07:00" level=info ms
 <ul>
 <li>Modify the container to include mod auth
 <ul>
-<li>I’m probably going to do this, because it’s simple.</li>
+<li>I’m probably going to do this, because it’s simple.<br>
+</li>
 </ul></li>
 <li>Use a proxy in front that has openid auth</li>
 <li>Maybe saml is supported?</li>
 </ul>
 <p>Also, I suspect the way that image overriding is so trivial is to account for usecases like this.</p>
 <p>I tracked down how the images are built. They are built using a tool <a href="https://opendev.org/openstack/loci">openstack loci</a>, which seems to be fairly flexible. I think if I feed it a “DIST_PACKAGES” argument after feeding it the prerequisite builds, I can have something that comes with mod_oauth installed. I could then push this to my kubernetes cluster, tag it, and have my openstack helm deployment use that.</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb82" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb82-1">podman build . -f Dockerfile.base --build-arg FROM:ubuntu:noble --build-arg CEPH_REPO='deb https://download.ceph.com/debian-reef/ jammy main' --tag base:ubuntu_noble</span>
-<span id="cb82-2"></span>
-<span id="cb82-3">podman build . -f Dockerfile --target requirements --build-arg FROM=base:ubuntu_noble --build-arg PROJECT=requirements --tag requirements:master-ubuntu_noble</span>
-<span id="cb82-4"></span>
-<span id="cb82-5"></span>
-<span id="cb82-6">ERROR: Could not open requirements file: [Errno 2] No such file or directory: '""'</span>
-<span id="cb82-7">Error: building at STEP "RUN /opt/loci/scripts/install.sh": while running runtime: exit status 1</span></code></pre></div></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb86" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb86-1">podman build . -f Dockerfile.base --build-arg FROM:ubuntu:noble --build-arg CEPH_REPO='deb https://download.ceph.com/debian-reef/ jammy main' --tag base:ubuntu_noble</span>
+<span id="cb86-2"></span>
+<span id="cb86-3">podman build . -f Dockerfile --target requirements --build-arg FROM=base:ubuntu_noble --build-arg PROJECT=requirements --tag requirements:master-ubuntu_noble</span>
+<span id="cb86-4"></span>
+<span id="cb86-5"></span>
+<span id="cb86-6">ERROR: Could not open requirements file: [Errno 2] No such file or directory: '""'</span>
+<span id="cb86-7">Error: building at STEP "RUN /opt/loci/scripts/install.sh": while running runtime: exit status 1</span></code></pre></div></div>
 <p>And then this errors. I will try docker.</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb83" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb83-1">---&gt; 583b9bca7698</span>
-<span id="cb83-2">Step 44/44 : RUN /opt/loci/scripts/install.sh</span>
-<span id="cb83-3"> ---&gt; Running in 57eb5670a12d</span>
-<span id="cb83-4">+ source /etc/lsb-release</span>
-<span id="cb83-5">++ DISTRIB_ID=Ubuntu</span>
-<span id="cb83-6">++ DISTRIB_RELEASE=22.04</span>
-<span id="cb83-7">++ DISTRIB_CODENAME=jammy</span>
-<span id="cb83-8">++ DISTRIB_DESCRIPTION='Ubuntu 22.04.5 LTS'</span>
-<span id="cb83-9">+ export LC_CTYPE=C.UTF-8</span>
-<span id="cb83-10">+ LC_CTYPE=C.UTF-8</span>
-<span id="cb83-11">+ echo 'APT::Get::AllowUnauthenticated "true";'</span>
-<span id="cb83-12">+ mv /etc/apt/sources.list /etc/apt/sources.list.bak</span>
-<span id="cb83-13">+ cat</span>
-<span id="cb83-14">+ apt-get update</span>
-<span id="cb83-15">E: Malformed entry 1 in list file /etc/apt/sources.list (URI parse)</span>
-<span id="cb83-16">E: The list of sources could not be read.</span>
-<span id="cb83-17">The command '/bin/sh -c /opt/loci/scripts/install.sh' returned a non-zero code: 100</span>
-<span id="cb83-18">[moonpie@cachyos-x8664 loci]$ docker build . -f Dockerfile --target requirements --build-arg FROM=base:ubuntu_noble </span></code></pre></div></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb87" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb87-1">---&gt; 583b9bca7698</span>
+<span id="cb87-2">Step 44/44 : RUN /opt/loci/scripts/install.sh</span>
+<span id="cb87-3"> ---&gt; Running in 57eb5670a12d</span>
+<span id="cb87-4">+ source /etc/lsb-release</span>
+<span id="cb87-5">++ DISTRIB_ID=Ubuntu</span>
+<span id="cb87-6">++ DISTRIB_RELEASE=22.04</span>
+<span id="cb87-7">++ DISTRIB_CODENAME=jammy</span>
+<span id="cb87-8">++ DISTRIB_DESCRIPTION='Ubuntu 22.04.5 LTS'</span>
+<span id="cb87-9">+ export LC_CTYPE=C.UTF-8</span>
+<span id="cb87-10">+ LC_CTYPE=C.UTF-8</span>
+<span id="cb87-11">+ echo 'APT::Get::AllowUnauthenticated "true";'</span>
+<span id="cb87-12">+ mv /etc/apt/sources.list /etc/apt/sources.list.bak</span>
+<span id="cb87-13">+ cat</span>
+<span id="cb87-14">+ apt-get update</span>
+<span id="cb87-15">E: Malformed entry 1 in list file /etc/apt/sources.list (URI parse)</span>
+<span id="cb87-16">E: The list of sources could not be read.</span>
+<span id="cb87-17">The command '/bin/sh -c /opt/loci/scripts/install.sh' returned a non-zero code: 100</span>
+<span id="cb87-18">[moonpie@cachyos-x8664 loci]$ docker build . -f Dockerfile --target requirements --build-arg FROM=base:ubuntu_noble </span></code></pre></div></div>
 <p>Docker also errors on the second step, albeit for a different reason. This is somewhat strange, because I should be trying to use Ubuntu noble rather than jammy.</p>
 <p>Or… I could just do what understack <em>actually</em> did which was literally just installing mod auth openid. From <a href="https://github.com/rackerlabs/understack/blob/main/containers/keystone/Dockerfile">their dockerfile</a>.</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb84" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb84-1"># syntax=docker/dockerfile:1</span>
-<span id="cb84-2"></span>
-<span id="cb84-3">ARG OPENSTACK_VERSION="required_argument"</span>
-<span id="cb84-4">FROM quay.io/airshipit/keystone:${OPENSTACK_VERSION}-ubuntu_jammy</span>
-<span id="cb84-5"></span>
-<span id="cb84-6">ADD --checksum=sha256:deb52ea8304a41ee0331e4ba87a9f82ff643464b6d34084e161f58ec11c25a69 https://github.com/OpenIDC/mod_auth_openidc/releases/download/v2.4.16.5/libapache2-mod-auth-openidc_2.4.16.5-1.jammy_amd64.deb /tmp</span>
-<span id="cb84-7"></span>
-<span id="cb84-8">RUN apt-get update &amp;&amp; \</span>
-<span id="cb84-9">    apt-get install -y --no-install-recommends \</span>
-<span id="cb84-10">        /tmp/libapache2-mod-auth-openidc_2.4.16.5-1.jammy_amd64.deb \</span>
-<span id="cb84-11">    &amp;&amp; apt-get clean &amp;&amp; rm -rf /var/lib/apt/lists/* /tmp/*.deb</span></code></pre></div></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb88" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb88-1"># syntax=docker/dockerfile:1</span>
+<span id="cb88-2"></span>
+<span id="cb88-3">ARG OPENSTACK_VERSION="required_argument"</span>
+<span id="cb88-4">FROM quay.io/airshipit/keystone:${OPENSTACK_VERSION}-ubuntu_jammy</span>
+<span id="cb88-5"></span>
+<span id="cb88-6">ADD --checksum=sha256:deb52ea8304a41ee0331e4ba87a9f82ff643464b6d34084e161f58ec11c25a69 https://github.com/OpenIDC/mod_auth_openidc/releases/download/v2.4.16.5/libapache2-mod-auth-openidc_2.4.16.5-1.jammy_amd64.deb /tmp</span>
+<span id="cb88-7"></span>
+<span id="cb88-8">RUN apt-get update &amp;&amp; \</span>
+<span id="cb88-9">    apt-get install -y --no-install-recommends \</span>
+<span id="cb88-10">        /tmp/libapache2-mod-auth-openidc_2.4.16.5-1.jammy_amd64.deb \</span>
+<span id="cb88-11">    &amp;&amp; apt-get clean &amp;&amp; rm -rf /var/lib/apt/lists/* /tmp/*.deb</span></code></pre></div></div>
 <p>I think the simplest thing is to clone this and then push it to Dockerhub, and then use that one. ALthough one thing I am concerned about is that the version in the Ubuntu Noble resources seems to use be an older version than the one they get.</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb85" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb85-1">root@b0fd9560e5c2:/# apt search libapache2-mod-auth-openidc</span>
-<span id="cb85-2">Sorting... Done</span>
-<span id="cb85-3">Full Text Search... Done</span>
-<span id="cb85-4">libapache2-mod-auth-openidc/noble-updates,noble-security 2.4.15.1-1ubuntu0.1 amd64</span>
-<span id="cb85-5">  OpenID Connect Relying Party implementation for Apache</span></code></pre></div></div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb86" style="background: #f1f3f5;"><pre class="sourceCode Dockerfile code-with-copy"><code class="sourceCode dockerfile"><span id="cb86-1"><span class="co" style="color: #5E5E5E;
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb89" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb89-1">root@b0fd9560e5c2:/# apt search libapache2-mod-auth-openidc</span>
+<span id="cb89-2">Sorting... Done</span>
+<span id="cb89-3">Full Text Search... Done</span>
+<span id="cb89-4">libapache2-mod-auth-openidc/noble-updates,noble-security 2.4.15.1-1ubuntu0.1 amd64</span>
+<span id="cb89-5">  OpenID Connect Relying Party implementation for Apache</span></code></pre></div></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb90" style="background: #f1f3f5;"><pre class="sourceCode Dockerfile code-with-copy"><code class="sourceCode dockerfile"><span id="cb90-1"><span class="co" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;"># </span><span class="cv" style="color: #5E5E5E;
 background-color: null;
 font-style: italic;">syntax=docker/dockerfile:1</span></span>
-<span id="cb86-2"></span>
-<span id="cb86-3"><span class="kw" style="color: #003B4F;
+<span id="cb90-2"></span>
+<span id="cb90-3"><span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">FROM</span> quay.io/airshipit/keystone:2025.1-ubuntu_noble</span>
-<span id="cb86-4"></span>
-<span id="cb86-5"><span class="kw" style="color: #003B4F;
+<span id="cb90-4"></span>
+<span id="cb90-5"><span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">RUN</span> <span class="ex" style="color: null;
@@ -4277,7 +4448,7 @@ font-weight: bold;
 font-style: inherit;">&amp;&amp;</span> <span class="dt" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">\</span></span>
-<span id="cb86-6">    <span class="ex" style="color: null;
+<span id="cb90-6">    <span class="ex" style="color: null;
 background-color: null;
 font-style: inherit;">apt-get</span> install <span class="at" style="color: #657422;
 background-color: null;
@@ -4286,7 +4457,7 @@ background-color: null;
 font-style: inherit;">--no-install-recommends</span> libapache2-mod-auth-openidc <span class="dt" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">\</span></span>
-<span id="cb86-7">    <span class="kw" style="color: #003B4F;
+<span id="cb90-7">    <span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">&amp;&amp;</span> <span class="ex" style="color: null;
@@ -4309,77 +4480,91 @@ font-style: inherit;">*</span>.deb</span></code></pre></div></div>
 <p><code>openstack identity provider create --remote-id https://idp.moonpiedumpl.ing/app openstack openid</code></p>
 <p>Create a mapping.</p>
 <p><code>openstack federation protocol create openid --mapping openid_mapping --identity-provider openid</code></p>
+<p>I get an error now, because the helm chart version updated but the container didn’t. I am on</p>
+<p>Relevant:</p>
+<p><a href="https://docs.openstack.org/releasenotes/openstack-helm/current.html" class="uri">https://docs.openstack.org/releasenotes/openstack-helm/current.html</a></p>
+<p><a href="https://opendev.org/openstack/openstack-helm/commit/b2a515d52d37832317e63b3942157f8b1f1689b4" class="uri">https://opendev.org/openstack/openstack-helm/commit/b2a515d52d37832317e63b3942157f8b1f1689b4</a></p>
+<p>So to fix this, I think the only real option is ensure that the chart version and the container version are in sync. I have two options</p>
+<ul>
+<li>Downgrade all charts to 2025.1
+<ul>
+<li>I tested with the keystone chart, and it seems to work</li>
+</ul></li>
+<li>Upgrade all containers to 2025.2</li>
+</ul>
+<p>I really like the appeal of the latter, because 2025.2 is supported until right after 2027, when I graduate. This means that I could deploy openstack and not touch it, simply destroying it when I need to leave college.</p>
+<p>Okay, I updated the keystone helm chart to version 2025.2, but I still get the error. <code>:(</code>.</p>
 </section>
 <section id="nova" class="level2">
 <h2 class="anchored" data-anchor-id="nova">Nova</h2>
 <p>And then I get this error in my nova container.</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb87" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb87-1">+ exec nova-compute --config-file /etc/nova/nova.conf --config-file /tmp/pod-shared/nova-console.conf --config-file /tmp/pod-shared/nova-libvirt.conf --config-file /tmp/pod-shared/nova-compute-fqdn.conf --config-file /tmp/pod-shared /nova-hypervisor.conf --config-dir /etc/nova/nova.conf.d 2025-10-01 21:33:31.610 2068907 INFO nova.virt.driver [None req-949165f9-c5bc-4527-af02-15ad7ab73875 - - - - - -] Lo ading compute driver 'libvirt.LibvirtDriver' 2025-10-01 21:33:32.074 2068907 INFO nova.compute.provider_config [None req-949165f9-c5bc-4527-af02-15ad7ab73875 - - - - - -[] No provider configs found in /etc/nova/provider_config/. If files are present, ensure the Nova process has access. 2025-10-01 21:33:32.597 2068907 INFO nova.service [-] Starting compute node (version 31.1.1) libvirt: error : internal error: could not initialize domain event timer 2025-10-01 21:33:33.112 2068907 WARNING nova.virt.libvirt.host [None req-d6e2b665-7aa3-4f75-bc91-8e7c07d7536a - - - - -[] URI qemu+unix:///system?socket=/run/libvirt/libvirt-sock does not support events: internal error: could not i nitialize domain event timer: libvirt.libvirtError: internal error: could not initialize domain event timer</span></code></pre></div></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb91" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb91-1">+ exec nova-compute --config-file /etc/nova/nova.conf --config-file /tmp/pod-shared/nova-console.conf --config-file /tmp/pod-shared/nova-libvirt.conf --config-file /tmp/pod-shared/nova-compute-fqdn.conf --config-file /tmp/pod-shared /nova-hypervisor.conf --config-dir /etc/nova/nova.conf.d 2025-10-01 21:33:31.610 2068907 INFO nova.virt.driver [None req-949165f9-c5bc-4527-af02-15ad7ab73875 - - - - - -] Lo ading compute driver 'libvirt.LibvirtDriver' 2025-10-01 21:33:32.074 2068907 INFO nova.compute.provider_config [None req-949165f9-c5bc-4527-af02-15ad7ab73875 - - - - - -[] No provider configs found in /etc/nova/provider_config/. If files are present, ensure the Nova process has access. 2025-10-01 21:33:32.597 2068907 INFO nova.service [-] Starting compute node (version 31.1.1) libvirt: error : internal error: could not initialize domain event timer 2025-10-01 21:33:33.112 2068907 WARNING nova.virt.libvirt.host [None req-d6e2b665-7aa3-4f75-bc91-8e7c07d7536a - - - - -[] URI qemu+unix:///system?socket=/run/libvirt/libvirt-sock does not support events: internal error: could not i nitialize domain event timer: libvirt.libvirtError: internal error: could not initialize domain event timer</span></code></pre></div></div>
 <p>This issue is most likely caused by a mismatch of the libvirtd in the libvirt container and the libvirt-python that is being used in the</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb88" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb88-1">&lt;&lt;K9s-Shell&gt;&gt; Pod: openstack/libvirt-libvirt-default-rzp2k | Container: libvirt</span>
-<span id="cb88-2">root@thoth:/# libvirtd --version</span>
-<span id="cb88-3">libvirtd (libvirt) 10.0.0</span></code></pre></div></div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb89" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb89-1">&lt;&lt;K9s-Shell&gt;&gt; Pod: openstack/nova-compute-default-6ls4j | Container: nova-compute</span>
-<span id="cb89-2">nova@thoth:/$ pip show libvirt-python</span>
-<span id="cb89-3">Name: libvirt-python</span>
-<span id="cb89-4">Version: 11.0.0</span>
-<span id="cb89-5">Summary: The libvirt virtualization API python binding</span>
-<span id="cb89-6">Home-page: http://www.libvirt.org</span>
-<span id="cb89-7">Author:</span>
-<span id="cb89-8">Author-email:</span>
-<span id="cb89-9">License:</span>
-<span id="cb89-10">Location: /var/lib/openstack/lib/python3.12/site-packages</span>
-<span id="cb89-11">Requires:</span>
-<span id="cb89-12">Required-by:</span></code></pre></div></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb92" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb92-1">&lt;&lt;K9s-Shell&gt;&gt; Pod: openstack/libvirt-libvirt-default-rzp2k | Container: libvirt</span>
+<span id="cb92-2">root@thoth:/# libvirtd --version</span>
+<span id="cb92-3">libvirtd (libvirt) 10.0.0</span></code></pre></div></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb93" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb93-1">&lt;&lt;K9s-Shell&gt;&gt; Pod: openstack/nova-compute-default-6ls4j | Container: nova-compute</span>
+<span id="cb93-2">nova@thoth:/$ pip show libvirt-python</span>
+<span id="cb93-3">Name: libvirt-python</span>
+<span id="cb93-4">Version: 11.0.0</span>
+<span id="cb93-5">Summary: The libvirt virtualization API python binding</span>
+<span id="cb93-6">Home-page: http://www.libvirt.org</span>
+<span id="cb93-7">Author:</span>
+<span id="cb93-8">Author-email:</span>
+<span id="cb93-9">License:</span>
+<span id="cb93-10">Location: /var/lib/openstack/lib/python3.12/site-packages</span>
+<span id="cb93-11">Requires:</span>
+<span id="cb93-12">Required-by:</span></code></pre></div></div>
 <p>I find this kinda weird because I am using 2025.1 for both. But actually, upon further investigation, when I download older images of nova, they all still have libvirt-python 11.0.</p>
 <p>I think this issue could also be similar to something I had with OVN earlier on, where /run is mounted into the container and it keeps the sockets and other cruft from the deleted containers.</p>
 <p>I found the <a href="https://opendev.org/openstack/requirements/src/commit/92137b98daed9be790ba7df71748d6d80207043c/upper-constraints.txt">pinned requirements</a>, and it looks like even 7 months ago the version of libvirt-python in use was still 10.</p>
 <p>The issue has to be seperate from that. One concern I have is that my host’s system is too old — I haven’t updated to the current Debian Trixie yet, I am still on bookworm.</p>
 <p>Okay. I updated to Trixie. No dice.</p>
 <p>Next, I change edit the daemonset, changing the command to <code>tail -f /dev/null</code>, changing the filesystem to be writable, and the user it runs as to be root.</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb90" style="background: #f1f3f5;"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb90-1"><span class="co" style="color: #5E5E5E;
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb94" style="background: #f1f3f5;"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb94-1"><span class="co" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;">...</span></span>
-<span id="cb90-2"><span class="co" style="color: #5E5E5E;
+<span id="cb94-2"><span class="co" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;">command:</span></span>
-<span id="cb90-3"><span class="co" style="color: #5E5E5E;
+<span id="cb94-3"><span class="co" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;">  - tail</span></span>
-<span id="cb90-4"><span class="co" style="color: #5E5E5E;
+<span id="cb94-4"><span class="co" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;">  - -f</span></span>
-<span id="cb90-5"><span class="co" style="color: #5E5E5E;
+<span id="cb94-5"><span class="co" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;">  - /dev/null</span></span>
-<span id="cb90-6"><span class="co" style="color: #5E5E5E;
+<span id="cb94-6"><span class="co" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;">...</span></span>
-<span id="cb90-7"><span class="co" style="color: #5E5E5E;
+<span id="cb94-7"><span class="co" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;">securityContext:</span></span>
-<span id="cb90-8"><span class="co" style="color: #5E5E5E;
+<span id="cb94-8"><span class="co" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;">  privileged: true</span></span>
-<span id="cb90-9"><span class="co" style="color: #5E5E5E;
+<span id="cb94-9"><span class="co" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;">  readOnlyRootFilesystem: false</span></span>
-<span id="cb90-10"><span class="co" style="color: #5E5E5E;
+<span id="cb94-10"><span class="co" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;">  runAsUser: 0</span></span></code></pre></div></div>
 <p>I test to see if virsh can connect without complaining, which is seems to be able to .</p>
 <p>Meanwhile, I spot this in libvirt logs.</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb91" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb91-1">2025-10-02 22:32:22.949+0000: 1577326: error : dnsmasqCapsNewFromBinary:672 : Unable to find 'dnsmasq' binary in $PATH: No such file or directory</span>
-<span id="cb91-2">2025-10-02 22:32:25.043+0000: 1577449: info : libvirt version: 10.0.0, package: 10.0.0-2ubuntu8.6 (Ubuntu)</span>
-<span id="cb91-3">2025-10-02 22:32:25.043+0000: 1577449: info : hostname: thoth</span>
-<span id="cb91-4">2025-10-02 22:32:25.043+0000: 1577449: error : dnsmasqCapsNewFromBinary:672 : Unable to find 'dnsmasq' binary in $PATH: No such file or directory</span></code></pre></div></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb95" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb95-1">2025-10-02 22:32:22.949+0000: 1577326: error : dnsmasqCapsNewFromBinary:672 : Unable to find 'dnsmasq' binary in $PATH: No such file or directory</span>
+<span id="cb95-2">2025-10-02 22:32:25.043+0000: 1577449: info : libvirt version: 10.0.0, package: 10.0.0-2ubuntu8.6 (Ubuntu)</span>
+<span id="cb95-3">2025-10-02 22:32:25.043+0000: 1577449: info : hostname: thoth</span>
+<span id="cb95-4">2025-10-02 22:32:25.043+0000: 1577449: error : dnsmasqCapsNewFromBinary:672 : Unable to find 'dnsmasq' binary in $PATH: No such file or directory</span></code></pre></div></div>
 <p>Although installing dnsmasq on the host doesn’t really do anything.</p>
 <p>I also see more errors after I start nova:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb92" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb92-1">2025-10-03 12:01:24.689+0000: 3156564: error : dnsmasqCapsNewFromBinary:672 : Unable to find 'dnsmasq' binary in $PATH: No such file or directory</span>
-<span id="cb92-2">2025-10-03 12:05:13.111+0000: 3156520: error : virNetSocketReadWire:1781 : End of file while reading data: Input/output error</span>
-<span id="cb92-3">2025-10-03 12:05:24.116+0000: 3156520: error : virNetSocketReadWire:1781 : End of file while reading data: Input/output error</span>
-<span id="cb92-4">2025-10-03 12:05:53.393+0000: 3156520: error : virNetSocketReadWire:1781 : End of file while reading data: Input/output error</span>
-<span id="cb92-5">^[[B2025-10-03 12:06:35.354+0000: 3156520: error : virNetSocketReadWire:1781 : End of file while reading data: Input/output error</span>
-<span id="cb92-6">2025-10-03 12:07:30.381+0000: 3156520: error : virNetSocketReadWire:1781 : End of file while reading data: Input/output error</span></code></pre></div></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb96" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb96-1">2025-10-03 12:01:24.689+0000: 3156564: error : dnsmasqCapsNewFromBinary:672 : Unable to find 'dnsmasq' binary in $PATH: No such file or directory</span>
+<span id="cb96-2">2025-10-03 12:05:13.111+0000: 3156520: error : virNetSocketReadWire:1781 : End of file while reading data: Input/output error</span>
+<span id="cb96-3">2025-10-03 12:05:24.116+0000: 3156520: error : virNetSocketReadWire:1781 : End of file while reading data: Input/output error</span>
+<span id="cb96-4">2025-10-03 12:05:53.393+0000: 3156520: error : virNetSocketReadWire:1781 : End of file while reading data: Input/output error</span>
+<span id="cb96-5">^[[B2025-10-03 12:06:35.354+0000: 3156520: error : virNetSocketReadWire:1781 : End of file while reading data: Input/output error</span>
+<span id="cb96-6">2025-10-03 12:07:30.381+0000: 3156520: error : virNetSocketReadWire:1781 : End of file while reading data: Input/output error</span></code></pre></div></div>
 <p>But apparently, these are <a href="https://forums.unraid.net/topic/131240-libvirt-error-virnetsocketreadwire1791-end-of-file-while-reading-data-inputoutput-error-after-upgrading-to-6115/">harmless</a>.</p>
 <blockquote class="blockquote">
 <p>This is the feedback from Libvirt developers. The socket connection to libvirtd / other daemons was abruptly closed. Essentially you can almost always ignore this error message as being mostly harmless.</p>
@@ -4391,47 +4576,47 @@ font-style: inherit;">  runAsUser: 0</span></span></code></pre></div></div>
 <p>It is possible to modify the container and add copy and paste: https://www.reddit.com/r/openstack/comments/1nueogz/the_solution_to_novnc_copy_paste_for_kolla/</p>
 <p>https://github.com/Vishwamithra37/galam_nonvc_copypaste/tree/CopyPasteWorking_NoVnc_OpenStack</p>
 <p>However, I discover something very disappointing in my testing:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb93" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb93-1">[moonpie@cachyos-x8664 flux-config]$ nmap -A 130.166.84.86</span>
-<span id="cb93-2">Starting Nmap 7.98 ( https://nmap.org ) at 2025-10-09 22:14 -0700</span>
-<span id="cb93-3">Nmap scan report for s084n086.csun.edu (130.166.84.86)</span>
-<span id="cb93-4">Host is up (0.0076s latency).</span>
-<span id="cb93-5">Not shown: 990 closed tcp ports (conn-refused)</span>
-<span id="cb93-6">PORT     STATE    SERVICE      VERSION</span>
-<span id="cb93-7">22/tcp   open     ssh          Golang x/crypto/ssh server (protocol 2.0)</span>
-<span id="cb93-8">| ssh-hostkey: </span>
-<span id="cb93-9">|_  4096 97:2f:18:c7:7c:b4:7e:72:55:02:6e:d9:46:7c:33:69 (RSA)</span>
-<span id="cb93-10">80/tcp   open     http         nginx (reverse proxy)</span>
-<span id="cb93-11">443/tcp  open     ssl/http     nginx (reverse proxy)</span>
-<span id="cb93-12">|_ssl-date: TLS randomness does not represent time</span>
-<span id="cb93-13">| ssl-cert: Subject: commonName=Kubernetes Ingress Controller Fake Certificate/organizationName=Acme Co</span>
-<span id="cb93-14">| Subject Alternative Name: DNS:ingress.local</span>
-<span id="cb93-15">| Not valid before: 2025-10-07T17:00:03</span>
-<span id="cb93-16">|_Not valid after:  2026-10-07T17:00:03</span>
-<span id="cb93-17">|_http-title: 404 Not Found</span>
-<span id="cb93-18">445/tcp  filtered microsoft-ds</span>
-<span id="cb93-19">3300/tcp open     ceph         Ceph distributed filesystem msgr2 protocol</span>
-<span id="cb93-20">5900/tcp open     vnc          VNC (protocol 3.8)</span>
-<span id="cb93-21">| vnc-info: </span>
-<span id="cb93-22">|   Protocol version: 3.8</span>
-<span id="cb93-23">|   Security types: </span>
-<span id="cb93-24">|     None (1)</span>
-<span id="cb93-25">|_  WARNING: Server does not require authentication</span>
-<span id="cb93-26">6789/tcp open     ceph         Ceph distributed filesystem protocol v027 (ipv4)</span>
-<span id="cb93-27">8080/tcp open     http         FRITZ!Box TR-069 service</span>
-<span id="cb93-28">|_http-server-header: Ceph Object Gateway (squid)</span>
-<span id="cb93-29">|_http-open-proxy: Proxy might be redirecting requests</span>
-<span id="cb93-30">8443/tcp open     ssl/http     LXD container manager REST API</span>
-<span id="cb93-31">|_http-title: Site doesn't have a title (application/json).</span>
-<span id="cb93-32">|_ssl-date: TLS randomness does not represent time</span>
-<span id="cb93-33">| ssl-cert: Subject: commonName=root@thoth/organizationName=Linux Containers</span>
-<span id="cb93-34">| Subject Alternative Name: DNS:thoth, IP Address:127.0.0.1, IP Address:0:0:0:0:0:0:0:1</span>
-<span id="cb93-35">| Not valid before: 2025-10-07T17:10:18</span>
-<span id="cb93-36">|_Not valid after:  2035-10-05T17:10:18</span>
-<span id="cb93-37">9091/tcp open     http         Golang net/http server (Go-IPFS json-rpc or InfluxDB API)</span>
-<span id="cb93-38">Service Info: Device: broadband router</span>
-<span id="cb93-39"></span>
-<span id="cb93-40">Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .</span>
-<span id="cb93-41">Nmap done: 1 IP address (1 host up) scanned in 50.35 seconds</span></code></pre></div></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb97" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb97-1">[moonpie@cachyos-x8664 flux-config]$ nmap -A 130.166.84.86</span>
+<span id="cb97-2">Starting Nmap 7.98 ( https://nmap.org ) at 2025-10-09 22:14 -0700</span>
+<span id="cb97-3">Nmap scan report for s084n086.csun.edu (130.166.84.86)</span>
+<span id="cb97-4">Host is up (0.0076s latency).</span>
+<span id="cb97-5">Not shown: 990 closed tcp ports (conn-refused)</span>
+<span id="cb97-6">PORT     STATE    SERVICE      VERSION</span>
+<span id="cb97-7">22/tcp   open     ssh          Golang x/crypto/ssh server (protocol 2.0)</span>
+<span id="cb97-8">| ssh-hostkey: </span>
+<span id="cb97-9">|_  4096 97:2f:18:c7:7c:b4:7e:72:55:02:6e:d9:46:7c:33:69 (RSA)</span>
+<span id="cb97-10">80/tcp   open     http         nginx (reverse proxy)</span>
+<span id="cb97-11">443/tcp  open     ssl/http     nginx (reverse proxy)</span>
+<span id="cb97-12">|_ssl-date: TLS randomness does not represent time</span>
+<span id="cb97-13">| ssl-cert: Subject: commonName=Kubernetes Ingress Controller Fake Certificate/organizationName=Acme Co</span>
+<span id="cb97-14">| Subject Alternative Name: DNS:ingress.local</span>
+<span id="cb97-15">| Not valid before: 2025-10-07T17:00:03</span>
+<span id="cb97-16">|_Not valid after:  2026-10-07T17:00:03</span>
+<span id="cb97-17">|_http-title: 404 Not Found</span>
+<span id="cb97-18">445/tcp  filtered microsoft-ds</span>
+<span id="cb97-19">3300/tcp open     ceph         Ceph distributed filesystem msgr2 protocol</span>
+<span id="cb97-20">5900/tcp open     vnc          VNC (protocol 3.8)</span>
+<span id="cb97-21">| vnc-info: </span>
+<span id="cb97-22">|   Protocol version: 3.8</span>
+<span id="cb97-23">|   Security types: </span>
+<span id="cb97-24">|     None (1)</span>
+<span id="cb97-25">|_  WARNING: Server does not require authentication</span>
+<span id="cb97-26">6789/tcp open     ceph         Ceph distributed filesystem protocol v027 (ipv4)</span>
+<span id="cb97-27">8080/tcp open     http         FRITZ!Box TR-069 service</span>
+<span id="cb97-28">|_http-server-header: Ceph Object Gateway (squid)</span>
+<span id="cb97-29">|_http-open-proxy: Proxy might be redirecting requests</span>
+<span id="cb97-30">8443/tcp open     ssl/http     LXD container manager REST API</span>
+<span id="cb97-31">|_http-title: Site doesn't have a title (application/json).</span>
+<span id="cb97-32">|_ssl-date: TLS randomness does not represent time</span>
+<span id="cb97-33">| ssl-cert: Subject: commonName=root@thoth/organizationName=Linux Containers</span>
+<span id="cb97-34">| Subject Alternative Name: DNS:thoth, IP Address:127.0.0.1, IP Address:0:0:0:0:0:0:0:1</span>
+<span id="cb97-35">| Not valid before: 2025-10-07T17:10:18</span>
+<span id="cb97-36">|_Not valid after:  2035-10-05T17:10:18</span>
+<span id="cb97-37">9091/tcp open     http         Golang net/http server (Go-IPFS json-rpc or InfluxDB API)</span>
+<span id="cb97-38">Service Info: Device: broadband router</span>
+<span id="cb97-39"></span>
+<span id="cb97-40">Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .</span>
+<span id="cb97-41">Nmap done: 1 IP address (1 host up) scanned in 50.35 seconds</span></code></pre></div></div>
 <p>There is an unauthenticated, unencrypted VNC server on my server. And sure enough, when I connect to it, I am greeted with the interface of the test virtual machine I have created.</p>
 <p>It seems that the novnc-proxy pod uses host networking by default, and you have to disable via values in the helm chart. And the VNC server is still exposed :/.</p>
 <p>One thing I need to test is if pods can access services on the host that are only served on localhost.</p>
@@ -4440,16 +4625,16 @@ font-style: inherit;">  runAsUser: 0</span></span></code></pre></div></div>
 <p>The values I want look pretty easy, but it does look like I need to spin up a self signed certificate authority and certificate. I do that, and then it still doesn’t connect. It looks like I failed to configure novnc to expect https, and was expecting http instead. I found the <a href="https://github.com/vexxhost/atmosphere/blob/25c4962e898db266f6844bce60ef0ef86abcaab5/roles/openstack_helm_endpoints/vars/main.yml#L270">relevant endpoints config</a>, in openstack atmosphere’s code.</p>
 <p>Another thing I want to do is to deploy the serial console in addition to the novnc console. This is difficult because the nova helm chart only supports one console kind at a time, but I think a potential way I could get around this is by deploying nova twice, but disabling all the manifests except for the relevant ones I care about.</p>
 <p>Oh, and here is the cloud-init config I use to give the Rocky server a default username and password. This only works when I select “configuration drive”, probably for reasons similar to the issues I was having with Incus. I just wanted an operating system that came with NetworkManager by default, as I have the most familiarity with the internals of that as opposed to other solutions.</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb94" style="background: #f1f3f5;"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb94-1"><span class="co" style="color: #5E5E5E;
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb98" style="background: #f1f3f5;"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb98-1"><span class="co" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;">#cloud-config</span></span>
-<span id="cb94-2"><span class="fu" style="color: #4758AB;
+<span id="cb98-2"><span class="fu" style="color: #4758AB;
 background-color: null;
 font-style: inherit;">users</span><span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">:</span></span>
-<span id="cb94-3"><span class="at" style="color: #657422;
+<span id="cb98-3"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">  </span><span class="kw" style="color: #003B4F;
 background-color: null;
@@ -4464,7 +4649,7 @@ font-weight: bold;
 font-style: inherit;">:</span><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;"> myuser</span></span>
-<span id="cb94-4"><span class="at" style="color: #657422;
+<span id="cb98-4"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -4476,7 +4661,7 @@ background-color: null;
 font-style: inherit;"> </span><span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">"mypassword"</span></span>
-<span id="cb94-5"><span class="at" style="color: #657422;
+<span id="cb98-5"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -4488,7 +4673,7 @@ background-color: null;
 font-style: inherit;"> </span><span class="ch" style="color: #20794D;
 background-color: null;
 font-style: inherit;">false</span></span>
-<span id="cb94-6"><span class="at" style="color: #657422;
+<span id="cb98-6"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -4498,7 +4683,7 @@ font-weight: bold;
 font-style: inherit;">:</span><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;"> /bin/bash</span></span>
-<span id="cb94-7"><span class="at" style="color: #657422;
+<span id="cb98-7"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -4508,7 +4693,7 @@ font-weight: bold;
 font-style: inherit;">:</span><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;"> sudo</span></span>
-<span id="cb94-8"><span class="at" style="color: #657422;
+<span id="cb98-8"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -4526,7 +4711,7 @@ font-style: inherit;">'ALL=(ALL) ALL'</span><span class="kw" style="color: #003B
 background-color: null;
 font-weight: bold;
 font-style: inherit;">]</span></span>
-<span id="cb94-9"><span class="at" style="color: #657422;
+<span id="cb98-9"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -4549,8 +4734,8 @@ font-style: inherit;">true</span></span></code></pre></div></div>
 <p>One possibility is firewall rules. The default security group doesn’t allow for any traffic to on the ingress, only egress. Disabling this still had issues, but I think I am a step in the right direction.</p>
 <p>Next thing to consider is port security. Port security is typically good where you control the subnet, as it ensures that ports attatched to VM’s only get the ip address you want them to have. But it probably breaks things if you try to access an external dhcp server, as the virtual machine tries to change it’s own ip address after figuring out what has been assigned.</p>
 <p>So after some research, it looks like neutron is responsible for assigning ip addresses, and it uses port security to ensure that virtual machines get the correct one. So I try to create a “port” that is free from those restrictions, and get this:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb95" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb95-1">(venv) [moonpie@cachyos-x8664 openstack]$ openstack server add port testlocal vm-bridge</span>
-<span id="cb95-2">BadRequestException: 400: Client Error for url: https://nova.openstack.moonpiedumpl.ing/v2.1/7edd8553fb2f46bb86e33d4a67249cf6/servers/4f64ca58-4716-42f1-8974-e58dc353064c/os-interface, Network requires port_security_enabled and subnet associated in order to apply security groups.</span></code></pre></div></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb99" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb99-1">(venv) [moonpie@cachyos-x8664 openstack]$ openstack server add port testlocal vm-bridge</span>
+<span id="cb99-2">BadRequestException: 400: Client Error for url: https://nova.openstack.moonpiedumpl.ing/v2.1/7edd8553fb2f46bb86e33d4a67249cf6/servers/4f64ca58-4716-42f1-8974-e58dc353064c/os-interface, Network requires port_security_enabled and subnet associated in order to apply security groups.</span></code></pre></div></div>
 <p>What I’m trying to do is to put a router/firewall type operating system in front of a the subnet so that I can just attatch ports to that network with the same controls.</p>
 <p>As a backup plan, I could also consider replicating what <a href="https://jamielinux.com/docs/libvirt-networking-handbook/custom-nat-based-network.html">libvirt does for it’s NAT based networking</a> and then using that as an external bridge. VM’s would get traffic forwarded through to the main interface. No public VM’s though.</p>
 <p>Although this gives me another interesting idea. What if I just put them on an Incus bridge? Although sadly, linuxbridge isn’t supported, but Incus does seem to be able to create an openvswitch bridge. This also might explain why the undercloud-overcloud setup is popular.</p>
@@ -4579,7 +4764,7 @@ font-style: inherit;">true</span></span></code></pre></div></div>
 </ul>
 <p>The problem is that openstack really wants each project to have it’s own router on an external subnet. In theory I could do double NAT or things like that, but that breaks floating ip address setups. But with this setup, I have two external networks, one with 255 addresses, and one with 49 ip addresses.</p>
 <p>I created a bridge using the Incus UI. Here is the yaml config of the Incus network, so I can easily recreate it.</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb96" style="background: #f1f3f5;"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb96-1"><span class="fu" style="color: #4758AB;
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb100" style="background: #f1f3f5;"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb100-1"><span class="fu" style="color: #4758AB;
 background-color: null;
 font-style: inherit;">project</span><span class="kw" style="color: #003B4F;
 background-color: null;
@@ -4587,7 +4772,7 @@ font-weight: bold;
 font-style: inherit;">:</span><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;"> default</span></span>
-<span id="cb96-2"><span class="fu" style="color: #4758AB;
+<span id="cb100-2"><span class="fu" style="color: #4758AB;
 background-color: null;
 font-style: inherit;">name</span><span class="kw" style="color: #003B4F;
 background-color: null;
@@ -4595,7 +4780,7 @@ font-weight: bold;
 font-style: inherit;">:</span><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;"> br-inc</span></span>
-<span id="cb96-3"><span class="fu" style="color: #4758AB;
+<span id="cb100-3"><span class="fu" style="color: #4758AB;
 background-color: null;
 font-style: inherit;">description</span><span class="kw" style="color: #003B4F;
 background-color: null;
@@ -4603,7 +4788,7 @@ font-weight: bold;
 font-style: inherit;">:</span><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;"> For openstack</span></span>
-<span id="cb96-4"><span class="fu" style="color: #4758AB;
+<span id="cb100-4"><span class="fu" style="color: #4758AB;
 background-color: null;
 font-style: inherit;">type</span><span class="kw" style="color: #003B4F;
 background-color: null;
@@ -4611,13 +4796,13 @@ font-weight: bold;
 font-style: inherit;">:</span><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;"> bridge</span></span>
-<span id="cb96-5"><span class="fu" style="color: #4758AB;
+<span id="cb100-5"><span class="fu" style="color: #4758AB;
 background-color: null;
 font-style: inherit;">config</span><span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">:</span></span>
-<span id="cb96-6"><span class="at" style="color: #657422;
+<span id="cb100-6"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -4627,7 +4812,7 @@ font-weight: bold;
 font-style: inherit;">:</span><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;"> openvswitch</span></span>
-<span id="cb96-7"><span class="at" style="color: #657422;
+<span id="cb100-7"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -4637,7 +4822,7 @@ font-weight: bold;
 font-style: inherit;">:</span><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;"> 10.88.0.1/24</span></span>
-<span id="cb96-8"><span class="at" style="color: #657422;
+<span id="cb100-8"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -4649,7 +4834,7 @@ background-color: null;
 font-style: inherit;"> </span><span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">'false'</span></span>
-<span id="cb96-9"><span class="at" style="color: #657422;
+<span id="cb100-9"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -4661,7 +4846,7 @@ background-color: null;
 font-style: inherit;"> </span><span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">'true'</span></span>
-<span id="cb96-10"><span class="at" style="color: #657422;
+<span id="cb100-10"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -4688,9 +4873,31 @@ font-style: inherit;"> none</span></span></code></pre></div></div>
 </ul></li>
 <li>Networkmanager attempts to manage the ovs bridges when it shouldn’t be
 <ul>
-<li>When I look into the</li>
+<li>When I look into the NetworkManager UI of cockpit, it looks like networkmanager is attempting to manage some openstack virtual ports</li>
 </ul></li>
 </ul>
+<p>Instead I’m gonna try something different. I’m gonna create another veth, and put an incus linux bridge on that veth, and then connect it to an openstack</p>
+<p>It’s probably not the CNI, because it looks like Calico (which is like the default Canal that RKE2 uses but more), was <a href="https://review.opendev.org/c/openstack/openstack-helm/+/460298/1/tools/kubeadm-aio/assets/usr/bin/kubeadm-aio">supported and worked fine with openstack-helm</a>.</p>
+<p>Okay, again the issue is cruft caused by a lack of proper cleanup. It looks like the openvswitch bridges aren’t actually deleted, and this causes issues with initialization. But when I clean everything up and reboot, I can get internet access now on my virtual machines.</p>
+<p>But, only with the external subnet, the incus internal subnet does not work. I dig through config, and NetworkManager seesm to have saved config for the ports attatched to the openstack bridge. I found a <a href="https://git.openembedded.org/openembedded-core-contrib/commit/?h=paule/npm-install-fix&amp;id=503a80de1cc9097fdc8f6b5b7d0e3a3991b0ecd2">relevant issue</a>, and it does look like NetworkManager clobbers tap devices. Interestingly, networkmangaer does not touch openstack’s openvswtich bridges, or incus’ bridges.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb101" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb101-1">root@thoth:/sys/class/net/br-int# ethtool -i qvof1f97de8-c2</span>
+<span id="cb101-2">driver: veth</span>
+<span id="cb101-3">version: 1.0</span>
+<span id="cb101-4">firmware-version:</span>
+<span id="cb101-5">expansion-rom-version:</span>
+<span id="cb101-6">bus-info:</span>
+<span id="cb101-7">supports-statistics: yes</span>
+<span id="cb101-8">supports-test: no</span>
+<span id="cb101-9">supports-eeprom-access: no</span>
+<span id="cb101-10">supports-register-dump: no</span>
+<span id="cb101-11">supports-priv-flags: no</span></code></pre></div></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb102" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb102-1"></span>
+<span id="cb102-2"></span>
+<span id="cb102-3">So I need a config file to remind networkmanager to not touch my precious devices:</span>
+<span id="cb102-4"></span>
+<span id="cb102-5">```{.ini path='/etc/NetworkManager/conf.d/openstack-ovs.conf'}</span>
+<span id="cb102-6">[keyfile]</span>
+<span id="cb102-7">unmanaged-devices=interface-name:tap*;interface-name:qbr*;interface-name:qvo*</span></code></pre></div></div>
 </section>
 <section id="glance" class="level2">
 <h2 class="anchored" data-anchor-id="glance">Glance</h2>
@@ -4717,13 +4924,13 @@ font-style: inherit;"> none</span></span></code></pre></div></div>
 <p>This appears to be a <a href="https://lists.openstack.org/archives/list/openstack-discuss@lists.openstack.org/thread/UU5XE3TOHCIBQZ7O5TVNZ6MPN3CX27HI/">known issue</a>, where the solution is to increase the number of uwsgi worker threads. I increased to 2, then 4, then 40, and then 80 with no luck. <code>:/</code>.</p>
 <p>I take a look at what Atmosphere, a deployment tool for helm <a href="https://github.com/vexxhost/atmosphere/blob/main/charts/glance/values.yaml#L392C2-L412C56">is doing</a>. It looks like there exist <a href="https://uwsgi-docs.readthedocs.io/en/latest/Chunked.html">uwsgi options related to chunked input</a>.</p>
 <p>After setting a uwsgi config of:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb97" style="background: #f1f3f5;"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb97-1"><span class="fu" style="color: #4758AB;
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb103" style="background: #f1f3f5;"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb103-1"><span class="fu" style="color: #4758AB;
 background-color: null;
 font-style: inherit;">glance_api_uwsgi</span><span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">:</span></span>
-<span id="cb97-2"><span class="at" style="color: #657422;
+<span id="cb103-2"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -4731,7 +4938,7 @@ font-style: inherit;">uwsgi</span><span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">:</span></span>
-<span id="cb97-3"><span class="at" style="color: #657422;
+<span id="cb103-3"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -4743,7 +4950,7 @@ background-color: null;
 font-style: inherit;"> </span><span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">"4096000"</span></span>
-<span id="cb97-4"><span class="at" style="color: #657422;
+<span id="cb103-4"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -4755,7 +4962,7 @@ background-color: null;
 font-style: inherit;"> </span><span class="ch" style="color: #20794D;
 background-color: null;
 font-style: inherit;">true</span></span>
-<span id="cb97-5"><span class="at" style="color: #657422;
+<span id="cb103-5"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -4767,7 +4974,7 @@ background-color: null;
 font-style: inherit;"> </span><span class="ch" style="color: #20794D;
 background-color: null;
 font-style: inherit;">true</span></span>
-<span id="cb97-6"><span class="at" style="color: #657422;
+<span id="cb103-6"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -4789,15 +4996,17 @@ font-style: inherit;">10</span></span></code></pre></div></div>
 </blockquote>
 <p>This new default is to fix <a href="https://nvd.nist.gov/vuln/detail/CVE-2022-29404">this CVE</a>, which I am not affected on becasue I am on 2.4.58 instead of the affected 2.4.53.</p>
 <p>After setting <code>LimitRequestBody 0</code>, it works and I can upload larger images from the UI. It looks like atmosphere’s openstack helm doesn’t have this, because the default apache2 version they use in their container, <code>docker.io/openstackhelm/horizon:stein-ubuntu_bionic</code>, is older than the patch.</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb98" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb98-1">root@9971ffb9219b:/var/lib/python# apache2 -v</span>
-<span id="cb98-2">Server version: Apache/2.4.29 (Ubuntu)</span>
-<span id="cb98-3">Server built:   2020-08-12T21:33:25</span></code></pre></div></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb104" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb104-1">root@9971ffb9219b:/var/lib/python# apache2 -v</span>
+<span id="cb104-2">Server version: Apache/2.4.29 (Ubuntu)</span>
+<span id="cb104-3">Server built:   2020-08-12T21:33:25</span></code></pre></div></div>
 </section>
 <section id="cleanup-1" class="level2">
 <h2 class="anchored" data-anchor-id="cleanup-1">Cleanup</h2>
 <p>Here are the commands I use to cleanup after doing a deploy.</p>
 <p><code>kubectl delete -f apps/</code></p>
 <p>Delete the OVN bridge from Incus’s networks</p>
+<p>In the openvswitch pod:</p>
+<p><code>ovs-vsctl del-br br-int</code> and then repeat for br-tun and br-ex</p>
 <p><code>kubectl delete -f infra/</code></p>
 <p><code>kubectl delete -n openstack jobs.batch --all</code></p>
 <p><code>kubectl delete configmaps -n openstack mariadb-mariadb-state</code></p>
@@ -4807,6 +5016,7 @@ font-style: inherit;">10</span></span></code></pre></div></div>
 <p><code>rm -rf /run/libvirt</code></p>
 <p><code>rm -rf /etc/libvirt</code></p>
 <p>If this isn’t done, then the nova-compute-default pod fails to start.</p>
+<p><code>rm -rf /run/openvswitch</code> Maybe?</p>
 </section>
 </section>
 <section id="notes-for-iteration-two" class="level1">
@@ -4825,6 +5035,7 @@ font-style: inherit;">10</span></span></code></pre></div></div>
 <li>Kustomizations would let me do variable substitutions from secrets, allowing me to have things like the database password be private, but the url be public. Currently, I hide the entire database url (it includes the password).</li>
 </ul></li>
 <li>Move to endpointslices instead of endpoints</li>
+<li>Authentik with free tier of <a href="https://www.smtp2go.com/" class="uri">https://www.smtp2go.com/</a> in order to send password reset links.</li>
 </ul>
 <p>One thing I am considering is using <a href="https://zitadel.com/">Zitadel</a> instead of authentik, because Zitadel supports <a href="https://zitadel.com/docs/apis/actions/introduction">actions</a> which are arbitrary scripts and probably cleaner to do than hacking an authentik policy to do api calls and requests.</p>
 <p>But, Zitadel doesn’t seem to supply something akin to authentik blueprints. Also, it seems to be more designed for developers</p>
@@ -4837,7 +5048,10 @@ font-style: inherit;">10</span></span></code></pre></div></div>
 <p>Also, I would probably rather use Cilium or Calico instead of RKE2’s combo of Flannel and Calico. I would want an eBPF data plane, and then I could use Cilium or Calico as host firewalls for blocking ssh and the kube api.</p>
 <p>Other things to consider are options for improving security.</p>
 <ul>
-<li>Kube Api and ssh behind the firewall, requiring me to VPN into the server to access those services.</li>
+<li>Kube Api and ssh behind the firewall, requiring me to VPN into the server to access those services.
+<ul>
+<li>Cilium or calico host based firewall</li>
+</ul></li>
 <li>Some form of login banner/warning banner. If I’m going to be essentially becoming my own hosting provider/infra, it makes sense to have the legal protections in place.s</li>
 </ul>
 <p>Openstack instead of Incus. Incus is really good, but there are so many papercuts and issues when using it that are frustrating. I originally wanted Openstack because it was a whole “cloud” and had features like s3, databases as a service, firewall as a service, containers as a service, etc. But on the reddit, people are frustrated with those services as they aren’t maintained and truly reliable the way that the core openstack set of components is — for example, <a href="https://www.reddit.com/r/openstack/comments/1lelavr/is_openstack_zun_still_maintained_and_used/mywdhnj/">zun (containers) was deprecated and then undeprecated</a>.</p>
@@ -5005,75 +5219,75 @@ Link Failure Count: 0
 Permanent HW addr: 48:4d:7e:ec:54:31
 Slave queue ID: 0</code></pre>
 <p>The <code>Link Failure Count: 1</code> is probably due to me unplugging it to plug my laptop in, but it did come back up again, which is a good sign.</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb101" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb101-1">root@thoth:~# ifstat -i enp9s0,enp0s25,eth0,bond0,internal0,public0</span>
-<span id="cb101-2">      enp9s0             enp0s25               eth0               bond0             internal0            public0</span>
-<span id="cb101-3"> KB/s in  KB/s out   KB/s in  KB/s out   KB/s in  KB/s out   KB/s in  KB/s out   KB/s in  KB/s out   KB/s in  KB/s out</span>
-<span id="cb101-4">    1.87      2.46      0.00      0.00      1.22      2.95      1.87      2.46      0.00      0.00      1.11      0.00</span>
-<span id="cb101-5">    1.16      1.62      0.00      0.00      0.76      2.33      1.16      1.62      0.00      0.00      0.67      0.00</span>
-<span id="cb101-6">    2.11      1.63      0.00      0.00      1.23      1.92      2.11      1.63      0.00      0.00      1.09      0.00</span>
-<span id="cb101-7">    1.81      1.65      0.00      0.00      1.31      2.33      1.81      1.65      0.00      0.00      1.21      0.00</span>
-<span id="cb101-8">    2.40      1.67      0.00      0.00      1.99      2.00      2.40      1.67      0.06      1.40      0.51      0.00</span>
-<span id="cb101-9">    1.16      1.71      0.00      0.00      0.82      2.00      1.16      1.71      0.00      0.00      0.58      0.00</span>
-<span id="cb101-10">    1.16      1.67      0.00      0.00      0.73      3.03      1.16      1.67      0.00      0.00      0.64      0.00</span>
-<span id="cb101-11">    1.00      1.66      0.00      0.00      0.73      1.84      1.00      1.66      0.05      0.00      0.63      0.00</span>
-<span id="cb101-12">    2.60      2.54      0.00      0.00      2.11      2.62      2.60      2.54      0.07      0.00      0.69      0.00</span></code></pre></div></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb107" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb107-1">root@thoth:~# ifstat -i enp9s0,enp0s25,eth0,bond0,internal0,public0</span>
+<span id="cb107-2">      enp9s0             enp0s25               eth0               bond0             internal0            public0</span>
+<span id="cb107-3"> KB/s in  KB/s out   KB/s in  KB/s out   KB/s in  KB/s out   KB/s in  KB/s out   KB/s in  KB/s out   KB/s in  KB/s out</span>
+<span id="cb107-4">    1.87      2.46      0.00      0.00      1.22      2.95      1.87      2.46      0.00      0.00      1.11      0.00</span>
+<span id="cb107-5">    1.16      1.62      0.00      0.00      0.76      2.33      1.16      1.62      0.00      0.00      0.67      0.00</span>
+<span id="cb107-6">    2.11      1.63      0.00      0.00      1.23      1.92      2.11      1.63      0.00      0.00      1.09      0.00</span>
+<span id="cb107-7">    1.81      1.65      0.00      0.00      1.31      2.33      1.81      1.65      0.00      0.00      1.21      0.00</span>
+<span id="cb107-8">    2.40      1.67      0.00      0.00      1.99      2.00      2.40      1.67      0.06      1.40      0.51      0.00</span>
+<span id="cb107-9">    1.16      1.71      0.00      0.00      0.82      2.00      1.16      1.71      0.00      0.00      0.58      0.00</span>
+<span id="cb107-10">    1.16      1.67      0.00      0.00      0.73      3.03      1.16      1.67      0.00      0.00      0.64      0.00</span>
+<span id="cb107-11">    1.00      1.66      0.00      0.00      0.73      1.84      1.00      1.66      0.05      0.00      0.63      0.00</span>
+<span id="cb107-12">    2.60      2.54      0.00      0.00      2.11      2.62      2.60      2.54      0.07      0.00      0.69      0.00</span></code></pre></div></div>
 <p>So it looks like despite having a bond, only one of my interfaces is actually used. Both say up though, but this probably contributes to not getting enough network speeds.</p>
 <p>After a reboot, it works fine, however:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb102" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb102-1">root@thoth:~# ifstat -i enp9s0,enp0s25,eth0,bond0,internal0,public0</span>
-<span id="cb102-2">      enp9s0             enp0s25               eth0               bond0             internal0            public0</span>
-<span id="cb102-3"> KB/s in  KB/s out   KB/s in  KB/s out   KB/s in  KB/s out   KB/s in  KB/s out   KB/s in  KB/s out   KB/s in  KB/s out</span>
-<span id="cb102-4">11989.63     52.37      1.37    124.69  11654.08    171.83  11989.74    177.06     39.22   1938.29      0.99      0.00</span>
-<span id="cb102-5">11946.43     49.93      1.87    138.25  11614.61    182.29  11948.30    188.25     38.44   1828.08      1.42      0.00</span>
-<span id="cb102-6">11959.60     45.93      1.56    145.35  11625.44    185.09  11959.90    191.29     35.43   1556.25      1.03      0.00</span>
-<span id="cb102-7">11922.62     42.51      1.62    151.77  11592.51    187.73  11928.02    194.21     32.27   1440.24      1.22      0.00</span>
-<span id="cb102-8">11848.59     35.80      1.25    160.06  11509.07    188.90  11847.45    195.96     25.35   1181.13      0.90      0.00</span>
-<span id="cb102-9">11854.63     40.43      1.62    145.73  11528.21    179.70  11858.91    186.06     30.50   1410.89      1.09      0.00</span>
-<span id="cb102-10">11926.80     45.38      1.12    145.14  11593.25    184.30  11925.13    190.51     34.03   1589.40      0.89      0.00</span></code></pre></div></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb108" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb108-1">root@thoth:~# ifstat -i enp9s0,enp0s25,eth0,bond0,internal0,public0</span>
+<span id="cb108-2">      enp9s0             enp0s25               eth0               bond0             internal0            public0</span>
+<span id="cb108-3"> KB/s in  KB/s out   KB/s in  KB/s out   KB/s in  KB/s out   KB/s in  KB/s out   KB/s in  KB/s out   KB/s in  KB/s out</span>
+<span id="cb108-4">11989.63     52.37      1.37    124.69  11654.08    171.83  11989.74    177.06     39.22   1938.29      0.99      0.00</span>
+<span id="cb108-5">11946.43     49.93      1.87    138.25  11614.61    182.29  11948.30    188.25     38.44   1828.08      1.42      0.00</span>
+<span id="cb108-6">11959.60     45.93      1.56    145.35  11625.44    185.09  11959.90    191.29     35.43   1556.25      1.03      0.00</span>
+<span id="cb108-7">11922.62     42.51      1.62    151.77  11592.51    187.73  11928.02    194.21     32.27   1440.24      1.22      0.00</span>
+<span id="cb108-8">11848.59     35.80      1.25    160.06  11509.07    188.90  11847.45    195.96     25.35   1181.13      0.90      0.00</span>
+<span id="cb108-9">11854.63     40.43      1.62    145.73  11528.21    179.70  11858.91    186.06     30.50   1410.89      1.09      0.00</span>
+<span id="cb108-10">11926.80     45.38      1.12    145.14  11593.25    184.30  11925.13    190.51     34.03   1589.40      0.89      0.00</span></code></pre></div></div>
 <p>But, when I log in a few hours later:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb103" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb103-1">root@thoth:~# ifstat -i enp9s0,enp0s25</span>
-<span id="cb103-2">      enp9s0             enp0s25</span>
-<span id="cb103-3"> KB/s in  KB/s out   KB/s in  KB/s out</span>
-<span id="cb103-4">    3.07      5.95      0.00      0.00</span>
-<span id="cb103-5">    2.01      2.97      0.00      0.00</span>
-<span id="cb103-6">   62.43      6.41      0.00      0.00</span>
-<span id="cb103-7">    1.82      3.16      0.00      0.00</span>
-<span id="cb103-8">    1.81      3.02      0.00      0.00</span>
-<span id="cb103-9">   21.44     11.37      0.00      0.00</span>
-<span id="cb103-10">   16.05      3.42      0.00      0.00</span>
-<span id="cb103-11">    1.11      0.06      0.00      0.00</span>
-<span id="cb103-12">    1.82      0.12      0.00      0.00</span>
-<span id="cb103-13">    1.10      0.06      0.00      0.00</span>
-<span id="cb103-14">    0.99      0.06      0.00      0.00</span>
-<span id="cb103-15">    0.94      0.06      0.00      0.00</span>
-<span id="cb103-16">   16.15      3.75      0.00      0.00</span>
-<span id="cb103-17">   27.99      6.11      0.00      0.00</span>
-<span id="cb103-18">10650.43    210.02      0.00      0.00</span>
-<span id="cb103-19">11952.08    213.10      0.00      0.00</span>
-<span id="cb103-20">11996.47    213.79      0.00      0.00</span>
-<span id="cb103-21">11987.28    208.43      0.00      0.00</span>
-<span id="cb103-22"> 4684.25     75.68      0.00      0.00</span>
-<span id="cb103-23">    1.45      0.06      0.00      0.00</span>
-<span id="cb103-24">    3.79      0.06      0.00      0.00</span>
-<span id="cb103-25">    1.25      0.87      0.00      0.00</span>
-<span id="cb103-26">    3.04      0.30      0.00      0.00</span>
-<span id="cb103-27">    2.33      0.06      0.00      0.00</span></code></pre></div></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb109" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb109-1">root@thoth:~# ifstat -i enp9s0,enp0s25</span>
+<span id="cb109-2">      enp9s0             enp0s25</span>
+<span id="cb109-3"> KB/s in  KB/s out   KB/s in  KB/s out</span>
+<span id="cb109-4">    3.07      5.95      0.00      0.00</span>
+<span id="cb109-5">    2.01      2.97      0.00      0.00</span>
+<span id="cb109-6">   62.43      6.41      0.00      0.00</span>
+<span id="cb109-7">    1.82      3.16      0.00      0.00</span>
+<span id="cb109-8">    1.81      3.02      0.00      0.00</span>
+<span id="cb109-9">   21.44     11.37      0.00      0.00</span>
+<span id="cb109-10">   16.05      3.42      0.00      0.00</span>
+<span id="cb109-11">    1.11      0.06      0.00      0.00</span>
+<span id="cb109-12">    1.82      0.12      0.00      0.00</span>
+<span id="cb109-13">    1.10      0.06      0.00      0.00</span>
+<span id="cb109-14">    0.99      0.06      0.00      0.00</span>
+<span id="cb109-15">    0.94      0.06      0.00      0.00</span>
+<span id="cb109-16">   16.15      3.75      0.00      0.00</span>
+<span id="cb109-17">   27.99      6.11      0.00      0.00</span>
+<span id="cb109-18">10650.43    210.02      0.00      0.00</span>
+<span id="cb109-19">11952.08    213.10      0.00      0.00</span>
+<span id="cb109-20">11996.47    213.79      0.00      0.00</span>
+<span id="cb109-21">11987.28    208.43      0.00      0.00</span>
+<span id="cb109-22"> 4684.25     75.68      0.00      0.00</span>
+<span id="cb109-23">    1.45      0.06      0.00      0.00</span>
+<span id="cb109-24">    3.79      0.06      0.00      0.00</span>
+<span id="cb109-25">    1.25      0.87      0.00      0.00</span>
+<span id="cb109-26">    3.04      0.30      0.00      0.00</span>
+<span id="cb109-27">    2.33      0.06      0.00      0.00</span></code></pre></div></div>
 <p>I also see repeated disconnections again. But what causes these disconnections?</p>
 <p>Also, I suspect this issue may have happened previously, which is why I ran out of network when Incus was downloading images.</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb104" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb104-1">e1000e 0000:00:19.0 enp0s25: Detected Hardware Unit Hang:</span>
-<span id="cb104-2">  TDH                  &lt;e0&gt;</span>
-<span id="cb104-3">  TDT                  &lt;1e&gt;</span>
-<span id="cb104-4">  next_to_use          &lt;1e&gt;</span>
-<span id="cb104-5">  next_to_clean        &lt;df&gt;</span>
-<span id="cb104-6">buffer_info[next_to_clean]:</span>
-<span id="cb104-7">  time_stamp           &lt;1002e4bf0&gt;</span>
-<span id="cb104-8">  next_to_watch        &lt;e0&gt;</span>
-<span id="cb104-9">  jiffies              &lt;10049d328&gt;</span>
-<span id="cb104-10">  next_to_watch.status &lt;0&gt;</span>
-<span id="cb104-11">MAC Status             &lt;80043&gt;</span>
-<span id="cb104-12">PHY Status             &lt;796d&gt;</span>
-<span id="cb104-13">PHY 1000BASE-T Status  &lt;0&gt;</span>
-<span id="cb104-14">PHY Extended Status    &lt;3000&gt;</span>
-<span id="cb104-15">PCI Status             &lt;10&gt;</span></code></pre></div></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb110" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb110-1">e1000e 0000:00:19.0 enp0s25: Detected Hardware Unit Hang:</span>
+<span id="cb110-2">  TDH                  &lt;e0&gt;</span>
+<span id="cb110-3">  TDT                  &lt;1e&gt;</span>
+<span id="cb110-4">  next_to_use          &lt;1e&gt;</span>
+<span id="cb110-5">  next_to_clean        &lt;df&gt;</span>
+<span id="cb110-6">buffer_info[next_to_clean]:</span>
+<span id="cb110-7">  time_stamp           &lt;1002e4bf0&gt;</span>
+<span id="cb110-8">  next_to_watch        &lt;e0&gt;</span>
+<span id="cb110-9">  jiffies              &lt;10049d328&gt;</span>
+<span id="cb110-10">  next_to_watch.status &lt;0&gt;</span>
+<span id="cb110-11">MAC Status             &lt;80043&gt;</span>
+<span id="cb110-12">PHY Status             &lt;796d&gt;</span>
+<span id="cb110-13">PHY 1000BASE-T Status  &lt;0&gt;</span>
+<span id="cb110-14">PHY Extended Status    &lt;3000&gt;</span>
+<span id="cb110-15">PCI Status             &lt;10&gt;</span></code></pre></div></div>
 <p>I see this error in the cockpit logs, probably from dmesg. However, although rebooting fixes the problem temporarily, I lose these logs. I think</p>
 <p>Also, apparently the sober people dorms get 1g links up/down. I will do those next summer/year.</p>
 </section>
@@ -5104,8 +5318,8 @@ Slave queue ID: 0</code></pre>
 <div class="code-with-filename-file">
 <pre><strong>/etc/security/limits.conf</strong></pre>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb105" data-filename="/etc/security/limits.conf" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb105-1">*    soft    nofile    65536</span>
-<span id="cb105-2">*    hard    nofile    65536</span></code></pre></div></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb111" data-filename="/etc/security/limits.conf" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb111-1">*    soft    nofile    65536</span>
+<span id="cb111-2">*    hard    nofile    65536</span></code></pre></div></div>
 </div>
 
 
@@ -12796,6 +13010,11 @@ rook-ceph-operator   66s   False   Helm install failed for release openstack/roo
 <p>I want synergy to happen, but for the synergy to use up one of the other resources, preventing snowballing / an infinite combo.</p>
 <p>The other thing I want is to fix issues with interactivity, which are one of the complaints about MTG. To fix this, I will have a tactical “battlefield” during the attak/defense phases, where card positioning is on a hex grid and all “enchantment” or “resource generation” type cards can be attacked or defended. The goal of this is to prevent setups where one player is more focused on playing solitaire instead of dueling other players.</p>
 <p>In addition to this, I would like to incentivize <em>actions</em>, rather than <em>state</em>. The problem with incentivizing state via something like rewarding having cards in the graveyard, is that players want to play those cards.</p>
+<p>One of the top comments of <a href="https://www.youtube.com/watch?v=rJaAbe3F4ao">this video</a></p>
+<blockquote class="blockquote">
+<p>Something I wish this video touched on more is that it isn’t just that cards are generating more value - that is actually only partially true. The power level of most instants and sorceries has not scaled at the same rate as creatures. Creatures all generating additional value making them essentially 1.5 to 2 cards vs 1:1 removal means control can never reach parity without also being creature based since using spot removal actually gives you negative tempo. The best equipment are also creatures, the best enchantments are either also creatures or interact with creatures directly, the best artifacts are direct creature interaction, the best planeswalkers in standard are a creature and one that generates creatures. Not only do creatures do everything, everything else has turned into creatures also. This design philosophy has actually made the game less diverse.</p>
+</blockquote>
+<p>As a reply to this, every card will essentially be a creature.</p>
 </section>
 <section id="game-setuplayout" class="level1">
 <h1>Game Setup/Layout</h1>
@@ -13455,10 +13674,17 @@ GetWin: Get the amount of damage a winning attacker would do</code></pre>
 </ul>
 <p>Not kubernetes:</p>
 <ul>
-<li>Debian</li>
-<li>Kolla-ansible</li>
+<li><a href="https://salsa.debian.org/openstack-team/debian/openstack-cluster-installer">Debian</a></li>
+<li>Kolla-ansible
+<ul>
+<li><a href="https://osism.tech/">OSISM</a>/<a href="docs.scs.community/docs/iaas/guides/concept-guide/components/openstack">SCS</a></li>
+</ul></li>
 <li>Openstack-ansible</li>
 <li>Canonical Sunbeam</li>
+</ul>
+<p>Configuration:</p>
+<ul>
+<li><a href="https://k-orc.cloud/" class="uri">https://k-orc.cloud/</a> — Gives you a k8s operators for managing openstack</li>
 </ul>
 </section>
 <section id="nix" class="level1">
@@ -16016,6 +16242,80 @@ font-style: inherit;">}</span>:</span></code></pre></div></div>
   <category>playground</category>
   <guid>./playground/flake-shell/</guid>
   <pubDate>Fri, 21 Jun 2024 07:00:00 GMT</pubDate>
+</item>
+<item>
+  <title>Nice Challenge 5</title>
+  <dc:creator>Jeffrey Fonseca</dc:creator>
+  <link>./writeups/nice-challenge-5/</link>
+  <description><![CDATA[ 
+
+
+
+
+
+<p>This is for the <a href="https://nice-challenge.com/">NICE</a> challenge, and this would be my fifth one (not counting repeats).</p>
+<p>As usual, it started out with a simulated chatroom:</p>
+<p><img src="./writeups/nice-challenge-5/images/chatroom.png" class="img-fluid"></p>
+<p>And, there were also some empty checks.</p>
+<p><img src="./writeups/nice-challenge-5/images/emptychecks.png" class="img-fluid"></p>
+<p>Based on this, it seems like I will be working on the “Production Web Server”, primarily.</p>
+<section id="prod-web" class="level1">
+<h1>Prod-Web</h1>
+<section id="users" class="level2">
+<h2 class="anchored" data-anchor-id="users">Users</h2>
+<p>First, I created user accounts for the relevant users.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb1-1">useradd gthatcher</span>
+<span id="cb1-2"></span>
+<span id="cb1-3">useradd rob</span></code></pre></div></div>
+<p>Since <code>gthatcher</code> is going to be an admin, I added them to the <code>wheel</code> user group, since that is often used as an administrator group on Linux systems.</p>
+<p><code>usermod -aG wheel gthatcher</code></p>
+<p>Then, I used the <code>visudo</code> command to edit the sudoer’s file and add wheel as a group that could use all commands with sudo:</p>
+<div class="code-with-filename">
+<div class="code-with-filename-file">
+<pre><strong>/etc/sudoers</strong></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2" data-filename="/etc/sudoers" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb2-1">## Allows people in group wheel to run all commands</span>
+<span id="cb2-2">%wheel  ALL=(ALL)   ALL</span></code></pre></div></div>
+</div>
+<p>The other thing I added was for user <code>rob</code> to be able to run certain commands as sudo, without a password, but only those commands.</p>
+<div class="code-with-filename">
+<div class="code-with-filename-file">
+<pre><strong>/etc/sudoers</strong></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3" data-filename="/etc/sudoers" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb3-1">rob ALL=NOPASSWD : /bin/sudoedit /var/www/html/*, /bin/systemctl status httpd, /bin/systemctl stop httpd, /bin/systemctl start httpd, /bin/systemctl restart httpd, /bin/systemctl enable httpd, /bin/systemctl disable httpd</span></code></pre></div></div>
+</div>
+</section>
+<section id="update-apache" class="level2">
+<h2 class="anchored" data-anchor-id="update-apache">Update Apache</h2>
+<p>Also, I needed to update apache. However, the repos completely broken on this machine, so I deleted them, and made way for new repos.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb4-1">mv /etc/yum.repos.d /etc/yum.repos.bac # Back up old yum repos just in case</span>
+<span id="cb4-2"></span>
+<span id="cb4-3">mkdir /etc/yum.repos.d</span>
+<span id="cb4-4"></span>
+<span id="cb4-5">curl http://mirror.centos.org/centos/7/atomic/x86_64/repo/CentOS-Base.repo -o /etc/yum.repos.d/CentOS-Base.repo</span>
+<span id="cb4-6"></span>
+<span id="cb4-7">yum update</span></code></pre></div></div>
+<p>And with this, Apache is updated.</p>
+</section>
+<section id="ssh-config" class="level2">
+<h2 class="anchored" data-anchor-id="ssh-config">Ssh Config</h2>
+<p>Ssh needs to be configured to use key based authentication, instead of password based authentication.</p>
+<p>On the Prod-Web server:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb5-1">ssh-keygen # this generates an ssh key in the default location. I did not set a passphrase.</span>
+<span id="cb5-2"></span>
+<span id="cb5-3">scp .ssh/id_rsa.pub playerone@172.16.20.11:/home/playerone/.ssh/authorized_keys # use password to authenticate the connection</span></code></pre></div></div>
+<p>This creates a key and authorizes it for use on the Dev-Web server.</p>
+<p>And with this, all checks are green:</p>
+<p><img src="./writeups/nice-challenge-5/images/greenchecks.png" class="img-fluid"></p>
+
+
+</section>
+</section>
+
+ ]]></description>
+  <category>writeups</category>
+  <guid>./writeups/nice-challenge-5/</guid>
+  <pubDate>Fri, 07 Jun 2024 07:00:00 GMT</pubDate>
 </item>
 </channel>
 </rss>
