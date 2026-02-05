@@ -173,16 +173,24 @@ Kubernetes:
   * Genestack
   * Understack
   * Atmosphere
+  * Starlingx
 * Yaook
 * Openstack k8s operators
 * Mirantis Rockoon
+* Canonical Sunbeam
+  * Although this one is different because it's somewhat opaque and I cannot see any easy docs about installing it to an existing k8s cluster.
 
 Not kubernetes:
 
-* Debian
+* [Debian](https://salsa.debian.org/openstack-team/debian/openstack-cluster-installer)
 * Kolla-ansible
+  * [OSISM](https://osism.tech/)/[SCS](docs.scs.community/docs/iaas/guides/concept-guide/components/openstack)
 * Openstack-ansible
-* Canonical Sunbeam
+
+
+Configuration:
+
+* <https://k-orc.cloud/> — Gives you a k8s operators for managing openstack
 
 # Nix
 

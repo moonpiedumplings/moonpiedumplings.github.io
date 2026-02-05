@@ -22,25 +22,29 @@ let
   });
 
   quarto = pkgs.quarto.overrideAttrs (oldAttrs: rec {
-    version = "1.8.25";
-    src = pkgs.fetchurl {
-      url = "https://github.com/quarto-dev/quarto-cli/releases/download/v${version}/quarto-${version}-linux-amd64.tar.gz";
-      sha256 = "sha256-E9RDAooKgnshdXs3+etS26+PBiPr/KxEFi++o62fwf8=";
-    };
-    preFixup = ''
-      wrapProgram $out/bin/quarto \
-        --prefix QUARTO_TYPST : ${pkgs.lib.makeBinPath [ pkgs.typst ]}/typst \
-        --prefix QUARTO_ESBUILD ${pkgs.lib.makeBinPath [ pkgs.esbuild ]}/esbuild
-    '';
-    patches = [
-    ];
+    # preFixup = ''
+    #   wrapProgram $out/bin/quarto \
+    #     --set-default QUARTO_PANDOC ${pkgs.lib.makeBinPath [ pkgs.pandoc ]}/pandoc \
+    #     --set-default QUARTO_TYPST ${pkgs.lib.makeBinPath [ pkgs.typst ]}/typst \
+    #     --set-default QUARTO_ESBUILD ${pkgs.lib.makeBinPath [ pkgs.esbuild ]}/esbuild \
+    #     --set-default QUARTO_DENO ${pkgs.lib.makeBinPath [pkgs.deno]}/deno \
+    #     --set-default QUARTO_DART_SASS ${pkgs.lib.makeBinPath [pkgs.dart-sass]}/dart-sass
+    # '';
+    # patches = [
+    # ];
     installPhase = ''
       runHook preInstall
 
       mkdir -p $out/bin $out/share
 
-      rm -rf bin/tools/*/typst
-      rm -rf bin/tools/*/esbuild
+      rm -rf bin/tools/*
+      rm -rf bin/tools/*
+
+      mkdir bin/tools/aarch64
+      mkdir bin/tools/x86_64
+
+      ln -s ${pkgs.lib.makeBinPath [ pkgs.pandoc ]}/pandoc bin/tools/x86_64/pandoc
+      ln -s ${pkgs.lib.makeBinPath [ pkgs.pandoc ]}/pandoc bin/tools/aarch64/pandoc
 
       mv bin/* $out/bin
       mv share/* $out/share
@@ -58,6 +62,7 @@ pkgs.mkShellNoCC {
     bashInteractive
     (python3.withPackages pythonDeps)
     quarto
+    pandoc
     texEnv
     font-awesome
   ];

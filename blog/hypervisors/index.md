@@ -92,6 +92,9 @@ These are roughly ordered from less private cloud features, to a fully featured 
 -   XCP-NG + Xen Orchestra
 -   VMware vSphere
 -   Openstack
+-   Ubicloud
+-   CloudStack
+-   
 
 This is a non exhaustive list.
 

@@ -839,6 +839,61 @@ I have now migrated to cloudnativepg.
 
 But after this, I want to migrate away from my little injection hack to something more stable. I should be able to create a configmap, and then mount that into the container. I started working on this, and it looks like the command is not truly templated, but instead that many of the things like the api key are generated from environment variables. 
 
+Okay, the next thing I want to do for coder is to use a CUDA image for Leela chess 0, so I and my friends can take advantage of the power analysis capabilities of [nibbler](https://github.com/rooklift/nibbler) on the go. There are a few ways I can do this. 
+
+I think the easiest way to do this is to use a webtop podman image on the host, and then install all of the relevant gpu drivers and [cudnnn lc0 from the aur](https://aur.archlinux.org/packages/lc0-cudnn-git). Then, I can commit the image and push it. 
+
+```{.default}
+abc@43d4afccc294:/var/cache$ history
+    1  sudo chown abc:abc config/
+    2  ls
+    3  cd config/
+    4  ls
+    5  sudo pacman -Sy git
+    6  git clone https://aur.archlinux.org/packages/lc0-cudnn-git.git
+    7  git clone https://aur.archlinux.org/packages/lc0-cudnn-git
+    8  git clone https://aur.archlinux.org/lc0-cudnn-git.git
+    9  cd lc0-cudnn-git/
+   10  ls
+   11  makepkg -si
+   12  lc0
+   13  cd ..
+   14  ls
+   15  git clone https://aur.archlinux.org/packages/nibbler-git
+   16  git clone https://aur.archlinux.org/packages/nibbler-gi.git
+   17  git clone https://aur.archlinux.org/nibbler-git.git
+   18  cd nibbler-git/
+   19  ls
+   20  makepkg -si
+   21  lco --help
+   22  sudo pacman -Scc
+```
+
+This mostly works, except the lc0 backend wants a network file. I can probably put in a volume, where it has the 
+
+My concern, however, is image and model size. The image is currently very large, and I fear that loading cuda into ram for more than one container, may not duplicate the memory the way non gpu operations do. 
+
+Same goes for lc0's model file. 
+
+I load it up in a podman container to test:
+
+```{.default}
+Latest version of CUDA supported by the driver: 12.4.0
+WARNING: code was compiled with unsupported CUDA version.
+CUDA error: CUDA driver version is insufficient for CUDA runtime version (../../src/neural/backends/cuda/network_cuda.cc:233)
+error CUDA error: CUDA driver version is insufficient for CUDA runtime version (../../src/neural/backends/cuda/network_cuda.cc:233)
+```
+
+I was using an archlinux container, and a debian host. 
+
+I updated the nvidia driver (and cuda) on the host. Also, apparently the cuda libraries are mounted into the container, I don't think I need cuda, although I do probably need cudnn.
+
+`podman run -it --rm -v ".:/config/lc0" --gpus all --entrypoint bash --user abc docker.io/linuxserver/webtop:arch-kde`
+
+`makepkg -s`
+
+`pacman -S ./ --assume-installed cuda=13`
+
 ### Oauth2
 
 Another thing is that Oauth2/OIDC was not working. It seems that my method of secrets did not work, so instead I have to do something else, "envfrom".
@@ -1633,7 +1688,17 @@ So I am searching for some options for operators for postgres:
 * [Crunchy Postgres Operator](https://github.com/CrunchyData/postgres-operator)
 * [Zalando](https://github.com/zalando/postgres-operator)
 
-For redis... I think I am going to switch to the internal cache implementation instead. The 
+For redis... I think I am going to switch to the internal cache implementation instead. Although this results in an error, and I have to put a puase on forgejo for now.
+
+
+## Pangolin
+
+[Pangolin](https://github.com/fosrl/pangolin), is a reverse proxy similar to cloudfare tunnels, and also offers VPN capabilities, similar to Netbird. I am very interested in it becuase it offers a multi-tenant VPN solution, which is a paid feature in Netbird.
+
+But, they offer no kubernetes deployment by default. I will be converting their docker compose deploy to a k8s deployment. 
+
+
+
 
 ## Cloud Native Postgres
 
@@ -1847,9 +1912,18 @@ $2a$14$LdqC7FEIx2w6arGCNw7Pi.qxe2kFSvBecz.IvtdcdLvJe4V.xeyhi
 This gets me a password and a hash to use. I feed that to the config, and my default ollama url looks something like this: `http://ollama:secretpassword@ollama.owui.svc.cluster.local:11434`. 
 
 
-
-
 Another thing that annoyed me is changing the openwebui pipelines api key to something more secure by deafault. The necessary environment variable, `PIPELINES_API_KEY` does not seem to be documented, but I found it on a [github issue](https://github.com/open-webui/pipelines/issues/311). 
+
+
+Okay, after the rebuild where my hard drives died, I made some changes to authentik, where user accounts no longer have emails. 
+
+But many applications, like Openwebui, expect email. On the OpenWebui [docs](https://docs.openwebui.com/getting-started/env-configuration/#enable_oauth_without_email), they mention an environment variable, `ENABLE_OAUTH_WITHOUT_EMAIL`, that is necessary for OAUTH users without email to sign in. 
+
+It doesn't work. The config option is not real. Despite being [mentioned in a github issue](https://github.com/open-webui/open-webui/issues/18045), I could not find it in the source code. 
+
+While reading the [source code of where it *should* be present](https://github.com/open-webui/open-webui/blob/6f1486ffd0cb288d0e21f41845361924e0d742b3/backend/open_webui/utils/oauth.py#L69), I notice something that looks relevant: `ENABLE_OAUTH_EMAIL_FALLBACK`.
+
+This config option, when set to true, and `OAUTH_SUB_CLAIM` is set to `preferred_username`, makes everything work. 
 
 ### Models
 
@@ -1861,6 +1935,8 @@ Although, one irritating I have noticed is that the model download doesn't conti
 
 I'm also interested in the new-ish [embeddinggemma:300m](https://ollama.com/library/embeddinggemma:300m) model.
 
+
+# Ingress
 
 ## Ingress-Nginx
 
@@ -2011,7 +2087,29 @@ And then I can forward the tcp service via the ingress nginx controller, by foll
 
 Another issue I encountered was "413 Request Entity Too Large" when trying to upload ISO's to nginx. By default, nginx has a setting, [client.max_body_size](https://nginx.org/en/docs/http/ngx_http_core_module.html#client_max_body_size) that limits the size of client requests, or in this case, the size of ISO's that I can upload to Incus. To fix, you can add [annotation that changes this setting](https://kubernetes.github.io/ingress-nginx/user-guide/nginx-configuration/annotations/#custom-max-body-size). 
 
+## Gateway API
 
+So now, [ingress nginx is being deprecated](https://www.reddit.com/r/kubernetes/comments/1ove0t5/ingress_nginx_retirement_what_you_need_to_know/). 
+
+I have a few options, but I do think I have to switch off. One problem is almost all of the helm charts I use, create resources of type ingress. Thankfully, I have been very, very careful to intentionally avoid specifying what ingress class they use, meaning that all I really have to do is delete the ingress, and then I would iterate over the ingresses and delete their current ingress class. I have switched ingress class names before, and according to my testing, all it requires is that I delete the `spec.ingressClassName` resource from the ingress object, and then the ingress will work with the new cluster ingress.
+
+So I want something that supports both ingress, and gateway API, in addition to that. Another fear I have, is that the annotations nginx uses may not be supported.
+
+* Traefik
+  * [relevant reddit comment](https://old.reddit.com/r/kubernetes/comments/1ove0t5/ingress_nginx_retirement_what_you_need_to_know/nolru3s/)
+  * Supports gateway api as well as ingress
+  * [They are trying to make a compat layer for nginx's annotations](https://www.reddit.com/r/kubernetes/comments/1ove0t5/ingress_nginx_retirement_what_you_need_to_know/nojhw78/)
+    * [original link](https://doc.traefik.io/traefik/master/reference/routing-configuration/kubernetes/ingress-nginx/)
+* Cilium/Envoy
+
+Both traefik and Cilium support gateway api.
+
+
+Some big caveats:
+
+* No support for oauth2-proxy, which 
+
+I actually don't think I am going to switch yet. The problem is that I don't really want to use Traefik, but at the same time, Openstack-helm depends on ingress-nginx's annotations.So I kinda just have to leave it for now.
 
 
 ## Cert-Manager
@@ -2026,7 +2124,7 @@ Okay after waiting for a bit, it's there. Sometimes the solution is patience.
 
 But I decide to switch to the [original version](https://github.com/mdonoughe/porkbun-webhook) instead, after realizing that I can use a GitRepository to get the helm chart, and deploy the helm chart from a path in the git repository.
 
-### Nvidia Container Toolkit
+## Nvidia Container Toolkit
 
 So firstly, I need to install the Nvidia container runtime on kuberntes. 
 
@@ -2073,9 +2171,22 @@ After this, I should be able to simply set nvidia as a runtime for certain pods,
 
 Another common step for Nvidia support in Kubernetes, is to install the [Nvidia K8s device plugin](https://github.com/NVIDIA/k8s-device-plugin), but this requires the Nvidia container runtime to be teh *default*. I don't want this, because it gives services that don't need an Nvidia GPU access to Nvidia GPU's. I don't think I need this, however, so I won't bother.  
 
+
+But then I needed newer nvidia drivers. I followed [nvidia's network repo instructions](https://docs.nvidia.com/datacenter/tesla/driver-installation-guide/debian.html#network-repository-enablement-amd64) to get a newer version of nvidia drivers on Debian 13. 
+
+And then to remove the older driver and update:
+
+`apt install cuda-drivers`
+
+This mostly works, but a config file in /etc/modprobe.d is not correct. It is `/etc/modprobe.d/nvidia.conf.dpkg-new`, which I had to rename to just `/etc/modprobe.d/nvidia.conf` in order for the nvidia drivers to work properly.
+
+In addition to this, I have to regenerate the nvidia container runtime file for the new drivers.
+
+`nvidia-ctk cdi generate > /etc/cdi/nvidia.yaml`
+
 ## Storage
 
-# OpenEBS
+### OpenEBS
 
 Kubernetes storage is fairly complex, and I have encountered issues with it multiple times in the subprojects I have used, so I am moving them here to this section instead from where they originally where. 
 
@@ -2178,6 +2289,77 @@ Maybe what's missing is iptables?
 `apt install iptables` ­— the version that debian comes with is actually a wrapper for nftables. 
 
 
+I have decided to switch to Cilium and istio, to prepare for a potential kubeflow deployment.
+
+```{.yaml filename='/etc/rancher/rke2/config.yaml'}
+disable:
+  # Yeah so apparently this was kind of important.
+  # - rke2-coredns
+  - rke2-ingress-nginx
+cni:
+  - multus
+  - cilium
+```
+
+I encountered some issues, so I started by nuking `/etc/cni` and `/var/lib/cni` (well actually, moving them to a backup). But I still had issues, specifically [this one](https://github.com/cilium/cilium/issues/38222). 
+
+To fix, I adjusted the config:
+
+```{.yaml}
+apiVersion: helm.cattle.io/v1
+kind: HelmChartConfig
+metadata:
+  name: rke2-cilium
+  namespace: kube-system
+spec:
+  valuesContent: |-
+    kubeProxyReplacement: true
+    socketLB:
+      hostNamespaceOnly: true
+    cluster:
+      name: "default"
+      id: 0
+    cni:
+      exclusive: false
+    hostFirewall:
+      enabled: false
+    envoy:
+      prometheus:
+        enabled: false
+    bpf:
+      monitorAggregation: medium 
+      monitorAggregationInterval: 5s   
+    l2announcements:
+      enabled: false
+    tunnelProtocol: geneve
+    operator:
+      replicas: 1
+      updateStrategy:
+        type: RollingUpdate
+        rollingUpdate:
+          maxSurge: 100%
+          maxUnavailable: 100%
+```
+
+
+I get further errors, probably because I have a weird bridge setup and cilium doesn't know what to do:
+
+```{.yaml}
+routingMode: native
+nodePort:
+  directRoutingDevice: eth0
+```
+
+Still errors. I needed something different:
+
+```{.yaml}
+extraConfig:
+  #direct-routing-device: "eth0"
+  devices: "eth0"
+```
+
+And then I enable the host firewall, and have a deny by default firewall. Of course, before doing this I apply a configuration that gives me access, so I don't lock myself out.
+
 
 # IP address change
 
@@ -2269,6 +2451,12 @@ I think another thing I missed was that ceph wants a storage system that exposes
 
 [Here is Openstack-helms test script for deploying ceph](https://opendev.org/openstack/openstack-helm/src/branch/master/tools/deployment/ceph/ceph-rook.sh).
 
+I copied something similar and got it working. But after a reboot, I noticed that my disk devices had been moved around. `:/` To avoid this, I should reference the disk device by part-id or by it's path. Both of these can be found by typing `ls -l` in `/dev/disk/by-id` or `/dev/disk/by-path`, which shows the id or path as a file that is a symlink to the "standard" way of referring to disk devices.
+
+`2025-11-17 06:40:12.025816 I | ceph-cluster-controller: skipping orchestration for cluster object "ceph" in namespace "ceph" because its cleanup policy is set`
+
+I got this error because I tried to set `confirmation: yes-really-destroy-data` in the ceph config when I install it, so I could skip a step. I was not as clever as I thought. 
+
 ### Cleanup
 
 Also, when I need to nuke ceph, the cleanup of the ceph cluster requires [some manual steps](https://rook.io/docs/rook/latest/Storage-Configuration/ceph-teardown/). 
@@ -2279,9 +2467,23 @@ First thing, first, edit the cephcluster customresources deletion policy.
 
 `kubectl -n rook-ceph patch cephcluster rook-ceph --type merge -p '{"spec":{"cleanupPolicy":{"confirmation":"yes-really-destroy-data"}}}'`
 
-Then, delete the ceph objecstore and cephblockpool objects in ceph.
+Then, delete the cephcluster cr. It might not work, so you might have to delete the ceph objecstore and cephblockpool objects in ceph.
 
-Then find the cephcluster cr itself. 
+
+Actually, it's easier to just nuke the entire `ceph` and `rook-ceph` namespaces. 
+
+Then `kubectl edit clientprofiles.csi.ceph.io -n rook-ceph ceph` and remove the finalizer, because it doesn't delete properly.
+
+On the host, wipe the disk and `rm -rf /var/lib/rook`.  Also, format the disk device:
+
+<https://rook.io/docs/rook/latest/Getting-Started/ceph-teardown/?h=cleanu#zapping-devices>
+
+`sgdisk --zap-all /dev/disk/by-id/ata-WDC_WD40EZAX-00C8UB0_WD-WX22D556K14P`
+
+`partprobe /dev/disk/by-id/ata-WDC_WD40EZAX-00C8UB0_WD-WX22D556K14P`
+
+`kubectl get crd | grep ceph | awk '{print $1}' | xargs kubectl delete crd`
+
 
 ## Openstack install (cont)
 
@@ -2412,7 +2614,7 @@ Secondly, keystone does Openid connect via [mod_auth_openid](https://github.com/
 But, the understack containers latest version is 2024.2, whereas I am on the 2025.1 release. So I have two options for this:
 
 * Modify the container to include mod auth
-  * I'm probably going to do this, because it's simple. 
+  * I'm probably going to do this, because it's simple.   
 * Use a proxy in front that has openid auth
 * Maybe saml is supported?
 
@@ -2509,6 +2711,26 @@ Create a mapping.
 
 `openstack federation protocol create openid --mapping openid_mapping --identity-provider openid`
 
+
+I get an error now, because the helm chart version updated but the container didn't. I am on 
+
+Relevant:
+
+<https://docs.openstack.org/releasenotes/openstack-helm/current.html>
+
+<https://opendev.org/openstack/openstack-helm/commit/b2a515d52d37832317e63b3942157f8b1f1689b4>
+
+So to fix this, I think the only real option is ensure that the chart version and the container version are in sync. I have two options
+
+* Downgrade all charts to 2025.1
+  * I tested with the keystone chart, and it seems to work
+* Upgrade all containers to 2025.2
+
+I really like the appeal of the latter, because 2025.2 is supported until right after 2027, when I graduate. This means that I could deploy openstack and not touch it, simply destroying it when I need to leave college. 
+
+Okay, I updated the keystone helm chart to version 2025.2, but I still get the error. `:(`.
+
+Okay I fixed it. I needed to update the keystone wsgi conf template, as that was still outdated. 
 
 
 ## Nova
@@ -2742,7 +2964,7 @@ What I am thinking of doing is twofold:
 
 The problem is that openstack really wants each project to have it's own router on an external subnet. In theory I could do double NAT or things like that, but that breaks floating ip address setups. But with this setup, I have two external networks, one with 255 addresses, and one with 49 ip addresses.
 
-I created a bridge using the Incus UI. Here is the yaml config of the Incus network, so I can easily recreate it.
+I created a bridge using the Incus UI. Here is the yaml config of the Incus network, so I can easily recreate it. Although I have to restart incus in between openstack destroys and installs. 
 
 ```{.yaml}
 project: default
@@ -2773,7 +2995,77 @@ Two other possibilites:
 * Iptables rules created by canal get in the way
   * I should try cilium instead, which uses epbf for it's rules
 * Networkmanager attempts to manage the ovs bridges when it shouldn't be
-  * When I look into the 
+  * When I look into the NetworkManager UI of cockpit, it looks like networkmanager is attempting to manage some openstack virtual ports
+
+
+Instead I'm gonna try something different. I'm gonna create another veth, and put an incus linux bridge on that veth, and then connect it to an openstack 
+
+
+It's probably not the CNI, because it looks like Calico (which is like the default Canal that RKE2 uses but more), was [supported and worked fine with openstack-helm](https://review.opendev.org/c/openstack/openstack-helm/+/460298/1/tools/kubeadm-aio/assets/usr/bin/kubeadm-aio).  
+
+Okay, again the issue is cruft caused by a lack of proper cleanup. It looks like the openvswitch bridges aren't actually deleted, and this causes issues with initialization. But when I clean everything up and reboot, I can get internet access now on my virtual machines. 
+
+But, only with the external subnet, the incus internal subnet does not work. I dig through config, and NetworkManager seesm to have saved config for the ports attatched to the openstack bridge. I found a [relevant issue](https://git.openembedded.org/openembedded-core-contrib/commit/?h=paule/npm-install-fix&id=503a80de1cc9097fdc8f6b5b7d0e3a3991b0ecd2), and it does look like NetworkManager clobbers tap devices. Interestingly, networkmangaer does not touch openstack's openvswtich bridges, or incus' bridges.
+
+```{.default}
+root@thoth:/sys/class/net/br-int# ethtool -i qvof1f97de8-c2
+driver: veth
+version: 1.0
+firmware-version:
+expansion-rom-version:
+bus-info:
+supports-statistics: yes
+supports-test: no
+supports-eeprom-access: no
+supports-register-dump: no
+supports-priv-flags: no
+```
+
+```{.default}
+
+
+So I need a config file to remind networkmanager to not touch my precious devices:
+
+```{.ini path='/etc/NetworkManager/conf.d/openstack-ovs.conf'}
+[keyfile]
+unmanaged-devices=interface-name:tap*;interface-name:qbr*;interface-name:qvo*
+```
+
+And then, I am able to put a router on both the incus and/or the external network, and that router can give internal networks internet. However, floating ip's, or putting a virtual machine directly on the Incus network don't work. They do work with the real external network, but I would like both working.
+
+So what could be going wrong here? It's probably *Incus* attempting to manage the networking of the openstack virtual machines, causing it to not get a connection. 
+
+
+Okay I get another error when I attempt to create a network:
+
+```{.default}
+2025-11-28 04:12:11.537962 /var/lib/openstack/lib/python3.12/site-packages/oslo_policy/policy.py:1133: UserWarning: Policy "create_network:shared": "rule:admin_only" failed scope check. The token used to make the request was domain scoped but the policy requires ['project'] scope. This behavior may change in the future where using the intended scope is required
+2025-11-28 04:12:11.537980   warnings.warn(msg)
+``` 
+
+```{.default}
+2025-11-29 11:12:46.315134 2025-11-29 11:12:46.312 20 ERROR keystone.server.flask.application oslo_policy.policy.InvalidScope: "identity:list_application_credentials": "(rule:admin_required) or (role:reader and system_scope:all) or rule:owner" requires a scope of ['system', 'project'], request was made with domain scope.
+```
+
+Okay, it looks like the cli still works at least. The problem is that horizon gives me a "domain" scoped token, which is more than project scoped tasks want, but at the same time is not the universal administrator that a system scoped token would give me. 
+
+`openstack network create --external --provider-network-type flat --provider-physical-network public --share public`
+
+woops I forgot to set the gateway.
+
+`openstack subnet create --subnet-range 130.166.84.0/24 --gateway 130.166.84.11 --no-dhcp --allocation-pool start=130.166.84.29,end=130.166.84.69 --network public public-main`
+
+Incus networks:
+
+`openstack network create --external --provider-network-type flat --provider-physical-network incus --share incus`
+
+
+`openstack subnet create --subnet-range 10.88.0.0/24 --gateway 10.88.0.1 --network incus incus-main`
+
+
+Okay, and then back to Incus subnet: It looks like Networkmanager isn't actually not managing the interfaces I asked it not to manage. I think what is happening is that I have two [keyfile] sections in two seperate files in my `NetworkManger.conf.d`, and NetworkManager is only actually reading one of them. But even after this is fixed, floating ip's still don't work on the Incus network.
+
+
 
 ## Glance
 
@@ -2838,6 +3130,51 @@ Server version: Apache/2.4.29 (Ubuntu)
 Server built:   2020-08-12T21:33:25
 ```
 
+
+## Rabbitmq
+
+Rabbitmq updated, but it looks like the database schema didn't upgrade alongside it. Because rabbitmq doesn't store any truly persistent data, I decided to nuke it and then redeploy openstack services in place.
+
+`kubectl delete -f infra/rabbitmq`
+
+`kubectl delete pvc -n openstack rabbitmq-data-rabbitmq-rabbitmq-0`
+
+`flux reconcile helmrelease -n openstack --force keystone`
+
+and then repeat for other services. 
+
+One thing that fails is cinder and nova, because the ceph config is broken for some reason.
+
+```{.yaml}
+apiVersion: v1
+data:
+  ceph.conf: |
+    [global]
+    mon_host = will be discovered
+kind: ConfigMap
+metadata:
+  name: ceph-etc
+  namespace: openstack
+  resourceVersion: "34776760"
+  uid: cbc817ba-fe41-4afd-a035-1f63b2acc7d4
+```
+
+The eventual solution to this issue is to delete the ceph-adapter-rook helmrelease, reapply it. This fixes the configmap and puts the actual ip address in there, and I can reconcile the cinder and nova services. 
+
+
+# MariaDB
+
+I got this error:
+
+ Either correct the problem (if it's, for example, out of memory error) and restart, or │
+│  delete tc log and start server with --tc-heuristic-recover={commit|rollback}
+
+
+To fix, I edited the statefulset that the container was part of, replacing the start command with `sleep infinity` (to prevent crashloopbackoff). Then I deleted `/var/lib/mysqld/tc.log`, and then I ran `mysqld --wsrep-cluster-address="gcomm://" --tc-heuristic-recover=rollback`
+
+After this, ran `flux reconcile helmrelease -n openstack --force mariadb` to reinstall mariadb and reset the statefulset. 
+
+
 ## Cleanup
 
 Here are the commands I use to cleanup after doing a deploy.
@@ -2845,6 +3182,10 @@ Here are the commands I use to cleanup after doing a deploy.
 `kubectl delete -f apps/`
 
 Delete the OVN bridge from Incus's networks
+
+In the openvswitch pod:
+
+`ovs-vsctl del-br br-int` and then repeat for br-tun and br-ex
 
 `kubectl delete -f infra/`
 
@@ -2864,6 +3205,9 @@ And then on the compute node, I needed to:
 
 If this isn't done, then the nova-compute-default pod fails to start. 
 
+
+`rm -rf /run/openvswitch` Maybe?
+
 # Notes for iteration two
 
 I will eventually tear down everything and rebuild it. Some of the stuff is not worth changing right now, but when I do a rebuild I may end up making these changes.
@@ -2877,6 +3221,7 @@ Here's some minor stuff on the more nitpicky side:
   * I edited the file that says "do not edit"
   * Kustomizations would let me do variable substitutions from secrets, allowing me to have things like the database password be private, but the url be public. Currently, I hide the entire database url (it includes the password).
 * Move to endpointslices instead of endpoints
+* Authentik with free tier of <https://www.smtp2go.com/> in order to send password reset links.
 
 
 One thing I am considering is using [Zitadel](https://zitadel.com/) instead of authentik, because Zitadel supports [actions](https://zitadel.com/docs/apis/actions/introduction) which are arbitrary scripts and probably cleaner to do than hacking an authentik policy to do api calls and requests.
@@ -2901,6 +3246,7 @@ Also, I would probably rather use Cilium or Calico instead of RKE2's combo of Fl
 Other things to consider are options for improving security.
 
 * Kube Api and ssh behind the firewall, requiring me to VPN into the server to access those services.
+  * Cilium or calico host based firewall
 * Some form of login banner/warning banner. If I'm going to be essentially becoming my own hosting provider/infra, it makes sense to have the legal protections in place.s
 
 
