@@ -1,0 +1,1096 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.7.31">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="dcterms.date" content="2024-03-20">
+
+<title>My server part 4 — Kubernetes – Jeffrey Fonseca</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-e1a5c8363afafaef2c763b6775fbf3ca.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-8ef56b68f8fa1e9d2ba328e99e439f80.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-e1a5c8363afafaef2c763b6775fbf3ca.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-2d2c3c1dc8fcebd689918bbad00a5354.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-61fddf1775f8cf983c184c2ec9e6a10f.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-2d2c3c1dc8fcebd689918bbad00a5354.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+
+</head>
+
+<body class="nav-fixed quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const darkModeDefault = authorPrefersDark;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">Jeffrey Fonseca</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../posts/index.html"> 
+<span class="menu-text">Posts</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../resume/index.html"> 
+<span class="menu-text">Resume</span></a>
+  </li>  
+</ul>
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item compact">
+    <a class="nav-link" href="../../../feed.xml"> <i class="bi bi-rss" role="img">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/moonpiedumplings"> <i class="bi bi-github" role="img">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#why-the-switch" id="toc-why-the-switch" class="nav-link active" data-scroll-target="#why-the-switch">Why the switch?</a></li>
+  <li><a href="#rootless-kubernetes" id="toc-rootless-kubernetes" class="nav-link" data-scroll-target="#rootless-kubernetes">Rootless (?) Kubernetes</a>
+  <ul class="collapse">
+  <li><a href="#user-namespaces" id="toc-user-namespaces" class="nav-link" data-scroll-target="#user-namespaces">User Namespaces</a></li>
+  <li><a href="#package-managerhelm" id="toc-package-managerhelm" class="nav-link" data-scroll-target="#package-managerhelm">Package Manager/Helm</a></li>
+  <li><a href="#kubernetes-distro" id="toc-kubernetes-distro" class="nav-link" data-scroll-target="#kubernetes-distro">Kubernetes Distro</a></li>
+  <li><a href="#distributed-storage" id="toc-distributed-storage" class="nav-link" data-scroll-target="#distributed-storage">Distributed (?) Storage</a></li>
+  <li><a href="#gitops-software" id="toc-gitops-software" class="nav-link" data-scroll-target="#gitops-software">Gitops Software</a></li>
+  <li><a href="#misc-addonsdeployment" id="toc-misc-addonsdeployment" class="nav-link" data-scroll-target="#misc-addonsdeployment">Misc Addons/Deployment</a></li>
+  </ul></li>
+  <li><a href="#services" id="toc-services" class="nav-link" data-scroll-target="#services">Services</a>
+  <ul class="collapse">
+  <li><a href="#authentik" id="toc-authentik" class="nav-link" data-scroll-target="#authentik">Authentik</a></li>
+  <li><a href="#forgejo" id="toc-forgejo" class="nav-link" data-scroll-target="#forgejo">Forgejo</a></li>
+  <li><a href="#nextcloud" id="toc-nextcloud" class="nav-link" data-scroll-target="#nextcloud">Nextcloud</a></li>
+  </ul></li>
+  <li><a href="#networking" id="toc-networking" class="nav-link" data-scroll-target="#networking">Networking</a></li>
+  <li><a href="#kubernetes-installation-and-setup" id="toc-kubernetes-installation-and-setup" class="nav-link" data-scroll-target="#kubernetes-installation-and-setup">Kubernetes Installation and Setup</a></li>
+  <li><a href="#presearch-and-notes-for-future-pieces" id="toc-presearch-and-notes-for-future-pieces" class="nav-link" data-scroll-target="#presearch-and-notes-for-future-pieces">Presearch and Notes for Future Pieces</a>
+  <ul class="collapse">
+  <li><a href="#openstack" id="toc-openstack" class="nav-link" data-scroll-target="#openstack">Openstack</a></li>
+  <li><a href="#kubernetes" id="toc-kubernetes" class="nav-link" data-scroll-target="#kubernetes">Kubernetes</a></li>
+  <li><a href="#misc" id="toc-misc" class="nav-link" data-scroll-target="#misc">Misc</a>
+  <ul class="collapse">
+  <li><a href="#multi-tenancy" id="toc-multi-tenancy" class="nav-link" data-scroll-target="#multi-tenancy">Multi-Tenancy</a></li>
+  </ul></li>
+  </ul></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">My server part 4 — Kubernetes</h1>
+  <div class="quarto-categories">
+    <div class="quarto-category">projects</div>
+  </div>
+  </div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">March 20, 2024</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="why-the-switch" class="level1">
+<h1>Why the switch?</h1>
+<p>I was working on configuring rootless podman via ansible, but I had trouble because the tooling was incomplete. Ansible is a suboptiomal way to manage containers, and rootless podman can’t manage its own services.</p>
+<p>For the whole journey, see the <a href="../build-server-3/#systemd-integration">previous post</a></p>
+<p>So yeah. I’ve decided to switch to Kubernetes, because Kubernetes can manage it’s own services, and be rootless. The configuration-as-code landscape for Kubernetes, is much, much better than podman, and I will get many more options. For example, I can use <a href="">helm</a>, which is somewhat like a package manager for kubernetes, to install apps. Both Caddy and Authentik offer helm packages. Using the offered packages is probably less work than converting a docker compose to a podman container.</p>
+</section>
+<section id="rootless-kubernetes" class="level1">
+<h1>Rootless (?) Kubernetes</h1>
+<section id="user-namespaces" class="level2">
+<h2 class="anchored" data-anchor-id="user-namespaces">User Namespaces</h2>
+<p>Just like how Linux has “distributions”, or bundles of software that build on top of the Linux kernels, Kubernetes has distros. I want rootless Kubernetes,</p>
+<p>I started by looking at <a href="https://k3s.io/">k3s</a>, the version of kubernetes I have experience with. However, there appear to be some <a href="https://docs.k3s.io/advanced#known-issues-with-rootless-mode">caveats with rootless mode</a>… including not being able to run a multi node cluster.</p>
+<p>There is an article related to Kubernetes rootless containers: <a href="https://rootlesscontaine.rs/getting-started/kubernetes/" class="uri">https://rootlesscontaine.rs/getting-started/kubernetes/</a></p>
+<p>And what I see is… not promising. I don’t really desire to do run <code>kind</code> or <code>minikube</code>, because they are stripped down compared to more feature-full Kubernetes distros like <code>k3s</code></p>
+<p>Minikube, from that list above, is promising, but it is designed for development/testing, and <a href="https://github.com/kubernetes/minikube/issues/94">doesn’t support a multi-machine multi node setup</a></p>
+<p>Kind has a similar usecase, and limitation. Despite how easy it is to do rootless on them, that makes them unsuitable for me.</p>
+<p>Okay, I seem to have misunderstood what &lt;rootlesscontaine.rs&gt; want, as compared to what I want. That site documents how to run all the kubernetes components, as rootless using a user namespace. What I want, is using user namespaces to isolate pods.</p>
+<p>Kubernetes seems to support this natively: <a href="https://kubernetes.io/docs/tasks/configure-pod-container/user-namespaces/" class="uri">https://kubernetes.io/docs/tasks/configure-pod-container/user-namespaces/</a></p>
+<p>To enable user namespaces, all you need to do is set <code>hostUsers: false</code> in your kubernetes yaml… except, how can I override this for an existing helm chart?</p>
+</section>
+<section id="package-managerhelm" class="level2">
+<h2 class="anchored" data-anchor-id="package-managerhelm">Package Manager/Helm</h2>
+<p>Helm is very nice. However, from what I’ve heard, it is difficult to modify repackaged charts. This is especially concerning to me, because I intend to run all of my containers within user namespaces, and many helm charts don’t provide this. In order to run prepackaged apps in user namespaces, I need to modify existing helm charts.</p>
+<p><a href="https://helm.sh/docs/intro/using_helm/#customizing-the-chart-before-installing" class="uri">https://helm.sh/docs/intro/using_helm/#customizing-the-chart-before-installing</a></p>
+<p>Helm has docs on customizing the chart before installing.</p>
+<p>There exist some package repositores (similar to dockerhub) for helm:</p>
+<ul>
+<li><a href="https://artifacthub.io/" class="uri">https://artifacthub.io/</a>
+<ul>
+<li>Helm charts, package</li>
+</ul></li>
+<li><a href="https://operatorhub.io/" class="uri">https://operatorhub.io/</a>
+<ul>
+<li>Not helm, rather kubernetes yaml managed by a lifecycle manager</li>
+<li>Packages “operators”, like this <a href="https://operatorhub.io/operator/rook-ceph">rook/ceph</a></li>
+<li>Appeals to me less than artifacthub</li>
+</ul></li>
+</ul>
+</section>
+<section id="kubernetes-distro" class="level2">
+<h2 class="anchored" data-anchor-id="kubernetes-distro">Kubernetes Distro</h2>
+<p>Here is a <a href="https://landscape.cncf.io/?group=certified-partners-and-providers">list on the CNCF website</a></p>
+<p>I see three main options available to me:</p>
+<ul>
+<li><a href="https://kubespray.io/#/">Kubespray</a> (ansible)</li>
+<li><a href="https://k3s.io/">K3s</a>&gt;</li>
+<li><a href="https://docs.rke2.io/">RKE2</a></li>
+<li>k0s
+<ul>
+<li><a href="https://docs.k0sproject.io/stable/examples/ansible-playbook/">Has an ansible playbook</a></li>
+</ul></li>
+<li><a href="https://kurl.sh/">kurl</a>
+<ul>
+<li>Custom kubernetes installer, including things like storage</li>
+<li>Supports rook, but I don’t know if it is rook + ceph</li>
+<li>doesn’t seem to have anywhere near as much activity as I expect it to have… no CI/CD, Longhorn is deprecated</li>
+</ul></li>
+<li><a href="https://github.com/darxkies/k8s-tew">Kubernetes the Easier Way</a>
+<ul>
+<li>Comes with a <a href="https://darxkies.github.io/k8s-tew/_build/html/features.html">plethora of features</a>
+<ul>
+<li>including nginx + letsencrypt, helm, ceph, metallb, prometheus/grafana</li>
+<li>Very appealing, many features</li>
+</ul></li>
+</ul></li>
+</ul>
+<p>I don’t really want to opt for manual installation, or anything that’s too complex for too little gains.</p>
+<p>Kubespray appeals to me since it’s ansible, and it would be cool to manage the kubernetes cluster installation and the services from the same spot — but it got ruled out:</p>
+<p>From <a href="https://github.com/kubernetes-sigs/kubespray?tab=readme-ov-file#container-runtime-notes">the README</a></p>
+<blockquote class="blockquote">
+<p>Supported Docker versions are 18.09, 19.03, 20.10, 23.0 and 24.0. The recommended Docker version is 24.0. Kubelet might break on docker’s non-standard version numbering (it no longer uses semantic versioning). To ensure auto-updates don’t break your cluster look into e.g.&nbsp;the YUM versionlock plugin or apt pin</p>
+</blockquote>
+<p>It seems as kubespray deploys kubernetes by installing docker, and then deploying kubespray in docker. Although this is a neat decision, I cannot use docker at all, becuause I intend to deploy openstack using <a href="https://docs.openstack.org/kolla-ansible/latest/">kolla-ansible</a>, which also uses docker. From my testing, the openstack deployment completely destroys docker’s networking, so I probably can’t use both at once.</p>
+<p>In addition to that, kubespray completely <a href="https://github.com/search?q=repo%3Akubernetes-sigs%2Fkubespray%20%22podman%22&amp;type=code">uninstalls podman</a>, meaning I can’t use podman as a provider for kubespray either.</p>
+<p>I found an <a href="https://github.com/rancherfederal/rke2-ansible">ansible role</a> to deploy RKE2, but it seems that it just deploys vanilla RKE2, with none of the goodies that I am searching for like a load balancer or external storage.</p>
+<p>I also found something similer for <a href="https://github.com/k3s-io/k3s-ansible">k3s, an ansible role</a> to deploy a “vanilla” kubernetes cluster. However, at the bottom, they mention <a href="https://github.com/k3s-io/k3s-ansible?tab=readme-ov-file#need-more-features">some other ansible roles</a> to deploy a more than vanilla k3s cluster.</p>
+<p>I found a <a href="https://www.reddit.com/r/kubernetes/comments/1c09jfz/i_opensourced_today_my_fully_automated_k3s/">reddit post</a> where someone open sourced their own <a href="https://github.com/axivo/k3s-cluster">ansible playbook</a> — Only 22 days ago (as of the time of writing this), and it’s quite comprehensive. It comes with Argocd, Cilium, Longhorn, Prometheus, Cloudfare Let’s Encrypt certificates with cert-manager, and more.</p>
+<p>I looks very appealing to me, despite the fact that it seems to be opinionated, and designed for personal use. In addition to that, they are simply using ansible’s helm modules to deploy stuff — what would be different from me doing that, with my own deployment choices?</p>
+</section>
+<section id="distributed-storage" class="level2">
+<h2 class="anchored" data-anchor-id="distributed-storage">Distributed (?) Storage</h2>
+<p>Eventually, I do plan to scale up, and that requires a distributed storage solution. I see two main options:</p>
+<ul>
+<li>Ceph</li>
+<li>Longhorn (SUSE)
+<ul>
+<li><a href="https://artifacthub.io/packages/helm/longhorn/longhorn">Artifacthub</a></li>
+</ul></li>
+<li><a href="https://artifacthub.io/packages/helm/seaweedfs-csi-driver/seaweedfs-csi-driver">SeaweedFS</a></li>
+<li><a href="https://github.com/kadalu/kadalu">Kadalu (GlusterFS)</a>
+<ul>
+<li>Helm chart?</li>
+</ul></li>
+<li><a href="https://github.com/rancher/local-path-provisioner">local-path-provisioner</a> (SUSE)
+<ul>
+<li>An enhancement to Kubernete’s builtin ability to handle local storage paths, by SUSE</li>
+<li>maybe this is optimal, since I have just a one node cluster?</li>
+</ul></li>
+</ul>
+<p>Longhorn appeals to me, because if I choose to use other Suse products like rancher, then they probably integrate.</p>
+<p>But now, I’ve chosen to opt for FluxCD to manage my cluster rather than Longhorn. Because of this, I will probably opt for Ceph.</p>
+<p>I see a few options to deploy Ceph:</p>
+<ul>
+<li><a href="https://artifacthub.io/packages/helm/rook/rook-ceph" class="uri">https://artifacthub.io/packages/helm/rook/rook-ceph</a>
+<ul>
+<li>Has a <a href="https://artifacthub.io/packages/helm/rook/rook-ceph?modal=security-report&amp;section=vulnerabilities&amp;image=rook%2Fceph%3Av1.14.3&amp;target=Python">severe security vulnerability reported</a>, but is it really that bad?</li>
+</ul></li>
+<li>CSI (link later)</li>
+</ul>
+<p>I don’t understand what a CSI is and how it compares to the Rook ceph operator.</p>
+<p>However, it seems I’m running into another issue: It’s <a href="https://www.reddit.com/r/kubernetes/comments/hyvclw/how_to_run_rookceph_on_one_node/">difficult to run rook-ceph</a> on a single node. There are also other complaints about performance with ceph — the big complaint is that ceph uses up a lot of CPU relative to other distributed storage, but I wasn’t worrying about that. However, I’ve seen multiple claims that ceph requires high end hardware — SSD’s, which I don’t have. (Right now I have just one hard drive).</p>
+<p><a href="https://github.com/longhorn/longhorn/discussions/5737">Longhorn has a similar issue</a> — at least it seems usable on only one node, but the recommendation is to have at least 3 nodes.</p>
+<p>Local-path-provisioner is probably what I’m going to use, because I think it is built into k3s (and by extension, RKE2), by default.</p>
+</section>
+<section id="gitops-software" class="level2">
+<h2 class="anchored" data-anchor-id="gitops-software">Gitops Software</h2>
+<p><a href="https://en.wikipedia.org/wiki/DevOps#GitOps">Gitops</a> is a principle of software deployment, where the deployment infrastructure, services, and configuration, are stored in git — hence the name, Git Operations.</p>
+<p>There are several ways to do Gitops on Kubernetes, but the core challenge I am encountering, is that some Gitops software must be deployed to Kubernetes in order to manage the cluster, but you cannot use that software to deploy itself.</p>
+<p>What likely happens is that after you deploy the software to the cluster, then it records itself and adds itself to the state, but I have to ensure this works properly.</p>
+<p>Or maybe the GitOps software stays outside the configuration, eternally untracked, but still self updating?</p>
+<p>I still haven’t selected a GitOps software, but I am looking at:</p>
+<ul>
+<li>ArgoCD</li>
+<li>FluxCD
+<ul>
+<li><a href="https://fluxcd.io/flux/get-started/">Simple enough to bootsrap</a></li>
+<li>bootstraps itself from Github repo</li>
+</ul></li>
+<li>Fleet (made by SUSE, just like k3s, RKE2, rancher, and longhorn)</li>
+</ul>
+<p>After thinking about it, I can’t find a way to deploy a cluster and the CI/CD software at once, in such a way that it provisions itself. Many deployment methods simply abstract deploying the CI/CD software afterwards.</p>
+<p>It’s probably best to not rely on abstractions since this is my first time really deploying Kubernetes, instead, I will just have to accept that the Kubernetes deployment will not be stored as code.</p>
+<p>I found something interesting:</p>
+<ul>
+<li><a href="https://github.com/farcaller/nixhelm" class="uri">https://github.com/farcaller/nixhelm</a></li>
+<li><a href="https://github.com/farcaller/nixdockertag" class="uri">https://github.com/farcaller/nixdockertag</a></li>
+</ul>
+<p>Mentioned in a Lemmy comment, it takes helm charts, and is able to convert them to a format that can be consumed by ArgoCD, using Nix.</p>
+<p>Okay, but after more research, I’ve settled on Flux. It seems very easy to bootstrap, and to use <a href="https://fluxcd.io/flux/guides/helmreleases/">helm charts</a> with it. I don’t really need a GUI or multitenancy like ArgoCD provides, or the integrations that Fleet (probably) provides.</p>
+<p>Flux seems “lightweight”. It reads from a Git repo, and applies and reconciles state. In addition to that, it can bootstrap itself. Although, I think I will end up running into a funny catch-22 when I decide to move away from github to a self hosted forgejo, on the kubernetes cluster, everything will be fine… probably.</p>
+<p>Maybe I could have a seperate git server, and that stores the Kubernetes state? Flux seems to support <a href="https://fluxcd.io/flux/cmd/flux_bootstrap_git/">bootstrapping from any git repo</a>.</p>
+<p>A few recommendations on the internet seem to suggest that I should have bootstrap flux from something external to the cluster, rather than from inside the cluster.</p>
+</section>
+<section id="misc-addonsdeployment" class="level2">
+<h2 class="anchored" data-anchor-id="misc-addonsdeployment">Misc Addons/Deployment</h2>
+<ul>
+<li><p>Monitoring: <a href="https://artifacthub.io/packages/helm/prometheus-community/kube-prometheus-stack?modal=install">kube-prometheus-helm-stack</a></p></li>
+<li><p>Secrets:</p>
+<ul>
+<li>: <a href="https://github.com/getsops/sops" class="uri">https://github.com/getsops/sops</a>
+<ul>
+<li>Basically ansible vault, very appealing</li>
+</ul></li>
+<li>: <a href="https://external-secrets.io/latest/" class="uri">https://external-secrets.io/latest/</a>
+<ul>
+<li>Seems catch-22y, I need an existing external service to manage secrets… but I suppose it is called external secrets</li>
+</ul></li>
+</ul></li>
+<li><p>Ingress</p>
+<ul>
+<li>Nginx ingress… but how do I get SSL with this setup?</li>
+<li>Traefik ingress (has <a href="https://www.eff.org/deeplinks/2024/03/should-caddy-and-traefik-replace-certbot">automatic https</a>)</li>
+<li>Caddy: <a href="https://github.com/caddyserver/ingress" class="uri">https://github.com/caddyserver/ingress</a> — WIP software…</li>
+</ul></li>
+</ul>
+<p>I need a simple git ssh for bootstrapping flux from.</p>
+<ul>
+<li><a href="https://github.com/chrisnharvey/simple-git-server" class="uri">https://github.com/chrisnharvey/simple-git-server</a>
+<ul>
+<li>Seems unmaintained</li>
+</ul></li>
+<li>Apparently you can just use ssh as a git server</li>
+</ul>
+</section>
+</section>
+<section id="services" class="level1">
+<h1>Services</h1>
+<section id="authentik" class="level2">
+<h2 class="anchored" data-anchor-id="authentik">Authentik</h2>
+<p>Authentik provides <a href="https://docs.goauthentik.io/docs/installation/kubernetes">documentation on a Kubernetes deployment</a>, along with a Helm chart.</p>
+</section>
+<section id="forgejo" class="level2">
+<h2 class="anchored" data-anchor-id="forgejo">Forgejo</h2>
+<p>Forgejo has a helm chart: <a href="https://codeberg.org/forgejo-contrib/forgejo-helm" class="uri">https://codeberg.org/forgejo-contrib/forgejo-helm</a></p>
+<p>Unlike authentik, forgejo’s helm chart also seems to have some <a href="https://codeberg.org/forgejo-contrib/forgejo-helm#rootless-defaults">support for rootless/user namespaces</a>.</p>
+<p>I also want static sites, and here are some of the options I’ve found:</p>
+<ul>
+<li><a href="https://git.gay/gitgay/pages-server" class="uri">https://git.gay/gitgay/pages-server</a></li>
+<li><a href="https://forgejo.org/docs/latest/developer/static-pages/" class="uri">https://forgejo.org/docs/latest/developer/static-pages/</a></li>
+</ul>
+</section>
+<section id="nextcloud" class="level2">
+<h2 class="anchored" data-anchor-id="nextcloud">Nextcloud</h2>
+<p>There is an existing <a href="https://nextcloud.github.io/helm/">helm chart for nextcloud</a>: <a href="https://github.com/nextcloud/helm" class="uri">https://github.com/nextcloud/helm</a></p>
+<p>However, it says in the above, that it is community maintained, and not truly official.</p>
+<p>Going to the <a href="https://portal.nextcloud.com/article/Scalability/Deployment-recommendations/Large-Organizations-and-Service-Providers">nextcloud official docs for larger scale deployment recommendations</a>… and it’s paywalled. It’s likely that Nextcloud maintains official helm charts — but only for paying customers.</p>
+<p>Someone had an issue with nextcloud configurations on helm, and I asked them for the problem and solution, and they <a href="https://programming.dev/comment/9714618">replied to my post</a>.</p>
+</section>
+</section>
+<section id="networking" class="level1">
+<h1>Networking</h1>
+<p>Yup. After spending the majority of my time setting up networking on my previous iteration of this plan, it’s time to do exactly that, <em>again</em>.</p>
+<p>My original plan was to host some components of openstack on a VPS, allowing my server to give any virtual machines public ipv6 addresses despite being firewalled and behind the NAT of Cal State Northridge’s internet… except there is no NAT. Or firewall. In fact, if I set up bridging, I can give virtual machines more than one public ipv4 address without going through any of that hassle. So my plans have changed.</p>
+<p>However, some questions come in to play that need to be answered, that I need to think about:</p>
+<ul>
+<li>Multi node kubernetes: The dream is to have some form of high availability, where any two machines can fail, and my setup stays up (high availability usually requires 3 machines).</li>
+<li>Can I deploy openstack parallel to kubernetes?</li>
+<li>Should my router go in front of, or behind my server?</li>
+</ul>
+<p>I would like to forgo the router entirely, as it reduces complexity. However, the router is useful because it can provide ethernet to my laptop, which is faster than the CSUN wifi, especially when it gets congested.</p>
+<p>I am thinking of putting the router in front of my server, and configuring bridged networking, to allow my server to access the CSUN network directly, through both it’s ethernet ports. However, I do fear a speed bottleneck — when attempting to test CSUN’s ethernet speeds, I discovered that my laptop’s ethernet port only supported 100 mbps, meaning even though the cable supported higher speeds, and the ethernet port potentially supported higher speeds, there was a cap. I need to research</p>
+<p>Another potential setup is for the server to be in front, with the router connected to it’s secondary NIC/ethernet port. I could use the special bridging setup I have discovered where the primary ethernet port is both a bridge and a normal network interface, and then I could add the secondary ethernet port as a virtual port to the bridge. I would then create a second bridge, and add it to the first bridge, and openstack would use that bridge as it’s bridge for virtual machines.</p>
+<p>I’ve decided on the second. Although, there is another bottleneck in place, the NIC on my server itself. Although my router has all 1000 Mb/s ports, both NIC of my servers are capped at 100mb/s. I need to buy a PCI ethernet card (preferably with two ethernet ports).</p>
+<p>Options:</p>
+<ul>
+<li>https://www.amazon.com/Dual-Port-Gigabit-Network-Express-Ethernet/dp/B09D3JL14S</li>
+</ul>
+<p>The other thing I need to get working with is dynamic dns. Since CSUN’s ethernet works via DHCP, I’m not guaranteed the same ip address between reboots or other network configuration changes. I am using porkbun as my DNS provider, and I am searching for some options for that.</p>
+<ul>
+<li>https://hub.docker.com/r/qmcgaw/ddns-updater/
+<ul>
+<li>Comes with kubernetes manifests, but look too complex for now</li>
+<li>minor issue with root domain of subdomains <a href="https://www.reddit.com/r/homelab/comments/137y1v9/dynamic_dns_with_porkbun/kegh2xy/">something needs to be “@”</a></li>
+</ul></li>
+</ul>
+<p>It works great, although I had trouble testing it up because I was on my phone’s hotspot, which only gives me an ipv6 address.</p>
+<p>After I get Dynamic dns working, I decided to set up bridging, since my server will sit in front of my router, or my computer having an ethernet port.</p>
+<p>I followed my documented steps on <a href="../build-server-2/">build server part 2</a> (the section about bridging and veth).</p>
+<p>Except, I did not set up a veth just yet. I don’t need it.</p>
+</section>
+<section id="kubernetes-installation-and-setup" class="level1">
+<h1>Kubernetes Installation and Setup</h1>
+<p>The first thing is to <a href="https://docs.rke2.io/known_issues#networkmanager">configure NetworkManager to ignore CNI managed interfaces</a>, otherwise issues will occur.</p>
+<p>I followed the <a href="https://docs.rke2.io/install/quickstart">quick start</a> install guide. I started with the server, however, that only installs the server components, and not the agent components of rke2.</p>
+<p>I also followed the agent guide, in an attempt to get a single node install. That was a bad idea — I think the server also is capable of acting as an agent in a single node install?</p>
+<p>However, nothing starts properly. The RKE2 server service crashes, and I need to investigate why. I suspect it is because kubernete’s virtual networking is unable to properly interact with my special bridged networking setup, and this results in crashes… but the logs don’t seem to say anything relevant.</p>
+<p>After a reinstall, it seems to work? (I think I figured out what caused it: I forgot to edit the NetworkManager.conf file). And looking at <a href="https://blog.alphabravo.io/posts/2021/single-node-rke2-pt1/">this guide</a>, it seems that the server components also come with the agent components, as shown by how they deploy rancher (a workload) on just the server.</p>
+<p>I mostly ignored the steps, except copying <code>/etc/rancher/rke2/rke2.yaml</code> to <code>~/.kube/config</code>, and I also chowned the config file as my user. This way I could manage kubernetes as a regular user, rather than only as root.</p>
+<p>I tried installing kubectl to my user using nix at first, but kubectl complained that if the version was two major releases away, it could cause issues. So insetad, I installing kubectl from a specific nixpkgs revision:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>moonpie@thoth:~$ nix profile install nixpkgs/10b813040df67c4039086db0f6eaf65c536886c6#kubectl</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>moonpie@thoth:~$ kubectl version</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>Client Version: v1.28.4</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>Kustomize Version: v5.0.4-0.20230601165947-6ce0bf390ce3</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>Server Version: v1.28.10+rke2r1</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Now… Fluxcd deployment is next.</p>
+<p>I installed fluxcd using nix.</p>
+<p><code>nix profile install nixpkgs#fluxcd</code></p>
+<p>Before I installed fluxcd however, I decided to <a href="https://docs.rke2.io/networking/networking_services?_highlight=nginx/networking/networking_services#nginx-ingress-controller">disable the nginx ingress controller</a>. I did this because I intend to deploy traefik or something else as my ingress controller with flux.</p>
+<p>It seems the RKE2 <a href="https://docs.rke2.io/install/configuration">configuration file</a> needs to be created manually. After creating that file, adding <code>disable: rke2-ingress-nginx</code> to it, and restarting the server service, the nginx controller is disabled.</p>
+<p>Now, for the flux install. Since I don’t want to use github, I decided to just use ssh as a git server.</p>
+<p>Following the guide for flux <a href="https://fluxcd.io/flux/installation/bootstrap/generic-git-server/#ssh-private-key">bootstrapping with git</a>:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>flux bootstrap git --url ssh://moonpie@moonpiedumpl.ing/home/moonpie/fleet-charts --private-key-file=/home/moonpie/.ssh/moonstack --path=cluster/my-cluster</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>And it starts working immediately… except when I clone the git repo from the server, it’s empty‽ At least it has a branch, “master”, but this branch has no commits or anything to start from. I’m attempting to follow the rest of the <a href="https://fluxcd.io/flux/get-started">bootstrapping guide</a>, so I create a directory, “cluster/my-cluster” in the git repo and put the first chart in it. Nothing happens. I think I screwed up somewhere, so I decide to uninstall flux and start over again.</p>
+</section>
+<section id="presearch-and-notes-for-future-pieces" class="level1">
+<h1>Presearch and Notes for Future Pieces</h1>
+<section id="openstack" class="level2">
+<h2 class="anchored" data-anchor-id="openstack">Openstack</h2>
+<p>Since I am using Kubernetes to deploy services, it is worth investing if I can deploy Openstack (or some other self-hosted cloud) on Kubernetes.</p>
+<ul>
+<li><a href="https://yaook.cloud/">Yaook</a></li>
+<li><a href="https://github.com/vexxhost/atmosphere">Atmosphere</a></li>
+</ul>
+<p>These look appealing, but very hard to deploy.</p>
+</section>
+<section id="kubernetes" class="level2">
+<h2 class="anchored" data-anchor-id="kubernetes">Kubernetes</h2>
+</section>
+<section id="misc" class="level2">
+<h2 class="anchored" data-anchor-id="misc">Misc</h2>
+<p><a href="https://editor.networkpolicy.io/">Graphical network policy editor</a></p>
+<p><a href="https://k8syaml.com/">Semi graphical yaml editor</a></p>
+<section id="multi-tenancy" class="level3">
+<h3 class="anchored" data-anchor-id="multi-tenancy">Multi-Tenancy</h3>
+<p>In case I can’t obtain multi-tenancy by openstack provisioning kuberntes, there are some alternative solutions I am looking at:</p>
+<ul>
+<li>vcluster</li>
+<li><a href="https://github.com/projectcapsule/capsule">capsule</a></li>
+<li><a href="https://github.com/clastix/kamaji">kamaji</a></li>
+</ul>
+
+
+</section>
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+        const codeEl = trigger.previousElementSibling.cloneNode(true);
+        for (const childEl of codeEl.children) {
+          if (isCodeAnnotation(childEl)) {
+            childEl.remove();
+          }
+        }
+        return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("\.");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

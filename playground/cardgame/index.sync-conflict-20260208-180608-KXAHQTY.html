@@ -1,0 +1,1250 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.7.31">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="dcterms.date" content="2024-09-12">
+<meta name="description" content="My attempt at creating a deckbuilding game where players make the cards">
+
+<title>The Ultimate Card Game – Jeffrey Fonseca</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-e1a5c8363afafaef2c763b6775fbf3ca.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-8ef56b68f8fa1e9d2ba328e99e439f80.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-e1a5c8363afafaef2c763b6775fbf3ca.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-2d2c3c1dc8fcebd689918bbad00a5354.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-61fddf1775f8cf983c184c2ec9e6a10f.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-2d2c3c1dc8fcebd689918bbad00a5354.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+
+</head>
+
+<body class="nav-fixed quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const darkModeDefault = authorPrefersDark;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">Jeffrey Fonseca</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../posts/index.html"> 
+<span class="menu-text">Posts</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../resume/index.html"> 
+<span class="menu-text">Resume</span></a>
+  </li>  
+</ul>
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item compact">
+    <a class="nav-link" href="../../../feed.xml"> <i class="bi bi-rss" role="img">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/moonpiedumplings"> <i class="bi bi-github" role="img">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#game-setuplayout" id="toc-game-setuplayout" class="nav-link active" data-scroll-target="#game-setuplayout">Game Setup/Layout</a>
+  <ul class="collapse">
+  <li><a href="#gamemodes" id="toc-gamemodes" class="nav-link" data-scroll-target="#gamemodes">Gamemodes:</a></li>
+  </ul></li>
+  <li><a href="#card-design" id="toc-card-design" class="nav-link" data-scroll-target="#card-design">Card Design</a>
+  <ul class="collapse">
+  <li><a href="#offensivedefensive-trait-spreadsheet" id="toc-offensivedefensive-trait-spreadsheet" class="nav-link" data-scroll-target="#offensivedefensive-trait-spreadsheet">Offensive/Defensive Trait Spreadsheet</a></li>
+  <li><a href="#offensive-aspects" id="toc-offensive-aspects" class="nav-link" data-scroll-target="#offensive-aspects">Offensive Aspects:</a></li>
+  <li><a href="#defensive-aspects" id="toc-defensive-aspects" class="nav-link" data-scroll-target="#defensive-aspects">Defensive Aspects:</a></li>
+  <li><a href="#misc-aspects" id="toc-misc-aspects" class="nav-link" data-scroll-target="#misc-aspects">Misc Aspects:</a></li>
+  <li><a href="#active-traits" id="toc-active-traits" class="nav-link" data-scroll-target="#active-traits">Active Traits:</a></li>
+  <li><a href="#table" id="toc-table" class="nav-link" data-scroll-target="#table">Table</a></li>
+  <li><a href="#triggers" id="toc-triggers" class="nav-link" data-scroll-target="#triggers">Triggers:</a></li>
+  <li><a href="#curses" id="toc-curses" class="nav-link" data-scroll-target="#curses">Curses:</a></li>
+  <li><a href="#misc-notes-and-workshopping" id="toc-misc-notes-and-workshopping" class="nav-link" data-scroll-target="#misc-notes-and-workshopping">Misc Notes and Workshopping:</a></li>
+  </ul></li>
+  <li><a href="#combat" id="toc-combat" class="nav-link" data-scroll-target="#combat">Combat</a>
+  <ul class="collapse">
+  <li><a href="#combat-phase" id="toc-combat-phase" class="nav-link" data-scroll-target="#combat-phase">Combat Phase</a></li>
+  <li><a href="#programming-this" id="toc-programming-this" class="nav-link" data-scroll-target="#programming-this">Programming This</a></li>
+  </ul></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content page-columns page-full" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">The Ultimate Card Game</h1>
+  <div class="quarto-categories">
+    <div class="quarto-category">playground</div>
+  </div>
+  </div>
+
+<div>
+  <div class="description">
+    My attempt at creating a deckbuilding game where players make the cards
+  </div>
+</div>
+
+
+<div class="quarto-title-meta">
+
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">September 12, 2024</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="game-setuplayout" class="level1">
+<h1>Game Setup/Layout</h1>
+<p>Traditional Deck + Hand style. How many in a hand? I’m thinking 7.</p>
+<p>Players start with no mana, but can spend from life</p>
+<p>Life: Players start with 16 life Life can also be used to cast cards, which is basically the only way to cast cards before “factory” type cards are on the field or via 0 or negative cost cards.</p>
+<p>During the “block” phase of an attack, the blocking player can either cast 0 (or negative) cost cards, or cast cards using life. This makes cards effectively “instants”, allowing players to bring stuff on the field at the opponent turn, but at some price, as the cards must be either &lt; 0 cost or paid with life.</p>
+<p>Cards play in their “stunned” state. AkA: cards cannot attack first turn after playing (Might change if I adjust how cards do damage)</p>
+<p>Players can pay production to nerf cards. It costs X * N where N is the total amount of aspect points a card has in that aspect, to reduce that aspect by one. N does not change. So to completeley destroy a 3 health card, it costs 27 production points. To remove one of an 8 aspect card, it’s 8 production points, 2 is 16, etc.</p>
+<section id="gamemodes" class="level2">
+<h2 class="anchored" data-anchor-id="gamemodes">Gamemodes:</h2>
+<p>Best of 1, 16 life.</p>
+<p>Best of 3, 16 life.</p>
+<p>Alternate: Half of cards in graveyard go to exile, the other half go to the bottom of the players deck. Either completely random, pseudorandom, or complete player choice. Note: why is this better than multiple rounds? This could also be a seperate gamemode.</p>
+<p>Players have no life, but instead have a shared number line that acts as life. But, if the players have a certain difference between their opponent, then they lose. This difference starts as 2^32 or some other arbitrarily high power of two. But, it halves with every turn (or maybe every half turn?), eventually reducing itself down to one where it stays there.</p>
+<p>C*mmander: Players get to start with a 64 (more than legendary, or maybe 128) value card on the board. If it dies they lose? Or maybe they can recast it and they have player life.</p>
+</section>
+</section>
+<section id="card-design" class="level1 page-columns page-full">
+<h1>Card Design</h1>
+<p>Round up (?)</p>
+<p>Rarity system:</p>
+<p>Legendary: 32 + cost</p>
+<p>Epic: 16 + cost</p>
+<p>Rare: 8 + cost</p>
+<p>Common: 4 + cost</p>
+<p>30 cards in a deck</p>
+<p>Card ratios must be: (minimum 15/30 cards, probably 30)</p>
+<p>2 legendaries, 4 epic, 8 rare, and 16 common for 30 total. You can have more, but you must maintain that ratio.</p>
+<p>Negative cost cards give player production points to use, in addition to being instants.</p>
+<p>Attack/defense:</p>
+<p>5 card draws at the beginning of the turn: Can be used instead to the card effect.</p>
+<p>Cards:</p>
+<hr>
+<p>Card name, mana cost</p>
+<p>Poorly drawn image</p>
+<p>Detail text/keywords</p>
+<p>Flavor text</p>
+<p>————- Attack Power/Health/Production power</p>
+<p>Alternate Card design:</p>
+<p>Card Name</p>
+<p>Either under or next to name: base costs + addons – (negative production cost increaste) – rarity cost add = mana/production cost</p>
+<p>attack/ power, vertically down the left side of the card</p>
+<p>(number) Card trait</p>
+<p>Flavor text</p>
+<p>Card “Shop”</p>
+<p>Traits cost Trait Number * N where N is the total amount of traits</p>
+<section id="offensivedefensive-trait-spreadsheet" class="level2 page-columns page-full">
+<h2 class="anchored" data-anchor-id="offensivedefensive-trait-spreadsheet">Offensive/Defensive Trait Spreadsheet</h2>
+<div class="column-screen-inset">
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Offensive Trait</th>
+<th>Defensive Equivalent</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Attack: This card does X damage, or has X health</td>
+<td>Health: This card has X health</td>
+</tr>
+<tr class="even">
+<td>Multi-Attack: During combat phase, this card can launch and extra attack (solo or with others?) up to X extra times</td>
+<td>Shield: This card has X sets of it’s health, and a single attack, no matter how much damage it is, can only break a single shield</td>
+</tr>
+<tr class="odd">
+<td>Spellstorm: For every token applied to this card by the controller, actually X tokens are applied, and these applications count for the purposes of triggers</td>
+<td>Spellshield: For every X token applied to this card by opponent, this card is only affected by 1/X of them. If less than X-1 are applied, then this card isn’t affected at all</td>
+</tr>
+<tr class="even">
+<td>Weight: This card is equivalent to X-1 cards for the purposes of moving it</td>
+<td>Strength: This card can move X more cards than it could usually move, but they must be next to eachother OR could move X cards from further away, like a reach type mechanic</td>
+</tr>
+<tr class="odd">
+<td>Agility: This card can move over X cards it wouldn’t normally be able to move over</td>
+<td>RestrictionTypeThing: This card restrict movement of cards over, or onto itself</td>
+</tr>
+<tr class="even">
+<td>MultiAttack (needs different name): This card can hold more than one card under it, and even move with more than one card under it, up to X extra cards</td>
+<td>MultiBlock (needs different name): This card requires X more cards on top of it to be able to move past it. The extra cards on top of it, fight the card independently, and do not deal cumulative damage (or take less damage than this cards whole attack stat)</td>
+</tr>
+<tr class="odd">
+<td>Buyback: Pay base cost - X when casting this card or when it’s on the field. Then, when it dies, it returns to your hand instead of going to the graveyard. (too weak. maybe mtg storm?)</td>
+<td>Recursion: This card can be cast from the graveyard for the base cost - X recursion tokens on it (maybe X * N?)</td>
+</tr>
+<tr class="even">
+<td>Integrate: Pay N * N production points to combine this card with another card, stacking all values. Integrated cards count as one card, even when targeted by another integrate card, but the calculation becomes N3 * (N1 + N2) (Goals: Replace mtg archetype voltron, mtg keywords equip, fortify, enchant, mutate, merge, meld)</td>
+<td>Debuff/Attatch Curse: X: Pay N + N – X points to apply a debuff to a card with value N, where all the aspects of this card are subtracted from that card. Actives and Curses carry over. The card can be considered to be “recast” and curses activate immediately.</td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="offensive-aspects" class="level2">
+<h2 class="anchored" data-anchor-id="offensive-aspects">Offensive Aspects:</h2>
+<p><strong>Attack</strong>: X Give this card the ability to attack, and 1 + X attack power. Cards need at least one attack to be able to block.</p>
+<p><strong>Double Tap</strong>: 1 + ??: Card has does a second attack which happens before the first one in an encounter, doing extra damage. Opponent can pay some porportion of production to remove some proportion of double tap from a card.</p>
+<p>Alt idea: During each section of the combat phase, player can chose to do extra damage with this card towards cards it is over/under.</p>
+<p>Goals: Shield-remove, replace mtg keyword deathtouch.</p>
+<p><strong>Spellbuff</strong>: tokens applied to this card by it’s controller are multiplied, and count as that many applications of that token.</p>
+</section>
+<section id="defensive-aspects" class="level2">
+<h2 class="anchored" data-anchor-id="defensive-aspects">Defensive Aspects:</h2>
+<p><strong>Health</strong>: Base + X Give this card health trait and 1 + X hit points. (note: If a card has no health, it disappears at the end of a turn).</p>
+<p><strong>Multi Block</strong>: 1 + X block more than one attacker of a target, per target blocked, up to 2 + X</p>
+<p><strong>Multi-Target-Block</strong>: 1 + X: Block for more than one card, although only one attacker per target, up to 2 + X stacks with multi block with</p>
+<p><strong>Anti-AoE</strong>: Base:1 + X add this cards health power to hower many</p>
+<p><strong>Merged Block</strong>: Base:1 + X: This card can do a merged block, which is mostly treated as one block. The health of merged blockers is “pooled” where they all share damage. To kill all cards in the merged block, and attacker must outdamage the pool. (Should merged block allow merging of traits?) (and should merged block allow blocking multi-block?)</p>
+<p>Idea: No merging of traits. Stacks with other defensive traits. Allows for multi-blocking, of one card, but doesn’t</p>
+<p><strong>Collective Block</strong>: 1 + X. If multiple cards are blocking one card, they gain a “health” pool, where they all share damage. To kill all cards pooling cards, they must deal enough damage to overcome the “health pool” This card can pool with X cards. Cannot health pool with cards with greater health than itself. Blocking is treated as a merged block, where something like “damage multiplication” can split up the health pool again.</p>
+<p>Do I want collective block to merge traits as well?</p>
+<p><strong>Shield</strong>: X: Card gets a seperate “shield of X hit points. If they are damaged by one attack/encounter, it doesn’t rollover into their HP. Opponent(s) can pay production points to reduce the shield value. Shield points can also be spent to reduce active effects</p>
+<p>Goals: Replace mtg keywork indestructuble. Replace clash royale shield mechanic Maybe replace hexproof with a resist spell mechanic?</p>
+<p><strong>Spellshield</strong>: X : X : For every X spell effects applied to it, it is only influenced by (X - 1 / X) of them. E.g: spellshield 2 means that it halves spell effects applied. 3 means it 1/3rds them and so on. This can be reduced by paying production (?)</p>
+<p>Goal: replace mtg hexproof/ward. What’s offensive equivalent?</p>
+</section>
+<section id="misc-aspects" class="level2">
+<h2 class="anchored" data-anchor-id="misc-aspects">Misc Aspects:</h2>
+<p><strong>Integrate</strong>: X: X Pay N * N production points to combine this card with another card, stacking all values. Integrated cards count as one card, even when targeted by another integrate card, but the calculation becomes N3 * (N1 + N2)</p>
+<p><strong>Debuff/Attatch Curse</strong>: X: Pay N + N – X points to apply a debuff to a card with value N, where all the aspects of this card are subtracted from that card. Actives and Curses carry over.</p>
+<p>How to remove? Pay cost? Card death?</p>
+</section>
+<section id="active-traits" class="level2">
+<h2 class="anchored" data-anchor-id="active-traits">Active Traits:</h2>
+</section>
+<section id="table" class="level2">
+<h2 class="anchored" data-anchor-id="table">Table</h2>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Active</th>
+<th>Cost (* N) : Output</th>
+<th>Application Cost?</th>
+<th>Effect</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Mana Generation (probably call it just Mana for short)</td>
+<td>X : X * N (*N? probably not)</td>
+<td>N/A</td>
+<td>Generates Mana for casting things</td>
+</tr>
+<tr class="even">
+<td>Stealth</td>
+<td>X : X</td>
+<td>Don’t know.</td>
+<td>N/A</td>
+</tr>
+<tr class="odd">
+<td>Necromancy (or maybe recursion?)</td>
+<td>X : X</td>
+<td>Don’t know, probably not</td>
+<td>Apply to cards in your graveyard. Then, those cards can be cast for base cost - amount of Necromancy/Recursion tokens applied to them again. (or maybe base cost - X*N?)</td>
+</tr>
+<tr class="even">
+<td>Scry/Tutor</td>
+<td>X : X (*N?)</td>
+<td>Don’t know, probably</td>
+<td>N/A yet. Probably look at X cards or look at cards with up to X production point cost</td>
+</tr>
+<tr class="odd">
+<td>Polarity Reversal</td>
+<td>X : X (*N?)</td>
+<td>Probably not</td>
+<td>Change offensive abilities to their defensive equivalents defensive and vice versa, of a single card</td>
+</tr>
+<tr class="even">
+<td>Phase/Empherality</td>
+<td>X : X</td>
+<td>Probably not</td>
+<td>Decrease the amount that a card can interact, or be interacted with by X. Does X less damage, or but takes X less damage. How should this interact with</td>
+</tr>
+<tr class="odd">
+<td>Counterspell</td>
+<td>X : X</td>
+<td>Maybe a mechanic where counterspell can take from existing aspects on board, but it costs production</td>
+<td>Either take a token that opponent is holding directly, or take a token on the board.</td>
+</tr>
+<tr class="even">
+<td>Replicate</td>
+<td>X : X</td>
+<td>Maybe a mechanic where replicate can take from existing aspects on board, but it costs production</td>
+<td>Copy a token that is in play or that anyone is holding</td>
+</tr>
+<tr class="odd">
+<td>Gain Life</td>
+<td>X : X</td>
+<td>1 production point per token</td>
+<td>Gain life when applied</td>
+</tr>
+<tr class="even">
+<td>Burn (direct damage)</td>
+<td>X : X</td>
+<td>probably</td>
+<td>Apply direct damage to any card or your opponent, as long as their is a card path from you to that card or your player</td>
+</tr>
+<tr class="odd">
+<td>Arbitrary Aspect (trigger?)</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="even">
+<td>Arbitrary Negative Aspect</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>So the idea behind “actives” is that they generate points/tokens that can be spent on things — but don’t have to be spent. The actives that cost production to use, only cost production on the application of the active, rather than the generation/creation of the points.</li>
+</ul>
+<p><strong>Mana Generation</strong>: X: X * N . Generate mana for casting things</p>
+<p>Give opponent production points: Goal: replicate elixir golem mechanic from clash royale. Problems: Too weak. Decks which use less or no production won’t be affected by this. Needs an alternate ability along with give opponent production points, such as giving opponent another active.</p>
+<p><strong>Stealth</strong>: Base:1 + X Take 1 + X cards off the field… and then put them back on face down in new spots. Stealthed cards are revealed when they take action, attack, or are dealt damage. Stealth can also be used to move around cards during the blocking phase.</p>
+<p>Cost:</p>
+<p>Goal: Twofold: Obscure cards on board, but also allow to move cards in blocking (or attacking?) phases around. Blue idea, playing with information</p>
+<p><strong>Necromancy</strong>: Base:1 + X Search 1 + X through the bottom of the deck/graveyard. Cast a cards base cost, rather than their total creation point cost.</p>
+<p>Goal: Play the roal of black deck, bringing cards back from the dead. Replace mtg https://mtg.fandom.com/wiki/List_of_Magic_slang#Recursion recursion</p>
+<p><strong>Tutor</strong>: Cost Base:1 + X, look at the top X cards of your deck and show them to your oppnent. You can cast directly from these cards. Problem: Recursive scry/tutor too op</p>
+<p>Goal: Play the role of blue deck, increasing options player has.</p>
+<p><strong>Polarity Reversal</strong>: X: Change offensive abilities to their defensive equivalents defensive and vice versa, of a single card, up to X * N of a single trait</p>
+<p>Goal: Buff and nerf at the same time. Can be used to reduce health, or increase attack.</p>
+<p><strong>Counterspell</strong>: Base:1 + X: You “take control” of 1 + X “spell” aspects targeting individual things. Problem: How will counterspell and react phases work? Do I want this? It adds extra complexity to casting. Idea: Counter either 1 + X damage/protection/production (distributed) or 1 + X spell effects targeting stuff.</p>
+<p>Goal: play the role of the blue counterspell, while also allowing them to deny production points</p>
+<p><strong>Replicate</strong>: X: Duplicate active effects, excluding replicate effects. Can duplicate opponents effects, or own. Can replicate counterspell.</p>
+<p><strong>Aspect Enhancement</strong>: X: Enhance any aspect of card(s) up to X. Costs (initial aspect cost) + X * N production points. * Having this cost mana is kinda weak.</p>
+<p><strong>Gain Life</strong>: X: X and pay X production points to do so</p>
+<p><strong>Deny attackers</strong>. Some kind of stop attacker from attacking mechanic.</p>
+<p>Also want active?</p>
+<p>I want some kind of burn effect/direct damage, without it being broken.</p>
+<p><strong>Burn/Direct damage</strong>: X: X: Deal direct damage to opponent, but this requires that you must pay production for each damage done, and damage is limited by defensive cards under your cards along the path.</p>
+<p><strong>Abitrary Active/Trigger</strong> : Produce actives/triggers to place on cards. Should this cost production to apply?</p>
+<p><strong>Arbitrary Negative Active/Trigger</strong>: Produces negatives to put on cards. Negative health is straightforward, but negative damage, “agility”, and etc get interesting.</p>
+<p><strong>Empheral</strong>: Cause a card to not be affected by stuff, but also not be able to affect stuff. Basically mtg phase.</p>
+</section>
+<section id="triggers" class="level2">
+<h2 class="anchored" data-anchor-id="triggers">Triggers:</h2>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Trigger Name</th>
+<th>Output</th>
+<th>Multi-Activate</th>
+<th>Triggers on?</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Instead of card draw</td>
+<td>X * N</td>
+<td>Probably Not</td>
+<td>Players decide to do this instead of drawing one of their five cards they can draw</td>
+</tr>
+<tr class="even">
+<td>On card play</td>
+<td>X * N</td>
+<td>No</td>
+<td>Generates actives when this card is played</td>
+</tr>
+<tr class="odd">
+<td>Familier Friends</td>
+<td>X</td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Familiar friends</strong>: X: When you play a card with similar trait and valuet and value appears, including this specific trigger + active, Do up to 1 + X of an active trait, based on the common traits and values that are shared.</p>
+<p>Note: Too op if it includes health, attack, and friends… but is it?</p>
+<p>Also: Familiar friends… but on death?</p>
+<p><strong>Damage dealt via attacking or blocking</strong> (including or excluding overkill): X : X</p>
+<p><strong>Damage taken</strong> (including or excluding shield?): X : X</p>
+<p>Goal: Replace elixir golem clash royale</p>
+<p><strong>Card enters play</strong>: X: X * N</p>
+<p><strong>Instead of card draw</strong>: X: X * N</p>
+<p><strong>Pay production points</strong>: I want this mechanic, but do not know how to balance it</p>
+<p><strong>Getting attacked by X cards</strong>: X: X</p>
+<p><strong>When XYZ active token is applied</strong>: X : X</p>
+<p>Most notable of this is: “when lifegain” as that has very good synergy</p>
+<p>Problem (?): Can go infinite.</p>
+<p><strong>When opponent takes damage</strong>: X : X</p>
+<ul>
+<li>This could lead to going infinite with “burn” tokens.</li>
+</ul>
+<p><strong>Formation: When pattern created during attack/defense phase</strong>: Form a pattern of your own cards (must be on on top): X : X * (cards with same trigger in the pattern) * (amount of different patterns linked together):</p>
+<p>Eg: A pattern can be a straight line, or a curved line, or a grouping of three, a lightning bolt or whatever. Orientation does not matter (?), only relative orientation does.</p>
+<p>Probably a better way to do this.</p>
+<p>Maybe: Outputs X * (total in chain) * (complexity of chain/amount of extra connections for every node with more than one connection) * (cards with same trigger in chain) * (Amount of overlapping cards that are also part of a different formation)</p>
+<p>Maybe too powerful?</p>
+<p>Goal: Replace tribal, allow for synergy without being contrived/artificial. The synergy is artificial, but players have to work for it.</p>
+</section>
+<section id="curses" class="level2">
+<h2 class="anchored" data-anchor-id="curses">Curses:</h2>
+<p><strong>Constant Mana Cost</strong>: Take X mana from the player every turn, or if they can’t provide that, life. In exchange, offer X * N card creation points for players to use. Essentially for each negative mana point, they can add one of each trait for each negative mana point during the turn. Must be paid before the attacking step.</p>
+<ul>
+<li>Should it die if no mana given?</li>
+<li>Or should it take from life?</li>
+<li>What about production? Probably not effect actives… but I like the idea of cumulative upkeep for a spell tower.</li>
+</ul>
+<p>I think I need to separate this into two different curses: One which does damage, and one that doesn’t.</p>
+<p><strong>Day/Night</strong>: X from anything: X Opponent gains control of this card during their turn, except the card doesn’t have full stats. It only has X stats, X for each trait in place. It also gains X stats in the opposite section of held traits. So 4 hp, but 0 attack, but 2 X becomes 2 hp, 2 attack.</p>
+<p>How to handle one time spell cards? * Day/night results in the card staying alive, even when it has 0 or less health * Opponent gets a portion of spell effects * Daynight straight up doesn’t affect actives ← I like this one</p>
+<p>May need different name, mtg already has daynight. Traitor? Betrayal? Doublecross? Doubleagent?</p>
+<p><strong>Bounce</strong>:</p>
+<p>Card on field goes to hand, in exchange for a card that has a base cost less than Cost – X base cost. If there is no such card, then this card goes to the graveyard. You can keep the card on the field in exchange for a sacrifice of at least Cost + X * N from your hand or the field, straight to the graveyard.</p>
+<ul>
+<li>Beginning or end of turn (it would be nice to bounce immediately)</li>
+<li>How to have card be persistent?</li>
+</ul>
+<p>At beginning of turn, or when card is attempted to be played, take it off the field for a card in hand with base value &lt; cost – X, or sacrifice card from field with cost + X?</p>
+<p>AKA: some kind of bounce curse</p>
+<p>At beginning of turn or before played, take cards on the field that are worth more/less than something off the field and put them back into your hand. If you cannot do this, because of a full hand or because of the value</p>
+<p>On/before turn, bounce cards value back to hand. If you can’t do that, then bounce this card, exchanging it for something in your hand with less than X. If can’t do that, then graveyard.</p>
+<p>On turn, and/or when this card is played, return this cards value +</p>
+<p><strong>Siege/Battle</strong>: X from anything: X card is cast as an X health card under an opponents control. They must defend it, if the attacking player manages to kill it, then it becomes the normal card</p>
+<ul>
+<li>Allow spell damage to kill the battle?</li>
+</ul>
+<p>Goal: replace siege/battle from mtg</p>
+<p><strong>Equality</strong>: X from triggers/actives: X times N this card gives opponent up to X*N of of “actives” it generates, when it generates them.</p>
+<p>Goal: Allow for the creation of board wipe type effects.</p>
+<p><strong>Sacrifice</strong> X from anything : X You need to sacrifice cards with a base cost of X * N cards on the field when played.</p>
+</section>
+<section id="misc-notes-and-workshopping" class="level2">
+<h2 class="anchored" data-anchor-id="misc-notes-and-workshopping">Misc Notes and Workshopping:</h2>
+<p>Goals: Replace mtg creature tokens, mtg evasion mechanics (keywords flying, horsemanship, unblockable, trample, etc)</p>
+<p>https://mtg.fandom.com/wiki/Evasion_ability</p>
+<p>Resources (used to do stuff):</p>
+<ul>
+<li>Mana/Production (can cast from life)
+<ul>
+<li>Life</li>
+</ul></li>
+<li>Cards in hand (artificially increased by scry)
+<ul>
+<li>Draw counts</li>
+</ul></li>
+<li>Cards on field</li>
+<li>Cards in graveyard</li>
+<li>Board space?</li>
+</ul>
+<p>I want synergy to happen, but for the synergy to use up one of the other resources, preventing snowballing/ an infinite combo.</p>
+<p>Maybe I need another resource?</p>
+<p>Catch up mechanics?</p>
+<ul>
+<li>I like the “equality” curse</li>
+<li>But I want one more</li>
+</ul>
+<p>Some kind of meta card attribute?</p>
+<p>Potential keywords:</p>
+<p>Recursion: X : X Pay Base Cost – X to cast this card from your graveyard</p>
+<p>Buyback: X : X Pay Cost – X in addition to casting this spell to return it to your hand when you cast it.</p>
+<ul>
+<li>Too weak</li>
+</ul>
+<p>Banding/Splitting: Combine and divide mechanics somehow (or maybe I should build these into the game rules)</p>
+<p>Anti-Actives</p>
+<p>Take life: X :X</p>
+<p>Idea is to have taxes or some sort of sin mechanic.</p>
+<p>Gain +X +X when X: Idea is some conditional gain strength mechanic</p>
+<p>In general, I want some kind of state based trigger, that can activate every turn.</p>
+<p>When X cards on the field. When X cards in graveyard. X in hand? etc. How to make fair?</p>
+<p>Okay, after watching <a href="https://www.youtube.com/watch?v=HuAkw707oOA">A video about lifedecking</a>, I’ve realized that it’s problematic to incentivize cards in the graveyard, because players want to <em>play</em> their cards, and a strategy which incentives sacrifice or something along those lines isn’t really that. But, this problem with lifedecking also applies to <em>any</em> incentive to maintain a “state” of the game. Although an ongoing incentive to maintain a certain boardstate is good to get to, it also incentivizes players to <em>keep</em> that board state — which may not be fun. So this will be put on hold for a while, and instead, I will only incentive <em>actions</em> by the players. Interesting =/= fun to play.</p>
+<p>Alternate cost where players can pay other token types. Maybe decreases N or lets them pay base cost. This can be a curse type.</p>
+<p>Tax and Stax: Fundamentally, a tax an opponent can’t pay to do something is like a stax: Some kind of opponent restrictions… actually, I don’t like this. I want a control archetype, but I confused control with stax/tax. Clash Royale manages to have control be a major archetype without s/tax.</p>
+<ul>
+<li>Opponent can’t X doesn’t work because of the way my game is designed. However, opponent can’t do X fundamentally equivalent to a tax effect that the opponent can’t afford to play?</li>
+</ul>
+<p>Formation application token: Allow for multiplication of tokens on the battlefield. Costs X1 * X2 * X3 * N where X1 is the multiplication and X2 is the formation size, and X3 is the total tokens it can take. So a 2 * 1 * 3 would double up to three tokens for a single card.</p>
+<p>Some kind of sacrifice cards curse.</p>
+<p>See also: MTG emerge</p>
+<p>MTG Surge</p>
+<p>MTG rebound</p>
+<p>MTG storm: Pay X to duplicate the on-cast effects of this card?</p>
+</section>
+</section>
+<section id="combat" class="level1">
+<h1>Combat</h1>
+<p>Defensive player sets up layout at the end of their attacking turn, and cannot change it or reoganize it.</p>
+<p>Attack player sets a layout, and then either chooses to make the first move, or to pick how the connections work.</p>
+<p>Played on something equivalent to a hex grid, but not an actual hex grid. A square grid where each row is offset by ½, and touching squares are considered connected.</p>
+<p>Moves cards can make:</p>
+<p>Move: Move onto an adjacent card.</p>
+<p>Swap: Replace adjacent card with this one</p>
+<p>Pull: Pull connected card under this card.</p>
+<ul>
+<li>Pull into spot, and move this card out of the way?</li>
+</ul>
+<p>Push: Move card out of way? Maybe can push in place to move a card to an adjacent spot</p>
+<p>Spawn: Spawn new piece in a blank spot adjacent to your own pieces, and only your own pieces</p>
+<p>All of these moves can be done over a chain of your color’s cards, including attacking/defending ones.</p>
+<p>Stacked cards are considered as attacking eachother, and cannot move on/off, but they can be moved over.</p>
+<p>The attacker round ends immediately when a player stalemates is unable to make a swap, push, or pull move. ???</p>
+<p>One hive rule (from hive): Players cannot make a move that results in their being two groups of cards.</p>
+<p><a href="https://en.wikipedia.org/wiki/Hive_(game)" class="uri">https://en.wikipedia.org/wiki/Hive_(game)</a></p>
+<p>So… how does a player actually do damage? And how should collective defense/attack and multi attack/defense work?</p>
+<p>Two ways I am thinking of doing damage: Getting a card onto/past all defenders</p>
+<p>Or creating a chain that connects it past defenders. Maybe like 1 damage for each card in the chain?</p>
+<p>How should cards launch an attack against valuable cards? Surrounding them? Building a chain which accesses them?</p>
+<p>Ideas:</p>
+<ul>
+<li>Attackers cards deal (ATK + ATK + ATK) *N where N in the amount of cards surrounding a card, but those cards of that set can’t attack a player</li>
+<li>Defenders cards can protect (DEF* )</li>
+<li>Surrounding a card with 6 cards is an insta kill (can be on top cards as well)</li>
+<li>This is in <em>addition</em> to the mechanic where cards on top of eachother battle.</li>
+</ul>
+<p>Idea: replace mtg banding</p>
+<p>Should cards being on top or below matter? Maybe? Only on top cards count for purposes of a chain, and also can surround other cards.</p>
+<p>Anyway, this is good, but I need to calculate the fairness of this game. I think the only way to calculate fairness is to write a program that solves this game.</p>
+<p>Combat ends <strong>immediately</strong> where a player cannot make another move (either attacker or defender).</p>
+<p>What about drawish rules, like 3 fold repetition?</p>
+<section id="combat-phase" class="level2">
+<h2 class="anchored" data-anchor-id="combat-phase">Combat Phase</h2>
+<p>It goes step by step. Steps go like</p>
+<ul>
+<li><p>Offensive player moves cards, or plays cards into the combat zone. This one can only be done once.</p></li>
+<li><p>Offensive player activates an “instead of draw trigger” Only done once, and mutually exclusive with the above.</p></li>
+<li><p>Defensive player makes a move, or plays a card into the combat zone.</p></li>
+<li><p>End step</p></li>
+</ul>
+<p>Or maybe vice versa?</p>
+<p>Regardless, cards only die at the end of each “step”, giving either player time to do things like counterspell and react with spell type abilities.</p>
+<p>Infinite Loop Prevention: A trigger can only be triggered once per combat step (for both players).</p>
+</section>
+<section id="programming-this" class="level2">
+<h2 class="anchored" data-anchor-id="programming-this">Programming This</h2>
+<p>I think I need to convert this to a python program that will solve any set of rules I give it, in order to actually ensure my game is fair., I’ve done some testing on my own, but I don’t think just one person can play chess.</p>
+<ul>
+<li><a href="https://stackoverflow.com/questions/11373122/best-way-to-store-a-triangular-hexagonal-grid-in-python">Hexagonal Grid in python (stackoverflow)</a></li>
+<li><a href="http://www-cs-students.stanford.edu/~amitp/game-programming/grids/">Grids</a></li>
+<li><a href="https://www.redblobgames.com/grids/hexagons/">Grids/hexagons</a></li>
+<li><a href="https://www.redblobgames.com/grids/parts/">Grids/parts</a></li>
+</ul>
+<p>So… how can I make a hexagonal grid in order to calculate solutions to my game?</p>
+<p>I really, really like the idea of representing <a href="https://www.redblobgames.com/grids/hexagons/#coordinates-cube">hexagonal coordinates as a cube</a>.</p>
+<p>Pseudocode of what I want:</p>
+<pre><code>HexGrid = 2d array, or graph of nodes
+
+CheckLegality: Function that checks if a hex grid config is legal (all nodes are connected)
+
+GetMovesJump: Get Possible moves of the Jump on top of another card type
+
+GetMovesShove: Get possible moves of the shove card out of the way type
+
+GetMovesPull: Get possible moves of the pull card under type
+
+GetMovesSwap: Get possible moves of the swap type
+
+GetWin: Get the amount of damage a winning attacker would do</code></pre>
+<p>I would also need several other functions/features, like I would have to be able to detect if a set of moves is the same as an older set of moves. I think this is easier with a set of nodes than an infinitely large hex grid.</p>
+<p>People at the San Fernando Valley LUG, said I should research “graph theory”, because there already exist algorithms to check if all nodes are connected, or to traverse a graph, or so on.</p>
+
+
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+        const codeEl = trigger.previousElementSibling.cloneNode(true);
+        for (const childEl of codeEl.children) {
+          if (isCodeAnnotation(childEl)) {
+            childEl.remove();
+          }
+        }
+        return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("\.");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

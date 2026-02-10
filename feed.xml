@@ -10,7 +10,243 @@
 <atom:link href="https://moonpiedumplings.github.io/feed.xml" rel="self" type="application/rss+xml"/>
 <description>All posts, intended to be used in an RSS feed. Can be found at feed.xml</description>
 <generator>quarto-1.8.26</generator>
-<lastBuildDate>Mon, 05 Jan 2026 08:00:00 GMT</lastBuildDate>
+<lastBuildDate>Wed, 21 Jan 2026 08:00:00 GMT</lastBuildDate>
+<item>
+  <title>Asahi Linux</title>
+  <link>https://moonpiedumplings.github.io/playground/asahi-setup/</link>
+  <description><![CDATA[ 
+
+
+
+
+
+<section id="stopping" class="level1">
+<h1>Stopping</h1>
+<p>It’s inconvenient, as I seem to rely on certain tools that are x86 only or x86 first. I won’t deny that the battery life is very good though. Even <a href="https://www.reddit.com/r/AsahiLinux/comments/1qe3dnr/battery_life/o04c3j2/">without shutting down</a>, I could get 7 hours estimated. But my main laptop, which I just got back from being repaired at Best Buy, gives me 5.5-6 hours, which is more than enough for my daily usage.</p>
+<p>I originally used the Macbook in the first place because I literally dropped my old laptop down the stairs so I had no other device. But now I have my other device, so I will return to what I am familiar with. It has 16 gb of ram, plus zram already enabled (CachyOS), so it’s easier for me to use it the way I want to.</p>
+<p>I’m still keeping this up though because it’s interesting, especially my experiments with zram, and discovery of zram’s lesser known features.</p>
+</section>
+<section id="intro" class="level1">
+<h1>Intro</h1>
+<p>I have decided to setup <a href="https://asahilinux.org/">Asahi Linux</a>, which is the Linux for M1 Macs. My sister gave me her old Macbook Air (2020), and it has an M1 and 8 gb of ram.</p>
+<p>After removing all the stickers, it will become my daily driver device.</p>
+</section>
+<section id="initial-install" class="level1">
+<h1>Initial Install</h1>
+<p>The install is pretty easy, as the install script that you run from MacOS just works. Sadly, it does not come with full disk encryption, which I had to enable. I fiddled with USB boot, but eventualy I couldn’t get it working, and I also wasn’t really interesting in doing open heart surgery and trying to encrypt the system in place.</p>
+<p>Eventually, I decided to install two Asahi partitions. One was a “minimal” type install, and the other was my regular KDE.</p>
+<p>From the minimal install, I ran <a href="https://github.com/osx-tools/asahi-encrypt" class="uri">https://github.com/osx-tools/asahi-encrypt</a> on the regular install, and full disk encryption with LUKS was enabled.</p>
+<p>In addition to that, I had to do further steps. I created more subvolumes, for /nix and /var, so that they wouldn’t be caught in the</p>
+<div class="code-with-filename">
+<div class="code-with-filename-file">
+<pre><strong>in the minimal install</strong></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1" data-filename="in the minimal install" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb1-1">cryptsetup open /dev/mainroot root</span>
+<span id="cb1-2"></span>
+<span id="cb1-3">mount /dev/mapper/root /mnt</span>
+<span id="cb1-4"></span>
+<span id="cb1-5">btrfs subvolume create /mnt var</span>
+<span id="cb1-6"></span>
+<span id="cb1-7">btrfs su cre /mnt nix</span>
+<span id="cb1-8"></span>
+<span id="cb1-9">cp /mnt/root/var/* /mnt/var/</span></code></pre></div></div>
+</div>
+<p>And then I edited the fstab file to contain the new subvolumes. I also amped up the zstd compression, from 1 to 3, since my Macbook only has 256 gb of storage total, and the Linux root partition is only 160 gb.</p>
+<div class="code-with-filename">
+<div class="code-with-filename-file">
+<pre><strong>/mnt/root/etc/fstab</strong></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2" data-filename="/mnt/root/etc/fstab" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb2-1">UUID=rootuuid / btrfs x-systemd.growfs,compress=zstd:3,defaults,subvol=root 0 1</span>
+<span id="cb2-2">UUID=bootuuid /boot ext4 defaults 0 0</span>
+<span id="cb2-3">UUID=rootuuid /home btrfs x-systemd.growfs,compress=zstd:3,subvol=home 0 0</span>
+<span id="cb2-4">UUID=rootuuid /nix btrfs compress=zstd:3,subvol=nix 0 0</span>
+<span id="cb2-5">UUID=rootuuid /var btrfs compress=zstd:3,subvol=var 0 0</span>
+<span id="cb2-6">UUID=efiuuid /boot/efi vfat defaults,umask=0077,shortname=winnt 0 0</span>
+<span id="cb2-7">/var/swap/swapfile swap swap sw 0 0</span></code></pre></div></div>
+</div>
+<p>After making these changes I rebooted and it worked. I then proceeded to install timeshift as an easy way to redo/undo my tinkering, like the changes I make below.</p>
+</section>
+<section id="memory-optimization" class="level1">
+<h1>Memory Optimization</h1>
+<p>I really want 4 firefox sessions open and two vscode sessions open at once. I know it’s possible. I don’t want to give my normal workflow up.</p>
+<section id="zswap" class="level2">
+<h2 class="anchored" data-anchor-id="zswap">Zswap</h2>
+<p>Zswap doesn’t seem to be as effective by default, so I decided to tinker it with it a bit.</p>
+<div class="code-with-filename">
+<div class="code-with-filename-file">
+<pre><strong>/etc/tmpfiles.d/asahi-enable-zswap.conf</strong></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3" data-filename="/etc/tmpfiles.d/asahi-enable-zswap.conf" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb3-1">#Type Path                                            Mode UID  GID  Age  Content</span>
+<span id="cb3-2">w     /sys/module/zswap/parameters/max_pool_percent   -    -    -    -    50</span>
+<span id="cb3-3">w     /sys/module/zswap/parameters/zpool              -    -    -    -    zsmalloc</span>
+<span id="cb3-4">w     /sys/module/zswap/parameters/enabled            -    -    -    -    Y</span>
+<span id="cb3-5">w     /sys/module/zswap/parameters/compressor         -    -    -    -    zstd</span></code></pre></div></div>
+</div>
+<p><a href="https://github.com/Flisk/zswapstat" class="uri">https://github.com/Flisk/zswapstat</a></p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb4-1">stored_pages           170842</span>
+<span id="cb4-2">pool_total_size        601358336</span>
+<span id="cb4-3">written_back_pages     761753</span>
+<span id="cb4-4">decompress_fail        0</span>
+<span id="cb4-5">reject_compress_poor   0</span>
+<span id="cb4-6">reject_compress_fail   50432</span>
+<span id="cb4-7">reject_kmemcache_fail  0</span>
+<span id="cb4-8">reject_alloc_fail      0</span>
+<span id="cb4-9">reject_reclaim_fail    41</span>
+<span id="cb4-10">pool_limit_hit         0</span>
+<span id="cb4-11"></span>
+<span id="cb4-12">compressed             573.5 MiB</span>
+<span id="cb4-13">uncompressed           2669.4 MiB</span>
+<span id="cb4-14">space_savings          0.785</span></code></pre></div></div>
+<p>I don’t see anywhere near as aggressive space savings as I did when I used zram on other devices. In addition to that, all swap is slowly consumed before I begin to hit an OOM.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb5-1">NAME               TYPE SIZE USED PRIO</span>
+<span id="cb5-2">/var/swap/swapfile file   8G   8G   -2</span></code></pre></div></div>
+<p>I <em>could</em> add more swap. But I know it’s possible to fit a lot more data into ram.</p>
+</section>
+<section id="zram" class="level2">
+<h2 class="anchored" data-anchor-id="zram">Zram</h2>
+<p>I switched to Zram, because zram’s compression is really impressive:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb6-1">NAME       ALGORITHM DISKSIZE  DATA COMPR TOTAL STREAMS MOUNTPOINT</span>
+<span id="cb6-2">/dev/zram0 zstd         11.7G  7.3G  1.7G  1.7G         [SWAP]</span></code></pre></div></div>
+<p>Assuming decompressing data from ram is faster than reading from disk, it is quite a bit of swap. I no longer encounter any OOM’s after switching to zram. At least not before I try 5 firefox sessions and 3 vscode’s up at once.</p>
+<p>To switch to zram, firstly zswap needs to be disabled:</p>
+<div class="code-with-filename">
+<div class="code-with-filename-file">
+<pre><strong>/etc/tmpfiles.d/asahi-enable-zswap.conf</strong></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7" data-filename="/etc/tmpfiles.d/asahi-enable-zswap.conf" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb7-1">#Type Path                                            Mode UID  GID  Age  Content</span>
+<span id="cb7-2">w     /sys/module/zswap/parameters/max_pool_percent   -    -    -    -    50</span>
+<span id="cb7-3">w     /sys/module/zswap/parameters/zpool              -    -    -    -    zsmalloc</span>
+<span id="cb7-4">w     /sys/module/zswap/parameters/enabled            -    -    -    -    N</span></code></pre></div></div>
+</div>
+<p>The last “N” used to be “Y”, which is what I have changed.</p>
+<p>To enable zram:</p>
+<p><code>sudo dnf install zram-generator</code></p>
+<p>And then the settings I used</p>
+<div class="code-with-filename">
+<div class="code-with-filename-file">
+<pre><strong>cat /etc/systemd/zram-generator.conf</strong></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8" data-filename="cat /etc/systemd/zram-generator.conf" style="background: #f1f3f5;"><pre class="sourceCode ini code-with-copy"><code class="sourceCode ini"><span id="cb8-1"><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">[zram0]</span></span>
+<span id="cb8-2"><span class="dt" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">zram-size </span><span class="ot" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;"> </span><span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">12000</span></span>
+<span id="cb8-3"><span class="dt" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">compression-algorithm </span><span class="ot" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;"> zstd(level=3)</span></span></code></pre></div></div>
+</div>
+<p>Howevever, zram has some flaws. For example, when zram is full, the extra data from ram will spill over into swap instead. Another problem is that zram doesn’t use swap at all. Often, programs will put pages in memory that they only need as part of the startup process. Keeping those in memory forever is annoying. Swap lets the kernel move those not needed things onto the disk, freeing up more ram. See also <a href="https://chrisdown.name/2018/01/02/in-defence-of-swap.html" class="uri">https://chrisdown.name/2018/01/02/in-defence-of-swap.html</a>.</p>
+<p>A good way to get around this is via zram’s option for a backing device. However, unlike zswap it is not automatic. The backing device can automatically track <code>idle</code>, or untouched pages, but this needs a kernel option only set at compile time, that the asahi kernel does not come with this.</p>
+<p>This does have to be set up manually for now, since I don’t have a partition.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb9-1">swapoff /dev/zram0</span>
+<span id="cb9-2"></span>
+<span id="cb9-3">losetup -f /var/swap/zrambacker.img</span>
+<span id="cb9-4"></span>
+<span id="cb9-5">echo /dev/loop0 &gt; /sys/block/zram0/backing_dev</span>
+<span id="cb9-6"></span>
+<span id="cb9-7">swapon /dev/zram0</span></code></pre></div></div>
+<p><a href="https://docs.kernel.org/admin-guide/blockdev/zram.html#idle-pages-tracking" class="uri">https://docs.kernel.org/admin-guide/blockdev/zram.html#idle-pages-tracking</a></p>
+<p>For preliminary testing, I did have to set up the loopback device manually, and then reset zram before assinging it the backing device.</p>
+<p>But despite this, it still requires manual intervention to actually do the process of pushing pages.</p>
+<p><code>echo all &gt; /sys/block/zram0/idle</code></p>
+<p>Sadly I cannot push a number instead . I must mark all pages as all, then push them to disk. This still works though.</p>
+<p><code>echo idle &gt; /sys/block/zram0/writeback</code></p>
+<p>And then indle pages are pushed to disk after a few seconds.</p>
+<p>To check how much is on the disk:</p>
+<p><code>awk '{printf "%.2f GiB\n", $1 * 4096 / 1024 / 1024 / 1024}' /sys/block/zram0/bd_stat</code></p>
+<pre><code>root@sobek:/sys/block/zram0# awk '{printf "%.2f GiB\n", $1 * 4096 / 1024 / 1024 / 1024}' /sys/block/zram0/bd_stat
+3.90 GiB</code></pre>
+<p>It would make sense for this to be an optimization that distros designed for more optimized memory usage. A custom daemon could regularly push pages that were idle for too long. I think this is what Android does to make zram work. Or maybe Android operates entirely in ram and doesn’t touch swap to avoid writes to the disk, I know that can be a concern on lower quality solid state/flash devices. Although, this is less of a concern because zram pushes compressed data to the disk, unlike a traditional swap setup.</p>
+<p>One disappointing thing is that zram seems to count data pushed to disk as stored on the zram disk device, rather than being seperate. This means there is no way to individually measure except to look at <code>bd_stat</code> and subtract from zram. It just doesn’t count this as compressed data when looking at <code>zramctl</code>.</p>
+<p>Another thing that is frustrating is that zram does not seem to push compressed data to swap. It uncompresses data, and then stores it all in the writeback device, meaning that if more than 8 gb of data is compressed into ram, it won’t fit into the writeback device. There does appear to be some <a href="https://lwn.net/Articles/1048650/">preliminary work</a> but nothing that has made it into the mainline kernel yet.</p>
+<p>Right now though, it’s actually mostly okay though because a lot of data does get pushed even if the writeback device does fill up.</p>
+<p>In theory, having that kernel config option to automatically track idle pages, in combination with a daemon that would automatically cause zram to push compressed data to the writeback device, probably be more efficient and performant than zswap/swap. But it’s not really here yet.</p>
+<p>But for now, I got my other x86 laptop back so I’m stopping here.</p>
+</section>
+</section>
+<section id="podman-machine" class="level1">
+<h1>Podman Machine</h1>
+<p>I attempted to run Microsoft’s SQL in a container, and although an arm version is supplied, it errors:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb11-1">moonpie@sobek:~/vscode/home-manager$ podman run -e "ACCEPT_EULA=1" -e "MSSQL_SA_PASSWORD=MyStrongPass123" -e "MSSQL_PID=Developer" -e "MSSQL_USER=SA" -p 1433:1433 -d --name=sql mcr.microsoft.com/azure-sql-edgeTrying to pull mcr.microsoft.com/azure-sql-edge:latest...</span>
+<span id="cb11-2">911ec509fd6e8a06777fd929f32066c1303ea9cbea3391898d823fa4c6a75aa3</span>
+<span id="cb11-3">moonpie@sobek:~/vscode/home-manager$ podman logs sql </span>
+<span id="cb11-4">Azure SQL Edge will run as non-root by default.</span>
+<span id="cb11-5">This container is running as user mssql.</span>
+<span id="cb11-6">To learn more visit https://go.microsoft.com/fwlink/?linkid=2140520.</span>
+<span id="cb11-7">2026/01/22 18:33:18 [launchpadd] INFO: Extensibility Log Header: &lt;timestamp&gt; &lt;process&gt; &lt;sandboxId&gt; &lt;sessionId&gt; &lt;message&gt;</span>
+<span id="cb11-8">2026/01/22 18:33:18 [launchpadd] WARNING: Failed to load /var/opt/mssql/mssql.conf ini file with error open /var/opt/mssql/mssql.conf: no such file or directory</span>
+<span id="cb11-9">2026/01/22 18:33:18 [launchpadd] INFO: DataDirectories =  /bin:/etc:/lib:/lib32:/lib64:/sbin:/usr/bin:/usr/include:/usr/lib:/usr/lib32:/usr/lib64:/usr/libexec/gcc:/usr/sbin:/usr/share:/var/lib:/opt/microsoft:/opt/mssql-extensibility:/opt/mssql/mlservices:/opt/mssql/lib/zulu-jre-11:/opt/mssql-tools</span>
+<span id="cb11-10">2026/01/22 18:33:18 Drop permitted effective capabilities.</span>
+<span id="cb11-11">&lt;jemalloc&gt;: Unsupported system page size</span>
+<span id="cb11-12">&lt;jemalloc&gt;: Unsupported system page size</span>
+<span id="cb11-13">&lt;jemalloc&gt;: Unsupported system page size</span>
+<span id="cb11-14">&lt;jemalloc&gt;: Unsupported system page size</span>
+<span id="cb11-15">&lt;jemalloc&gt;: Unsupported system page size</span>
+<span id="cb11-16">Error in GnuTLS initialization: ASN1 parser: Element was not found.</span>
+<span id="cb11-17">&lt;jemalloc&gt;: Unsupported system page size</span>
+<span id="cb11-18">&lt;jemalloc&gt;: Unsupported system page size</span>
+<span id="cb11-19">&lt;jemalloc&gt;: Unsupported system page size</span>
+<span id="cb11-20">&lt;jemalloc&gt;: Unsupported system page size</span>
+<span id="cb11-21">Out of memory allocating bitmask: Cannot allocate memory</span></code></pre></div></div>
+<p>Apparently, jemalloc is often compiled to work on only 4k page systems, whereas the M Mac’s use a 16k page size. So it results in a crash.</p>
+<p>The easiest way to get around this seems to be with podman’s virtual machine, that isn’t really designed for native linux systems but I think it will work here.</p>
+<p>However, because nobody ever expected that someone would use the tool designed to virtualize linux on Mac/NonLinux systems to run containers on a Linux system, the podman package does not pull in, or even mention any of the dependencies needed to start the podman machine.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb12-1">gvisor-tap-vsock</span>
+<span id="cb12-2">virtiofsd</span></code></pre></div></div>
+<p>In addition to that, podman machine must be told where to find the virtiofsd binary.</p>
+<div class="code-with-filename">
+<div class="code-with-filename-file">
+<pre><strong>'</strong></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13" data-filename="'" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb13-1">[engine]</span>
+<span id="cb13-2"></span>
+<span id="cb13-3">helper_binaries_dir = [</span>
+<span id="cb13-4">  "/usr/local/libexec/podman",</span>
+<span id="cb13-5">  "/usr/local/lib/podman",</span>
+<span id="cb13-6">  "/usr/libexec/podman",</span>
+<span id="cb13-7">  "/usr/libexec",</span>
+<span id="cb13-8">  "/usr/lib/podman",</span>
+<span id="cb13-9">]</span></code></pre></div></div>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb14-1">podman machine init </span>
+<span id="cb14-2"></span>
+<span id="cb14-3">podman machine start</span></code></pre></div></div>
+<p>And then a podman virtual machine starts. I can run <code>podman machine ssh podman-machine-default</code> to enter into it, or I can point the docker or podman socket at it.</p>
+<p>Overall, I find this deeply ironic. podman machine was originally designed for MacOS users to run a Linux virtual machine, so they could use Linux containers. But instead, I am have to use it on Linux on my Macbook so I can run Linux containers due to a mismatch in page size which makes things incompatible anyways. I was so excited about not needing a virtual machine but I needed one anyway :P.</p>
+<p><code>sudo dnf install docker</code></p>
+<p>And then to use the docker cli with the podman machine:</p>
+<p><code>export DOCKER_HOST='unix:///run/user/1000/podman/podman-machine-default-api.sock'</code></p>
+<p>Then, you can run docker containers with volume mounts, port forwarding, etc from the asahi host, but they actually run in the virtual machine. Ideally, I shouldn’t need to do this for arm</p>
+</section>
+<section id="misc-notes" class="level1">
+<h1>Misc Notes</h1>
+<p>These are miscellanous notes for myself, for smaller one off tasks.</p>
+<p>Since the grub config is in a different spot, and Fedora doesn’t come with an <code>update-grub</code> script or equivalent, regenerating the grub config must be done manually:</p>
+<p><code>sudo grub2-mkconfig -o /boot/boot/grub2/grub.cfg</code></p>
+<p>Extracting passwords from my old firefox profiles can be done with <a href="https://github.com/unode/firefox_decrypt/">firefox_decrypt</a>.</p>
+<p>And then this can be ran, pointed at a firefox profile folder and it will spit out passwords. Actually, I later found someting better, it’s possible to run <code>firefox --profile folder</code> directly on a folder to continue to use the profile.</p>
+<p>Sadly Fedora KDE’s Dolphin does not seem to come with the right click &gt; New Libreoffice Writer that I am used to. However, I have realized that ODT documents seem to be empty by default, so simply by creating an empty text file named <code>*.odt</code>, libreoffice can open it.</p>
+
+
+</section>
+
+ ]]></description>
+  <category>playground</category>
+  <guid>https://moonpiedumplings.github.io/playground/asahi-setup/</guid>
+  <pubDate>Wed, 21 Jan 2026 08:00:00 GMT</pubDate>
+</item>
 <item>
   <title>Audio sharing</title>
   <link>https://moonpiedumplings.github.io/playground/audio-share/</link>
@@ -14438,2069 +14674,6 @@ Tip
   <category>writeups</category>
   <guid>https://moonpiedumplings.github.io/writeups/nice-challenge-6/</guid>
   <pubDate>Sun, 25 Aug 2024 07:00:00 GMT</pubDate>
-</item>
-<item>
-  <title>Creating a nix flake shell, the “proper” way</title>
-  <link>https://moonpiedumplings.github.io/playground/flake-shell/</link>
-  <description><![CDATA[ 
-
-
-
-
-
-<p>So, I think it’s time for me to move from the older channels way of doing things in nix, to the newer flakes. I am using the <a href="https://github.com/DeterminateSystems/nix-installer">determinate system nix installer</a>, which only comes with flakes. However, the nix docs are very poor, so I am going to document my process of converting my development environment here.</p>
-<p>The first thing, is that despite the fact that there is a lot of the existing flakes use a utility called <a href="https://github.com/numtide/flake-utils">flake-utils</a>. However, this tool was ultimately started as an experiment, and has issues. A <a href="https://ayats.org/blog/no-flake-utils/">blog post</a> (<a href="https://web.archive.org/web/20240229094244/https://ayats.org/blog/no-flake-utils/">archive</a>) goes over some of the issues it has, and recommends against it… except I can’t figure out at all how to apply it.</p>
-<p>The other recommendation is another pattern, recommended by Reddit user Tomberek:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1" style="background: #f1f3f5;"><pre class="sourceCode nix code-with-copy"><code class="sourceCode nix"><span id="cb1-1"><span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">{</span></span>
-<span id="cb1-2">  <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">inputs</span>.<span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">nixpkgs</span>.<span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">url</span> <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">"github:NixOS/nixpkgs/22.05"</span><span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">;</span></span>
-<span id="cb1-3">  <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">outputs</span> <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">{</span><span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">self</span><span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">,</span><span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">nixpkgs</span><span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">}</span>: <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">{</span></span>
-<span id="cb1-4">    <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">devShells</span> <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> <span class="bu" style="color: null;
-background-color: null;
-font-style: inherit;">builtins</span><span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">.</span>mapAttrs <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">(</span><span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">system</span><span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">:</span> <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">pkgs</span><span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">:</span> <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">{</span></span>
-<span id="cb1-5">      <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">default</span> <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> pkgs<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">.</span>mkShell <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">{</span></span>
-<span id="cb1-6">        <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">shellHook</span> <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">''</span></span>
-<span id="cb1-7"><span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">          echo 'WARNING: gotcha during nix develop shellHooks'</span></span>
-<span id="cb1-8"><span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">          function _direnv_hook(){</span></span>
-<span id="cb1-9"><span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">              echo 'WARNING, "_direnv_hook" has been overwritten"'</span></span>
-<span id="cb1-10"><span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">          }</span></span>
-<span id="cb1-11"><span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">        ''</span><span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">;</span></span>
-<span id="cb1-12">        <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">packages</span> <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">[</span></span>
-<span id="cb1-13">          <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">(</span>pkgs<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">.</span>writeShellApplication <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">{</span></span>
-<span id="cb1-14">            <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">name</span> <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">"ls"</span><span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">;</span></span>
-<span id="cb1-15">            <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">text</span> <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">''</span></span>
-<span id="cb1-16"><span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">              echo 'WARNING, "ls" has been overwritten"'</span></span>
-<span id="cb1-17"><span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">            ''</span><span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">;</span></span>
-<span id="cb1-18">          <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">}</span></span>
-<span id="cb1-19">            <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">)</span></span>
-<span id="cb1-20">        <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">];</span></span>
-<span id="cb1-21">      <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">};</span></span>
-<span id="cb1-22">    <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">})</span> nixpkgs<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">.</span>legacyPackages<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">;</span></span>
-<span id="cb1-23">  <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">};</span></span>
-<span id="cb1-24"><span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">}</span></span></code></pre></div></div>
-<p>There are multiple different ways of creating an output for multiple systems at once, it seems.</p>
-<p>So far:</p>
-<ul>
-<li>ForEachSystem</li>
-<li>Flake-parts</li>
-<li>Flake-utils</li>
-<li>Tomberek’s method</li>
-</ul>
-<p>I suspect there are other methods, potentially better one’s, that aren’t documented. However, because of the <a href="https://ayats.org/blog/no-flake-utils/">no-flake-utils</a> blogpost, where the author suggests to use pure nix and no libraries, I have decided to opt for that approach.</p>
-<p>My ultimate goal is to convert the shell.nix I am using, into a flake.</p>
-<p>I have a simple outline:</p>
-<div class="code-with-filename">
-<div class="code-with-filename-file">
-<pre><strong>flake.nix</strong></pre>
-</div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2" data-filename="flake.nix" style="background: #f1f3f5;"><pre class="sourceCode nix code-with-copy"><code class="sourceCode nix"><span id="cb2-1"><span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">{</span></span>
-<span id="cb2-2">  <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">inputs</span> <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">{</span></span>
-<span id="cb2-3">    <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">nixpkgs</span>.<span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">url</span> <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">"nixpkgs"</span><span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">;</span></span>
-<span id="cb2-4">  <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">};</span></span>
-<span id="cb2-5">  <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">outputs</span> <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> inputs @ <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">{</span><span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">nixpkgs</span><span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">,</span> <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">...}</span>: <span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">let</span></span>
-<span id="cb2-6"></span>
-<span id="cb2-7">    <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">pkgs</span> <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> <span class="bu" style="color: null;
-background-color: null;
-font-style: inherit;">import</span> nixpkgs <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">{};</span></span>
-<span id="cb2-8"></span>
-<span id="cb2-9">    <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">forAllSystems</span> <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">function</span><span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">:</span></span>
-<span id="cb2-10">      nixpkgs<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">.</span>lib<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">.</span>genAttrs <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">[</span></span>
-<span id="cb2-11">        <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">"x86_64-linux"</span></span>
-<span id="cb2-12">        <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">"aarch64-linux"</span></span>
-<span id="cb2-13">      <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">]</span> <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">(</span><span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">system</span><span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">:</span></span>
-<span id="cb2-14">        function <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">(</span><span class="bu" style="color: null;
-background-color: null;
-font-style: inherit;">import</span> nixpkgs <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">{</span></span>
-<span id="cb2-15">          <span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">inherit</span> <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">system</span><span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">;</span></span>
-<span id="cb2-16">          <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">config</span>.<span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">allowUnfree</span> <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> <span class="cn" style="color: #8f5902;
-background-color: null;
-font-style: inherit;">true</span><span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">;</span></span>
-<span id="cb2-17">          <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">overlays</span> <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">[</span></span>
-<span id="cb2-18">            inputs<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">.</span>something<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">.</span>overlays<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">.</span>default</span>
-<span id="cb2-19">          <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">];</span></span>
-<span id="cb2-20">        <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">}));</span></span>
-<span id="cb2-21"></span>
-<span id="cb2-22">  <span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">in</span> <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">{</span></span>
-<span id="cb2-23">    <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">devShells</span>.<span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">x86_64-linux</span>.<span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">default</span> <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> pkgs<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">.</span>mkShell <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">{</span></span>
-<span id="cb2-24">        <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">packages</span> <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> <span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">with</span> pkgs<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">;</span> <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">[</span> </span>
-<span id="cb2-25">            nodePackages_latest<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">.</span>npm</span>
-<span id="cb2-26">            quarto</span>
-<span id="cb2-27">            <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">];</span></span>
-<span id="cb2-28">  <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">};</span></span>
-<span id="cb2-29">  <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">};</span></span>
-<span id="cb2-30"><span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">}</span></span></code></pre></div></div>
-</div>
-<p>After some tinkering, I get this to at least load, and not give me a syntax error. Instead, it gives me a different error:</p>
-<p><code>error: flake 'git+file:///home/moonpie/vscode/test/flake-test' does not provide attribute 'packages.x86_64-linux.default' or 'defaultPackage.x86_64-linux'</code></p>
-<p>I find this odd, since I provide a devshell. However, I realized that the other command to get a reproducible shell environment, <code>nix develop</code>, might be what is used instead to call upon the <code>devShells</code> attribute.</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb3-1">[moonpie@lizard flake-test]$ nix develop</span>
-<span id="cb3-2">error:</span>
-<span id="cb3-3">       … while evaluating a branch condition</span>
-<span id="cb3-4">         at /nix/store/2yb39wmx10a5lsm4d2jj7c6h94h36spi-source/pkgs/stdenv/booter.nix:64:9:</span>
-<span id="cb3-5">           63|       go = pred: n:</span>
-<span id="cb3-6">           64|         if n == len</span>
-<span id="cb3-7">             |         ^</span>
-<span id="cb3-8">           65|         then rnul pred</span>
-<span id="cb3-9"></span>
-<span id="cb3-10">       … while calling the 'length' builtin</span>
-<span id="cb3-11">         at /nix/store/2yb39wmx10a5lsm4d2jj7c6h94h36spi-source/pkgs/stdenv/booter.nix:62:13:</span>
-<span id="cb3-12">           61|     let</span>
-<span id="cb3-13">           62|       len = builtins.length list;</span>
-<span id="cb3-14">             |             ^</span>
-<span id="cb3-15">           63|       go = pred: n:</span>
-<span id="cb3-16"></span>
-<span id="cb3-17">       (stack trace truncated; use '--show-trace' to show the full trace)</span>
-<span id="cb3-18"></span>
-<span id="cb3-19">       error: attribute 'currentSystem' missing</span>
-<span id="cb3-20">       at /nix/store/2yb39wmx10a5lsm4d2jj7c6h94h36spi-source/pkgs/top-level/impure.nix:17:43:</span>
-<span id="cb3-21">           16|   # (build, in GNU Autotools parlance) platform.</span>
-<span id="cb3-22">           17|   localSystem ? { system = args.system or builtins.currentSystem; }</span>
-<span id="cb3-23">             |                                           ^</span>
-<span id="cb3-24">           18|</span></code></pre></div></div>
-<p>What’s the difference between nix shell and nix develop? From my understanding, <code>nix develop</code> is designed for developing packages, as it brings in build dependencies, rather than only runtime dependencies. It’s because of this, that I want <code>nix shell</code> to work instead, because that command seems to be focused more on simply getting the tools I want.</p>
-<p>Except, according to some comparisons I found online, <a href="https://discourse.nixos.org/t/difference-between-nix-shell-nix-shell-nix-develop/32469/4">nix shell can’t even adjust environment variables</a>. Now of course, a single forum reply is <em>not</em> documentation… but nix’s documentation is very poor, and this is a common frustration, being forced to rely on forum posts rather than official documentation for information.</p>
-<p>The <a href="https://nix.dev/manual/nix/2.18/command-ref/new-cli/nix3-shell">official docs</a> talk about using <code>nix shell</code> as a command line program, but not at all how it interacts with flakes and .nix files.</p>
-<p>I got something that works for <code>nix develop</code></p>
-<div class="code-with-filename">
-<div class="code-with-filename-file">
-<pre><strong>flake.nix</strong></pre>
-</div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4" data-filename="flake.nix" style="background: #f1f3f5;"><pre class="sourceCode nix code-with-copy"><code class="sourceCode nix"><span id="cb4-1"><span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">{</span></span>
-<span id="cb4-2">  <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">inputs</span> <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">{</span></span>
-<span id="cb4-3">    <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">nixpkgs</span>.<span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">url</span> <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">"nixpkgs"</span><span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">;</span></span>
-<span id="cb4-4">  <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">};</span></span>
-<span id="cb4-5">  <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">outputs</span> <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> inputs @ <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">{</span><span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">nixpkgs</span><span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">,</span> <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">...}</span>: <span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">let</span></span>
-<span id="cb4-6"></span>
-<span id="cb4-7">    <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">pkgs</span> <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> <span class="bu" style="color: null;
-background-color: null;
-font-style: inherit;">import</span> nixpkgs <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">{};</span></span>
-<span id="cb4-8"></span>
-<span id="cb4-9">    <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">forAllSystems</span> <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">function</span><span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">:</span></span>
-<span id="cb4-10">      nixpkgs<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">.</span>lib<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">.</span>genAttrs <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">[</span></span>
-<span id="cb4-11">        <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">"x86_64-linux"</span></span>
-<span id="cb4-12">        <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">"aarch64-linux"</span></span>
-<span id="cb4-13">      <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">]</span> <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">(</span><span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">system</span><span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">:</span></span>
-<span id="cb4-14">        function <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">(</span><span class="bu" style="color: null;
-background-color: null;
-font-style: inherit;">import</span> nixpkgs <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">{</span></span>
-<span id="cb4-15">          <span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">inherit</span> <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">system</span><span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">;</span></span>
-<span id="cb4-16">          <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">config</span>.<span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">allowUnfree</span> <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> <span class="cn" style="color: #8f5902;
-background-color: null;
-font-style: inherit;">true</span><span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">;</span></span>
-<span id="cb4-17">        <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">}));</span></span>
-<span id="cb4-18"></span>
-<span id="cb4-19">  <span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">in</span> <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">{</span></span>
-<span id="cb4-20"></span>
-<span id="cb4-21">    <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">devShells</span> <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> forAllSystems <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">(</span><span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">pkgs</span><span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">:</span> <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">{</span></span>
-<span id="cb4-22">      <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">default</span> <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> pkgs<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">.</span>mkShell <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">{</span></span>
-<span id="cb4-23">        <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">packages</span> <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> <span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">with</span> pkgs<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">;</span> <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">[</span> </span>
-<span id="cb4-24">            nodePackages_latest<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">.</span>npm</span>
-<span id="cb4-25">            quarto</span>
-<span id="cb4-26">            <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">];</span></span>
-<span id="cb4-27">      <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">};</span></span>
-<span id="cb4-28">    <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">});</span></span>
-<span id="cb4-29">    <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">packages</span> <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> forAllSystems <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">(</span><span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">pkgs</span><span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">:</span> <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">{</span></span>
-<span id="cb4-30">      <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">default</span> <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> pkgs<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">.</span>mkShell <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">{</span></span>
-<span id="cb4-31">        <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">packages</span> <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> <span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">with</span> pkgs<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">;</span> <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">[</span></span>
-<span id="cb4-32">            nodePackages_latest<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">.</span>npm</span>
-<span id="cb4-33">            quarto</span>
-<span id="cb4-34">            <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">];</span></span>
-<span id="cb4-35">      <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">};</span></span>
-<span id="cb4-36">    <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">});</span></span>
-<span id="cb4-37">  <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">};</span></span>
-<span id="cb4-38"><span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">}</span></span></code></pre></div></div>
-</div>
-<p><code>nix develop</code> works fine, except it takes a long time to setup on the first run, compared to <code>nix-shell -p quarto nodePackages_latest.npm</code>. I wonder if this is because, since <code>nix develop</code> is designed for development purposes, it pulls in more dependencies than <code>nix-shell</code> does.</p>
-<p><code>nix shell</code> doesn’t work at all. It gives me a different shell, and adds things to the path, but it doesn’t actually add any of the programs I specify to the path.</p>
-<p>(Also, I still have another unanswered question: What does the <code>@</code> symbol mean in a nix expression).</p>
-<p>I later went and <a href="https://nix.dev/tutorials/nix-language.html#named-attribute-set-argument">found an answer</a>. <code>@</code> <em>names</em> the attribute set</p>
-<p>I managed to get <code>nix shell</code> working… somewhat.</p>
-<div class="code-with-filename">
-<div class="code-with-filename-file">
-<pre><strong>flake.nix</strong></pre>
-</div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5" data-filename="flake.nix" style="background: #f1f3f5;"><pre class="sourceCode nix code-with-copy"><code class="sourceCode nix"><span id="cb5-1"><span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">{</span></span>
-<span id="cb5-2">  <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">inputs</span> <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">{</span></span>
-<span id="cb5-3">    <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">nixpkgs</span>.<span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">url</span> <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">"nixpkgs"</span><span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">;</span></span>
-<span id="cb5-4">  <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">};</span></span>
-<span id="cb5-5">  <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">outputs</span> <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> inputs @ <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">{</span><span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">nixpkgs</span><span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">,</span> <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">...}</span>: <span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">let</span></span>
-<span id="cb5-6"></span>
-<span id="cb5-7">    <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">pkgs</span> <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> <span class="bu" style="color: null;
-background-color: null;
-font-style: inherit;">import</span> nixpkgs <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">{};</span></span>
-<span id="cb5-8"></span>
-<span id="cb5-9">    <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">forAllSystems</span> <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">function</span><span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">:</span></span>
-<span id="cb5-10">      nixpkgs<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">.</span>lib<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">.</span>genAttrs <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">[</span></span>
-<span id="cb5-11">        <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">"x86_64-linux"</span></span>
-<span id="cb5-12">        <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">"aarch64-linux"</span></span>
-<span id="cb5-13">      <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">]</span> <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">(</span><span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">system</span><span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">:</span></span>
-<span id="cb5-14">        function <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">(</span><span class="bu" style="color: null;
-background-color: null;
-font-style: inherit;">import</span> nixpkgs <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">{</span></span>
-<span id="cb5-15">          <span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">inherit</span> <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">system</span><span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">;</span></span>
-<span id="cb5-16">          <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">config</span>.<span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">allowUnfree</span> <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> <span class="cn" style="color: #8f5902;
-background-color: null;
-font-style: inherit;">true</span><span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">;</span></span>
-<span id="cb5-17">        <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">}));</span></span>
-<span id="cb5-18"></span>
-<span id="cb5-19">  <span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">in</span> <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">{</span></span>
-<span id="cb5-20"><span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">packages</span> <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> forAllSystems <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">(</span><span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">pkgs</span><span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">:</span> <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">{</span></span>
-<span id="cb5-21">      <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">default</span> <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> pkgs<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">.</span>jupyter<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">;</span></span>
-<span id="cb5-22">    <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">});</span></span>
-<span id="cb5-23">  <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">};</span></span>
-<span id="cb5-24"><span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">}</span></span></code></pre></div></div>
-</div>
-<p>And this makes the <code>jupyter</code> command available to me in my shell, and the library I called upon. But, this doesn’t seem scalable. How do I get this to do more packages? How do I get this to do environment variables? And is this really better than <code>nix develop</code>?</p>
-<p>I started to do some testing. The big problem, I’ve found with nix develop, is that since it is designed for development, it brings in development dependencies, regardless of the fact that I am <em>not</em> doing development, and am instead just aiming for a reproducible shell environment.</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6" style="background: #f1f3f5;"><pre class="sourceCode nix code-with-copy"><code class="sourceCode nix"><span id="cb6-1">devShells = forAllSystems <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">(</span><span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">pkgs</span><span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">:</span> <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">{</span></span>
-<span id="cb6-2">      <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">default</span> <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> pkgs<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">.</span>mkShell <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">{</span></span>
-<span id="cb6-3"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#         packages = with pkgs; [</span></span>
-<span id="cb6-4"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#             jupyter</span></span>
-<span id="cb6-5"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#            ];</span></span>
-<span id="cb6-6">        <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">buildInputs</span> <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> <span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">with</span> pkgs<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">;</span> <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">[</span> jupyter <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">];</span></span>
-<span id="cb6-7">      <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">};</span></span></code></pre></div></div>
-<p>Results in:</p>
-<details>
-<summary>
-Show path
-</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb7-1">[moonpie@lizard flake-test]$ nix develop</span>
-<span id="cb7-2">warning: Git tree '/home/moonpie/vscode/test/flake-test' is dirty</span>
-<span id="cb7-3">evaluating derivation 'git+file:///home/moonpie/vscode/test/flake-test#devShells.x86_64-linux.default'</span>
-<span id="cb7-4">(nix:nix-shell-env) [moonpie@lizard flake-test]$ echo $PATH</span>
-<span id="cb7-5">/nix/store/pdqndw2kgjv8l3kd5ii0c833jqmxdanq-patchelf-0.15.0/bin:/nix/store/mpm3i0sbqc9svfch6a17179fs64dz2kv-gcc-wrapper-13.3.0/bin:/nix/store/zc0nsv23pakbafngjy32kvhfzb16as43-gcc-13.3.0/bin:/nix/store/082x03cmpnsqkfp4ljrhsadz68rh3q1h-glibc-2.39-52-bin/bin:/nix/store/i7qhgc0bs725qw3wdanznfkdna4z2ns2-coreutils-9.5/bin:/nix/store/l46fjkzva0bhvy9p2r7p4vi68kr7a1db-binutils-wrapper-2.41/bin:/nix/store/wwfrj9kvfi14xclc38qfwm71ah6aawdh-binutils-2.41/bin:/nix/store/hn4bklvwvjjhkqy8d5npgb0aq8hba27s-python3-3.11.9-env/bin:/nix/store/i7qhgc0bs725qw3wdanznfkdna4z2ns2-coreutils-9.5/bin:/nix/store/rr1yixvn0z63mgq9s04ig9j9qlz23s2g-findutils-4.9.0/bin:/nix/store/j4gkc44c1pwl5ccgxm83s4r746bsdcw9-diffutils-3.10/bin:/nix/store/ks6c62g0m3gqrs5i7m0cv6d6aqhdvirn-gnused-4.9/bin:/nix/store/md9apn3290h7kv0x198ihaaa3k6icg4b-gnugrep-3.11/bin:/nix/store/hkx0wcm23i9ihqlysri8n41kl232kawb-gawk-5.2.2/bin:/nix/store/95ljdxg4drk1iq8jkjfq2c0z5vbwv8vm-gnutar-1.35/bin:/nix/store/nc9lq1lra01932rfyclq3gsh82cxbmii-gzip-1.13/bin:/nix/store/cyc3v8qfkhn4r38a8s5d7f2c33q624mz-bzip2-1.0.8-bin/bin:/nix/store/18z454gyz0wpb641rw6gpqk0vi4wbxy6-gnumake-4.4.1/bin:/nix/store/agkxax48k35wdmkhmmija2i2sxg8i7ny-bash-5.2p26/bin:/nix/store/r05c0lpbnjc8dg3rrr3ck7s07pjy86j3-patch-2.7.6/bin:/nix/store/qqhrymypl970jc6npvi9a6sikhr84mdf-xz-5.4.6-bin/bin:/nix/store/qcqmiq1mb3pkk2bxbj6d6gb2fk9knk8l-file-5.45/bin:/home/moonpie/.nix-profile/bin:/nix/var/nix/profiles/default/bin:/home/moonpie/.nix-profile/bin:/nix/var/nix/profiles/default/bin:/home/moonpie/.nix-profile/bin:/nix/var/nix/profiles/default/bin:/usr/local/sbin:/usr/local/bin:/usr/bin:/usr/lib/jvm/default/bin:/usr/bin/site_perl:/usr/bin/vendor_perl:/usr/bin/core_perl</span></code></pre></div></div>
-</details>
-<p>Compared to the same thing for nix shell:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8" style="background: #f1f3f5;"><pre class="sourceCode nix code-with-copy"><code class="sourceCode nix"><span id="cb8-1">packages = forAllSystems <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">(</span><span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">pkgs</span><span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">:</span> <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">{</span></span>
-<span id="cb8-2">      <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">default</span> <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> pkgs<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">.</span>mkShell <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">{</span></span>
-<span id="cb8-3">        <span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">#packages = with pkgs; [ jupyter ];</span></span>
-<span id="cb8-4">        <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">buildInputs</span> <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> <span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">with</span> pkgs<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">;</span> <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">[</span> jupyter <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">];</span></span>
-<span id="cb8-5">        <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">TEST_ENV</span> <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">"test environment variable"</span><span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">;</span></span>
-<span id="cb8-6">      <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">};</span></span></code></pre></div></div>
-<details>
-<summary>
-Show path
-</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb9-1">[moonpie@lizard flake-test]$ nix shell</span>
-<span id="cb9-2">warning: Git tree '/home/moonpie/vscode/test/flake-test' is dirty</span>
-<span id="cb9-3">evaluating derivation 'git+file:///home/moonpie/vscode/test/flake-test#packages.x86_64-linux.default'</span>
-<span id="cb9-4">[moonpie@lizard flake-test]$ echo $PATH</span>
-<span id="cb9-5">/home/moonpie/.nix-profile/bin:/nix/var/nix/profiles/default/bin:/nix/store/i4zy8833s3dxrk3dmzb29k3y6rik15a4-nix-shell/bin:/home/moonpie/.nix-profile/bin:/nix/var/nix/profiles/default/bin:/home/moonpie/.nix-profile/bin:/nix/var/nix/profiles/default/bin:/usr/local/sbin:/usr/local/bin:/usr/bin:/usr/lib/jvm/default/bin:/usr/bin/site_perl:/usr/bin/vendor_perl:/usr/bin/core_perl</span></code></pre></div></div>
-</details>
-<p>However…</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb10-1">[moonpie@lizard flake-test]$ echo $TEST_ENV</span></code></pre></div></div>
-<p>And nothing. (no reply to that command means the environment variable is unset). <code>nix shell</code> does not seem to set environment variables at all, even if I set them in the <code>pkgs.mkShell</code>, compared to <code>nix develop</code>, which does that.</p>
-<p>However, I don’t want to bring <em>every</em> single build dependency as just for my shell environments.</p>
-<p>I did more testing with the various <a href="http://ryantm.github.io/nixpkgs/stdenv/stdenv/#ssec-stdenv-dependencies-reference">types of dependencies</a> that a <code>pkgs.mkShell</code> (or more accurately, what it abstracts, <code>stdenv.mkDerivation</code>), and every single type of them brings build dependencies. This is a feature of nix develop, but it is becoming a hindrance.</p>
-<p>Nevermind. Apparently, <code>nix-shell</code> also brings in build dependencies, and behaves identically to <code>nix develop</code>, and completely unlike <code>nix shell</code>. Some part of me wonders if there is some way to get this working. Another part of me doesn’t care.</p>
-<p>Since I have something working, I modified the <a href="https://nixos.wiki/wiki/flakes#Super_fast_nix-shell">super fast nix shell</a> example to not use flakes.</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11" style="background: #f1f3f5;"><pre class="sourceCode nix code-with-copy"><code class="sourceCode nix"><span id="cb11-1"><span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">{</span></span>
-<span id="cb11-2">  <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">inputs</span> <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">{</span></span>
-<span id="cb11-3">    <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">nixpkgs</span>.<span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">url</span> <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">"nixpkgs"</span><span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">;</span></span>
-<span id="cb11-4">  <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">};</span></span>
-<span id="cb11-5">  <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">outputs</span> <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> inputs @ <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">{</span><span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">nixpkgs</span><span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">,</span> <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">...}</span>: <span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">let</span></span>
-<span id="cb11-6"></span>
-<span id="cb11-7">    <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">pkgs</span> <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> <span class="bu" style="color: null;
-background-color: null;
-font-style: inherit;">import</span> nixpkgs <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">{};</span></span>
-<span id="cb11-8"></span>
-<span id="cb11-9">    <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">forAllSystems</span> <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">function</span><span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">:</span></span>
-<span id="cb11-10">      nixpkgs<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">.</span>lib<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">.</span>genAttrs <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">[</span></span>
-<span id="cb11-11">        <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">"x86_64-linux"</span></span>
-<span id="cb11-12">        <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">"aarch64-linux"</span></span>
-<span id="cb11-13">      <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">]</span> <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">(</span><span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">system</span><span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">:</span></span>
-<span id="cb11-14">        function <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">(</span><span class="bu" style="color: null;
-background-color: null;
-font-style: inherit;">import</span> nixpkgs <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">{</span></span>
-<span id="cb11-15">          <span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">inherit</span> <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">system</span><span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">;</span></span>
-<span id="cb11-16">          <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">config</span>.<span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">allowUnfree</span> <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> <span class="cn" style="color: #8f5902;
-background-color: null;
-font-style: inherit;">true</span><span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">;</span></span>
-<span id="cb11-17">        <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">}));</span></span>
-<span id="cb11-18"></span>
-<span id="cb11-19">  <span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">in</span> <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">{</span></span>
-<span id="cb11-20"></span>
-<span id="cb11-21">    <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">devShells</span> <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> forAllSystems <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">(</span><span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">pkgs</span><span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">:</span> <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">{</span></span>
-<span id="cb11-22">      <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">default</span> <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> <span class="bu" style="color: null;
-background-color: null;
-font-style: inherit;">import</span> <span class="ss" style="color: #20794D;
-background-color: null;
-font-style: inherit;">./shell.nix</span> <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">{</span> <span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">inherit</span> <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">pkgs</span><span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">;</span> <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">};</span></span>
-<span id="cb11-23">    <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">});</span></span>
-<span id="cb11-24">  <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">};</span></span>
-<span id="cb11-25"><span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">}</span></span></code></pre></div></div>
-<p>This errors:</p>
-<details>
-<summary>
-Show errors
-</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb12-1">[moonpie@lizard moonpiedumplings.github.io]$ nix develop</span>
-<span id="cb12-2">warning: Git tree '/home/moonpie/vscode/moonpiedumplings.github.io' is dirty</span>
-<span id="cb12-3">warning: creating lock file '/home/moonpie/vscode/moonpiedumplings.github.io/flake.lock':</span>
-<span id="cb12-4">• Added input 'nixpkgs':</span>
-<span id="cb12-5">    'github:NixOS/nixpkgs/3f84a279f1a6290ce154c5531378acc827836fbb?narHash=sha256-u1fA0DYQYdeG%2B5kDm1bOoGcHtX0rtC7qs2YA2N1X%2B%2BI%3D' (2024-06-13)</span>
-<span id="cb12-6">warning: Git tree '/home/moonpie/vscode/moonpiedumplings.github.io' is dirty</span>
-<span id="cb12-7">error:</span>
-<span id="cb12-8">       … while calling the 'import' builtin</span>
-<span id="cb12-9">         at /nix/store/jd6fy6iw7fsj0135phhd7awmq5s00sgj-source/flake.nix:22:17:</span>
-<span id="cb12-10">           21|     devShells = forAllSystems (pkgs: {</span>
-<span id="cb12-11">           22|       default = import ./shell.nix { inherit pkgs; };</span>
-<span id="cb12-12">             |                 ^</span>
-<span id="cb12-13">           23|     });</span>
-<span id="cb12-14"></span>
-<span id="cb12-15">       … while evaluating the file '/nix/store/jd6fy6iw7fsj0135phhd7awmq5s00sgj-source/shell.nix':</span>
-<span id="cb12-16"></span>
-<span id="cb12-17">       … while calling the 'import' builtin</span>
-<span id="cb12-18">         at /nix/store/jd6fy6iw7fsj0135phhd7awmq5s00sgj-source/shell.nix:2:12:</span>
-<span id="cb12-19">            1| let</span>
-<span id="cb12-20">            2|     pkgs = import &lt;nixpkgs&gt; {};</span>
-<span id="cb12-21">             |            ^</span>
-<span id="cb12-22">            3|</span>
-<span id="cb12-23"></span>
-<span id="cb12-24">       (stack trace truncated; use '--show-trace' to show the full trace)</span>
-<span id="cb12-25"></span>
-<span id="cb12-26">       error: cannot look up '&lt;nixpkgs&gt;' in pure evaluation mode (use '--impure' to override)</span>
-<span id="cb12-27">[moonpie@lizard moonpiedumplings.github.io]$ nix develop --impure</span>
-<span id="cb12-28">warning: Git tree '/home/moonpie/vscode/moonpiedumplings.github.io' is dirty</span>
-<span id="cb12-29">error: attempt to call something which is not a function but a set: { type = "derivation"; PYTHONPATH = «thunk»; QUARTO_PANDOC = «thunk»; QUARTO_PYTHON = «thunk»; __ignoreNulls = true; __structuredAttrs = «thunk»; all = «thunk»; args = «thunk»; buildInputs = «thunk»; buildPhase = "{ echo \"------------------------------------------------------------\";\n  echo \" WARNING: the existence of this path is not guaranteed.\";\n  echo \" It is an internal implementation detail for pkgs.mkShell.\";\n  echo \"------------------------------------------------------------\";\n  echo;\n  # Record all build inputs as runtime dependencies\n  export;\n} &gt;&gt; \"$out\"\n"; «36 attributes elided» }</span>
-<span id="cb12-30">       at /nix/store/0symal17vrawjkdmbp0afyrz45ax5fay-source/flake.nix:22:17:</span>
-<span id="cb12-31">           21|     devShells = forAllSystems (pkgs: {</span>
-<span id="cb12-32">           22|       default = import ./shell.nix { inherit pkgs; };</span>
-<span id="cb12-33">             |                 ^</span>
-<span id="cb12-34">           23|     });</span></code></pre></div></div>
-</details>
-<p>Okay, I got it. There was one change I needed to make.</p>
-<div class="code-with-filename">
-<div class="code-with-filename-file">
-<pre><strong>shell.nix</strong></pre>
-</div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13" data-filename="shell.nix" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb13-1">let</span>
-<span id="cb13-2">    pkgs = import &lt;nixpkgs&gt; {};</span>
-<span id="cb13-3">    python3 = pkgs.python311;</span></code></pre></div></div>
-</div>
-<p>In my shell.nix, I should have:</p>
-<div class="code-with-filename">
-<div class="code-with-filename-file">
-<pre><strong>shell.nix</strong></pre>
-</div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14" data-filename="shell.nix" style="background: #f1f3f5;"><pre class="sourceCode nix code-with-copy"><code class="sourceCode nix"><span id="cb14-1"><span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">{</span> <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">pkgs</span> <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">?</span> <span class="bu" style="color: null;
-background-color: null;
-font-style: inherit;">import</span> &lt;nixpkgs&gt; <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">{}</span> <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">}</span>:</span>
-<span id="cb14-2"></span>
-<span id="cb14-3"><span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">let</span></span>
-<span id="cb14-4">    <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">python3</span> <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> pkgs<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">.</span>python311<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">;</span></span></code></pre></div></div>
-</div>
-<p>One last thing. What does the <code>@</code> symbol do? I suspect nothing. Kate (my IDE for nix testing), complains about the <code>input</code> binding being unused, so I am gussing it doesn’t do anything.</p>
-<p>When I remove it, and replace that line with:</p>
-<p><code>outputs = {nixpkgs, ...}: let</code></p>
-<p>It works fine.</p>
-<p>After all of this, I did realize something.</p>
-<p>The configuration file for nix has an option called “extra-nix-path”</p>
-<div class="code-with-filename">
-<div class="code-with-filename-file">
-<pre><strong>/etc/nix/nix.conf</strong></pre>
-</div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15" data-filename="/etc/nix/nix.conf" style="background: #f1f3f5;"><pre class="sourceCode nix code-with-copy"><code class="sourceCode nix"><span id="cb15-1">build<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">-</span>users<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">-</span>group = nixbld</span>
-<span id="cb15-2">experimental<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">-</span>features = nix<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">-</span>command flakes repl<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">-</span>flake</span>
-<span id="cb15-3">auto<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">-</span>optimise<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">-</span>store = <span class="cn" style="color: #8f5902;
-background-color: null;
-font-style: inherit;">true</span></span>
-<span id="cb15-4">bash<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">-</span>prompt<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">-</span>prefix = <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">(</span><span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">nix</span><span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">:</span>$name<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">)</span>\<span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">040</span></span>
-<span id="cb15-5">max<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">-</span>jobs = auto</span>
-<span id="cb15-6">extra<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">-</span>nix<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">-</span>path = nixpkgs=<span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">flake</span><span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">:</span>nixpkgs</span>
-<span id="cb15-7">upgrade<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">-</span>nix<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">-</span>store<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">-</span>path<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">-</span>url = <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">https</span><span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">://</span><span class="ss" style="color: #20794D;
-background-color: null;
-font-style: inherit;">install.determinate.systems/nix-upgrade/stable/universal</span></span></code></pre></div></div>
-</div>
-<p>This option makes channel commands available and working, even though no nix channels are actually installed. Meaning, I could have continued to use <code>nix-shell</code>, and it would have worked…</p>
-<p>Well, flakes still have their own benefits. The version of <code>nixpkgs</code> used is tracked in a <code>flake.lock</code> file in the git repo. This ensures reproducibility, as I would be able to update the version of <code>nixpkgs</code> for everyone using the repo, rather than having to rely on people updating their channels manually (running <code>nix-channel --update</code>). With the latter, channels will result in a different version of <code>nixpkgs</code> being used, but with flakes, everybody uses the same version of <code>nixpkgs</code>.</p>
-<p>However, I still would like to know if there is a way to not bring along every development dependency.</p>
-<p>Okay, I asked on the Nixos Discord about not bringing along every development dependency, and I was told that wasn’t how <code>nix develop</code> worked. Rather, they claimed, the default <code>pkgs.mkShell</code> brings upon a “standard environment” of some build tools like gcc. Alternatively, you can use <code>pkgs.mkShellNoCC</code>.</p>
-<p>This actually, works, to an extent. Using <a href="https://github.com/utdemir/nix-tree">nix-tree</a>, I can analyze the disk space used by the various things downloaded by nix.</p>
-<p>With the standard environment:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb16" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb16-1">┌───────────────────────────────────────────┬───────────────────────────────────────────┬───────────────────────────────────────────┐</span>
-<span id="cb16-2">│nix-shell               7.49 GiB (7.49 GiB)│texlive-combined-full-2 6.24 GiB (5.62 GiB)│fonts.conf               3.64 GiB (3.1 KiB)│</span>
-<span id="cb16-3">│                                           │quarto-1.5.25          1.5 GiB (620.99 MiB)│texlive-combined-full-2 3.64 GiB (2.38 MiB)│</span>
-<span id="cb16-4">│                                           │python3-3.11.9-env  916.46 MiB (282.95 MiB)│texlive-combined-full-2 3.64 GiB (3.52 KiB)│</span>
-<span id="cb16-5">│                                           │stdenv-linux        332.93 MiB (166.29 KiB)│texlive-combined-full-2 3.64 GiB (3.45 GiB)│</span>
-<span id="cb16-6">│                                           │gcc-wrapper-13.3.0   312.31 MiB (60.92 KiB)│asymptote-2.88        1.24 GiB (660.91 MiB)│</span>
-<span id="cb16-7">│                                           │npm-10.8.1           310.91 MiB (97.35 MiB)│tlcockpit-1.2        1022.89 MiB (1.12 KiB)│</span>
-<span id="cb16-8">│                                           │gcc-13.3.0          274.27 MiB (223.02 MiB)│arara-7.1.3           966.03 MiB (1.14 KiB)│</span>
-<span id="cb16-9">│                                           │binutils-wrapper-2.41  86.52 MiB (50.1 KiB)│latex2nemeth-1.1.3       957.76 MiB (768.0)│</span>
-<span id="cb16-10">│                                           │binutils-2.41         71.24 MiB (31.32 MiB)│albatross-0.5.1       955.15 MiB (1.16 KiB)│</span>
-<span id="cb16-11">│                                           │diffutils-3.10         43.66 MiB (1.53 MiB)│texplate-1.0.4         953.4 MiB (1.14 KiB)│</span>
-<span id="cb16-12">│                                           │findutils-4.9.0        43.46 MiB (1.32 MiB)│bib2gls-3.9           952.17 MiB (1.99 KiB)│</span>
-<span id="cb16-13">│                                           │coreutils-9.5          42.13 MiB (2.12 MiB)│texosquery-1.7        950.24 MiB (2.35 KiB)│</span>
-<span id="cb16-14">│                                           │patchelf-0.15.0      40.02 MiB (234.31 KiB)│memoize-1.1.2        231.84 MiB (65.53 KiB)│</span>
-<span id="cb16-15">│                                           │file-5.45              39.42 MiB (8.33 MiB)│texlive-scripts-705 218.42 MiB (168.54 KiB)│</span>
-<span id="cb16-16">│                                           │gnutar-1.35            33.85 MiB (2.67 MiB)│texlive.infra-69740- 210.01 MiB (22.95 MiB)│</span>
-<span id="cb16-17">│                                           │gnugrep-3.11         33.68 MiB (922.61 KiB)│pygmentex-0.11       188.14 MiB (18.76 KiB)│</span>
-<span id="cb16-18">│                                           │glibc-2.39-52-bin       33.57 MiB (2.6 MiB)│pythontex-0.18      185.94 MiB (300.51 KiB)│</span>
-<span id="cb16-19">│                                           │gawk-5.2.2             33.54 MiB (2.57 MiB)│dvisvgm-3.2.2        184.64 MiB (50.79 MiB)│</span>
-<span id="cb16-20">│                                           │gzip-1.13             32.66 MiB (152.8 KiB)│lilyglyphs-0.2.4     175.43 MiB (24.97 KiB)│</span>
-<span id="cb16-21">│                                           │bash-5.2p26            32.51 MiB (1.54 MiB)│webquiz-5.2          173.81 MiB (44.94 KiB)│</span>
-<span id="cb16-22">│                                           │gnumake-4.4.1           32.47 MiB (1.5 MiB)│dviasm-68043         173.61 MiB (44.14 KiB)│</span>
-<span id="cb16-23">└───────────────────────────────────────────┴───────────────────────────────────────────┴───────────────────────────────────────────┘</span>
-<span id="cb16-24">/nix/store/r7zsi6cdib2yrhp7cpx4qn9d1b70jll5-texlive-combined-full-2023-final</span>
-<span id="cb16-25">NAR Size: 342.99 MiB | Closure Size: 6.24 GiB | Added Size: 5.62 GiB</span>
-<span id="cb16-26">Immediate Parents (1): nix-shell</span></code></pre></div></div>
-<p>Without the standard environment:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb17" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb17-1">┌───────────────────────────────────────────┬───────────────────────────────────────────┬───────────────────────────────────────────┐</span>
-<span id="cb17-2">│nix-shell               7.23 GiB (7.23 GiB)│texlive-combined-full-2 6.24 GiB (5.62 GiB)│fonts.conf               3.64 GiB (3.1 KiB)│</span>
-<span id="cb17-3">│                                           │quarto-1.5.25          1.5 GiB (620.99 MiB)│texlive-combined-full-2 3.64 GiB (2.38 MiB)│</span>
-<span id="cb17-4">│                                           │python3-3.11.9-env  916.46 MiB (282.95 MiB)│texlive-combined-full-2 3.64 GiB (3.52 KiB)│</span>
-<span id="cb17-5">│                                           │npm-10.8.1           310.91 MiB (97.35 MiB)│texlive-combined-full-2 3.64 GiB (3.45 GiB)│</span>
-<span id="cb17-6">│                                           │stdenv-linux         67.13 MiB (166.23 KiB)│asymptote-2.88        1.24 GiB (660.91 MiB)│</span>
-<span id="cb17-7">│                                           │diffutils-3.10         43.66 MiB (1.53 MiB)│tlcockpit-1.2        1022.89 MiB (1.12 KiB)│</span>
-<span id="cb17-8">│                                           │findutils-4.9.0        43.46 MiB (1.32 MiB)│arara-7.1.3           966.03 MiB (1.14 KiB)│</span>
-<span id="cb17-9">│                                           │coreutils-9.5          42.13 MiB (2.12 MiB)│latex2nemeth-1.1.3       957.76 MiB (768.0)│</span>
-<span id="cb17-10">│                                           │patchelf-0.15.0      40.02 MiB (234.31 KiB)│albatross-0.5.1       955.15 MiB (1.16 KiB)│</span>
-<span id="cb17-11">│                                           │file-5.45              39.42 MiB (8.33 MiB)│texplate-1.0.4         953.4 MiB (1.14 KiB)│</span>
-<span id="cb17-12">│                                           │gnutar-1.35            33.85 MiB (2.67 MiB)│bib2gls-3.9           952.17 MiB (1.99 KiB)│</span>
-<span id="cb17-13">│                                           │gnugrep-3.11         33.68 MiB (922.61 KiB)│texosquery-1.7        950.24 MiB (2.35 KiB)│</span>
-<span id="cb17-14">│                                           │gawk-5.2.2             33.54 MiB (2.57 MiB)│memoize-1.1.2        231.84 MiB (65.53 KiB)│</span>
-<span id="cb17-15">│                                           │gzip-1.13             32.66 MiB (152.8 KiB)│texlive-scripts-705 218.42 MiB (168.54 KiB)│</span>
-<span id="cb17-16">│                                           │bash-5.2p26            32.51 MiB (1.54 MiB)│texlive.infra-69740- 210.01 MiB (22.95 MiB)│</span>
-<span id="cb17-17">│                                           │gnumake-4.4.1           32.47 MiB (1.5 MiB)│pygmentex-0.11       188.14 MiB (18.76 KiB)│</span>
-<span id="cb17-18">│                                           │xz-5.4.6-bin         31.91 MiB (172.22 KiB)│pythontex-0.18      185.94 MiB (300.51 KiB)│</span>
-<span id="cb17-19">│                                           │gnused-4.9           31.67 MiB (714.07 KiB)│dvisvgm-3.2.2        184.64 MiB (50.79 MiB)│</span>
-<span id="cb17-20">│                                           │patch-2.7.6          31.32 MiB (359.24 KiB)│lilyglyphs-0.2.4     175.43 MiB (24.97 KiB)│</span>
-<span id="cb17-21">│                                           │bzip2-1.0.8-bin       31.11 MiB (67.24 KiB)│webquiz-5.2          173.81 MiB (44.94 KiB)│</span>
-<span id="cb17-22">│                                           │                                           │dviasm-68043         173.61 MiB (44.14 KiB)│</span>
-<span id="cb17-23">└───────────────────────────────────────────┴───────────────────────────────────────────┴───────────────────────────────────────────┘</span>
-<span id="cb17-24">/nix/store/r7zsi6cdib2yrhp7cpx4qn9d1b70jll5-texlive-combined-full-2023-final</span>
-<span id="cb17-25">NAR Size: 342.99 MiB | Closure Size: 6.24 GiB | Added Size: 5.62 GiB</span>
-<span id="cb17-26">Immediate Parents (1): nix-shell</span></code></pre></div></div>
-<p>This is a decent difference (26 megabytes) — and indeed, it was as I thought, the latex bundle package uses up the most disk space out of everything.</p>
-<p>I did some research, continuing to find an even more minimal shell. However, it doesn’t seem to be worth it. One <a href="https://discourse.nixos.org/t/with-default-nix-empty-nix-installs-packages-why/20284/3">solution</a> mentions to use <a href="https://github.com/numtide/devshell">devshell</a>, however, after browsing the source code, it doesn’t seem to be that much more minimal thank mkShellNoCC, and the documentation is sparse… it suggestst TOML, rather than nix for configuring the shell environment. And finally, the entire point of this endeavor was to <em>avoid</em> using external dependencies for my shell environments…</p>
-<p>There is also <a href="https://fzakaria.com/2021/08/02/a-minimal-nix-shell.html">another blogpost</a> where they attempt to strip down the nix shell environment of dependencies, including GNU coreutils, but it eventually fails because the basic nix shell environment requires <code>mkdir</code>.</p>
-<p>Now… which latex distribution should I switch to? I probably don’t need the every single latex package in nixpkgs, especially if all I want is to render a pdf.</p>
-<p>Currently, I am using <code>texlive.combined.scheme-full</code>, which is exactly that. According to the <a href="https://quarto.org/docs/output-formats/pdf-engine.html#overview">quarto pdf docs</a>, quarto recommends, and also is able to install <code>tinytex</code>. WHen quarto manages a texlive or tinytex distribution, it is also able to automatically install missing packages.</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb18" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb18-1">────────────────────────────────────────┬────────────────────────────────────────┬───────────────────────────────────────┐</span>
-<span id="cb18-2">│nix-shell            1.84 GiB (1.84 GiB)│quarto-1.5.25       1.5 GiB (620.99 MiB)│python3-3.11.9- 916.46 MiB (729.13 MiB)│</span>
-<span id="cb18-3">│                                        │python3-3.11.9-e 916.46 MiB (729.13 MiB)│deno-1.43.6     239.73 MiB (199.93 MiB)│</span>
-<span id="cb18-4">│                                        │texlive-2023-env 527.99 MiB (340.17 MiB)│dart-sass-1.77.4  49.52 MiB (18.54 MiB)│</span>
-<span id="cb18-5">│                                        │stdenv-linux      67.13 MiB (166.23 KiB)│esbuild-0.21.5     43.2 MiB (10.09 MiB)│</span>
-<span id="cb18-6">│                                        │diffutils-3.10      43.66 MiB (1.53 MiB)│bash-5.2p26        32.51 MiB (1.54 MiB)│</span>
-<span id="cb18-7">│                                        │findutils-4.9.0     43.46 MiB (1.32 MiB)│                                       │</span>
-<span id="cb18-8">│                                        │coreutils-9.5       42.13 MiB (2.12 MiB)│                                       │</span>
-<span id="cb18-9">│                                        │patchelf-0.15.0   40.02 MiB (234.31 KiB)│                                       │</span>
-<span id="cb18-10">│                                        │file-5.45           39.42 MiB (8.33 MiB)│                                       │</span>
-<span id="cb18-11">│                                        │gnutar-1.35         33.85 MiB (2.67 MiB)│                                       │</span>
-<span id="cb18-12">│                                        │gnugrep-3.11      33.68 MiB (922.61 KiB)│                                       │</span>
-<span id="cb18-13">│                                        │gawk-5.2.2          33.54 MiB (2.57 MiB)│                                       │</span>
-<span id="cb18-14">│                                        │gzip-1.13          32.66 MiB (152.8 KiB)│                                       │</span>
-<span id="cb18-15">│                                        │bash-5.2p26         32.51 MiB (1.54 MiB)│                                       │</span>
-<span id="cb18-16">│                                        │gnumake-4.4.1        32.47 MiB (1.5 MiB)│                                       │</span>
-<span id="cb18-17">│                                        │xz-5.4.6-bin      31.91 MiB (172.22 KiB)│                                       │</span>
-<span id="cb18-18">│                                        │gnused-4.9        31.67 MiB (714.07 KiB)│                                       │</span>
-<span id="cb18-19">│                                        │patch-2.7.6       31.32 MiB (359.24 KiB)│                                       │</span>
-<span id="cb18-20">│                                        │bzip2-1.0.8-bin    31.11 MiB (67.24 KiB)│                                       │</span>
-<span id="cb18-21">│                                        │                                        │                                       │</span>
-<span id="cb18-22">│                                        │                                        │                                       │</span>
-<span id="cb18-23">│                                        │                                        │                                       │</span>
-<span id="cb18-24">└────────────────────────────────────────┴────────────────────────────────────────┴───────────────────────────────────────┘</span>
-<span id="cb18-25">/nix/store/gc3phrmibx7zp5q16n5vy3h1ra6wjckr-quarto-1.5.25</span>
-<span id="cb18-26">NAR Size: 392.41 MiB | Closure Size: 1.5 GiB | Added Size: 620.99 MiB</span>
-<span id="cb18-27">Immediate Parents (1): nix-shell</span></code></pre></div></div>
-<p>After a lot of tinkering with latex packages, I manage to get it down to just under 2 GB of disk space used. Can I make it smaller? What about bzip, tar, or other coreutils that are taking up space?</p>
-<p>I decided to tinker with python and jupyter notebooks next. I was previously using the <code>juptyer</code> package, which is a metapackage containing all the jupyter components. I managed to cut it down quite a bit, to just <code>jupyter-core</code> and <code>pyaml</code>. This reduced the size further:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb19" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb19-1">┌──────────────────────────────────────────────────────┬──────────────────────────────────────────────────────┬─────────────────────────────────────────────────────┐</span>
-<span id="cb19-2">│nix-shell                          1.11 GiB (1.11 GiB)│quarto-1.5.47                  529.43 MiB (479.77 MiB)│deno-1.43.6                   239.73 MiB (199.93 MiB)│</span>
-<span id="cb19-3">│                                                      │texlive-2023-env               527.99 MiB (462.84 MiB)│typst-0.11.1                    76.53 MiB (30.55 MiB)│</span>
-<span id="cb19-4">│                                                      │python3-3.11.9-env              176.66 MiB (120.1 MiB)│dart-sass-1.77.4                49.52 MiB (18.54 MiB)│</span>
-<span id="cb19-5">│                                                      │stdenv-linux                    67.13 MiB (166.23 KiB)│esbuild-0.21.5                   43.2 MiB (10.09 MiB)│</span>
-<span id="cb19-6">│                                                      │diffutils-3.10                    43.66 MiB (1.53 MiB)│bash-5.2p26                      32.51 MiB (1.54 MiB)│</span>
-<span id="cb19-7">│                                                      │findutils-4.9.0                   43.46 MiB (1.32 MiB)│                                                     │</span>
-<span id="cb19-8">│                                                      │coreutils-9.5                     42.13 MiB (2.12 MiB)│                                                     │</span>
-<span id="cb19-9">│                                                      │patchelf-0.15.0                 40.02 MiB (234.31 KiB)│                                                     │</span>
-<span id="cb19-10">│                                                      │file-5.45                         39.42 MiB (8.33 MiB)│                                                     │</span>
-<span id="cb19-11">│                                                      │gnutar-1.35                       33.85 MiB (2.67 MiB)│                                                     │</span>
-<span id="cb19-12">│                                                      │gnugrep-3.11                    33.68 MiB (922.61 KiB)│                                                     │</span>
-<span id="cb19-13">│                                                      │gawk-5.2.2                        33.54 MiB (2.57 MiB)│                                                     │</span>
-<span id="cb19-14">│                                                      │gzip-1.13                        32.66 MiB (152.8 KiB)│                                                     │</span>
-<span id="cb19-15">│                                                      │bash-5.2p26                       32.51 MiB (1.54 MiB)│                                                     │</span>
-<span id="cb19-16">│                                                      │gnumake-4.4.1                      32.47 MiB (1.5 MiB)│                                                     │</span>
-<span id="cb19-17">│                                                      │xz-5.4.6-bin                    31.91 MiB (172.22 KiB)│                                                     │</span>
-<span id="cb19-18">│                                                      │gnused-4.9                      31.67 MiB (714.07 KiB)│                                                     │</span>
-<span id="cb19-19">│                                                      │patch-2.7.6                     31.32 MiB (359.24 KiB)│                                                     │</span>
-<span id="cb19-20">│                                                      │bzip2-1.0.8-bin                  31.11 MiB (67.24 KiB)│                                                     │</span>
-<span id="cb19-21">│                                                      │                                                      │                                                     │</span>
-<span id="cb19-22">└──────────────────────────────────────────────────────┴──────────────────────────────────────────────────────┴─────────────────────────────────────────────────────┘</span>
-<span id="cb19-23">/nix/store/5phsvm3n78djp6gbmmda3jvm912h3gwg-quarto-1.5.47</span>
-<span id="cb19-24">NAR Size: 220.63 MiB | Closure Size: 529.43 MiB | Added Size: 479.77 MiB</span>
-<span id="cb19-25">Immediate Parents (1): nix-shell</span></code></pre></div></div>
-<p>However, can I reduce it further? I remove the size of quarto’s installation, by deleting the vendored versions of deno, typst, dart-sass, and esbuild, and using the nix versions instead. But what if that’s what’s using up more space?</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb20" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb20-1">┌──────────────────────────────────────────────────────┬──────────────────────────────────────────────────────┬─────────────────────────────────────────────────────┐</span>
-<span id="cb20-2">│nix-shell                          1.04 GiB (1.04 GiB)│texlive-2023-env               527.99 MiB (462.84 MiB)│bash-5.2p26                      32.51 MiB (1.54 MiB)│</span>
-<span id="cb20-3">│                                                      │quarto-1.5.47                  434.33 MiB (401.81 MiB)│                                                     │</span>
-<span id="cb20-4">│                                                      │python3-3.11.9-env             176.66 MiB (120.21 MiB)│                                                     │</span>
-<span id="cb20-5">│                                                      │stdenv-linux                    67.13 MiB (166.23 KiB)│                                                     │</span>
-<span id="cb20-6">│                                                      │diffutils-3.10                    43.66 MiB (1.53 MiB)│                                                     │</span>
-<span id="cb20-7">│                                                      │findutils-4.9.0                   43.46 MiB (1.32 MiB)│                                                     │</span>
-<span id="cb20-8">│                                                      │coreutils-9.5                     42.13 MiB (2.12 MiB)│                                                     │</span>
-<span id="cb20-9">│                                                      │patchelf-0.15.0                 40.02 MiB (234.31 KiB)│                                                     │</span>
-<span id="cb20-10">│                                                      │file-5.45                         39.42 MiB (8.33 MiB)│                                                     │</span>
-<span id="cb20-11">│                                                      │gnutar-1.35                       33.85 MiB (2.67 MiB)│                                                     │</span>
-<span id="cb20-12">│                                                      │gnugrep-3.11                    33.68 MiB (922.61 KiB)│                                                     │</span>
-<span id="cb20-13">│                                                      │gawk-5.2.2                        33.54 MiB (2.57 MiB)│                                                     │</span>
-<span id="cb20-14">│                                                      │gzip-1.13                        32.66 MiB (152.8 KiB)│                                                     │</span>
-<span id="cb20-15">│                                                      │bash-5.2p26                       32.51 MiB (1.54 MiB)│                                                     │</span>
-<span id="cb20-16">│                                                      │gnumake-4.4.1                      32.47 MiB (1.5 MiB)│                                                     │</span>
-<span id="cb20-17">│                                                      │xz-5.4.6-bin                    31.91 MiB (172.22 KiB)│                                                     │</span>
-<span id="cb20-18">│                                                      │gnused-4.9                      31.67 MiB (714.07 KiB)│                                                     │</span>
-<span id="cb20-19">│                                                      │patch-2.7.6                     31.32 MiB (359.24 KiB)│                                                     │</span>
-<span id="cb20-20">│                                                      │bzip2-1.0.8-bin                  31.11 MiB (67.24 KiB)│                                                     │</span>
-<span id="cb20-21">│                                                      │                                                      │                                                     │</span>
-<span id="cb20-22">└──────────────────────────────────────────────────────┴──────────────────────────────────────────────────────┴─────────────────────────────────────────────────────┘</span>
-<span id="cb20-23">/nix/store/a6v1glf1w6jfm949jlydb6imlbyimddw-quarto-1.5.47</span>
-<span id="cb20-24">NAR Size: 401.81 MiB | Closure Size: 434.33 MiB | Added Size: 401.81 MiB</span>
-<span id="cb20-25">Immediate Parents (1): nix-shell</span></code></pre></div></div>
-<p>Removing nix dependencies gets it down to 1.04 GB… but I don’t really like this setup. Vendoring is kinda problematic for a variety of reasons. I’m already vendoring pandoc, for example, and if pandoc is used again outside of the nix store, then it would take up twice as much disk space.</p>
-<p>Another thing is versioning. Although the pandoc version quarto provides is newer than the one in nixpkgs, the version of typst is the same, and the versions of dart-sass and deno is <em>older</em> by 4 minor versions.</p>
-<p>But, when comparing nix-tree and looking at the ark, most of the packages outside quarto are bigger… or are they?</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb21" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb21-1">┌──────────────────────────────────────────────────────┬──────────────────────────────────────────────────────┬─────────────────────────────────────────────────────┐</span>
-<span id="cb21-2">│                                                      │nix-shell                          1.03 GiB (1.03 GiB)│texlive-2023-env              527.99 MiB (462.84 MiB)│</span>
-<span id="cb21-3">│                                                      │                                                      │quarto-1.5.47                 443.91 MiB (396.38 MiB)│</span>
-<span id="cb21-4">│                                                      │                                                      │python3-3.11.9-env            176.66 MiB (120.21 MiB)│</span>
-<span id="cb21-5">│                                                      │                                                      │stdenv-linux                   67.13 MiB (166.23 KiB)│</span>
-<span id="cb21-6">│                                                      │                                                      │diffutils-3.10                   43.66 MiB (1.53 MiB)│</span>
-<span id="cb21-7">│                                                      │                                                      │findutils-4.9.0                  43.46 MiB (1.32 MiB)│</span>
-<span id="cb21-8">│                                                      │                                                      │coreutils-9.5                    42.13 MiB (2.12 MiB)│</span>
-<span id="cb21-9">│                                                      │                                                      │patchelf-0.15.0                40.02 MiB (234.31 KiB)│</span>
-<span id="cb21-10">│                                                      │                                                      │file-5.45                        39.42 MiB (8.33 MiB)│</span>
-<span id="cb21-11">│                                                      │                                                      │gnutar-1.35                      33.85 MiB (2.67 MiB)│</span>
-<span id="cb21-12">│                                                      │                                                      │gnugrep-3.11                   33.68 MiB (922.61 KiB)│</span>
-<span id="cb21-13">│                                                      │                                                      │gawk-5.2.2                       33.54 MiB (2.57 MiB)│</span>
-<span id="cb21-14">│                                                      │                                                      │gzip-1.13                       32.66 MiB (152.8 KiB)│</span>
-<span id="cb21-15">│                                                      │                                                      │bash-5.2p26                      32.51 MiB (1.54 MiB)│</span>
-<span id="cb21-16">│                                                      │                                                      │gnumake-4.4.1                     32.47 MiB (1.5 MiB)│</span>
-<span id="cb21-17">│                                                      │                                                      │xz-5.4.6-bin                   31.91 MiB (172.22 KiB)│</span>
-<span id="cb21-18">│                                                      │                                                      │gnused-4.9                     31.67 MiB (714.07 KiB)│</span>
-<span id="cb21-19">│                                                      │                                                      │patch-2.7.6                    31.32 MiB (359.24 KiB)│</span>
-<span id="cb21-20">│                                                      │                                                      │bzip2-1.0.8-bin                 31.11 MiB (67.24 KiB)│</span>
-<span id="cb21-21">│                                                      │                                                      │                                                     │</span>
-<span id="cb21-22">└──────────────────────────────────────────────────────┴──────────────────────────────────────────────────────┴─────────────────────────────────────────────────────┘</span>
-<span id="cb21-23">/nix/store/67sndag759yw2wvfrfgfszpgzvbyg3gk-nix-shell</span>
-<span id="cb21-24">NAR Size: 5.35 KiB | Closure Size: 1.03 GiB | Added Size: 1.03 GiB</span>
-<span id="cb21-25">Immediate Parents: -</span></code></pre></div></div>
-<p>Changing to the typst in nixpkgs decreases the size just a little bit. Not a lot, but just a little bit. It’s a pity that changing deno and dart-sass for the nixpkgs versions increases the size by quite a bit, as the nixpkgs versions are newer. Changing pandoc also increases size, but the pandoc version provided by quarto is newer.</p>
-<p>I also changed esbuild, and got it down to 1.02 GB.</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb22" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb22-1">┌──────────────────────────────────────────────────────┬──────────────────────────────────────────────────────┬─────────────────────────────────────────────────────┐</span>
-<span id="cb22-2">│nix-shell                          1.02 GiB (1.02 GiB)│texlive-2023-env               527.99 MiB (462.84 MiB)│typst-0.11.1                    76.53 MiB (30.55 MiB)│</span>
-<span id="cb22-3">│                                                      │quarto-1.5.47                  434.75 MiB (387.22 MiB)│bash-5.2p26                      32.51 MiB (1.54 MiB)│</span>
-<span id="cb22-4">│                                                      │python3-3.11.9-env             176.66 MiB (120.21 MiB)│                                                     │</span>
-<span id="cb22-5">│                                                      │stdenv-linux                    67.13 MiB (166.23 KiB)│                                                     │</span>
-<span id="cb22-6">│                                                      │diffutils-3.10                    43.66 MiB (1.53 MiB)│                                                     │</span>
-<span id="cb22-7">│                                                      │findutils-4.9.0                   43.46 MiB (1.32 MiB)│                                                     │</span>
-<span id="cb22-8">│                                                      │coreutils-9.5                     42.13 MiB (2.12 MiB)│                                                     │</span>
-<span id="cb22-9">│                                                      │patchelf-0.15.0                 40.02 MiB (234.31 KiB)│                                                     │</span>
-<span id="cb22-10">│                                                      │file-5.45                         39.42 MiB (8.33 MiB)│                                                     │</span>
-<span id="cb22-11">│                                                      │gnutar-1.35                       33.85 MiB (2.67 MiB)│                                                     │</span>
-<span id="cb22-12">│                                                      │gnugrep-3.11                    33.68 MiB (922.61 KiB)│                                                     │</span>
-<span id="cb22-13">│                                                      │gawk-5.2.2                        33.54 MiB (2.57 MiB)│                                                     │</span>
-<span id="cb22-14">│                                                      │gzip-1.13                        32.66 MiB (152.8 KiB)│                                                     │</span>
-<span id="cb22-15">│                                                      │bash-5.2p26                       32.51 MiB (1.54 MiB)│                                                     │</span>
-<span id="cb22-16">│                                                      │gnumake-4.4.1                      32.47 MiB (1.5 MiB)│                                                     │</span>
-<span id="cb22-17">│                                                      │xz-5.4.6-bin                    31.91 MiB (172.22 KiB)│                                                     │</span>
-<span id="cb22-18">│                                                      │gnused-4.9                      31.67 MiB (714.07 KiB)│                                                     │</span>
-<span id="cb22-19">│                                                      │patch-2.7.6                     31.32 MiB (359.24 KiB)│                                                     │</span>
-<span id="cb22-20">│                                                      │bzip2-1.0.8-bin                  31.11 MiB (67.24 KiB)│                                                     │</span>
-<span id="cb22-21">│                                                      │                                                      │                                                     │</span>
-<span id="cb22-22">└──────────────────────────────────────────────────────┴──────────────────────────────────────────────────────┴─────────────────────────────────────────────────────┘</span>
-<span id="cb22-23">/nix/store/zv70xxgak45jl997c53lwh91b7v3qz6s-quarto-1.5.47</span>
-<span id="cb22-24">NAR Size: 356.66 MiB | Closure Size: 434.75 MiB | Added Size: 387.22 MiB</span>
-<span id="cb22-25">Immediate Parents (1): nix-shell</span></code></pre></div></div>
-<p>I think this is the final iteration. Down to 1 GB is already a lot, and I think this will be the final iteration.</p>
-<p>Here is the final shell.nix:</p>
-<div class="code-with-filename">
-<div class="code-with-filename-file">
-<pre><strong>shell.nix</strong></pre>
-</div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb23" data-filename="shell.nix" style="background: #f1f3f5;"><pre class="sourceCode nix code-with-copy"><code class="sourceCode nix"><span id="cb23-1"><span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">{</span> <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">pkgs</span> <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">?</span> <span class="bu" style="color: null;
-background-color: null;
-font-style: inherit;">import</span> &lt;nixpkgs&gt; <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">{</span> <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">}</span> <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">}</span>:</span>
-<span id="cb23-2"></span>
-<span id="cb23-3"><span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">let</span></span>
-<span id="cb23-4">  <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">python3</span> <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> pkgs<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">.</span>python311<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">;</span></span>
-<span id="cb23-5">  <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">pythonDeps</span> <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">ps</span><span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">:</span> <span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">with</span> ps<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">;</span> <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">[</span></span>
-<span id="cb23-6">    jupyter-core</span>
-<span id="cb23-7">    pyyaml</span>
-<span id="cb23-8">  <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">];</span></span>
-<span id="cb23-9"></span>
-<span id="cb23-10">  <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">texDeps</span> <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">ps</span><span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">:</span> <span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">with</span> ps<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">;</span> <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">[</span></span>
-<span id="cb23-11">    collection-latex</span>
-<span id="cb23-12">    collection-latexrecommended</span>
-<span id="cb23-13">    xetex</span>
-<span id="cb23-14">  <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">];</span></span>
-<span id="cb23-15"></span>
-<span id="cb23-16">  <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">quarto</span> <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> pkgs<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">.</span>quarto<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">.</span>overrideAttrs <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">(</span><span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">oldAttrs</span><span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">:</span> <span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">rec</span> <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">{</span></span>
-<span id="cb23-17">    <span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;"># 1.3 + newer (I think) has a weird bug with the text boxes where they are white on a black background. Readable, but ugly</span></span>
-<span id="cb23-18">    <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">version</span> <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">"1.5.47"</span><span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">;</span></span>
-<span id="cb23-19">    <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">src</span> <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> pkgs<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">.</span>fetchurl <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">{</span></span>
-<span id="cb23-20">      <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">url</span> <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">"https://github.com/quarto-dev/quarto-cli/releases/download/v</span><span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">${</span>version<span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">}</span><span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">/quarto-</span><span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">${</span>version<span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">}</span><span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">-linux-amd64.tar.gz"</span><span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">;</span></span>
-<span id="cb23-21">      <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">sha256</span> <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">"sha256-Zfx3it7vhP+9vN8foveQ0xLcjPn5A7J/n+zupeFNwEk="</span><span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">;</span></span>
-<span id="cb23-22">    <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">};</span></span>
-<span id="cb23-23">    <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">preFixup</span> <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">''</span></span>
-<span id="cb23-24"><span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">      wrapProgram $out/bin/quarto \</span></span>
-<span id="cb23-25"><span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">        --prefix QUARTO_TYPST : </span><span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">${</span>pkgs<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">.</span>lib<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">.</span>makeBinPath <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">[</span> pkgs<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">.</span>typst <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">]</span><span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">}</span><span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">/typst \</span></span>
-<span id="cb23-26"><span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">        --prefix QUARTO_ESBUILD </span><span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">${</span>pkgs<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">.</span>lib<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">.</span>makeBinPath <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">[</span> pkgs<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">.</span>esbuild <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">]</span><span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">}</span><span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">/esbuild</span></span>
-<span id="cb23-27"><span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">    ''</span><span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">;</span></span>
-<span id="cb23-28">    <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">installPhase</span> <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">''</span></span>
-<span id="cb23-29"><span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">      runHook preInstall</span></span>
-<span id="cb23-30"></span>
-<span id="cb23-31"><span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">      mkdir -p $out/bin $out/share</span></span>
-<span id="cb23-32"></span>
-<span id="cb23-33"><span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">      rm -rf bin/tools/*/typst</span></span>
-<span id="cb23-34"><span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">      rm -rf bin/tools/*/esbuild</span></span>
-<span id="cb23-35"></span>
-<span id="cb23-36"><span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">      mv bin/* $out/bin</span></span>
-<span id="cb23-37"><span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">      mv share/* $out/share</span></span>
-<span id="cb23-38"></span>
-<span id="cb23-39"><span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">      runHook postInstall</span></span>
-<span id="cb23-40"><span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">    ''</span><span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">;</span></span>
-<span id="cb23-41">  <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">});</span></span>
-<span id="cb23-42"><span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">in</span></span>
-<span id="cb23-43">pkgs<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">.</span>mkShellNoCC <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">{</span></span>
-<span id="cb23-44">  <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">PYTHONPATH</span> <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">"</span><span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">${</span>pkgs<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">.</span>python3<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">.</span>withPackages pythonDeps<span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">}</span><span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">/bin/python3"</span><span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">;</span></span>
-<span id="cb23-45">  <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">QUARTO_PYTHON</span> <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">"</span><span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">${</span>pkgs<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">.</span>python3<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">.</span>withPackages pythonDeps<span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">}</span><span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">/bin/python3"</span><span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">;</span></span>
-<span id="cb23-46"></span>
-<span id="cb23-47">  <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">packages</span> <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> <span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">with</span> pkgs<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">;</span> <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">[</span></span>
-<span id="cb23-48">    <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">(</span>python3<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">.</span>withPackages pythonDeps<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">)</span></span>
-<span id="cb23-49">    quarto</span>
-<span id="cb23-50">    <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">(</span>texlive<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">.</span>withPackages texDeps<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">)</span></span>
-<span id="cb23-51">  <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">];</span></span>
-<span id="cb23-52"><span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">}</span></span></code></pre></div></div>
-</div>
-<section id="more-issues-no-tab-autocomplete" class="level1">
-<h1>More issues, no tab autocomplete</h1>
-<p>Nope, it’s not the final shell. For whatever reason, if I open Vscode, or zellij using the <code>nix develop</code> shell, I cannot use tab autocomplete. In addition to that, the Vscode shell seems to be broken in others ways.</p>
-<p>Here is the shell prompt:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb24" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb24-1">\[\][moonpie@lizard moonpiedumplings.github.io]$ \[\]</span></code></pre></div></div>
-<p>Yeah. Not what it’s supposed to be. I don’t know what the backslashes signify. However, <code>nix-shell</code> continues to work fine for zellij.</p>
-<p>There are some relevant issues for this:</p>
-<ul>
-<li>https://github.com/NixOS/nix/issues/6091</li>
-<li>https://github.com/NixOS/nix/issues/6982</li>
-<li>https://github.com/NixOS/nix/issues/8764</li>
-</ul>
-<p>In a related <a href="https://discourse.nixos.org/t/general-nix-office-hours/15019/37">discourse post</a>, Nobbz suggests to use <code>eval</code>, but that also does not work, not do related solutions with <code>. &lt;()</code>.</p>
-<p>The big problem is that <code>nix develop</code> is designed for emulation of the nix build environment, which is non-interactive. <code>nix shell</code>, as I noted above, does not properly replace <code>nix-shell</code>, as it does not allow for any configuration of environment variables. Or can it?</p>
-<p>I also investigated <code>pkgs.buildEnv</code>, which is <a href="https://github.com/NixOS/nixpkgs/issues/251039">literally undocumented</a>, in classic Nix fashion. I read the <a href="https://github.com/NixOS/nixpkgs/blob/master/pkgs%2Fbuild-support%2Fbuildenv%2Fdefault.nix">source code</a>, but it doesn’t seem to be able to set environment variables outside of wrapping programs. It mainly seems to be ableto add programs to the path.</p>
-<p>Another solution is <a href="https://github.com/edolstra/flake-compat">flake-compat</a>. It’s a bit of nix code by Eelco Dostra that has creates a <code>shell.nix</code> that enables <code>nix-shell</code> to be used with flakes. I find it deeply ironic that despite all this effort to use flakey commands, I still end up finding that the non-flake commands work perfectly.</p>
-<p>Another suggestion was to use direnv, but I don’t want to use that.</p>
-<p>Anyway, I noticed something different about the <code>nix-shell</code> vs <code>nix develop</code>:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb25" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb25-1">[nix-shell:~/vscode/moonpiedumplings.github.io]$ echo $SHELL</span>
-<span id="cb25-2">/nix/store/bh6w9sbfz2m5w1bd4cg2ndw1s66agkfd-bash-interactive-5.2p26/bin/bash</span></code></pre></div></div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb26" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb26-1">[moonpie@lizard moonpiedumplings.github.io]$ nix develop</span>
-<span id="cb26-2">warning: Git tree '/home/moonpie/vscode/moonpiedumplings.github.io' is dirty</span>
-<span id="cb26-3">evaluating derivation 'git+file:///home/moonpie/vscode/moonpiedumplings.github.io#devShells.x86_64-linux.default'</span>
-<span id="cb26-4">(nix:nix-shell-env) [moonpie@lizard moonpiedumplings.github.io]$ echo $SHELL</span>
-<span id="cb26-5">/nix/store/m101dg80ngyjdb02g6jwy80sr7kzj26g-bash-5.2p26/bin/bash</span></code></pre></div></div>
-<p><code>nix-shell</code> defaults to an bash-interactive, whereas <code>nix develop</code> seems to use a stripped down, noninteractive version of bash. This is probably because <code>nix develop</code></p>
-<p>The first thing I tried was to have <code>SHELL = "${pkgs.bashInteractive}/bin/bash";</code> in <code>pkgs.mkShell</code>, but this didn’t work. <code>nix develop</code> seems to set it’s own environment variables, <em>after</em> the other variables are set.</p>
-<p>The first thing I did was to set a post shellHook, which <code>nix develop</code> would run, and would <code>export</code> the variable.</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb27" style="background: #f1f3f5;"><pre class="sourceCode nix code-with-copy"><code class="sourceCode nix"><span id="cb27-1">pkgs<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">.</span>mkShellNoCC <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">{</span></span>
-<span id="cb27-2">   <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">shellHook</span> <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">''</span></span>
-<span id="cb27-3"><span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">    export SHELL='</span><span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">${</span>pkgs<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">.</span>bashInteractive<span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">}</span><span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">/bin/bash'</span></span>
-<span id="cb27-4"><span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">  ''</span><span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">;</span></span>
-<span id="cb27-5"><span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">}</span></span></code></pre></div></div>
-<p>This worked for zellij, but vscode’s terminal was still broken. To get vscode’s terminal working, I had to add <code>bashInterative</code> to packages:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb28" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb28-1">pkgs.mkShellNoCC {</span>
-<span id="cb28-2">  packages = with pkgs; [ bashInteractive ];</span>
-<span id="cb28-3">   shellHook = ''</span>
-<span id="cb28-4">    export SHELL='${pkgs.bashInteractive}/bin/bash'</span>
-<span id="cb28-5">  '';</span>
-<span id="cb28-6">}</span></code></pre></div></div>
-<p>I actually encountered a similar issue with python. Vscode seems to ignore things not added to path, even if they are specified in other ways, like <code>$PYTHONPATH</code> pointing to the correct version of python.</p>
-<p>But now, this finally works.</p>
-</section>
-<section id="home-manager" class="level1">
-<h1>Home-Manager</h1>
-<p>Next thing is to convert home manager to flakes. I need a slightly older version of kubectl, and flakes allow me to use packages from multiple versions of nixpkgs.</p>
-<p>I followed the <a href="https://nix-community.github.io/home-manager/index.xhtml#sec-flakes-standalone">standalone flakes installation instructions</a></p>
-<p><code>nix run home-manager/master -- init --switch</code></p>
-<p>And with this, I get a basic flake.nix, flake.lock, and home.nix in <code>.config/home-manager/</code>.</p>
-<p>For older versions of packages, there are two sites I like, nixhub and lazamar’s site:</p>
-<ul>
-<li>https://www.nixhub.io/</li>
-<li>https://lazamar.co.uk/nix-versions/</li>
-</ul>
-<p>I found the correct nixpkgs revision for what I want: <code>7a339d87931bba829f68e94621536cad9132971a</code>.</p>
-<p>However, using packages from multiple versions of nipkgs isn’t as easy as I thought it would be. The <a href="https://wiki.nixos.org/wiki/Flakes#Importing_packages_from_multiple_nixpkgs_branches">officail docs</a> suggest to use an overlay, which feels unecessary. Why can’t I just replicate what it does for <code>nixpkgs</code>, but for <code>nixpkgs</code> again?</p>
-<p>I tried that, and it didn’t work. The error’s aren’t very clear, but I think it’s because the home manager configuration is a function with explicit arguments, and it errors when I try to feed it more than what it wants.</p>
-<p>Thankfully, I found another simple solution:</p>
-<div class="code-with-filename">
-<div class="code-with-filename-file">
-<pre><strong>flake.nix</strong></pre>
-</div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb29" data-filename="flake.nix" style="background: #f1f3f5;"><pre class="sourceCode nix code-with-copy"><code class="sourceCode nix"><span id="cb29-1"><span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">{</span></span>
-<span id="cb29-2">  <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">description</span> <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">"Home Manager configuration of moonpie"</span><span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">;</span></span>
-<span id="cb29-3"></span>
-<span id="cb29-4">  <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">inputs</span> <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">{</span></span>
-<span id="cb29-5">    <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">nixpkgs</span>.<span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">url</span> <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">"github:nixos/nixpkgs/nixos-unstable"</span><span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">;</span></span>
-<span id="cb29-6">    <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">pkgs-kubectl</span>.<span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">url</span> <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">"github:nixos/nixpkgs/7a339d87931bba829f68e94621536cad9132971a"</span><span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">;</span></span>
-<span id="cb29-7">    <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">home-manager</span> <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">{</span></span>
-<span id="cb29-8">      <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">url</span> <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">"github:nix-community/home-manager"</span><span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">;</span></span>
-<span id="cb29-9">      <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">inputs</span>.<span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">nixpkgs</span>.<span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">follows</span> <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">"nixpkgs"</span><span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">;</span></span>
-<span id="cb29-10">    <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">};</span></span>
-<span id="cb29-11">  <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">};</span></span>
-<span id="cb29-12"></span>
-<span id="cb29-13">  <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">outputs</span> <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">{</span> <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">nixpkgs</span><span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">,</span> <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">pkgs-kubectl</span><span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">,</span> <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">home-manager</span><span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">,</span> <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">...</span> <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">}</span>:</span>
-<span id="cb29-14">    <span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">let</span></span>
-<span id="cb29-15">      <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">system</span> <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">"x86_64-linux"</span><span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">;</span></span>
-<span id="cb29-16">      <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">pkgs</span> <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> nixpkgs<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">.</span>legacyPackages<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">.</span><span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">${</span>system<span class="sc" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">}</span><span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">;</span></span>
-<span id="cb29-17">    <span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">in</span> <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">{</span></span>
-<span id="cb29-18">      <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">homeConfigurations</span>.<span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">"moonpie"</span> <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> home<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">-</span>manager<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">.</span>lib<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">.</span>homeManagerConfiguration <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">{</span></span>
-<span id="cb29-19">        <span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">inherit</span> <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">pkgs</span><span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">;</span></span>
-<span id="cb29-20">        <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">extraSpecialArgs</span> <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">{</span></span>
-<span id="cb29-21">          <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">pkgs-kbctl</span> <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> <span class="bu" style="color: null;
-background-color: null;
-font-style: inherit;">import</span> pkgs<span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">-</span>kubectl <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">{</span><span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">inherit</span> <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">system</span><span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">;};</span></span>
-<span id="cb29-22">        <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">};</span></span>
-<span id="cb29-23">        <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">modules</span> <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">=</span> <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">[</span> <span class="ss" style="color: #20794D;
-background-color: null;
-font-style: inherit;">./home.nix</span> <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">];</span></span>
-<span id="cb29-24">      <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">};</span></span>
-<span id="cb29-25">    <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">};</span></span>
-<span id="cb29-26"><span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">}</span></span></code></pre></div></div>
-</div>
-<p>And then in the beginning of home.nix:</p>
-<div class="code-with-filename">
-<div class="code-with-filename-file">
-<pre><strong>home.nix</strong></pre>
-</div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb30" data-filename="home.nix" style="background: #f1f3f5;"><pre class="sourceCode nix code-with-copy"><code class="sourceCode nix"><span id="cb30-1"><span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">{</span> <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">config</span><span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">,</span> <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">pkgs</span><span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">,</span> <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">pkgs-kbctl</span><span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">,</span> <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">...</span> <span class="op" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">}</span>:</span></code></pre></div></div>
-</div>
-<p>And this works. I can use <code>pkgs-kbctl.kubectl</code> to reference kubectl version 1.28.4, which is what’s on my server.</p>
-
-
-</section>
-
- ]]></description>
-  <category>playground</category>
-  <guid>https://moonpiedumplings.github.io/playground/flake-shell/</guid>
-  <pubDate>Fri, 21 Jun 2024 07:00:00 GMT</pubDate>
 </item>
 </channel>
 </rss>

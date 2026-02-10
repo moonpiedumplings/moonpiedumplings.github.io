@@ -1,0 +1,990 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.7.31">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="dcterms.date" content="2023-01-26">
+
+<title>Kasmweb setup – Jeffrey Fonseca</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-e1a5c8363afafaef2c763b6775fbf3ca.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-8ef56b68f8fa1e9d2ba328e99e439f80.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-e1a5c8363afafaef2c763b6775fbf3ca.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-2d2c3c1dc8fcebd689918bbad00a5354.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-61fddf1775f8cf983c184c2ec9e6a10f.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-2d2c3c1dc8fcebd689918bbad00a5354.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+
+</head>
+
+<body class="nav-fixed quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const darkModeDefault = authorPrefersDark;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">Jeffrey Fonseca</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../posts/index.html"> 
+<span class="menu-text">Posts</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../resume/index.html"> 
+<span class="menu-text">Resume</span></a>
+  </li>  
+</ul>
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item compact">
+    <a class="nav-link" href="../../../feed.xml"> <i class="bi bi-rss" role="img">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/moonpiedumplings"> <i class="bi bi-github" role="img">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#step-1-install-and-run-kasm" id="toc-step-1-install-and-run-kasm" class="nav-link active" data-scroll-target="#step-1-install-and-run-kasm">Step 1: Install and run kasm:</a></li>
+  <li><a href="#using-memory-deduplication-with-docker" id="toc-using-memory-deduplication-with-docker" class="nav-link" data-scroll-target="#using-memory-deduplication-with-docker">Using memory deduplication with docker</a>
+  <ul class="collapse">
+  <li><a href="#turns-out-memory-deduplication-is-on-by-default-for-docker-containers" id="toc-turns-out-memory-deduplication-is-on-by-default-for-docker-containers" class="nav-link" data-scroll-target="#turns-out-memory-deduplication-is-on-by-default-for-docker-containers">Turns out, memory deduplication is on by default for docker containers</a></li>
+  <li><a href="#kernel-same-page-merging" id="toc-kernel-same-page-merging" class="nav-link" data-scroll-target="#kernel-same-page-merging">Kernel Same page merging</a>
+  <ul class="collapse">
+  <li><a href="#compiling-uksmd" id="toc-compiling-uksmd" class="nav-link" data-scroll-target="#compiling-uksmd">Compiling UKSMD</a></li>
+  <li><a href="#switching-kernels" id="toc-switching-kernels" class="nav-link" data-scroll-target="#switching-kernels">Switching Kernels</a></li>
+  <li><a href="#weaker-alternative-ksm_preload" id="toc-weaker-alternative-ksm_preload" class="nav-link" data-scroll-target="#weaker-alternative-ksm_preload">Weaker alternative: ksm_preload</a></li>
+  </ul></li>
+  </ul></li>
+  <li><a href="#memory-overcommital" id="toc-memory-overcommital" class="nav-link" data-scroll-target="#memory-overcommital">Memory Overcommital</a></li>
+  <li><a href="#other-memory-optimizations-zram-and-zswap" id="toc-other-memory-optimizations-zram-and-zswap" class="nav-link" data-scroll-target="#other-memory-optimizations-zram-and-zswap">Other memory optimizations, zram and zswap</a>
+  <ul class="collapse">
+  <li><a href="#zram" id="toc-zram" class="nav-link" data-scroll-target="#zram">zram</a></li>
+  <li><a href="#zswap" id="toc-zswap" class="nav-link" data-scroll-target="#zswap">zswap</a></li>
+  </ul></li>
+  <li><a href="#setting-kernelsysctl-parameters-on-boot" id="toc-setting-kernelsysctl-parameters-on-boot" class="nav-link" data-scroll-target="#setting-kernelsysctl-parameters-on-boot">Setting Kernel/Sysctl Parameters on boot</a></li>
+  <li><a href="#customized-kasm-images" id="toc-customized-kasm-images" class="nav-link" data-scroll-target="#customized-kasm-images">Customized kasm images</a></li>
+  <li><a href="#nix-remote-store" id="toc-nix-remote-store" class="nav-link" data-scroll-target="#nix-remote-store">Nix remote store</a></li>
+  <li><a href="#persistent-profiles" id="toc-persistent-profiles" class="nav-link" data-scroll-target="#persistent-profiles">Persistent profiles:</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Kasmweb setup</h1>
+  <div class="quarto-categories">
+    <div class="quarto-category">projects</div>
+  </div>
+  </div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">January 26, 2023</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<p>School chromebooks cannot be used for computer science. Due to a content blocking setup that is more restrictive than the Great Firewall of China, school chromebooks cannot install the necessary digital tools for software development.</p>
+<p>Currently, you <strong>must</strong> have your own device to be able to participate in computer science classes. Students who are unable to obtain their own device for whatever reason are denied participation.</p>
+<p>Although getting the chromebooks unlocked to be able to install software is a complex, potentially legal problem, there are alternatives.</p>
+<p>Kasm is a remote desktop software. It runs a computer on a remote server, that can be accessed through a browser, or a chromebook. Because there are no restrictions on what can be installed when using Kasm, it makes it possible to use development tools on a chromebook. This blog post is me optimizing kasm so that it is more resource efficient, and also enabling software development tools to be easily installed on it.</p>
+<p>Roadblocks/steps:</p>
+<ul>
+<li>Install Kasm on Ubuntu</li>
+<li>Ensure remote server can be accessed</li>
+<li>Get persistent user profiles for remote server</li>
+<li>Allow user to use nix to install software
+<ul>
+<li>Create a shared nix cache for users</li>
+</ul></li>
+<li>Create a custom dockerfile with:
+<ul>
+<li>Nix preinstalled</li>
+<li>Perhaps a different desktop type</li>
+</ul></li>
+<li>Optimize memory usage
+<ul>
+<li>Use kernel same page merging (ksm) to deduplicate ram</li>
+<li>Use zram to optimize create compressed swap device in ram, and use that instead of zswap, because it does not touch the disk at all, enabling a performance boost</li>
+<li>Use VM overcommit or something else to make kasm launch when it currently thinks it doesn’t have enough ram.</li>
+<li>Set sysctl parameters for the features I want on boot</li>
+</ul></li>
+</ul>
+<section id="step-1-install-and-run-kasm" class="level1">
+<h1>Step 1: Install and run kasm:</h1>
+<p>status: complete</p>
+<p>Tested on Ubuntu 22. Working.</p>
+<p>From <a href="https://www.kasmweb.com/docs/latest/install/single_server_install.html">the kasm documenation</a></p>
+<p>Ignore the system requirements step. We are going to be sidestepping that with optimization.</p>
+<p>Default passwords are randomly generated, and output exactly once when your run the installation script. Save them to a text file or something, just don’t lose them.</p>
+</section>
+<section id="using-memory-deduplication-with-docker" class="level1">
+<h1>Using memory deduplication with docker</h1>
+<p>status: implemented on other systems, but without docker yet</p>
+<section id="turns-out-memory-deduplication-is-on-by-default-for-docker-containers" class="level2">
+<h2 class="anchored" data-anchor-id="turns-out-memory-deduplication-is-on-by-default-for-docker-containers">Turns out, memory deduplication is on by default for docker containers</h2>
+<p><a href="https://github.com/moby/moby/issues/7950#issuecomment-179131803">Github issue where someone asked about this</a>. The documents linked were very unclear, so I’ll break it down.</p>
+<p>If you are using overlayfs or aufs, you have memory deduplication. If you are using other storage drivers, you sacrifice memory for more i/o (write/read) performance.</p>
+<p>From <a href="https://docs.docker.com/storage/storagedriver/select-storage-driver/">here</a>:</p>
+<p><img src="currentstoragedriver.png" class="img-fluid"></p>
+<p>On my ubuntu virtual machine, and the AWS ubuntu machine we are working on, Overlay2 is the storage driver:</p>
+<p><img src="ubuntustoragedriver.png" class="img-fluid"></p>
+</section>
+<section id="kernel-same-page-merging" class="level2">
+<h2 class="anchored" data-anchor-id="kernel-same-page-merging">Kernel Same page merging</h2>
+<p>Previously, I tried instructions from here: https://wiki.openvz.org/KSM_(kernel_same-page_merging). However, I noticed only a minimal space saved using the LD_PRELOAD steps. Not useful.</p>
+<p>I then tried cachyos fork of uksmd: https://github.com/CachyOS/uksmd, a daemon to go through userspace tasks and dedupe them.</p>
+<p>Only works with a kernel that has the pmadv_ksm() syscall. Exists in most kernels optimized for desktop usage, like linux-zen, linux-liqourix, or pf-kernel (the original creators of uksmd)</p>
+<p>To check if your currently running kernel has the feature:</p>
+<ul>
+<li>on Archlinux, check if the files <code>sys_enter_pmadv_ksm</code> and <code>sys_exit_pmadv_ksm</code> exist in <code>/sys/kernel/debug/tracing/events/syscalls</code> (default does not have this feature, but linux-zen does)</li>
+<li>on Ubuntu check if lines containing pmadv exist in the file <code>/proc/kallsyms</code></li>
+</ul>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="uksmdstatsdesktop.png" class="img-fluid figure-img"></p>
+<figcaption>uksmstats</figcaption>
+</figure>
+</div>
+<p>Half a gig of ram saved on a normal desktop. Expect to see much more when multiple almost identical docker containers are launched. Very useful. It saves a lot of ram. However, there might be a better way for docker, without jumping through hoops.</p>
+<p>Does cost a miniscule amount of cpu power, but we have more cpu power and less ram on our servers.</p>
+<p>To install uksmd on ubuntu, you need to switch kernels.</p>
+<section id="compiling-uksmd" class="level3">
+<h3 class="anchored" data-anchor-id="compiling-uksmd">Compiling UKSMD</h3>
+<p>Steps to do so on Ubuntu 22 (you must have switched kernels):</p>
+<p><code>sudo apt-get install debhelper build-essential dh-make meson pkg-config libprocps-dev libcap-ng-dev</code> # I think it can either be pkg-conf or pkg-config</p>
+<p><code>git clone https://github.com/insilications/uksmd-clr</code></p>
+<p>Rename the directory to be something compatible with below steps, like uksmd-1 before you cd into it.</p>
+<p>Follow steps from <a href="https://blog.devgenius.io/how-to-build-debian-packages-from-meson-ninja-d1c28b60e709">here</a></p>
+<p><code>dh_make --createorig</code></p>
+<p><code>dh_auto_configure --buildsystem=meson</code></p>
+<p><code>dpkg-buildpackage -rfakeroot -us -uc -b</code></p>
+<p>The debian package will be build in the directory above the source directory.</p>
+<p>Install your debian package!</p>
+<p>If you want the <code>uksmdstats</code> command for monitoring purposes, you can only get it from the cachyos github (or make your own, it’s just a shell script).</p>
+<p><code>sudo curl https://raw.githubusercontent.com/CachyOS/uksmd/master/uksmdstats -o /usr/bin/uksmdstats</code></p>
+</section>
+<section id="switching-kernels" class="level3">
+<h3 class="anchored" data-anchor-id="switching-kernels">Switching Kernels</h3>
+<p>status: complete</p>
+<p><code>curl 'https://liquorix.net/install-liquorix.sh' | sudo bash</code> from the <a href="https://liquorix.net/">liqourix kernel website</a></p>
+<p>I checked if liqourix has the necessary features, and yes it does.</p>
+<section id="setting-the-default-kernel" class="level5">
+<h5 class="anchored" data-anchor-id="setting-the-default-kernel">Setting the Default Kernel</h5>
+<p>status: researching</p>
+<p><a href="https://www.reddit.com/r/linuxquestions/comments/110a2xh/how_can_i_set_the_default_kernel_for_grub_in_a/">Reddit post where I ask how to set default kernel in grub</a></p>
+<p>On that reddit post, I talk about some flawed solutions I have found. Mainly they don’t seem to be truly persistent, not surviving kernel updates, updates of grub, or installation of new kernels. This endeavor is pretty risky, because a broken grub means we will have no choice but to delete our aws and start over. I need a 100% solution.</p>
+<p>After grilling chatgpt through 3 wrong answers, which chatgpt presented with the absolute confidence that an AI has, it finally presented me a solution that seems like it doesn’t have a risk of breaking the AWS system we are working on.</p>
+<p><img src="defaultgrub.png" class="img-fluid"></p>
+<p>I need to make some adjustments, but I should be able to select for the term “liqourix” while removing the term “recovery” to select the correct kernel (but not the recovery kernel) with complete consistency even through kernel updates, grub updates, or installation of new kernels.</p>
+<p>I searched around for how to do this, but I eventually gave up and asked chatgpt again, getting this:</p>
+<p><img src="chatgptgrubhelp2.png" class="img-fluid"></p>
+<p>My 20_linux_xen is not the same as what chatgpt wants, so I asked again, and it gave me this code to put in /etc/default/grub:</p>
+<pre><code># Set the default menu entry based on the title of the menu entry
+# that contains the word "liqourix" while ignoring the term "recovery"
+GRUB_DEFAULT="$(grep -E -o '^menuentry.*liqourix.*' /boot/grub/grub.cfg | grep -v 'recovery' | head -1 | awk -F\' '{print $2}')"</code></pre>
+<p><code>grep -E -o '^menuentry.*liqourix.*' /boot/grub/grub.cfg | grep -v 'recovery' | head -1 | awk -F\' '{print $2}'</code></p>
+<p>I will test this in a virtual machine.</p>
+</section>
+</section>
+<section id="weaker-alternative-ksm_preload" class="level3">
+<h3 class="anchored" data-anchor-id="weaker-alternative-ksm_preload">Weaker alternative: ksm_preload</h3>
+<p>status: won’t be used</p>
+<p><code>git clone https://github.com/binfess/ksm_preload</code></p>
+<p><code>cmake .</code></p>
+<p><code>make</code></p>
+<p><code>sudo make install</code></p>
+<p>I added <code>LD_PRELOAD=/usr/local/share/ksm_preload/libksm_preload.so</code> to the file <code>/etc/environment</code></p>
+<p>I haven’t tested the above, but I saw very minimal space saved, only about 0.11 **megabytes* saved, on my desktop. Tests on my sample server are similarly discouraging:</p>
+<p><img src="ksmpreloadubuntu.png" class="img-fluid"></p>
+<p>The above was with 2 kasm sessions open. Nearly useless. In addition to that, uksmd seems to make this completely obsolete.</p>
+</section>
+</section>
+</section>
+<section id="memory-overcommital" class="level1">
+<h1>Memory Overcommital</h1>
+<p>status: complete</p>
+<p>Answers were received when I <a href="https://www.reddit.com/r/kasmweb/comments/10l90wn/ram_deduplication_and_zramzswap_with_kasm/">asked</a> on reddit.</p>
+<p><a href="https://www.kernel.org/doc/Documentation/vm/overcommit-accounting">The kernel has options to allow allocation of more memory than the system can give</a></p>
+<p>Default vm overcommit on containers is set to 0, no overcommit:</p>
+<p><img src="defaultvmovercommit.png" class="img-fluid"></p>
+<p>From my ubuntu 22 virtual machine. I changed this setting to 1, enabling overcommit.</p>
+<p>However, it still did not work. In addition to that, you have to edit the kasm agent settings. In the kasm admin panel, you have to go to compute &gt; docker agents &gt; scroll to the right and edit the single agent. Then, change the memory override to however many gigabytes you want in <strong>bytes</strong>.</p>
+<p><img src="agentsettings.png" class="img-fluid"></p>
+</section>
+<section id="other-memory-optimizations-zram-and-zswap" class="level1">
+<h1>Other memory optimizations, zram and zswap</h1>
+<p>Pick one, using both is detrimental to performance.</p>
+<p>I don’t know if zswap’s deduplication feature integrates with ksm, simply compressing already deduped pages, or it dedupes them, recomputes hashes, and then does deduping seperately, like swap-on-zram would do. If zswap has integration with ksm, then it is better, but if it doesn’t then zram is probably better because swap-on-zram minimizes swapping to disk, usually granting greater speeds.</p>
+<p>I’ve <a href="https://www.reddit.com/r/linuxquestions/comments/10sqvuj/zram_or_zswap_for_use_with_ksm/">asked on reddit</a> for help with this, and apparently, zswap does not have true deduplication. The same pages filled feature simply collapses pages that are filled entirely with 0’s or entirely with one’s. With this tidbit of knowledge, I can decisively choose zram, as it is capable of deduplicating pages with the compression process.</p>
+<section id="zram" class="level2">
+<h2 class="anchored" data-anchor-id="zram">zram</h2>
+<p>status: immplemented on my personal systems, but not on the ubuntu vm yet.</p>
+<p>To install zram, <code>sudo apt install systemd-zram-generator</code></p>
+<p>Then, you can configure zram by editing /etc/systemd/zram-generator.conf</p>
+<p>This works, but apparently, things in a swap file aren’t deduplicated by uksmd. Rather, zram handles it’s own deduplication, with the compression algorithms. Becuase it must hash pages, this can potentially lead to more cpu usage.</p>
+<p>Because I don’t know about this, I made yet another <a href="https://www.reddit.com/r/linuxquestions/comments/10sqvuj/zram_or_zswap_for_use_with_ksm/">reddit post</a> asking about this topic.</p>
+</section>
+<section id="zswap" class="level2">
+<h2 class="anchored" data-anchor-id="zswap">zswap</h2>
+<p>Status: Partially done, but dropped in favor of zswap</p>
+<p><img src="zswap.png" class="img-fluid"></p>
+<p>zswap is disabled by default on my ubuntu virtual machine. Odd that both are disabled by default.</p>
+<p>Parameters for zswap can be found in <code>/sys/module/zswap/parameters/</code></p>
+<p>To set parameters at boot, use kernel boot paremeters, like <code>zswap.enabled=1 zswap.compressor=lz4 zswap.max_pool_percent=20 zswap.zpool=z3fold</code></p>
+<p>I will need to tinker to see what is the most optimized zswap setup</p>
+<p><del>zswap has it’s own memory deduplication feature, which is enabled by default on both my ubuntu vm and the aws ubuntu server:</del></p>
+<p>See above, my comments about zswap’s memory deduplication feature.</p>
+<p><img src="zswapmemdedupe.png" class="img-fluid"></p>
+</section>
+</section>
+<section id="setting-kernelsysctl-parameters-on-boot" class="level1">
+<h1>Setting Kernel/Sysctl Parameters on boot</h1>
+<p>Status: researching</p>
+<p><a href="https://wiki.archlinux.org/title/Sysctl#Configuration">Archwiki article</a></p>
+</section>
+<section id="customized-kasm-images" class="level1">
+<h1>Customized kasm images</h1>
+<p>status: Complete</p>
+<p><a href="https://www.kasmweb.com/docs/latest/how_to/building_images.html">Building</a> and <a href="https://www.kasmweb.com/docs/latest/how_to/building_images.html">maintaining</a> custom docker images</p>
+<p>I have forked the Dockerfile github repos that kasm uses to build their images.</p>
+<p><a href="https://github.com/moonpiedumplings/nighthawk-workspaces-core-images">https://github.com/moonpiedumplings/nighthawk-workspaces-core-images</a></p>
+<p><a href="https://github.com/moonpiedumplings/nighthawk-workspaces">https://github.com/moonpiedumplings/nighthawk-workspaces</a></p>
+<p>Clone that, cd into it, and then run:</p>
+<p><code>docker build . -f [The dockerfile you want]</code> which should build an image.</p>
+<p>The current image I am experimenting with is in with both repos are the images with nighthawkcoders in the name.</p>
+<p>What worked was:</p>
+<p><code>RUN apt update &amp;&amp; apt install nix-bin</code></p>
+<p>You can add that to any of the ubuntu images, but the image I am using is in my nighthawk-workspaces repo, called dockerfile-kasm-ubuntu-jammy-nighthawkcoders.</p>
+<p>I pushed it to the docker hub, and it can be found on docker at moonpiedumplings/kasm-ubuntu-jammy-nighthawkcoders:0.5. To use this, I recommend just cloning the existing ubuntu jammy image, and replacing the docker image with our nighthawkcoders one.</p>
+<p><img src="dockerimage.png" class="img-fluid"></p>
+<p>Then, you have to adjust the kasm workspaces settings, as described below, to get nix working properly, like mounting the nix store. The command listed does not create the nix store.</p>
+</section>
+<section id="nix-remote-store" class="level1">
+<h1>Nix remote store</h1>
+<p>Status: complete, all the way</p>
+<p>I’ve created a <a href="https://www.reddit.com/r/NixOS/comments/10q9db1/shared_nix_store_between_docker_containers/">reddit post</a> relating to this topic. I’ve received several replies, but I still struggled, so I ended up asking on discord (ugh) for help, where I instantly received the answer to my problem. I’ve updated my reddit post, editing it with the solution.</p>
+<p>To get this working, install nix using a multi user installation on the host:</p>
+<p><code>sh &lt;(curl -L https://nixos.org/nix/install) --daemon</code></p>
+<p>Then stop the container, and restart it with a correctly mounted nix store:</p>
+<p><code>/nix:/nix:ro</code> as a docker bind mount.</p>
+<p>To use this docker mount with kasm, you need to use volume mapping workspace setting:</p>
+<pre class="{json}"><code>{
+  "/nix": {
+    "bind": "/nix",
+    "mode": "ro",
+    "uid": 1000,
+    "gid": 1000,
+    "required": true,
+    "skip_check": false
+  }
+}</code></pre>
+<p><img src="volumemappings.png" class="img-fluid"></p>
+<p>And finally, you need to ensure the nix in docker is always using the daemon.</p>
+<p>The environment variable<code>NIX_REMOTE=daemon</code> needs to be set inside the container.</p>
+<p>In addition to this, two other environment variables must be set, LD_LIBRARY_PATH (default breaks nix), and LC_ALL must be unset to suppress a warning that doesn’t interfere with the usage of nix but is really annoying.</p>
+<p>You can set the necessary environment variables using kasm docker run config override workspace setting:</p>
+<pre class="{json}"><code>{
+  "environment": {
+    "NIX_REMOTE": "daemon",
+    "LD_LIBRARY_PATH": "/opt/libjpeg-turbo:usr/local/nvidia/lib:usr/local/nvidia/lib64",
+    "LC_ALL": ""
+  }
+}</code></pre>
+<p><img src="envvars.png" class="img-fluid"></p>
+</section>
+<section id="persistent-profiles" class="level1">
+<h1>Persistent profiles:</h1>
+<p>Status: complete</p>
+<p>Guides on Kasm docs:</p>
+<p><a href="https://www.kasmweb.com/docs/latest/guide/persistent_data/persistent_profiles.html">In depth guide + youtube video</a></p>
+<p><a href="https://www.kasmweb.com/docs/latest/how_to/persistent_profiles.html">Shorter quick how-to</a></p>
+<p>In the workspace configuration, set persistent profile path to <code>/mnt/kasm/nighthawkcoders/{username}</code></p>
+<p><img src="persistentprofile.png" class="img-fluid"></p>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+        const codeEl = trigger.previousElementSibling.cloneNode(true);
+        for (const childEl of codeEl.children) {
+          if (isCodeAnnotation(childEl)) {
+            childEl.remove();
+          }
+        }
+        return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("\.");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>
