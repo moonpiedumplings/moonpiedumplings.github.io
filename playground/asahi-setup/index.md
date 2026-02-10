@@ -4,8 +4,18 @@ date: "2026-1-21"
 categories: [playground]
 execute:
   freeze: false
-draft: true
 ---
+
+
+# Stopping
+
+It's inconvenient, as I seem to rely on certain tools that are x86 only or x86 first. I won't deny that the battery life is very good though. Even [without shutting down](https://www.reddit.com/r/AsahiLinux/comments/1qe3dnr/battery_life/o04c3j2/), I could get 7 hours estimated. But my main laptop, which I just got back from being repaired at Best Buy, gives me 5.5-6 hours, which is more than enough for my daily usage. 
+
+I originally used the Macbook in the first place because I literally dropped my old laptop down the stairs so I had no other device. But now I have my other device, so I will return to what I am familiar with. It has 16 gb of ram, plus zram already enabled (CachyOS), so it's easier for me to use it the way I want to.
+
+I'm still keeping this up though because it's interesting, especially my experiments with zram, and discovery of zram's lesser known features.
+
+# Intro
 
 
 I have decided to setup [Asahi Linux](https://asahilinux.org/), which is the Linux for M1 Macs. My sister gave me her old Macbook Air (2020), and it has an M1 and 8 gb of ram. 
@@ -174,7 +184,15 @@ root@sobek:/sys/block/zram0# awk '{printf "%.2f GiB\n", $1 * 4096 / 1024 / 1024 
 It would make sense for this to be an optimization that distros designed for more optimized memory usage. A custom daemon could regularly push pages that were idle for too long. I think this is what Android does to make zram work. Or maybe Android operates entirely in ram and doesn't touch swap to avoid writes to the disk, I know that can be a concern on lower quality solid state/flash devices. Although, this is less of a concern because zram pushes compressed data to the disk, unlike a traditional swap setup.
 
 
-One disappointing thing is that zram seems to count data pushed to disk as stored on the zram disk device, rather than being seperate. This means there is no way to individually measure except to look at `bd_stat` and substract from zram. It just doesn't count this data as compressed data. 
+One disappointing thing is that zram seems to count data pushed to disk as stored on the zram disk device, rather than being seperate. This means there is no way to individually measure except to look at `bd_stat` and subtract from zram. It just doesn't count this as compressed data when looking at `zramctl`.
+
+Another thing that is frustrating is that zram does not seem to push compressed data to swap. It uncompresses data, and then stores it all in the writeback device, meaning that if more than 8 gb of data is compressed into ram, it won't fit into the writeback device. There does appear to be some [preliminary work](https://lwn.net/Articles/1048650/) but nothing that has made it into the mainline kernel yet. 
+
+Right now though, it's actually mostly okay though because a lot of data does get pushed even if the writeback device does fill up.
+
+In theory, having that kernel config option to automatically track idle pages, in combination with a daemon that would automatically cause zram to push compressed data to the writeback device, probably be more efficient and performant than zswap/swap. But it's not really here yet.
+
+But for now, I got my other x86 laptop back so I'm stopping here.
 
 
 # Podman Machine
