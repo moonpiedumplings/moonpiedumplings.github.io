@@ -654,7 +654,160 @@ Now, people with Red Hat based distros (Alma, Rocky, Centos, etc), have to do so
 
 ## Authorization — Openfga
 
-After 
+Afte that, I set up openfga based documetnation. But, unlike a previous openfga setup, I managed to get it to sync to authentik. What I did, was I had an authentik expression policy, that would sync.
+
+[I was happy and wanted to share, so I made a forum post](https://discuss.linuxcontainers.org/t/oidc-group-sync-to-openfga-with-authentik/24979)
+
+Here is the script:
+
+```{.python}
+import json
+from authentik.core.models import Group
+
+system_groups = ["authentik Read-only", "authentik Admins"]
+
+all_groups = [group.name for group in Group.objects.all()]
+
+all_groups = list(set(all_groups) - set(system_groups))
+
+user_groups = [group.name for group in request.user.all_groups()]
+
+# I have my openfga server gated behind a token, but it's not by default
+openfga_api_key = "secretkey"
+
+writes = {
+    "writes": {
+        "tuple_keys": [
+            {
+                "user": f"user:{request.user.username}",
+                "relation": "member",
+                "object": "group"
+            }
+        ]
+    },
+    "authorization_model_id": "01K70P5HAQ8K2J3AN978F7Y1EC"
+}
+
+deletes = {
+    "deletes": {
+        "tuple_keys": [
+            {
+                "user": f"user:{request.user.username}",
+                "relation": "member",
+                "object": "group"
+            }
+        ]
+    },
+    "authorization_model_id": "01K70P5HAQ8K2J3AN978F7Y1EC"
+}
+
+
+headers = {
+    "Authorization": f"Bearer {openfga_api_key}",
+    "content-type": "application/json"
+}
+
+
+for group in list(set(all_groups) - set(user_groups)):
+  deletes["deletes"]["tuple_keys"][0]["object"] = f"group:{group}"
+  requests.post('https://openfga.moonpiedumpl.ing/stores/01K70P3ZX9DJEHF85XDJS4PXN2/write', data=json.dumps(deletes), headers=headers)
+
+
+for group in user_groups:
+    writes["writes"]["tuple_keys"][0]["object"] = f"group:{group}"
+    requests.post('https://openfga.moonpiedumpl.ing/stores/01K70P3ZX9DJEHF85XDJS4PXN2/write', data=json.dumps(writes), headers=headers)
+
+# It's supposed to return true/false depending on whether or not you want to pass/fail the action but I just always return true here    
+return True
+```
+
+However, this is not enough. I now would like to create projects per user. This will be even better, and cooler, and would make Incus into a viable openstack alternative if I implement network isolation of some kind.
+
+So I am thinking of this:
+
+* "default" ACL created in advanced, that blocks ingress traffic
+* internal0 network: default internal incus network.
+* pvp0 network: custom network that I would have that would have vulnerable boxes deployed on it, in order to have a cyber range.
+
+The above would be created in advance. Everything below would be dynamic, by an authentik expression policy.
+
+* $USERNAME network: This network has it's own subnet, and inherits the default ACL that blocks all ingress network traffic
+* $USERNAME-nonet network: this network does not have it's own subnet, and does not have dhcp either.
+  * The purpose of this network is to put a pfsense, or openwrt router on it.
+  * Then, virtual machines on this network would have port isolation and mac filtering set. 
+  * This means that all virtual machine traffic would go through the router
+  * This could be used to do a small scale emulation of a real physical network
+  * This setup is inspired by [this blog post](https://www.lochnair.net/2025/10/11/securing-my-incus-networks/), but I wonder if doing the weird subnetting is actually necessary when port isolation already exists.
+* $USERNAME project: Incus dynamically created project
+  * Only able to access the $USERNAME networks, the pvp0 network, and the internal0 network
+  * Shares the storage pool
+  * Has resource limits, on CPU and ram
+  * Has snapshots allowed (they are blocked by default)
+
+
+And then tada! Openstack alternative with all the features I care about. Mostly.
+
+Okay, this doesn't work from preliminary testing. The problem is [this](https://linuxcontainers.org/incus/docs/main/howto/network_acls/#bridge-limitations). Incus bridges (with the default nftables backend, which I do not want to change to iptables) block intra vm traffic by default. This is actually better and more secure, and what I would want in the real world. 
+
+Unfortunately, AWS Security Groups (what I am trying to mimic) do not work that way, and allow traffic inside the security group. So I have to use 
+"selector", which are not supported for Incus bridge networks. 
+
+There are two alternatives:
+
+* OVN Networks: I could set them up, and they support address sets
+* ACL per project. Get the subnet, and then allow traffic into the subnet via an ACL
+
+Okay I think I'm gonna use an OVN network. I don't want to have to get and filter more info. I started by following the steps [here](https://linuxcontainers.org/incus/docs/main/howto/network_ovn_setup/#network-ovn-setup).
+
+I do need to create an extra network, just so it has 255 OVN networks possible. I spun it from the UI, and then I changed the ipv4.ovn.ranges to match the autogenerated ip range incus gave it.
+
+```{.yaml}
+project: default
+name: forovn0
+description: Network that acts as uplink network for user specific OVN networks.
+type: bridge
+config:
+  ipv4.address: 10.83.142.1/24
+  ipv4.dhcp: 'false'
+  ipv4.nat: 'true'
+  ipv4.ovn.ranges: 10.83.142.2-10.83.142.254
+  ipv6.address: fd42:b55f:d877:83a2::1/64
+  ipv6.nat: 'true'
+```
+
+This works, although I did have to tinker with the ACL to allow ingress traffic. Now that I have Incus ACL's working though, I do need to think about whether or not I want the vlab network will be an OVN or a bridge network.
+
+Okay, for the virtaul lab, I have figured out the best way to do it. 
+
+* Isolate Layer 2 traffic between instances
+  * First option: OVN ACL that prevents any traffic but to the gateway, including layer2 traffic
+  * Second option: Port isolation, but has to be set per VM
+* Force traffic through the router/firewall vm:
+  * First option: Proxying arp requests
+  * Second option: Putting VM's on a /32 ([from same blogpost linked earlier](https://www.lochnair.net/2025/10/11/securing-my-incus-networks/))
+
+I have also realized something else: By default, intra-VLAN traffic is not inspected or isolated by the firewall. It explains a *lot* about some of the problems that physical networking labs face that I didn't understand. When I attended that Defcon talk and the guy on stage talked about how you should be monitoring East West traffic, I didn't realize that people *aren't doing that*. Another problem is that this setup doesn't seem to be deny by default. I feel like it would be better to just isolate every device from eachother and only allow what is need through a central firewall. There is no reason devices like desktops, should be able to talk to eachother in the first place. 
+
+
+
+So, lets figure out how to implement all of this in a single Authentik expression policy. Firstly, the Incus api is imperative, not declarative, meaning I cannot just rerun a create operation to adjust project or network options, which is something I want.
+
+So, the flow would be to first make a GET request to check if the objects exist. If they don't, then create them with a POST request. If they do exist, then overwrite them with a PUT request.
+
+The python script will use cert based authentication, as well. 
+
+First, I generated an incus.crt and an incus-ui.pfx using the UI. I did not set a password, to make it easier for the script to use it. But, I have to extract the pfx into a client cert and a client key, in order for it to be usable by requests.
+
+```
+openssl pkcs12 -in incus-ui.pfx -nocerts -nodes -out client.key
+
+
+openssl pkcs12 -in incus-ui.pfx -clcerts -nokeys -out client.crt
+```
+
+
+
+
 
 ## Bugs
 
@@ -826,9 +979,13 @@ So I need a way to start the init script, such that it detatches and disowns its
 
 Because the container comes with screen already, I can do this, and reuse an existing container for coder with minimal modifications or changes to the terraform overall (other options I were looking into were things like using a volume mount to add more s6 services, but it is difficult because the init_script is autogenerated, so I don't actaully know what it is, and I also still do not know if it is a shell script or just a sequence of commands set up by EOF). 
 
-In the future, when I have more users, another thing I want to do is apply NetworkPolicies depending on the groups a user is, to control which networks that the workspace has access to. 
+Later on, however, I found a superior method. I could use a configmap, with files that created a new s6 service, and then mount that into the container. [This is the configmap](https://github.com/moonpiedumplings/flux-config/blob/77552e3a5fb850437ab9c31ec71ee305be8ebcb8/apps/apps/coder/startupconfigmap.yaml). It is then mounted into the container via terraform, and [this is the config for that](https://github.com/moonpiedumplings/flux-config/blob/77552e3a5fb850437ab9c31ec71ee305be8ebcb8/apps/apps/coder/files/main.tf). 
 
-I have made a [Github Gist](https://gist.github.com/moonpiedumplings/641be9c7662fa10174fe9845a183c073) with my code. 
+This has been much cleaner, and much more reliable to set up. Unlike the previous setup, which would randomly fail occasionally, forcing users to destroy and recreate the container, this works completely at all times. 
+
+Another thing I had to do, was to apply a networkpolicy that prevented any pod but the coder deployment from accessing the coder workspaces. They run an http server with the web interface, and it's not authenticated, meaning without this, users can just find and connect to another users coder instances. I also considered trying to make the service only run on localhost, but I could not trivially figure out how to modify the services. 
+
+In the future, when I have more users, another thing I am considering NetworkPolicies depending on the groups a user is, to control which networks that the workspace has access to. 
 
 
 Next up is to inject the environment variables via secrets. 
@@ -1691,12 +1848,31 @@ So I am searching for some options for operators for postgres:
 For redis... I think I am going to switch to the internal cache implementation instead. Although this results in an error, and I have to put a puase on forgejo for now.
 
 
-## Pangolin
+## Netbird
 
-[Pangolin](https://github.com/fosrl/pangolin), is a reverse proxy similar to cloudfare tunnels, and also offers VPN capabilities, similar to Netbird. I am very interested in it becuase it offers a multi-tenant VPN solution, which is a paid feature in Netbird.
+I am planning to deploy [netbird](https://netbird.io/), an open source mesh VPN. It's similar to tailscale. It is also very popular, UC Irvine's cyber club is using it, and the cybersecurity competition we do mainly has migrated from globalprotect to netbird, now. I want a kubernetes deployment, because similar to the other services, I would like automatic upgrades. 
 
-But, they offer no kubernetes deployment by default. I will be converting their docker compose deploy to a k8s deployment. 
+I found a few existing helm charts:
 
+* <https://github.com/netbirdio/helms/tree/main/charts/netbird> — Official one's.
+* <https://github.com/KitStream/helms/tree/main/charts/netbird> — Unofficial, but looks well maintained by a corporate entity
+* <https://github.com/jaconi-io/helm-charts> — Commmunity made, but well made
+
+There is also a project called [app templates](https://bjw-s-labs.github.io/helm-charts/docs/app-template/) that is a general helm chart that can be used to deploy arbitary containerized apps. You can search through flux helmrelease's on github, with a focus on the app template, via [kubesearch.dev](https://kubesearch.dev/#netbird). I found one there.
+
+Anyway, I want auto updates. The problem is that the helm charts above, don't specify the image tag used. This means, that when the helm chart updates, the deployment would not actually be recreated, so the image wouldn't change. The other helm charts I am using, 
+
+What would be cool,  is to configure flux so that it uninstalls and reinstalls helm charts as part of the upgrade process, instead of running upgrade internally. And then if I set the ImagePullPolicy in the deployments (which can be configured through the helm charts), then the latest version of the images would be pulled among flux updates. This doesn't look trivial to do, and in addition to that, this would only trigger if the helm charts update. If they don't, then flux would never do anything to them.
+
+Another solution is [this](https://github.com/monlor/k8s-image-updater) or a similar solution. 
+
+Wait, upon further research, it looks like the official helm chart does specify the images, and it defaults to the [appversion](https://github.com/netbirdio/helms/blob/2aec0e99b07f7edefd63196d9ed597568b7615d4/charts/netbird/templates/management-deployment.yaml#L40), which is part of the helm chart itself. Unfortunaltely, the [appversion is outdated](https://github.com/netbirdio/helms/issues/39). 
+
+The [helm chart that the official netbird charts is forked from](https://github.com/totmicro/helms/blob/main/charts/netbird/Chart.yaml) is much more up to date, but still on 0.60.2 instead of the latest 0.66.
+
+The kitstreams chart [seems to be adding work to auto update](https://github.com/KitStream/helms/pull/11), which is promising. Since that was merged, I think I will be selecting that helm chart. 
+
+It's not perfect, though, one problem with it is the ingresses it creates rely on nginx specific annotations, although ingress-nginx is deprecated. Traefik, which I am using has a compatibility layer.
 
 
 
@@ -1855,6 +2031,8 @@ I have decided to forgo automatic backups, because there [there is no easy way t
 
 Instead, I will just do occasional manual snapshots. 
 
+I have automated snapshots, but the retention policy is poor. I must prune the snapshots manually. 
+
 ## LLMs
 
 I am currently looking into options. I want OIDC sign in, and RAG.
@@ -1936,9 +2114,9 @@ Although, one irritating I have noticed is that the model download doesn't conti
 I'm also interested in the new-ish [embeddinggemma:300m](https://ollama.com/library/embeddinggemma:300m) model.
 
 
-# Ingress
+## Ingress
 
-## Ingress-Nginx
+### Ingress-Nginx
 
 Okay, I thought I was done configuring Ingress-Nginx, until I logged into my Authentik and saw that all the logins appeared to be coming from the IP address of my host machine rather than the actual client IP of people who are connecting. 
 
@@ -2087,7 +2265,7 @@ And then I can forward the tcp service via the ingress nginx controller, by foll
 
 Another issue I encountered was "413 Request Entity Too Large" when trying to upload ISO's to nginx. By default, nginx has a setting, [client.max_body_size](https://nginx.org/en/docs/http/ngx_http_core_module.html#client_max_body_size) that limits the size of client requests, or in this case, the size of ISO's that I can upload to Incus. To fix, you can add [annotation that changes this setting](https://kubernetes.github.io/ingress-nginx/user-guide/nginx-configuration/annotations/#custom-max-body-size). 
 
-## Gateway API
+### Istio
 
 So now, [ingress nginx is being deprecated](https://www.reddit.com/r/kubernetes/comments/1ove0t5/ingress_nginx_retirement_what_you_need_to_know/). 
 
@@ -2107,9 +2285,31 @@ Both traefik and Cilium support gateway api.
 
 Some big caveats:
 
-* No support for oauth2-proxy, which 
+* No support for oauth2-proxy, which I would want for auth.
 
 I actually don't think I am going to switch yet. The problem is that I don't really want to use Traefik, but at the same time, Openstack-helm depends on ingress-nginx's annotations.So I kinda just have to leave it for now.
+
+Alright, it looks like openstack-helm has updated their helm charts to be able to use haproxy instead of ingress-nginx. They didn't use any complicated annotaitons. 
+
+I won't be migrating to gateway api, but I will shift to istio ingress instead of ingress-nginx. 
+
+I have deciced to deploy istio in ambient mode, instead of sidecar mode, because I can, but it does make things a bit more complex. 
+
+> Ingress supports specifying TLS settings. This is supported by Istio, but the referenced Secret must exist in the namespace of the istio-ingressgateway deployment (typically istio-system). cert-manager can be used to generate these certificates.
+
+From: <https://istio.io/latest/docs/tasks/traffic-management/ingress/kubernetes-ingress/#tls>
+
+Unfortunately, this is a dealbreaker `:(`. I want something compatible with my existing kubernetes ingress stuff, and it currently I put the SSL certs in the same namesp
+
+Since I already deployed istio in ambient mode, I will keep it deployed, but I won't be using it as an ingress/gateway controller.
+
+### Traefik
+
+And thus, we loop all the way around, to the ingress controller I originally discarded for ingress-nginx. Traefik is the current best option, because it currently supports gateway API, and ingress. 
+
+Installation was simpler, but then I had to remove the ingressClass set for all ingresses, so they would automatically use the default traefik ingress.
+
+But, my custom Incus ingress setup didn't work. So I had to migrate it to something else. I moved to traefik, and it was pretty easy. 
 
 
 ## Cert-Manager
@@ -3277,6 +3477,10 @@ Argo instead of Flux: Probably not. But I am considering changing the way flux i
 
 
 One thing I really, really want to do is get my own ASN and become my own hosting platform. But this is a far future type thing.
+
+Instead of installing helm releases to their own namespace, I should install them all to the flux-system namespace, and use the targetnamespace feature. TThis would allow me to put all my secrets in the flux-system namespace. This would allow me to avoid replicating the sops key to every single namespace, as flux sops decryption of secrets does not cross namespaces. 
+
+No wait, in hindsight, this does not work becasue helm releases try to reference secrets, and these can only be referenced from the same namespace. 
 
 
 # Incident: Outage
