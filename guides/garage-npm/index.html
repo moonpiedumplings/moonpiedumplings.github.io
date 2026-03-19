@@ -6,9 +6,10 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
-<meta name="description" content="Guides I’ve written. I keep this on the internet, so I can easily send these to people that need help.">
+<meta name="dcterms.date" content="2025-03-19">
+<meta name="description" content="In docker, of course">
 
-<title>Guides – Jeffrey Fonseca</title>
+<title>Garage S3 behind NPM – Jeffrey Fonseca</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -21,33 +22,66 @@ ul.task-list li input[type="checkbox"] {
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
 }
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
 </style>
 
 
-<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
-<script src="../site_libs/quarto-nav/headroom.min.js"></script>
-<script src="../site_libs/clipboard/clipboard.min.js"></script>
-<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
-<script src="../site_libs/quarto-search/fuse.min.js"></script>
-<script src="../site_libs/quarto-search/quarto-search.js"></script>
-<meta name="quarto:offset" content="../">
-<script src="../site_libs/quarto-listing/list.min.js"></script>
-<script src="../site_libs/quarto-listing/quarto-listing.js"></script>
-<script src="../site_libs/quarto-html/quarto.js" type="module"></script>
-<script src="../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
-<script src="../site_libs/quarto-html/axe/axe-check.js" type="module"></script>
-<script src="../site_libs/quarto-html/popper.min.js"></script>
-<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
-<script src="../site_libs/quarto-html/anchor.min.js"></script>
-<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../site_libs/quarto-html/quarto-syntax-highlighting-587c61ba64f3a5504c4d52d930310e48.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="../site_libs/quarto-html/quarto-syntax-highlighting-dark-b758ccaa5987ceb1b75504551e579abf.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<link href="../site_libs/quarto-html/quarto-syntax-highlighting-587c61ba64f3a5504c4d52d930310e48.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
-<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
-<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../site_libs/bootstrap/bootstrap-67ebe3c6891798413a6a4761c7c47152.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../site_libs/bootstrap/bootstrap-dark-99e90f674f56b4349e836a1941c1483a.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../site_libs/bootstrap/bootstrap-67ebe3c6891798413a6a4761c7c47152.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../site_libs/quarto-html/axe/axe-check.js" type="module"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-587c61ba64f3a5504c4d52d930310e48.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-b758ccaa5987ceb1b75504551e579abf.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-587c61ba64f3a5504c4d52d930310e48.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-3f2bc9d4f556814166f73bbd8817f5a4.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-876d2931c83aab800a84748ed374a49e.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-3f2bc9d4f556814166f73bbd8817f5a4.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -75,65 +109,7 @@ ul.task-list li input[type="checkbox"] {
     "search-label": "Search"
   }
 }</script>
-<script>
 
-  window.document.addEventListener("DOMContentLoaded", function (_event) {
-    const listingTargetEl = window.document.querySelector('#listing-listing .list');
-    if (!listingTargetEl) {
-      // No listing discovered, do not attach.
-      return; 
-    }
-
-    const options = {
-      valueNames: ['listing-date','listing-title','listing-author',{ data: ['index'] },{ data: ['categories'] },{ data: ['listing-date-sort'] },{ data: ['listing-title-sort'] }],
-      
-      searchColumns: ["listing-date","listing-title","listing-author"],
-    };
-
-    window['quarto-listings'] = window['quarto-listings'] || {};
-    window['quarto-listings']['listing-listing'] = new List('listing-listing', options);
-
-    if (window['quarto-listing-loaded']) {
-      window['quarto-listing-loaded']();
-    }
-  });
-
-  window.addEventListener('hashchange',() => {
-    if (window['quarto-listing-loaded']) {
-      window['quarto-listing-loaded']();
-    }
-  })
-  </script>
-
-  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
-  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
-
-<script type="text/javascript">
-const typesetMath = (el) => {
-  if (window.MathJax) {
-    // MathJax Typeset
-    window.MathJax.typeset([el]);
-  } else if (window.katex) {
-    // KaTeX Render
-    var mathElements = el.getElementsByClassName("math");
-    var macros = [];
-    for (var i = 0; i < mathElements.length; i++) {
-      var texText = mathElements[i].firstChild;
-      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
-        window.katex.render(texText.data, mathElements[i], {
-          displayMode: mathElements[i].classList.contains('display'),
-          throwOnError: false,
-          macros: macros,
-          fleqn: false
-        });
-      }
-    }
-  }
-}
-window.Quarto = {
-  typesetMath
-};
-</script>
 
 </head>
 
@@ -302,11 +278,11 @@ window.Quarto = {
   </script>
 
 <div id="quarto-search-results"></div>
-  <header id="quarto-header" class="headroom fixed-top quarto-banner">
+  <header id="quarto-header" class="headroom fixed-top">
     <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
       <div class="navbar-container container-fluid">
       <div class="navbar-brand-container mx-auto">
-    <a class="navbar-brand" href="../index.html">
+    <a class="navbar-brand" href="../../index.html">
     <span class="navbar-title">Jeffrey Fonseca</span>
     </a>
   </div>
@@ -317,17 +293,17 @@ window.Quarto = {
           <div class="collapse navbar-collapse" id="navbarCollapse">
             <ul class="navbar-nav navbar-nav-scroll me-auto">
   <li class="nav-item">
-    <a class="nav-link" href="../posts/index.html"> 
+    <a class="nav-link" href="../../posts/index.html"> 
 <span class="menu-text">Posts</span></a>
   </li>  
   <li class="nav-item">
-    <a class="nav-link" href="../resume/index.html"> 
+    <a class="nav-link" href="../../resume/index.html"> 
 <span class="menu-text">Resume</span></a>
   </li>  
 </ul>
             <ul class="navbar-nav navbar-nav-scroll ms-auto">
   <li class="nav-item compact">
-    <a class="nav-link" href="../../feed.xml"> <i class="bi bi-rss" role="img">
+    <a class="nav-link" href="../../../feed.xml"> <i class="bi bi-rss" role="img">
 </i> 
 <span class="menu-text"></span></a>
   </li>  
@@ -345,239 +321,134 @@ window.Quarto = {
     </nav>
 </header>
 <!-- content -->
-<header id="title-block-header" class="quarto-title-block default page-columns page-full">
-  <div class="quarto-title-banner page-columns page-full">
-    <div class="quarto-title column-page-left">
-      <h1 class="title">Guides</h1>
-                  <div>
-        <div class="description">
-          Guides I’ve written. I keep this on the internet, so I can easily send these to people that need help.
-        </div>
-      </div>
-                </div>
-  </div>
-    
-  
-  <div class="quarto-title-meta column-page-left">
-
-      
-    
-      
-    </div>
-    
-  
-  </header><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-full page-navbar">
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
 <!-- sidebar -->
 <!-- margin-sidebar -->
-    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar zindex-bottom">
         
-    <h5 class="quarto-listing-category-title">Categories</h5><div class="quarto-listing-category category-default"><div class="category" data-category="">All <span class="quarto-category-count">(13)</span></div><div class="category" data-category="Z3VpZGVz">guides <span class="quarto-category-count">(12)</span></div><div class="category" data-category="cHJvamVjdHM=">projects <span class="quarto-category-count">(1)</span></div></div></div>
+    </div>
 <!-- main -->
-<main class="content quarto-banner-title-block column-page-left" id="quarto-document-content">
+<main class="content" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Garage S3 behind NPM</h1>
+  <div class="quarto-categories">
+    <div class="quarto-category">projects</div>
+  </div>
+  </div>
+
+<div>
+  <div class="description">
+    In docker, of course
+  </div>
+</div>
+
+
+<div class="quarto-title-meta">
+
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">March 19, 2025</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<p>This document outlines how to deploy <a href="https://garagehq.deuxfleurs.fr/">garage</a>, an open source self hostable version of <a href="https://en.wikipedia.org/wiki/Amazon_S3#S3_API_and_competing_services">Amazon S3</a>.</p>
+<p>Most of this guide is adapted from <a href="https://garagehq.deuxfleurs.fr/documentation/quick-start/">the garage quick start</a>.</p>
+<p>Prerequisites:</p>
+<ul>
+<li>Docker</li>
+<li>Docker Compose (sometimes installed as <code>docker-compose</code>, sometimes as <code>docker compose</code>, both work)</li>
+<li><a href="https://nginxproxymanager.com/">Nginx Proxy Manager</a> (I mean, you can use another reverse proxy. But NPM is what I use here)
+<ul>
+<li>Using a <a href="https://nginxproxymanager.com/advanced-config/#best-practice-use-a-docker-network">docker network</a></li>
+</ul></li>
+</ul>
+<p>Firstly, create a folder which will host the docker compose data. This folder will be called <code>garage</code> or similar. <code>cd</code> into this directory.</p>
+<p>Below is a sample docker compose file. You may want to change the network depending on your <a href="https://nginxproxymanager.com/advanced-config/#best-practice-use-a-docker-network">docker network name</a>. Run the below command to create the docker compose:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>cat &gt; docker-compose.yaml &lt;&lt;EOF</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>version: '3'</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>services:</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  garaged:</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    image: dxflrs/garage:v2.2.0</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    volumes:</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>      - "./garage.toml:/etc/garage.toml"</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>      - "./meta:/var/lib/garage/meta"</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>      - "./data:/var/lib/garage/data"</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>    container_name: garaged</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>networks:</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>  default:</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>    external: true</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>    name: mine</span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>EOF</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Run the below command to create the garage.toml file:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>cat &gt; garage.toml &lt;&lt;EOF</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>metadata_dir = "/var/lib/garage/meta"</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>data_dir = "/var/lib/garage/data"</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>db_engine = "sqlite"</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>replication_factor = 1</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>rpc_bind_addr = "[::]:3901"</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>rpc_public_addr = "127.0.0.1:3901"</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>rpc_secret = "$(openssl rand -hex 32)"</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>[s3_api]</span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>s3_region = "garage"</span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>api_bind_addr = "[::]:3900"</span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>root_domain = ".s3.garage"</span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>[s3_web]</span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>bind_addr = "[::]:3902"</span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>root_domain = ".web.garage"</span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>index = "index.html"</span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>[k2v_api]</span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>api_bind_addr = "[::]:3904"</span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a>[admin]</span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a>api_bind_addr = "[::]:3903"</span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a>admin_token = "$(openssl rand -base64 32)"</span>
+<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a>metrics_token = "$(openssl rand -base64 32)"</span>
+<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a>EOF</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Note the <code>$(command)</code>’s in the file. These are actually executed and templated, when running cat, as a form of variable substitution.</p>
+<p><code>docker-compose up -d</code> to start garage.</p>
+<p>Next up is running the commands inside docker to create the “cluster” (it will only be a single node), and the bucket. Because the garage command must be ran inside the docker container, we make an alias to make it more convinient.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>alias garage='docker exec -it garaged ./garage'</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>garage layout assign -z dc1 -c 1G $(garage status | tail -1 | awk '{print $1}')</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>garage layout apply --version 1</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>This creates the base storage pool.</p>
+<p>Next up is bucket and key creation:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>garage bucket create bucketname</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>garage key create bucketkeyname</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>garage bucket allow --read --write --owner bucketname --key bucketkeyname</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Now, the reverse proxy. This is fairly simple, but you will have to use a wildcard cert, which requires a DNS-01 challenge.</p>
+<p>In the Nginx Proxy Manager Config, new host:</p>
+<p><img src="images/mainproxy.jpeg" class="img-fluid"></p>
+<p>And then for SSL:</p>
+<p><img src="images/ssl.jpeg" class="img-fluid"></p>
+<p>Of course, some parts may change depending on your DNS provider.</p>
+<p>It took some fiddling, but this finally gives me Joplin sync remotely, in a secure manner (I am using Joplin e2ee).</p>
 
 
 
-
-
-
-
-
-
-
-<div class="quarto-listing quarto-listing-container-table" id="listing-listing">
-<table class="quarto-listing-table table">
-<thead>
-<tr>
-
-<th>
-Date
-</th>
-
-<th>
-Title
-</th>
-
-<th>
-Author
-</th>
-
-</tr>
-</thead>
-<tbody class="list">
-
-<tr data-index="0" data-categories="cHJvamVjdHM=" data-listing-date-sort="1742356800000" data-listing-file-modified-sort="1773915948147" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="2" data-listing-word-count-sort="399" data-listing-title-sort="Garage S3 behind NPM" data-listing-filename-sort="index.md">
-<td>
-<span class="listing-date">Mar 19, 2025</span>
-</td>
-<td>
-<a href="../guides/garage-npm/index.html" class="title listing-title">Garage S3 behind NPM</a>
-</td>
-<td>
-<span class="listing-author">&nbsp;</span>
-</td>
-
-</tr>
-
-<tr data-index="1" data-categories="Z3VpZGVz" data-listing-date-sort="1739595600000" data-listing-file-modified-sort="1761868331933" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="6" data-listing-word-count-sort="1011" data-listing-title-sort="Free resources to learn various things" data-listing-filename-sort="index.md">
-<td>
-<span class="listing-date">Feb 15, 2025</span>
-</td>
-<td>
-<a href="../guides/learn-linux/index.html" class="title listing-title">Free resources to learn various things</a>
-</td>
-<td>
-<span class="listing-author">&nbsp;</span>
-</td>
-
-</tr>
-
-<tr data-index="2" data-categories="Z3VpZGVz" data-listing-date-sort="1730001600000" data-listing-file-modified-sort="1753521731286" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="2" data-listing-word-count-sort="376" data-listing-title-sort="Installing Unity on Distrobox" data-listing-filename-sort="index.qmd">
-<td>
-<span class="listing-date">Oct 27, 2024</span>
-</td>
-<td>
-<a href="../guides/unity-distrobox/index.html" class="title listing-title">Installing Unity on Distrobox</a>
-</td>
-<td>
-<span class="listing-author">&nbsp;</span>
-</td>
-
-</tr>
-
-<tr data-index="3" data-categories="Z3VpZGVz" data-listing-date-sort="1728792000000" data-listing-file-modified-sort="1753521731285" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="4" data-listing-word-count-sort="723" data-listing-title-sort="Sympy Gamma, my favorite WolframAlpha alternative" data-listing-filename-sort="index.qmd">
-<td>
-<span class="listing-date">Oct 13, 2024</span>
-</td>
-<td>
-<a href="../guides/sympy/index.html" class="title listing-title">Sympy Gamma, my favorite WolframAlpha alternative</a>
-</td>
-<td>
-<span class="listing-author">&nbsp;</span>
-</td>
-
-</tr>
-
-<tr data-index="4" data-categories="Z3VpZGVz" data-listing-date-sort="1700024400000" data-listing-file-modified-sort="1753521731283" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="6" data-listing-word-count-sort="1152" data-listing-title-sort="CCDC Environment setup" data-listing-filename-sort="index.qmd">
-<td>
-<span class="listing-date">Nov 15, 2023</span>
-</td>
-<td>
-<a href="../guides/ccdc-env/index.html" class="title listing-title">CCDC Environment setup</a>
-</td>
-<td>
-<span class="listing-author">&nbsp;</span>
-</td>
-
-</tr>
-
-<tr data-index="5" data-categories="Z3VpZGVz" data-listing-date-sort="1698465600000" data-listing-file-modified-sort="1753524256001" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="2" data-listing-word-count-sort="281" data-listing-title-sort="CCDC Learning Resources" data-listing-filename-sort="index.qmd">
-<td>
-<span class="listing-date">Oct 28, 2023</span>
-</td>
-<td>
-<a href="../guides/ccdc-learning/index.html" class="title listing-title">CCDC Learning Resources</a>
-</td>
-<td>
-<span class="listing-author">&nbsp;</span>
-</td>
-
-</tr>
-
-<tr data-index="6" data-categories="Z3VpZGVz" data-listing-date-sort="1691380800000" data-listing-file-modified-sort="1753521731285" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="2" data-listing-word-count-sort="237" data-listing-title-sort="Tmux" data-listing-filename-sort="index.qmd">
-<td>
-<span class="listing-date">Aug 7, 2023</span>
-</td>
-<td>
-<a href="../guides/tmux/index.html" class="title listing-title">Tmux</a>
-</td>
-<td>
-<span class="listing-author">&nbsp;</span>
-</td>
-
-</tr>
-
-<tr data-index="7" data-categories="Z3VpZGVz" data-listing-date-sort="1687924800000" data-listing-file-modified-sort="1753521731284" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="4" data-listing-word-count-sort="751" data-listing-title-sort="Basics of Git" data-listing-filename-sort="index.qmd">
-<td>
-<span class="listing-date">Jun 28, 2023</span>
-</td>
-<td>
-<a href="../guides/git/index.html" class="title listing-title">Basics of Git</a>
-</td>
-<td>
-<span class="listing-author">&nbsp;</span>
-</td>
-
-</tr>
-
-<tr data-index="8" data-categories="Z3VpZGVz" data-listing-date-sort="1686801600000" data-listing-file-modified-sort="1753521731286" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="5" data-listing-word-count-sort="984" data-listing-title-sort="Urestricted Wifi/Hotspot as long as you have one unlimited device" data-listing-filename-sort="index.qmd">
-<td>
-<span class="listing-date">Jun 15, 2023</span>
-</td>
-<td>
-<a href="../guides/unrestricted-tethering/index.html" class="title listing-title">Urestricted Wifi/Hotspot as long as you have one unlimited device</a>
-</td>
-<td>
-<span class="listing-author">&nbsp;</span>
-</td>
-
-</tr>
-
-<tr data-index="9" data-categories="Z3VpZGVz" data-listing-date-sort="1686456000000" data-listing-file-modified-sort="1753521731285" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="5" data-listing-word-count-sort="894" data-listing-title-sort="Installing the nix package manager and how it's useful" data-listing-filename-sort="index.qmd">
-<td>
-<span class="listing-date">Jun 11, 2023</span>
-</td>
-<td>
-<a href="../guides/nix-fun/index.html" class="title listing-title">Installing the nix package manager and how it’s useful</a>
-</td>
-<td>
-<span class="listing-author">&nbsp;</span>
-</td>
-
-</tr>
-
-<tr data-index="10" data-categories="Z3VpZGVz" data-listing-date-sort="1677560400000" data-listing-file-modified-sort="1753521731285" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="4" data-listing-word-count-sort="645" data-listing-title-sort="Nginx proxy manager" data-listing-filename-sort="index.qmd">
-<td>
-<span class="listing-date">Feb 28, 2023</span>
-</td>
-<td>
-<a href="../guides/npm/index.html" class="title listing-title">Nginx proxy manager</a>
-</td>
-<td>
-<span class="listing-author">&nbsp;</span>
-</td>
-
-</tr>
-
-<tr data-index="11" data-categories="Z3VpZGVz" data-listing-date-sort="1676350800000" data-listing-file-modified-sort="1753521731284" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="2" data-listing-word-count-sort="340" data-listing-title-sort="How to get a subdomain from duckdns" data-listing-filename-sort="index.qmd">
-<td>
-<span class="listing-date">Feb 14, 2023</span>
-</td>
-<td>
-<a href="../guides/duckdns/index.html" class="title listing-title">How to get a subdomain from duckdns</a>
-</td>
-<td>
-<span class="listing-author">&nbsp;</span>
-</td>
-
-</tr>
-
-<tr data-index="12" data-categories="Z3VpZGVz" data-listing-date-sort="1664510400000" data-listing-file-modified-sort="1741332099004" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="3" data-listing-word-count-sort="455" data-listing-title-sort="Set up cockpit on an AWS EC2 instance" data-listing-filename-sort="index.qmd">
-<td>
-<span class="listing-date">Sep 30, 2022</span>
-</td>
-<td>
-<a href="../guides/cockpit-setup/index.html" class="title listing-title">Set up cockpit on an AWS EC2 instance</a>
-</td>
-<td>
-<span class="listing-author">&nbsp;</span>
-</td>
-
-</tr>
-
-</tbody>
-</table>
-<div class="listing-no-matching d-none">No matching items</div>
-</div></main> <!-- /main -->
+</main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">
   window.document.addEventListener("DOMContentLoaded", function (event) {
     // Ensure there is a toggle, if there isn't float one in the top right
