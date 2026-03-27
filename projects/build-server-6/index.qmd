@@ -805,6 +805,13 @@ openssl pkcs12 -in incus-ui.pfx -nocerts -nodes -out client.key
 openssl pkcs12 -in incus-ui.pfx -clcerts -nokeys -out client.crt
 ```
 
+One this works, the above can be put into some code:
+
+
+
+
+
+In order to prevent any weird things with the openfga authorization as part of this, I have decided to create (and then disable/make inactive) two Authentik users: `default`, and `layer8`. This will prevent users from creating more users with default or layer8 as their username, which would give them access to those projects even if they are not part of the group. 
 
 
 

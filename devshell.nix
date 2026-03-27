@@ -12,13 +12,20 @@ let
   ];
   
   texEnv = (pkgs.texlive.combine {
-    inherit (pkgs.texlive) scheme-infraonly
+    inherit (pkgs.texlive) 
+      scheme-infraonly
       collection-latex collection-latexrecommended
-      fontawesome6
+      # fontawesome6
       lualatex-math
       luatex
       framed
-      xetex;
+      xetex
+      # Stuff needed for Jake's resume template
+      preprint titlesec marvosym enumitem
+      fancyhdr
+      # Not strictly needed for jakes, but makes things easier via a script
+      latexmk
+      ;
   });
 
   quarto = pkgs.quarto.overrideAttrs (oldAttrs: rec {
