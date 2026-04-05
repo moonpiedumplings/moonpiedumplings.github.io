@@ -805,9 +805,29 @@ openssl pkcs12 -in incus-ui.pfx -nocerts -nodes -out client.key
 openssl pkcs12 -in incus-ui.pfx -clcerts -nokeys -out client.crt
 ```
 
-One this works, the above can be put into some code:
+One this works, the above can be put into some code. I initially tried to embed the certificates in the code, but it seems like the authentik expression policies are restricted from creating certificates or the like.
 
+So instead, I have decided to mount them into the authentik worker as secrets. 
 
+Starting with this:
+
+```{.yaml}
+apiVersion: v1
+kind: Secret
+metadata:
+    name: incus-secrets
+    namespace: authentik
+type: Opaque
+stringData:
+    incus-key: |-
+       test data to encrypt here
+    incus-crt: |-
+        test data to encrypt here
+```
+
+Then, data can be encrypted with `sops encrypt --encrypted-regex '^(stringData)$' incus-secrets.yaml --in-place`
+
+Then, this gives creates a project via an authentik expression policy:
 
 
 

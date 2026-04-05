@@ -12,6 +12,12 @@ execute:
   freeze: false
 ---
 
+# Why?
+
+For some software, there are 10 billion alternatives. There are many great ebook readers, file browsers, terminals, and so on. 
+
+But for some types of software, it's rarer. There aren't as many options, and the options are less known. This is my page to keep track of softwares like that.
+
 
 # Vulnerability Scanning (Greenbone)
 
@@ -19,21 +25,41 @@ External:
 
 (<https://programming.dev/post/17335421>)
 
+(Web) GUI:
+
+* GreenBone/OpenVas
+* <https://sirius.opensecurity.com/>
+* <https://docs.enginsight.com/docs/master/operation/platform/penetration-testing>
+
+Cli:
+
+
 * <https://github.com/future-architect/vuls> <https://h0bbl3s.port0.org/vulnerability-scanning-with-vuls/>
 * <https://github.com/vulsio/vulsctl>
-* <https://github.com/projectdiscovery/nuclei>
+* https://github.com/therandomsecurityguy/flan-go-scan — Cloudfare's updated flan
+* <https://github.com/projectdiscovery/nuclei>  
+  * Tested it, it's quick and detects CVE's. Pretty nice!
 * <https://doc.ivre.rocks/en/latest/>
 * <https://github.com/tlkh/prowler> — last update 6 years ago
 
 * Nmap scripts
     * <https://github.com/scipag/vulscan> — vulnerability scanning project for nmap
     * <https://github.com/vulnersCom/nmap-vulners>
-    * <https://github.com/cloudflare/flan> — last update 2 years ago, based on vulners fro nmap
+    * <https://github.com/cloudflare/flan> — last update 2 years ago, based on vulners for nmap (has since been replaced, see above)
 
 
 Web scanning:
 
 * <https://www.zaproxy.org/>
+
+# SAST Tools
+
+Since they have been useful in dealing with custom, homemade apps during the cyber competitions, I will note a few down.
+
+* <https://github.com/Bearer/bearer>
+  * Not actually open source
+  * Works great though
+* https://github.com/opengrep/opengrep
 
 
 # Browser based Desktop (Kasmweb/VNC)
@@ -102,6 +128,10 @@ There is also this one project: [Interactive Code Playgrounds](https://github.co
 * [Tripwire](https://en.wikipedia.org/wiki/Open_Source_Tripwire) (last update 6 years ago)
 * [Falco](https://github.com/falcosecurity/falco)
 
+# Automated Red Teaming
+
+* Atomic Red Team
+* OpenAEV
 
 # Domain/AD
 
@@ -159,6 +189,25 @@ Lots of similar software mentioned there.
   * [Reddit post](https://www.reddit.com/r/kubernetes/comments/1jqd4pb/werfnelm_nelm_is_a_helm_3_alternative/)
 * <https://yokecd.github.io/docs/>
 * <https://github.com/ctrox/zeropod> — container pause and save to memory, then resume. Comes with an experimental in memory
+
+# Auth/IDP
+
+* Midpoint by Evoleum (layer on top of Active Directory that adds invites and other nice things)
+* Authentik
+* Kanidm
+* Void Auth
+* <https://gitlab.com/yaal/canaille>
+* LLdap
+
+# Virtualization Platforms
+
+* Openstack (see distros below)
+* SUSe Harvester
+* Incus
+* Proxmox
+* XCP-NG/Xen Orchestra
+* Sylvie.io (new one for bhyve)
+* 
 
 # Openstack
 

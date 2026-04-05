@@ -1,7 +1,7 @@
 { pkgs ? import <nixpkgs> { } }:
 
 let
-  python3 = pkgs.python311;
+  python3 = pkgs.python314;
   pythonDeps = ps: with ps; [
     jupyter-core
     pyyaml
