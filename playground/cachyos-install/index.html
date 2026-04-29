@@ -328,10 +328,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#installation" id="toc-installation" class="nav-link active" data-scroll-target="#installation">Installation</a></li>
+  <li><a href="#the-re-up" id="toc-the-re-up" class="nav-link active" data-scroll-target="#the-re-up">The Re-Up</a></li>
+  <li><a href="#main-post" id="toc-main-post" class="nav-link" data-scroll-target="#main-post">Main Post</a></li>
+  <li><a href="#installation" id="toc-installation" class="nav-link" data-scroll-target="#installation">Installation</a></li>
   <li><a href="#user-data" id="toc-user-data" class="nav-link" data-scroll-target="#user-data">User data</a></li>
-  <li><a href="#misc-config-changes" id="toc-misc-config-changes" class="nav-link" data-scroll-target="#misc-config-changes">Misc config changes</a></li>
   <li><a href="#nix-not-starting-on-boot." id="toc-nix-not-starting-on-boot." class="nav-link" data-scroll-target="#nix-not-starting-on-boot.">Nix not starting on boot.</a></li>
+  <li><a href="#ripping-out-cachyos-bs" id="toc-ripping-out-cachyos-bs" class="nav-link" data-scroll-target="#ripping-out-cachyos-bs">Ripping out CachyOS BS</a></li>
+  <li><a href="#misc-config-changes" id="toc-misc-config-changes" class="nav-link" data-scroll-target="#misc-config-changes">Misc config changes</a></li>
   </ul>
 </nav>
     </div>
@@ -367,7 +370,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </header>
 
 
+<section id="the-re-up" class="level1">
+<h1>The Re-Up</h1>
+<p>I am reinstalling CachyOS on my new framework, so I am updating this post to note what has changed and what hasn’t.</p>
+</section>
+<section id="main-post" class="level1">
+<h1>Main Post</h1>
 <p>I’ve decided to reinstall <a href="https://cachyos.org/">cachyos</a>, the Arch Linux fork I use on my laptop’s, because the config of my smaller laptop is getting crusty. In addition to not having any swap setup, <code>/nix</code> is part of the main btrfs subvolume, meaning it is included in snapshots, and my snapshots are far, far larger than they should be.</p>
+</section>
 <section id="installation" class="level1">
 <h1>Installation</h1>
 <p>I downloaded the latest, ISO, but I had some troubles installing. I first attempted to set up an LVM2 Partition, but that crashed, and I don’t know why. The error log of the installer doesn’t have any relevant information.</p>
@@ -428,12 +438,21 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h1>User data</h1>
 <p>I backed up my entire home directory to a tar archive using ark, the archiver tool on KDE. However, since I was backing it up to a usb thumb drive, I used <a href="https://wiki.archlinux.org/title/Gocryptfs">gocryptfs</a> to encrypt the folder where the archive was stored. I encrypt sensitive data I put on my usb drives, that way, even if I lose the drive, nothing gets compromised.</p>
 </section>
-<section id="misc-config-changes" class="level1">
-<h1>Misc config changes</h1>
-<p>I also enabled the <a href="https://wiki.archlinux.org/title/Keyboard_shortcuts#Kernel_(SysRq)">Magic sysrq key</a> via a kernel parameter in my grub config file.</p>
-</section>
 <section id="nix-not-starting-on-boot." class="level1">
 <h1>Nix not starting on boot.</h1>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Note
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>This fix doesn’t seem to be needed anymore. I didn’t encounter any issues, at least.</p>
+</div>
+</div>
 <p>I encountered another issue where nix does not start on boot. The problem is probably that, because /nix is a seperate btrfs subvolume, and the systemd service is a symlink to the nix service on /nix, systemd cannot locate the proper service. I need to either move the nix service so it is located on the root subvolume, or adjust the nix daemon service so it requires /nix to be mounted.</p>
 <p>Thankfully, systemd unit files have an option for this: <a href="https://www.freedesktop.org/software/systemd/man/latest/systemd.unit.html#RequiresMountsFor=">RequiresMountsFor=</a>.</p>
 <p>And to adjust the nix daemon service, I can use override, as <a href="https://askubuntu.com/questions/659267/how-do-i-override-or-configure-systemd-services">mentioned on stackoverflow</a>. Although, I don’t like this solution. Since the original service is still a symlink, would systemd really be able to find it?</p>
@@ -460,6 +479,33 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a><span class="dt">WantedBy</span><span class="ot">=</span><span class="st">sysinit.target</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>And with this, the nix socket starts properly on boot.</p>
+</section>
+<section id="ripping-out-cachyos-bs" class="level1">
+<h1>Ripping out CachyOS BS</h1>
+<p>CachyOS makes a lot of optimizations for gamers. I am not a gamer, so they annoy me.</p>
+<p>For example, ananicy-cpp is used to control resource usage of things on the system. But, I have found that it can severely slow, or even prevent the Lichess local browser analysis from running, so I disable it.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>root@nefertem ~]# systemctl disable --now ananicy-cpp.service </span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>Removed '/etc/systemd/system/multi-user.target.wants/ananicy-cpp.service'.</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>systemctl ma[root@nefertem ~]# systemctl mask ananicy-cpp.service </span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>Created symlink '/etc/systemd/system/ananicy-cpp.service' → '/dev/null'.</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Another thing I do is switch to the zen kernel, which is more optimized for desktop usage:</p>
+<p><code>sudo pacman -S linux-zen linux-zen-headers</code></p>
+<p>Another thing I find annoying is the <code>cachy-update</code> script. This script is well intentioned, designed to inform users of when their system updated and needs a reboot for all changes to take effect. The problem I have with it is that it informs users that they need to reboot <strong>before</strong> the update is actually finished (it seems to happen right before kernel initramfs generates), and during a particularly dangerous step to interrupt.</p>
+<p><code>sudo pacman -Rncs cachy-update</code></p>
+<p><code>sudo pacman -S archlinux-contrib</code></p>
+<p>Whoops, the update notifier is still there. It looks like it’s actually a pacman hook.</p>
+</section>
+<section id="misc-config-changes" class="level1">
+<h1>Misc config changes</h1>
+<p>I also enabled the <a href="https://wiki.archlinux.org/title/Keyboard_shortcuts#Kernel_(SysRq)">Magic sysrq key</a> via a kernel parameter in my grub config file.</p>
+<p>Enabling the <a href="https://aur.chaotic.cx/">chaotic aur</a>, which prebuilds many aur packages.</p>
+<p>Installing update-grub from the chaotic aur, which is a convinience script to update grub config.</p>
+<p><code>sudo pacman -S update-grub</code></p>
+<p>By default, firefox opens a random profile when I have it open a link. By right clicking on the application in the menu, and adding <code>-P</code> to arguments.</p>
+<p>Installing java:</p>
+<p><code>sudo pacman -S java-runtime-common jre-openjdk</code></p>
+<p>File picker woes:</p>
+<p>https://askubuntu.com/questions/1150404/kubuntu-18-10-how-do-i-change-this-file-picker</p>
 
 
 </section>
