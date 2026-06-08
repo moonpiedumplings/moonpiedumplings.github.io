@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.8.26">
+<meta name="generator" content="quarto-1.9.38">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -10,6 +10,9 @@
 
 <title>Reinstalling Cachyos – Jeffrey Fonseca</title>
 <style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
 div.columns{display: flex; gap: min(4vw, 1.5em);}
@@ -68,19 +71,18 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <meta name="quarto:offset" content="../../">
 <script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
 <script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
-<script src="../../site_libs/quarto-html/axe/axe-check.js" type="module"></script>
 <script src="../../site_libs/quarto-html/popper.min.js"></script>
 <script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="../../site_libs/quarto-html/anchor.min.js"></script>
 <link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-587c61ba64f3a5504c4d52d930310e48.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-b758ccaa5987ceb1b75504551e579abf.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-587c61ba64f3a5504c4d52d930310e48.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-0a6b7249c26820e032cb0bd839ff02b1.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../site_libs/bootstrap/bootstrap-3f2bc9d4f556814166f73bbd8817f5a4.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../../site_libs/bootstrap/bootstrap-dark-876d2931c83aab800a84748ed374a49e.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../../site_libs/bootstrap/bootstrap-3f2bc9d4f556814166f73bbd8817f5a4.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-71b0b744289a5ad46ce9ff4499f1ca2a.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-f7686484f646e218ec81858383baa446.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-71b0b744289a5ad46ce9ff4499f1ca2a.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -333,7 +335,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#installation" id="toc-installation" class="nav-link" data-scroll-target="#installation">Installation</a></li>
   <li><a href="#user-data" id="toc-user-data" class="nav-link" data-scroll-target="#user-data">User data</a></li>
   <li><a href="#nix-not-starting-on-boot." id="toc-nix-not-starting-on-boot." class="nav-link" data-scroll-target="#nix-not-starting-on-boot.">Nix not starting on boot.</a></li>
-  <li><a href="#ripping-out-cachyos-bs" id="toc-ripping-out-cachyos-bs" class="nav-link" data-scroll-target="#ripping-out-cachyos-bs">Ripping out CachyOS BS</a></li>
+  <li><a href="#ripping-out-cachyos-bs" id="toc-ripping-out-cachyos-bs" class="nav-link" data-scroll-target="#ripping-out-cachyos-bs">Ripping out CachyOS BS</a>
+  <ul class="collapse">
+  <li><a href="#pacman-hoooks" id="toc-pacman-hoooks" class="nav-link" data-scroll-target="#pacman-hoooks">Pacman hoooks</a></li>
+  </ul></li>
   <li><a href="#misc-config-changes" id="toc-misc-config-changes" class="nav-link" data-scroll-target="#misc-config-changes">Misc config changes</a></li>
   </ul>
 </nav>
@@ -494,6 +499,12 @@ Note
 <p><code>sudo pacman -Rncs cachy-update</code></p>
 <p><code>sudo pacman -S archlinux-contrib</code></p>
 <p>Whoops, the update notifier is still there. It looks like it’s actually a pacman hook.</p>
+<section id="pacman-hoooks" class="level2">
+<h2 class="anchored" data-anchor-id="pacman-hoooks">Pacman hoooks</h2>
+<p>I need to remove some of these pacman hooks. The auto snapper snapshots on every update are somewhat annoying.</p>
+<p>They exist at <code>/usr/share/libalpm/hooks/</code></p>
+<p>The first one I want to remove are the hooks installed by <code>snap-pac</code>, which cause automatic btrfs snapshots on package installation, removal, or updates.</p>
+</section>
 </section>
 <section id="misc-config-changes" class="level1">
 <h1>Misc config changes</h1>
@@ -506,6 +517,16 @@ Note
 <p><code>sudo pacman -S java-runtime-common jre-openjdk</code></p>
 <p>File picker woes:</p>
 <p>https://askubuntu.com/questions/1150404/kubuntu-18-10-how-do-i-change-this-file-picker</p>
+<p>Removing ulimits:</p>
+<div class="code-with-filename">
+<div class="code-with-filename-file">
+<pre><strong>/etc/security/limits.conf</strong></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7" data-filename="/etc/security/limits.conf"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a># at the end</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>moonpie soft memlock unlimited</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>moonpie hard memlock unlimited</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>This makes it possible to use fastflowlm, which was whining before this.</p>
 
 
 </section>
