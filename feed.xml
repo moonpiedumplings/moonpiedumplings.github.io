@@ -376,6 +376,493 @@ font-style: inherit;"> zstd(level=3)</span></span></code></pre></div></div>
   <pubDate>Mon, 05 Jan 2026 08:00:00 GMT</pubDate>
 </item>
 <item>
+  <title>Installing every LLM agent at once</title>
+  <link>https://moonpiedumplings.github.io/playground/llm-royale/</link>
+  <description><![CDATA[ 
+
+
+
+
+
+<p>Recently, I have begun to play with local LLM’s for various purposes. The runtime doesn’t matter too much, I am mostly bouncing between ollama-vulkan (seems to be bugged for gemini), ollama-rocm and fastflowlm (uses the NPU but doesn’t have as many models).</p>
+<p>But, what I have been playing witha lot is the harnesses/agents. I have tried out hermes, forgecode, nanocode, and a few others.</p>
+<p>I mostly use nix for packages, so I found out about this cool project: <a href="https://github.com/numtide/llm-agents.nix" class="uri">https://github.com/numtide/llm-agents.nix</a></p>
+<section id="installation" class="level1">
+<h1>Installation</h1>
+<p>It is essentially, nix packaging of a ton of agents and similar software. I was trying many out one by one here, but I got tired of that, so I decided to see if I could install all of them at once.</p>
+<p>I’m using home-manager to install packages on non-nixos systems: <a href="https://github.com/moonpiedumplings/home-manager/" class="uri">https://github.com/moonpiedumplings/home-manager/</a></p>
+<p>It was fairly simple actually. Because nix is a programming language, it is possible to convert it to a list, filter out broken agents, and then add them all fo</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1" style="background: #f1f3f5;"><pre class="sourceCode nix code-with-copy"><code class="sourceCode nix"><span id="cb1-1"><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">let</span> </span>
+<span id="cb1-2">  <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">hermes</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> inputs<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">.</span>hermes<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">.</span>packages<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">.</span><span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">${</span>system<span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">}</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">;</span></span>
+<span id="cb1-3">  <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">llm-agents</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> inputs<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">.</span>llm<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">-</span>agents<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">.</span>packages<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">.</span><span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">${</span>system<span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">}</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">;</span></span>
+<span id="cb1-4">  <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">every-agent</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">builtins</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">.</span>attrValues llm<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">-</span>agents<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">;</span></span>
+<span id="cb1-5">  <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># list of broken agents for filtering</span></span>
+<span id="cb1-6">  <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">broken-agents</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">[</span></span>
+<span id="cb1-7">    <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"aionui"</span></span>
+<span id="cb1-8">    <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"hermes-desktop"</span></span>
+<span id="cb1-9">    <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"showboat"</span></span>
+<span id="cb1-10">    <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"backlog-md"</span></span>
+<span id="cb1-11">    <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"mistral-vibe"</span></span>
+<span id="cb1-12">    <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"codex"</span></span>
+<span id="cb1-13">    <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#"openclaw"</span></span>
+<span id="cb1-14">    <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># Not an agent</span></span>
+<span id="cb1-15">    <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"flake-inputs"</span></span>
+<span id="cb1-16">    <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#"oh-my-opencode"</span></span>
+<span id="cb1-17">    <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#"omp"</span></span>
+<span id="cb1-18">    <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#"gno"</span></span>
+<span id="cb1-19">    <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># This stuff seems to be failing due to npm network issues. </span></span>
+<span id="cb1-20">    <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># It's probably my home internet rather than broken packages</span></span>
+<span id="cb1-21">    <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"reasonix"</span></span>
+<span id="cb1-22">    <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"paseo-desktop"</span></span>
+<span id="cb1-23">    <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"codegraph"</span></span>
+<span id="cb1-24">    <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"gitbutler"</span></span>
+<span id="cb1-25">    <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"but"</span></span>
+<span id="cb1-26">    <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"openclaw"</span></span>
+<span id="cb1-27">    <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"code"</span></span>
+<span id="cb1-28">  <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">];</span></span>
+<span id="cb1-29"></span>
+<span id="cb1-30">  <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">working-agents</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span>  <span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">builtins</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">.</span>attrValues</span>
+<span id="cb1-31">    <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#(builtins.removeAttrs llm-agents [ "aionui" "hermes-desktop" "showboat" ]);</span></span>
+<span id="cb1-32">    <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">(</span><span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">builtins</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">.</span>removeAttrs llm<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">-</span>agents broken<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">-</span>agents<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">);</span></span>
+<span id="cb1-33"></span>
+<span id="cb1-34">  <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">gpu-wrapped-agents</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">builtins</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">.</span>map config<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">.</span>lib<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">.</span>nixGL<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">.</span>wrappers<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">.</span>mesa working<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">-</span>agents<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">;</span></span></code></pre></div></div>
+<p>After I have almost everything that that project packages, available.</p>
+<p>Next up, was to sandbox them. Part of why I select the nix programming, is becasue it is possible to mount the immutable nix store into virtual machines or containers, saving space.</p>
+</section>
+<section id="incus-containers" class="level1">
+<h1>Incus Containers</h1>
+<p>So, I created an incus container:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2" style="background: #f1f3f5;"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb2-1"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">config</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span></span>
+<span id="cb2-2"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">image.description</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> Debian trixie amd64 (20260608_05:24)</span></span>
+<span id="cb2-3"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">image.os</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> Debian</span></span>
+<span id="cb2-4"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">image.release</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> trixie</span></span>
+<span id="cb2-5"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">devices</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span></span>
+<span id="cb2-6"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">disk-device-1</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span></span>
+<span id="cb2-7"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">path</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> /nix/store</span></span>
+<span id="cb2-8"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">readonly</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> </span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"true"</span></span>
+<span id="cb2-9"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">source</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> /nix/store</span></span>
+<span id="cb2-10"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">type</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> disk</span></span>
+<span id="cb2-11"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">disk-device-2</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span></span>
+<span id="cb2-12"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">path</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> /nix/var/nix/daemon-socket</span></span>
+<span id="cb2-13"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">readonly</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> </span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"true"</span></span>
+<span id="cb2-14"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">source</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> /nix/var/nix/daemon-socket</span></span>
+<span id="cb2-15"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">type</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> disk</span></span>
+<span id="cb2-16"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">type</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> container</span></span>
+<span id="cb2-17"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">project</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> default</span></span></code></pre></div></div>
+<p>Th ebig things to note are the way I mount the nix daemon, and the nix store into the container read only.</p>
+<p>Inside the virtual machine, I can install nix by running <code>apt install nix-bin</code>.</p>
+<p>Then, I have to set up the profiles so they are used properly:</p>
+<div class="code-with-filename">
+<div class="code-with-filename-file">
+<pre><strong>/etc/profile.d/nix.sh</strong></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3" data-filename="/etc/profile.d/nix.sh" style="background: #f1f3f5;"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb3-1"><span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">export</span> <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">NIX_REMOTE</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span>daemon <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># Ensures that nix tries to talk to the socket</span></span>
+<span id="cb3-2"><span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">export</span> <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">NIX_SSL_CERT_FILE</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span>/etc/ssl/certs/ca-certificates.crt</span>
+<span id="cb3-3"></span>
+<span id="cb3-4"><span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">if</span> <span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">[</span> <span class="ot" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">-e</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"</span><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">$HOME</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">/.nix-profile/etc/profile.d/hm-session-vars.sh"</span> <span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">]</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">;</span> <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">then</span></span>
+<span id="cb3-5">  <span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">.</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"</span><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">$HOME</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">/.nix-profile/etc/profile.d/hm-session-vars.sh"</span></span>
+<span id="cb3-6"><span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">fi</span></span>
+<span id="cb3-7"></span>
+<span id="cb3-8"><span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">export</span> <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">PATH</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"</span><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">$HOME</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">/.nix-profile/bin:/nix/var/nix/profiles/default/bin:</span><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">$PATH</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"</span></span></code></pre></div></div>
+</div>
+<p>I also have to add channels, and enable flakes and the new nix command.</p>
+<p>Once these are configured, when I run nix operations, like installing home manager and pointing home manager at the same config my host is using, it works, saving space becuase it is using the same binaries and libraries from the host. And every</p>
+</section>
+<section id="git-environments" class="level1">
+<h1>Git Environments</h1>
+<p>Next, is safely giving the Incus container access to the git environment. I created another directory, <code>agent-sandbox</code>, and shared that to the Incus container with read and write permissions.</p>
+<p>With git, you can actually git clone/push from a local repository. So if I run this on my host:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb4-1">[moonpie@nefertem Projects]$ cd agent-sandbox/</span>
+<span id="cb4-2">[moonpie@nefertem agent-sandbox]$ git clone ../coder-templates/</span>
+<span id="cb4-3">Cloning into 'coder-templates'...</span>
+<span id="cb4-4">remote: Enumerating objects: 171, done.</span>
+<span id="cb4-5">remote: Counting objects: 100% (171/171), done.</span>
+<span id="cb4-6">remote: Compressing objects: 100% (119/119), done.</span>
+<span id="cb4-7">remote: Total 171 (delta 44), reused 171 (delta 44), pack-reused 0 (from 0)</span>
+<span id="cb4-8">Receiving objects: 100% (171/171), 19.81 MiB | 2.02 MiB/s, done.</span>
+<span id="cb4-9">Resolving deltas: 100% (44/44), done.</span>
+<span id="cb4-10">[moonpie@nefertem agent-sandbox]$ cd coder-templates/</span>
+<span id="cb4-11">[moonpie@nefertem coder-templates]$ touch test.txt</span>
+<span id="cb4-12">[moonpie@nefertem coder-templates]$ echo test &gt; test.txt </span>
+<span id="cb4-13">[moonpie@nefertem coder-templates]$ git add .</span>
+<span id="cb4-14">[moonpie@nefertem coder-templates]$ git commit -m "test commit"</span>
+<span id="cb4-15">[main a31feff] test commit</span>
+<span id="cb4-16"> 1 file changed, 1 insertion(+)</span>
+<span id="cb4-17"> create mode 100644 test.txt</span>
+<span id="cb4-18">[moonpie@nefertem coder-templates]$ cd ..</span>
+<span id="cb4-19">[moonpie@nefertem agent-sandbox]$ cd ..</span>
+<span id="cb4-20">[moonpie@nefertem Projects]$ cd coder-templates/</span>
+<span id="cb4-21">[moonpie@nefertem coder-templates]$ git pull ../agent-sandbox/coder-templates/ main</span>
+<span id="cb4-22">From ../agent-sandbox/coder-templates</span>
+<span id="cb4-23"> * branch            main       -&gt; FETCH_HEAD</span>
+<span id="cb4-24">Updating 99ed112..a31feff</span>
+<span id="cb4-25">Fast-forward</span>
+<span id="cb4-26"> test.txt | 1 +</span>
+<span id="cb4-27"> 1 file changed, 1 insertion(+)</span>
+<span id="cb4-28"> create mode 100644 test.txt</span>
+<span id="cb4-29">[moonpie@nefertem coder-templates]$ </span></code></pre></div></div>
+<p>The agent now has a copy of the repo, they can do git operations on, but they can’t touch the original repo becasue that is outside of the sandbox.</p>
+<p>What this does, is it prevents agents from screwing up git history, or incorrectly pushing when they shouldn’t. By making them do all git operations in another repo, I can inspect the history before pulling it over.</p>
+</section>
+<section id="yolo" class="level1">
+<h1>YOLO</h1>
+<p>The idea behind this whole setup is that I should be able to run the agents in always confirm (YOLO) or similar modes, safely in a sandboxed environment.</p>
+
+
+</section>
+
+ ]]></description>
+  <category>playground</category>
+  <guid>https://moonpiedumplings.github.io/playground/llm-royale/</guid>
+  <pubDate>Thu, 05 Jun 2025 07:00:00 GMT</pubDate>
+</item>
+<item>
   <title>Systemd is Basically One Node Kubernetes</title>
   <link>https://moonpiedumplings.github.io/blog/systemk8s/</link>
   <description><![CDATA[ 
@@ -14543,269 +15030,6 @@ rook-ceph-operator   66s   False   Helm install failed for release openstack/roo
   <category>blog</category>
   <guid>https://moonpiedumplings.github.io/blog/watched-software/</guid>
   <pubDate>Sat, 07 Sep 2024 07:00:00 GMT</pubDate>
-</item>
-<item>
-  <title>Connecting Linux machines to Active Directory</title>
-  <link>https://moonpiedumplings.github.io/playground/ad-linux/</link>
-  <description><![CDATA[ 
-
-
-
-
-
-<section id="research" class="level1">
-<h1>Research</h1>
-<p>This is part of a project for CSUN’s Layer 8 cybersecurity club.</p>
-<p>There seem to be multiple ways of connecting a Linux machine to an LDAP server, in such a way that users can login using LDAP credentials.</p>
-<ul>
-<li><a href="https://arthurdejong.org/nss-pam-ldapd/setup">nss-pam</a></li>
-<li><a href="https://www.redhat.com/sysadmin/linux-active-directory">realmd/sssd</a></li>
-<li><a href="https://wiki.debian.org/AuthenticatingLinuxWithActiveDirectory">Windbind/Samba</a> (last updated 2016)</li>
-</ul>
-<p>Package comparison Table (Repology):</p>
-<ul>
-<li><a href="https://repology.org/project/nss-pam-ldapd/versions">nss-pam-ldapd</a></li>
-<li><a href="https://repology.org/project/realmd/versions">realmd</a></li>
-<li><a href="https://repology.org/project/sssd/versions">sssd</a> — Not on Arch</li>
-<li><a href="https://repology.org/project/samba/versions">samba</a></li>
-<li><a href="https://repology.org/project/krb5/versions">krb5</a></li>
-<li><a href="https://repology.org/project/apmod:auth-ntlm-winbind/versions">winbind</a> — only thing I could find, and not packaged everywhere</li>
-</ul>
-<p>Looking at this, nss-pam-ldapd seems to be the most generally available option for systems. Although, pam is only portable to systems that have it, all of our systems have pam, except for one — the openbsd system.</p>
-</section>
-<section id="deploying-lldap" class="level1">
-<h1>Deploying lldap</h1>
-<p>Windows team didn’t give us access to their active directory server, so we decided to deploy ldap instead. For deploying lldap, I chose <a href="https://github.com/lldap/lldap">lldap</a>, an all in one ldap implementation, that comes with a web ui for managemnt.</p>
-<p>Here is the docker-compose.yml I am using:</p>
-<div class="code-with-filename">
-<div class="code-with-filename-file">
-<pre><strong>docker-compose.yml</strong></pre>
-</div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1" data-filename="docker-compose.yml" style="background: #f1f3f5;"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb1-1"><span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">version</span><span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">:</span><span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;"> </span><span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">"3"</span></span>
-<span id="cb1-2"></span>
-<span id="cb1-3"><span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">volumes</span><span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">:</span></span>
-<span id="cb1-4"><span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">lldap_data</span><span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">:</span></span>
-<span id="cb1-5"><span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">driver</span><span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">:</span><span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;"> local</span></span>
-<span id="cb1-6"></span>
-<span id="cb1-7"><span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">services</span><span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">:</span></span>
-<span id="cb1-8"><span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">lldap</span><span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">:</span></span>
-<span id="cb1-9"><span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">image</span><span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">:</span><span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;"> docker.io/lldap/lldap:stable</span></span>
-<span id="cb1-10"><span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">ports</span><span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">:</span></span>
-<span id="cb1-11"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">      # For LDAP, not recommended to expose, see Usage section.</span></span>
-<span id="cb1-12"><span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">      </span><span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">-</span><span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;"> </span><span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">"3890:3890"</span></span>
-<span id="cb1-13"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">      # For LDAPS (LDAP Over SSL), enable port if LLDAP_LDAPS_OPTIONS__ENABLED set true, look env below</span></span>
-<span id="cb1-14"><span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">      </span><span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">-</span><span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;"> </span><span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">"6360:6360"</span></span>
-<span id="cb1-15"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">      # For the web front-end</span></span>
-<span id="cb1-16"><span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">      </span><span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">-</span><span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;"> </span><span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">"17170:17170"</span></span>
-<span id="cb1-17"><span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">volumes</span><span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">:</span></span>
-<span id="cb1-18"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">     # - "lldap_data:/data"</span></span>
-<span id="cb1-19"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">      # Alternatively, you can mount a local folder</span></span>
-<span id="cb1-20"><span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">       </span><span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">-</span><span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;"> </span><span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">"./lldap_data:/data"</span></span>
-<span id="cb1-21"><span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;">environment</span><span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">:</span></span>
-<span id="cb1-22"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">      #- UID=####</span></span>
-<span id="cb1-23"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">      #- GID=####</span></span>
-<span id="cb1-24"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">      #- TZ=####/####</span></span>
-<span id="cb1-25"><span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">      </span><span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">-</span><span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;"> LLDAP_JWT_SECRET="uprising slacks snuggle"</span></span>
-<span id="cb1-26"><span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">      </span><span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">-</span><span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;"> LLDAP_KEY_SEED="uprising slacks snuggle"</span></span>
-<span id="cb1-27"><span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">      </span><span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">-</span><span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;"> LLDAP_LDAP_BASE_DN=dc=example,dc=com</span></span>
-<span id="cb1-28"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">      # If using LDAPS, set enabled true and configure cert and key path</span></span>
-<span id="cb1-29"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">      # - LLDAP_LDAPS_OPTIONS__ENABLED=true</span></span>
-<span id="cb1-30"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">      # - LLDAP_LDAPS_OPTIONS__CERT_FILE=/path/to/certfile.crt</span></span>
-<span id="cb1-31"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">      # - LLDAP_LDAPS_OPTIONS__KEY_FILE=/path/to/keyfile.key        </span></span>
-<span id="cb1-32"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">      # You can also set a different database:</span></span>
-<span id="cb1-33"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">      # - LLDAP_DATABASE_URL=mysql://mysql-user:password@mysql-server/my-database</span></span>
-<span id="cb1-34"><span class="co" style="color: #5E5E5E;
-background-color: null;
-font-style: inherit;">      # - LLDAP_DATABASE_URL=postgres://postgres-user:password@postgres-server/my-database</span></span></code></pre></div></div>
-</div>
-<p>And then I copied the <code>lldap_config.docker_template.toml</code> to <code>./dat a/lldap_config.toml</code>. This sets up the default config for lldap.</p>
-<p>From here, the LDAP configuration can be edited through the web ui accessible at http://<you-ip>:17170</you-ip></p>
-</section>
-<section id="connecting-to-ldap" class="level1">
-<h1>Connecting to LDAP</h1>
-<section id="archlinux" class="level2">
-<h2 class="anchored" data-anchor-id="archlinux">Archlinux</h2>
-<p><code>sudo pacman -Syu nss-pam-ldapd</code></p>
-</section>
-<section id="kalidebian" class="level2">
-<h2 class="anchored" data-anchor-id="kalidebian">Kali/Debian</h2>
-<p><code>apt update</code></p>
-<p><code>apt install libnss-ldapd nslcd</code> (Do I need libpam-ldapd?)</p>
-</section>
-<section id="openbsd" class="level2">
-<h2 class="anchored" data-anchor-id="openbsd">Openbsd</h2>
-<p>???</p>
-</section>
-<section id="rhel" class="level2">
-<h2 class="anchored" data-anchor-id="rhel">RHEL</h2>
-<p><code>dnf update</code></p>
-<p><code>dnf install realmd sssd</code> (RHEL clones don’t seem to have nss-pam-ldapd)</p>
-
-
-</section>
-</section>
-
- ]]></description>
-  <category>playground</category>
-  <guid>https://moonpiedumplings.github.io/playground/ad-linux/</guid>
-  <pubDate>Thu, 29 Aug 2024 07:00:00 GMT</pubDate>
 </item>
 </channel>
 </rss>
