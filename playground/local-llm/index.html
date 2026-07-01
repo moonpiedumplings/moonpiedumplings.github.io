@@ -6,10 +6,10 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
-<meta name="dcterms.date" content="2026-06-08">
+<meta name="dcterms.date" content="2026-06-07">
 <meta name="description" content="And then sandboxing them">
 
-<title>Installing every LLM agent at once – Jeffrey Fonseca</title>
+<title>Local AI experiments – Jeffrey Fonseca</title>
 <style>
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -331,10 +331,20 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#installation" id="toc-installation" class="nav-link active" data-scroll-target="#installation">Installation</a></li>
+  <li><a href="#inference" id="toc-inference" class="nav-link active" data-scroll-target="#inference">Inference</a>
+  <ul class="collapse">
+  <li><a href="#npu-fastflowlm" id="toc-npu-fastflowlm" class="nav-link" data-scroll-target="#npu-fastflowlm">NPU: FastFlowLM</a></li>
+  <li><a href="#ollama" id="toc-ollama" class="nav-link" data-scroll-target="#ollama">Ollama</a></li>
+  <li><a href="#llama.cpp" id="toc-llama.cpp" class="nav-link" data-scroll-target="#llama.cpp">Llama.cpp</a></li>
+  <li><a href="#open-webui" id="toc-open-webui" class="nav-link" data-scroll-target="#open-webui">Open WebUI</a></li>
+  </ul></li>
+  <li><a href="#models" id="toc-models" class="nav-link" data-scroll-target="#models">Models</a></li>
+  <li><a href="#agents-and-interfaces" id="toc-agents-and-interfaces" class="nav-link" data-scroll-target="#agents-and-interfaces">Agents and Interfaces</a>
+  <ul class="collapse">
+  <li><a href="#installation" id="toc-installation" class="nav-link" data-scroll-target="#installation">Installation</a></li>
   <li><a href="#incus-containers" id="toc-incus-containers" class="nav-link" data-scroll-target="#incus-containers">Incus Containers</a></li>
   <li><a href="#git-environments" id="toc-git-environments" class="nav-link" data-scroll-target="#git-environments">Git Environments</a></li>
-  <li><a href="#yolo" id="toc-yolo" class="nav-link" data-scroll-target="#yolo">YOLO</a></li>
+  </ul></li>
   </ul>
 </nav>
     </div>
@@ -344,7 +354,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">Installing every LLM agent at once</h1>
+<h1 class="title">Local AI experiments</h1>
   <div class="quarto-categories">
     <div class="quarto-category">playground</div>
   </div>
@@ -363,7 +373,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <div>
     <div class="quarto-title-meta-heading">Published</div>
     <div class="quarto-title-meta-contents">
-      <p class="date">June 8, 2026</p>
+      <p class="date">June 7, 2026</p>
     </div>
   </div>
   
@@ -375,138 +385,232 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </header>
 
 
+<section id="inference" class="level1">
+<h1>Inference</h1>
+<p>Recently, I got a Framework 16 with the Ryzen AI. It has 32 gb of ram, which is more than enough to run local models, either on the GPU or the NPU. I am also experimenting with agents, in order to see if I can at the very least, get them to explain undocumented codebases or the like.</p>
+<section id="npu-fastflowlm" class="level2">
+<h2 class="anchored" data-anchor-id="npu-fastflowlm">NPU: FastFlowLM</h2>
+<p><a href="https://fastflowlm.com/">FastFlowLM</a> or FLM for short, is a software similar to Ollama that runs models on the Neural Processing Unit (NPU), instead of the GPU.</p>
+<p>One thing that makes it different is that the models must be converted to run on FLM in advance. It can’t download GGUF from hugging face, it uses a different format. They do have their own <a href="https://fastflowlm.com/docs/models/">repository of downloadable models</a>, but its nowhere near as large as Ollama’s repositories, or HuggingFace’s selection of GGUF models.</p>
+<p>It is possible to convert certain families of models manually: <a href="https://github.com/FastFlowLM/FLM_Q4NX_Converter" class="uri">https://github.com/FastFlowLM/FLM_Q4NX_Converter</a>, although it didn’t work to much for me. Right now I have just been playing with the available models.</p>
+<p>Okay. Upon further investigation, it looks like the process of converting a model is special, and has to be done per model.</p>
+<p>FastflowLM is useful, but it seems to be more for cases where you want smaller (older) models, running with less power consumption. I really want a powerful, active model, and I am okay with my computer getting warm. So, I looked to solutions that can run the current orthodox GGUF format.</p>
+</section>
+<section id="ollama" class="level2">
+<h2 class="anchored" data-anchor-id="ollama">Ollama</h2>
+<p>I first started with ollama-vulkan (packaged in Arch Linux), since Vulkan is officially supported on this hardware. However, I encountered a bug: <a href="https://github.com/ollama/ollama/issues/15261" class="uri">https://github.com/ollama/ollama/issues/15261</a></p>
+<p>Apparently Vulkan is broken with the Gemma4 models, which is frustrating.</p>
+<p>I switched to ollama-rocm (also packaged in Arch Linux). I was avoidant of this at first, because ROCM is technically only supported on datacenter AMD GPU’s, but it works fine on consumer GPU’s with some configuration, or in my case, no configuration. The downloaded gemma4 models now worked.</p>
+<p>Ollama worked, for the most part. Unfortunately, Llama.cpp is more performant, so that is why I tried below.</p>
+</section>
+<section id="llama.cpp" class="level2">
+<h2 class="anchored" data-anchor-id="llama.cpp">Llama.cpp</h2>
+<p>Llama.cpp is the first thing I tried in order to run LLM’s. Unfortunately, it would just segfault and core dump for me, no matter what I tried.</p>
+<p>Okay, I finally isolated it. The problem was that I need to explicitly specify the rocm device compilation should target. Also, I am using the Nixpkgs version not on Nixos. When I used the AUR version, it worked fine, although I am trying to avoid the AUR.</p>
+<p>Here is what I ended up doing to make Llama.cpp work:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode nix code-with-copy"><code class="sourceCode nix"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>llama<span class="op">-</span>cpp = pkgs<span class="op">.</span>llama<span class="op">-</span>cpp<span class="op">.</span>override <span class="op">{</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>      <span class="va">vulkanSupport</span> <span class="op">=</span> <span class="cn">true</span><span class="op">;</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>      <span class="va">cudaSupport</span> <span class="op">=</span> <span class="cn">false</span><span class="op">;</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>      <span class="va">rocmSupport</span> <span class="op">=</span> <span class="cn">true</span><span class="op">;</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>      <span class="va">rocmGpuTargets</span> <span class="op">=</span> <span class="op">[</span><span class="st">"gfx1152"</span><span class="op">];</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span>;</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>  llamacpp = llama<span class="op">-</span>cpp<span class="op">.</span>overrideAttrs <span class="op">(</span><span class="va">oldAttrs</span><span class="op">:</span> <span class="kw">rec</span> <span class="op">{</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>    <span class="va">version</span> <span class="op">=</span> <span class="st">"9684"</span><span class="op">;</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>    <span class="va">src</span> <span class="op">=</span> pkgs<span class="op">.</span>fetchFromGitHub <span class="op">{</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>    <span class="va">owner</span> <span class="op">=</span> <span class="st">"ggml-org"</span><span class="op">;</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>    <span class="va">repo</span> <span class="op">=</span> <span class="st">"llama.cpp"</span><span class="op">;</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>    <span class="va">tag</span> <span class="op">=</span> <span class="st">"b</span><span class="sc">${</span>version<span class="sc">}</span><span class="st">"</span><span class="op">;</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>    <span class="va">hash</span> <span class="op">=</span> <span class="st">"sha256-BQrdTEXUarGZcXU/g1w0BTx6FFDbuy738mcGINmwnGE="</span><span class="op">;</span></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>    <span class="va">leaveDotGit</span> <span class="op">=</span> <span class="cn">true</span><span class="op">;</span></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>    <span class="va">postFetch</span> <span class="op">=</span> <span class="st">''</span></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a><span class="st">      git -C "$out" rev-parse --short HEAD &gt; $out/COMMIT</span></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a><span class="st">      find "$out" -name .git -print0 | xargs -0 rm -rf</span></span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a><span class="st">    ''</span><span class="op">;</span></span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>    <span class="op">};</span></span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>    <span class="va">npmDepsHash</span> <span class="op">=</span> <span class="st">"sha256-0dctM/apI3ysMIEVBaBXO9hZMWskpJpNpOws1gwiOYc="</span><span class="op">;</span></span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>  <span class="op">})</span>; </span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>This updates llama.cpp, and also enables GPU support via HIP/ROCM.</p>
+<p>Except this crashes after an update. And I haven’t been able to fix it. It just dies. Worse, the process is “defunct” and can’t be killed properly, without having to reboot the whole machine.</p>
+<p>At first I thought that this was an issue with a mismatched ROCm version, between Nix and the host. But I tried the version of llama.cpp-rocm that CachyOS/Arch (now, they didn’t previously) ship, and it crashes too.</p>
+<p>I tried vulkan, which worked, but…s</p>
+<pre><code>[moonpie@nefertem home-manager]$ llama-cli --list-devices
+Warning, nixVulkanIntel overwriting existing LD_LIBRARY_PATH
+Available devices:
+  ROCm0: AMD Radeon 860M Graphics (15683 MiB, 26437 MiB free)
+  Vulkan0: AMD Radeon 860M Graphics (RADV KRACKAN1) (16195 MiB, 14880 MiB free)</code></pre>
+<p>Vulkan has much less vram than ROCm avaialable. Models that will load in ROCm, won’t load in Vulkan. I tried <a href="https://www.jeffgeerling.com/blog/2025/increasing-vram-allocation-on-amd-ai-apus-under-linux/">increasing the vram</a>, and llama-cli</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>[moonpie@nefertem ~]$ llama-cli --list-devices</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>Available devices:</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  Vulkan0: AMD Radeon 860M Graphics (RADV KRACKAN1) (25088 MiB, 21714 MiB free)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Unfortunately, it still doesn’t work, and many of the larger models which would load with ROCm, error:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>[moonpie@nefertem ~]$ llama-cli -hf unsloth/Qwen3.6-35B-A3B-GGUF:Q4_K_M</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>Loading model... -ggml_vulkan: Device memory allocation of size 1056622080 failed.</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>ggml_vulkan: vk::Device::allocateMemory: ErrorOutOfDeviceMemory</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>0.22.480.740 E alloc_tensor_range: failed to allocate Vulkan0 buffer of size 1056622080</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>/0.22.832.396 E llama_model_load: error loading model: unable to allocate Vulkan0 buffer</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>0.22.832.401 E llama_model_load_from_file_impl: failed to load model</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>0.22.832.435 E cmn  common_init_: failed to load model '/home/moonpie/.cache/huggingface/hub/models--unsloth--Qwen3.6-35B-A3B-GGUF/snapshots/a483e9e6cbd595906af30beda3187c2663a1118c/Qwen3.6-35B-A3B-UD-Q4_K_M.gguf'</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>-0.22.835.534 E srv    load_model: failed to load model, '/home/moonpie/.cache/huggingface/hub/models--unsloth--Qwen3.6-35B-A3B-GGUF/snapshots/a483e9e6cbd595906af30beda3187c2663a1118c/Qwen3.6-35B-A3B-UD-Q4_K_M.gguf'</span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a> </span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>Failed to load the model</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Which is frustrating.</p>
+</section>
+<section id="open-webui" class="level2">
+<h2 class="anchored" data-anchor-id="open-webui">Open WebUI</h2>
+<p>Open Web UI seems to be the easiest way to have a fully features local AI chat client. I tried searching for local apps, but they didn’t have web search which was unsatisfying.</p>
+<p>Installing it was pretty easy, I installed it using nix and <a href="https://github.com/nix-community/home-manager">home-manager</a>.</p>
+<p>Starting the server was a bit of a pain though, it tries to write to the nix store, which is immutable. I had to specificy that is should be trying to write somewhere else:</p>
+<pre><code>export DATA_DIR="$HOME/.local/share/open-webui"
+mkdir -p "$DATA_DIR"
+open-webui serve</code></pre>
+<p>Once it works, one thing I like is that it autodetected Ollama, and let me run models via that with no configuration.</p>
+<p>Similarly, if I run FastFlowLM on port 11434, instead of it’s default of 5-something, then it will automaticlly find it and connect to it. But FastFlowLM gives me a core dumped error when I attempt to run any models.</p>
+</section>
+</section>
+<section id="models" class="level1">
+<h1>Models</h1>
+<p>I have mostly been playing with the qwen3.5/6 and gemma4 family of models. Unfortunately, I have been encountering many frustrations. On</p>
+</section>
+<section id="agents-and-interfaces" class="level1">
+<h1>Agents and Interfaces</h1>
 <p>Recently, I have begun to play with local LLM’s for various purposes. The runtime doesn’t matter too much, I am mostly bouncing between ollama-vulkan (seems to be bugged for gemini), ollama-rocm and fastflowlm (uses the NPU but doesn’t have as many models).</p>
 <p>But, what I have been playing witha lot is the harnesses/agents. I have tried out hermes, forgecode, nanocode, and a few others.</p>
 <p>I mostly use nix for packages, so I found out about this cool project: <a href="https://github.com/numtide/llm-agents.nix" class="uri">https://github.com/numtide/llm-agents.nix</a></p>
-<section id="installation" class="level1">
-<h1>Installation</h1>
+<section id="installation" class="level2">
+<h2 class="anchored" data-anchor-id="installation">Installation</h2>
 <p>It is essentially, nix packaging of a ton of agents and similar software. I was trying many out one by one here, but I got tired of that, so I decided to see if I could install all of them at once.</p>
 <p>I’m using home-manager to install packages on non-nixos systems: <a href="https://github.com/moonpiedumplings/home-manager/" class="uri">https://github.com/moonpiedumplings/home-manager/</a></p>
 <p>It was fairly simple actually. Because nix is a programming language, it is possible to convert it to a list, filter out broken agents, and then add them all fo</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode nix code-with-copy"><code class="sourceCode nix"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> </span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="va">hermes</span> <span class="op">=</span> inputs<span class="op">.</span>hermes<span class="op">.</span>packages<span class="op">.</span><span class="sc">${</span>system<span class="sc">}</span><span class="op">;</span></span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  <span class="va">llm-agents</span> <span class="op">=</span> inputs<span class="op">.</span>llm<span class="op">-</span>agents<span class="op">.</span>packages<span class="op">.</span><span class="sc">${</span>system<span class="sc">}</span><span class="op">;</span></span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  <span class="va">every-agent</span> <span class="op">=</span> <span class="bu">builtins</span><span class="op">.</span>attrValues llm<span class="op">-</span>agents<span class="op">;</span></span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  <span class="co"># list of broken agents for filtering</span></span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>  <span class="va">broken-agents</span> <span class="op">=</span> <span class="op">[</span></span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>    <span class="st">"aionui"</span></span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    <span class="st">"hermes-desktop"</span></span>
-<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>    <span class="st">"showboat"</span></span>
-<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>    <span class="st">"backlog-md"</span></span>
-<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>    <span class="st">"mistral-vibe"</span></span>
-<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>    <span class="st">"codex"</span></span>
-<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>    <span class="co">#"openclaw"</span></span>
-<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Not an agent</span></span>
-<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>    <span class="st">"flake-inputs"</span></span>
-<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>    <span class="co">#"oh-my-opencode"</span></span>
-<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>    <span class="co">#"omp"</span></span>
-<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>    <span class="co">#"gno"</span></span>
-<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>    <span class="co"># This stuff seems to be failing due to npm network issues. </span></span>
-<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>    <span class="co"># It's probably my home internet rather than broken packages</span></span>
-<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>    <span class="st">"reasonix"</span></span>
-<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>    <span class="st">"paseo-desktop"</span></span>
-<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>    <span class="st">"codegraph"</span></span>
-<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>    <span class="st">"gitbutler"</span></span>
-<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a>    <span class="st">"but"</span></span>
-<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a>    <span class="st">"openclaw"</span></span>
-<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a>    <span class="st">"code"</span></span>
-<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a>  <span class="op">];</span></span>
-<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a>  <span class="va">working-agents</span> <span class="op">=</span>  <span class="bu">builtins</span><span class="op">.</span>attrValues</span>
-<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a>    <span class="co">#(builtins.removeAttrs llm-agents [ "aionui" "hermes-desktop" "showboat" ]);</span></span>
-<span id="cb1-32"><a href="#cb1-32" aria-hidden="true" tabindex="-1"></a>    <span class="op">(</span><span class="bu">builtins</span><span class="op">.</span>removeAttrs llm<span class="op">-</span>agents broken<span class="op">-</span>agents<span class="op">);</span></span>
-<span id="cb1-33"><a href="#cb1-33" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-34"><a href="#cb1-34" aria-hidden="true" tabindex="-1"></a>  <span class="va">gpu-wrapped-agents</span> <span class="op">=</span> <span class="bu">builtins</span><span class="op">.</span>map config<span class="op">.</span>lib<span class="op">.</span>nixGL<span class="op">.</span>wrappers<span class="op">.</span>mesa working<span class="op">-</span>agents<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode nix code-with-copy"><code class="sourceCode nix"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> </span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="va">hermes</span> <span class="op">=</span> inputs<span class="op">.</span>hermes<span class="op">.</span>packages<span class="op">.</span><span class="sc">${</span>system<span class="sc">}</span><span class="op">;</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="va">llm-agents</span> <span class="op">=</span> inputs<span class="op">.</span>llm<span class="op">-</span>agents<span class="op">.</span>packages<span class="op">.</span><span class="sc">${</span>system<span class="sc">}</span><span class="op">;</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>  <span class="va">every-agent</span> <span class="op">=</span> <span class="bu">builtins</span><span class="op">.</span>attrValues llm<span class="op">-</span>agents<span class="op">;</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>  <span class="co"># list of broken agents for filtering</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>  <span class="va">broken-agents</span> <span class="op">=</span> <span class="op">[</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>    <span class="st">"aionui"</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>    <span class="st">"hermes-desktop"</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>    <span class="st">"showboat"</span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>    <span class="st">"backlog-md"</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>    <span class="st">"mistral-vibe"</span></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>    <span class="st">"codex"</span></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>    <span class="co">#"openclaw"</span></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Not an agent</span></span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>    <span class="st">"flake-inputs"</span></span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>    <span class="co">#"oh-my-opencode"</span></span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>    <span class="co">#"omp"</span></span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a>    <span class="co">#"gno"</span></span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a>    <span class="co"># This stuff seems to be failing due to npm network issues. </span></span>
+<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a>    <span class="co"># It's probably my home internet rather than broken packages</span></span>
+<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a>    <span class="st">"reasonix"</span></span>
+<span id="cb6-22"><a href="#cb6-22" aria-hidden="true" tabindex="-1"></a>    <span class="st">"paseo-desktop"</span></span>
+<span id="cb6-23"><a href="#cb6-23" aria-hidden="true" tabindex="-1"></a>    <span class="st">"codegraph"</span></span>
+<span id="cb6-24"><a href="#cb6-24" aria-hidden="true" tabindex="-1"></a>    <span class="st">"gitbutler"</span></span>
+<span id="cb6-25"><a href="#cb6-25" aria-hidden="true" tabindex="-1"></a>    <span class="st">"but"</span></span>
+<span id="cb6-26"><a href="#cb6-26" aria-hidden="true" tabindex="-1"></a>    <span class="st">"openclaw"</span></span>
+<span id="cb6-27"><a href="#cb6-27" aria-hidden="true" tabindex="-1"></a>    <span class="st">"code"</span></span>
+<span id="cb6-28"><a href="#cb6-28" aria-hidden="true" tabindex="-1"></a>  <span class="op">];</span></span>
+<span id="cb6-29"><a href="#cb6-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-30"><a href="#cb6-30" aria-hidden="true" tabindex="-1"></a>  <span class="va">working-agents</span> <span class="op">=</span>  <span class="bu">builtins</span><span class="op">.</span>attrValues</span>
+<span id="cb6-31"><a href="#cb6-31" aria-hidden="true" tabindex="-1"></a>    <span class="co">#(builtins.removeAttrs llm-agents [ "aionui" "hermes-desktop" "showboat" ]);</span></span>
+<span id="cb6-32"><a href="#cb6-32" aria-hidden="true" tabindex="-1"></a>    <span class="op">(</span><span class="bu">builtins</span><span class="op">.</span>removeAttrs llm<span class="op">-</span>agents broken<span class="op">-</span>agents<span class="op">);</span></span>
+<span id="cb6-33"><a href="#cb6-33" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-34"><a href="#cb6-34" aria-hidden="true" tabindex="-1"></a>  <span class="va">gpu-wrapped-agents</span> <span class="op">=</span> <span class="bu">builtins</span><span class="op">.</span>map config<span class="op">.</span>lib<span class="op">.</span>nixGL<span class="op">.</span>wrappers<span class="op">.</span>mesa working<span class="op">-</span>agents<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>After I have almost everything that that project packages, available.</p>
 <p>Next up, was to sandbox them. Part of why I select the nix programming, is becasue it is possible to mount the immutable nix store into virtual machines or containers, saving space.</p>
 </section>
-<section id="incus-containers" class="level1">
-<h1>Incus Containers</h1>
+<section id="incus-containers" class="level2">
+<h2 class="anchored" data-anchor-id="incus-containers">Incus Containers</h2>
 <p>So, I created an incus container:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">config</span><span class="kw">:</span></span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">image.description</span><span class="kw">:</span><span class="at"> Debian trixie amd64 (20260608_05:24)</span></span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">image.os</span><span class="kw">:</span><span class="at"> Debian</span></span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">image.release</span><span class="kw">:</span><span class="at"> trixie</span></span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="fu">devices</span><span class="kw">:</span></span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">disk-device-1</span><span class="kw">:</span></span>
-<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">path</span><span class="kw">:</span><span class="at"> /nix/store</span></span>
-<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">readonly</span><span class="kw">:</span><span class="at"> </span><span class="st">"true"</span></span>
-<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">source</span><span class="kw">:</span><span class="at"> /nix/store</span></span>
-<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">type</span><span class="kw">:</span><span class="at"> disk</span></span>
-<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">disk-device-2</span><span class="kw">:</span></span>
-<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">path</span><span class="kw">:</span><span class="at"> /nix/var/nix/daemon-socket</span></span>
-<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">readonly</span><span class="kw">:</span><span class="at"> </span><span class="st">"true"</span></span>
-<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">source</span><span class="kw">:</span><span class="at"> /nix/var/nix/daemon-socket</span></span>
-<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">type</span><span class="kw">:</span><span class="at"> disk</span></span>
-<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a><span class="fu">type</span><span class="kw">:</span><span class="at"> container</span></span>
-<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a><span class="fu">project</span><span class="kw">:</span><span class="at"> default</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Th ebig things to note are the way I mount the nix daemon, and the nix store into the container read only.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">user.ui_terminal_default_payload</span><span class="kw">:</span><span class="at"> </span><span class="st">'{"command":"bash -l","environment":[{"key":"TERM","value":"xterm-256color"},{"key":"HOME","value":"/root"},{"key":"PATH","value":"/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/snap/bin:/run/current-system/sw/bin"},{"key":"LANG","value":"C.UTF-8"},{"key":"USER","value":"root"},{"key":"NIX_REMOTE","value":"daemon"}],"user":0,"group":0}'</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="fu">config</span><span class="kw">:</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">image.description</span><span class="kw">:</span><span class="at"> Debian trixie amd64 (20260608_05:24)</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">image.os</span><span class="kw">:</span><span class="at"> Debian</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">image.release</span><span class="kw">:</span><span class="at"> trixie</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a><span class="fu">devices</span><span class="kw">:</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">disk-device-1</span><span class="kw">:</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">path</span><span class="kw">:</span><span class="at"> /nix/store</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">readonly</span><span class="kw">:</span><span class="at"> </span><span class="st">"true"</span></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">source</span><span class="kw">:</span><span class="at"> /nix/store</span></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">type</span><span class="kw">:</span><span class="at"> disk</span></span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">disk-device-2</span><span class="kw">:</span></span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">path</span><span class="kw">:</span><span class="at"> /nix/var/nix/daemon-socket</span></span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">readonly</span><span class="kw">:</span><span class="at"> </span><span class="st">"true"</span></span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">source</span><span class="kw">:</span><span class="at"> /nix/var/nix/daemon-socket</span></span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">type</span><span class="kw">:</span><span class="at"> disk</span></span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a><span class="fu">type</span><span class="kw">:</span><span class="at"> container</span></span>
+<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a><span class="fu">project</span><span class="kw">:</span><span class="at"> default</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Th big things to note are the way I mount the nix daemon, and the nix store into the container read only. Another thing to note is the custom termianl payload. I use the command <code>bash -l</code> so that it loads an interactive bash shell, which is needed for nix to be present in the shell. The other thing I do is set the environment variable <code>NIX_REMOTE=daemon</code>, which makes it so that Nix understands that it itself isn’t supposed to run the builds, it’s supposed to communicate through the container to the host.</p>
 <p>Inside the virtual machine, I can install nix by running <code>apt install nix-bin</code>.</p>
 <p>Then, I have to set up the profiles so they are used properly:</p>
 <div class="code-with-filename">
 <div class="code-with-filename-file">
 <pre><strong>/etc/profile.d/nix.sh</strong></pre>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3" data-filename="/etc/profile.d/nix.sh"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">NIX_REMOTE</span><span class="op">=</span>daemon <span class="co"># Ensures that nix tries to talk to the socket</span></span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">NIX_SSL_CERT_FILE</span><span class="op">=</span>/etc/ssl/certs/ca-certificates.crt</span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="bu">[</span> <span class="ot">-e</span> <span class="st">"</span><span class="va">$HOME</span><span class="st">/.nix-profile/etc/profile.d/hm-session-vars.sh"</span> <span class="bu">]</span><span class="kw">;</span> <span class="cf">then</span></span>
-<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  <span class="bu">.</span> <span class="st">"</span><span class="va">$HOME</span><span class="st">/.nix-profile/etc/profile.d/hm-session-vars.sh"</span></span>
-<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="cf">fi</span></span>
-<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">PATH</span><span class="op">=</span><span class="st">"</span><span class="va">$HOME</span><span class="st">/.nix-profile/bin:/nix/var/nix/profiles/default/bin:</span><span class="va">$PATH</span><span class="st">"</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8" data-filename="/etc/profile.d/nix.sh"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">NIX_REMOTE</span><span class="op">=</span>daemon <span class="co"># Ensures that nix tries to talk to the socket</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">NIX_SSL_CERT_FILE</span><span class="op">=</span>/etc/ssl/certs/ca-certificates.crt</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="bu">[</span> <span class="ot">-e</span> <span class="st">"</span><span class="va">$HOME</span><span class="st">/.nix-profile/etc/profile.d/hm-session-vars.sh"</span> <span class="bu">]</span><span class="kw">;</span> <span class="cf">then</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>  <span class="bu">.</span> <span class="st">"</span><span class="va">$HOME</span><span class="st">/.nix-profile/etc/profile.d/hm-session-vars.sh"</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a><span class="cf">fi</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">PATH</span><span class="op">=</span><span class="st">"</span><span class="va">$HOME</span><span class="st">/.nix-profile/bin:/nix/var/nix/profiles/default/bin:</span><span class="va">$PATH</span><span class="st">"</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>I also have to add channels, and enable flakes and the new nix command.</p>
 <p>Once these are configured, when I run nix operations, like installing home manager and pointing home manager at the same config my host is using, it works, saving space becuase it is using the same binaries and libraries from the host. And every</p>
 </section>
-<section id="git-environments" class="level1">
-<h1>Git Environments</h1>
+<section id="git-environments" class="level2">
+<h2 class="anchored" data-anchor-id="git-environments">Git Environments</h2>
 <p>Next, is safely giving the Incus container access to the git environment. I created another directory, <code>agent-sandbox</code>, and shared that to the Incus container with read and write permissions.</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">devices</span><span class="kw">:</span></span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">disk-device-3</span><span class="kw">:</span></span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">path</span><span class="kw">:</span><span class="at"> /root/agent-sandbox</span></span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="co">    # Shift true makes it so that the container can actually read and write the host path</span></span>
-<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">shift</span><span class="kw">:</span><span class="at"> </span><span class="st">'true'</span></span>
-<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">source</span><span class="kw">:</span><span class="at"> /home/moonpie/Projects/agent-sandbox</span></span>
-<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">type</span><span class="kw">:</span><span class="at"> disk</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">devices</span><span class="kw">:</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">disk-device-3</span><span class="kw">:</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">path</span><span class="kw">:</span><span class="at"> /root/agent-sandbox</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="co">    # Shift true makes it so that the container can actually read and write the host path</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">shift</span><span class="kw">:</span><span class="at"> </span><span class="st">'true'</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">source</span><span class="kw">:</span><span class="at"> /home/moonpie/Projects/agent-sandbox</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">type</span><span class="kw">:</span><span class="at"> disk</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>With git, you can actually git clone/push from a local repository. So if I run this on my host:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>[moonpie@nefertem Projects]$ cd agent-sandbox/</span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>[moonpie@nefertem agent-sandbox]$ git clone ../coder-templates/</span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>Cloning into 'coder-templates'...</span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>remote: Enumerating objects: 171, done.</span>
-<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>remote: Counting objects: 100% (171/171), done.</span>
-<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>remote: Compressing objects: 100% (119/119), done.</span>
-<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>remote: Total 171 (delta 44), reused 171 (delta 44), pack-reused 0 (from 0)</span>
-<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>Receiving objects: 100% (171/171), 19.81 MiB | 2.02 MiB/s, done.</span>
-<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>Resolving deltas: 100% (44/44), done.</span>
-<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>[moonpie@nefertem agent-sandbox]$ cd coder-templates/</span>
-<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>[moonpie@nefertem coder-templates]$ touch test.txt</span>
-<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>[moonpie@nefertem coder-templates]$ echo test &gt; test.txt </span>
-<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>[moonpie@nefertem coder-templates]$ git add .</span>
-<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>[moonpie@nefertem coder-templates]$ git commit -m "test commit"</span>
-<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>[main a31feff] test commit</span>
-<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a> 1 file changed, 1 insertion(+)</span>
-<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a> create mode 100644 test.txt</span>
-<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>[moonpie@nefertem coder-templates]$ cd ..</span>
-<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>[moonpie@nefertem agent-sandbox]$ cd ..</span>
-<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a>[moonpie@nefertem Projects]$ cd coder-templates/</span>
-<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a>[moonpie@nefertem coder-templates]$ git pull ../agent-sandbox/coder-templates/ main</span>
-<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a>From ../agent-sandbox/coder-templates</span>
-<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a> * branch            main       -&gt; FETCH_HEAD</span>
-<span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a>Updating 99ed112..a31feff</span>
-<span id="cb5-25"><a href="#cb5-25" aria-hidden="true" tabindex="-1"></a>Fast-forward</span>
-<span id="cb5-26"><a href="#cb5-26" aria-hidden="true" tabindex="-1"></a> test.txt | 1 +</span>
-<span id="cb5-27"><a href="#cb5-27" aria-hidden="true" tabindex="-1"></a> 1 file changed, 1 insertion(+)</span>
-<span id="cb5-28"><a href="#cb5-28" aria-hidden="true" tabindex="-1"></a> create mode 100644 test.txt</span>
-<span id="cb5-29"><a href="#cb5-29" aria-hidden="true" tabindex="-1"></a>[moonpie@nefertem coder-templates]$ </span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>[moonpie@nefertem Projects]$ cd agent-sandbox/</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>[moonpie@nefertem agent-sandbox]$ git clone ../coder-templates/</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>Cloning into 'coder-templates'...</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>remote: Enumerating objects: 171, done.</span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>remote: Counting objects: 100% (171/171), done.</span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>remote: Compressing objects: 100% (119/119), done.</span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>remote: Total 171 (delta 44), reused 171 (delta 44), pack-reused 0 (from 0)</span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>Receiving objects: 100% (171/171), 19.81 MiB | 2.02 MiB/s, done.</span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>Resolving deltas: 100% (44/44), done.</span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>[moonpie@nefertem agent-sandbox]$ cd coder-templates/</span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>[moonpie@nefertem coder-templates]$ touch test.txt</span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>[moonpie@nefertem coder-templates]$ echo test &gt; test.txt </span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a>[moonpie@nefertem coder-templates]$ git add .</span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a>[moonpie@nefertem coder-templates]$ git commit -m "test commit"</span>
+<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a>[main a31feff] test commit</span>
+<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a> 1 file changed, 1 insertion(+)</span>
+<span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a> create mode 100644 test.txt</span>
+<span id="cb10-18"><a href="#cb10-18" aria-hidden="true" tabindex="-1"></a>[moonpie@nefertem coder-templates]$ cd ..</span>
+<span id="cb10-19"><a href="#cb10-19" aria-hidden="true" tabindex="-1"></a>[moonpie@nefertem agent-sandbox]$ cd ..</span>
+<span id="cb10-20"><a href="#cb10-20" aria-hidden="true" tabindex="-1"></a>[moonpie@nefertem Projects]$ cd coder-templates/</span>
+<span id="cb10-21"><a href="#cb10-21" aria-hidden="true" tabindex="-1"></a>[moonpie@nefertem coder-templates]$ git pull ../agent-sandbox/coder-templates/ main</span>
+<span id="cb10-22"><a href="#cb10-22" aria-hidden="true" tabindex="-1"></a>From ../agent-sandbox/coder-templates</span>
+<span id="cb10-23"><a href="#cb10-23" aria-hidden="true" tabindex="-1"></a> * branch            main       -&gt; FETCH_HEAD</span>
+<span id="cb10-24"><a href="#cb10-24" aria-hidden="true" tabindex="-1"></a>Updating 99ed112..a31feff</span>
+<span id="cb10-25"><a href="#cb10-25" aria-hidden="true" tabindex="-1"></a>Fast-forward</span>
+<span id="cb10-26"><a href="#cb10-26" aria-hidden="true" tabindex="-1"></a> test.txt | 1 +</span>
+<span id="cb10-27"><a href="#cb10-27" aria-hidden="true" tabindex="-1"></a> 1 file changed, 1 insertion(+)</span>
+<span id="cb10-28"><a href="#cb10-28" aria-hidden="true" tabindex="-1"></a> create mode 100644 test.txt</span>
+<span id="cb10-29"><a href="#cb10-29" aria-hidden="true" tabindex="-1"></a>[moonpie@nefertem coder-templates]$ </span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>The agent now has a copy of the repo, they can do git operations on, but they can’t touch the original repo becasue that is outside of the sandbox.</p>
 <p>What this does, is it prevents agents from screwing up git history, or incorrectly pushing when they shouldn’t. By making them do all git operations in another repo, I can inspect the history before pulling it over.</p>
-</section>
-<section id="yolo" class="level1">
-<h1>YOLO</h1>
+<p>Not everything is git, so this has to be transferred over. The easiest way to do it, is run <code>git diff</code> and <code>git apply</code> to create an apply a patch.</p>
+<p>Because I’m on Linux/Wayland, I can use <code>wl-copy</code> and <code>wl-paste</code> to save the patch to my clipboard.</p>
+<p>In the normal repo, I run: <code>git diff | wl-copy</code></p>
+<p>In the sandboxed repo, I can then just run: <code>wl-paste | git apply</code></p>
 <p>The idea behind this whole setup is that I should be able to run the agents in always confirm (YOLO) or similar modes, safely in a sandboxed environment.</p>
 
 
+</section>
 </section>
 
 </main> <!-- /main -->

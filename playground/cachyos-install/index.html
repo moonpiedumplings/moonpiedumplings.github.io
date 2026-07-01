@@ -504,6 +504,23 @@ Note
 <p>I need to remove some of these pacman hooks. The auto snapper snapshots on every update are somewhat annoying.</p>
 <p>They exist at <code>/usr/share/libalpm/hooks/</code></p>
 <p>The first one I want to remove are the hooks installed by <code>snap-pac</code>, which cause automatic btrfs snapshots on package installation, removal, or updates.</p>
+<p>I also need to remove the “please reboot hook”. This one is a bit more complicated, as it is owned by a <code>cachyos-hooks</code>, which has many more tools… including one to update the initramfs:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>[moonpie@nefertem hooks]$ pacman -Ql cachyos-hooks </span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>cachyos-hooks /usr/</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>cachyos-hooks /usr/bin/</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>cachyos-hooks /usr/bin/update-initramfs</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>cachyos-hooks /usr/share/</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>cachyos-hooks /usr/share/libalpm/</span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>cachyos-hooks /usr/share/libalpm/hooks/</span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>cachyos-hooks /usr/share/libalpm/hooks/cachyos-branding.hook</span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>cachyos-hooks /usr/share/libalpm/hooks/cachyos-plymouth-initramfs.hook</span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>cachyos-hooks /usr/share/libalpm/hooks/cachyos-reboot-required.hook</span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>cachyos-hooks /usr/share/libalpm/hooks/lsb-release.hook</span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>cachyos-hooks /usr/share/libalpm/hooks/os-release.hook</span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>cachyos-hooks /usr/share/libalpm/scripts/</span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>cachyos-hooks /usr/share/libalpm/scripts/cachyos-branding</span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a>cachyos-hooks /usr/share/libalpm/scripts/cachyos-reboot-required</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Hmmm. Unfortunately, that <code>update-initramfs</code> script is actually somewhat important, as it rebuilds the kernel initramfs, which is needed to boot.</p>
 </section>
 </section>
 <section id="misc-config-changes" class="level1">
@@ -522,9 +539,9 @@ Note
 <div class="code-with-filename-file">
 <pre><strong>/etc/security/limits.conf</strong></pre>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7" data-filename="/etc/security/limits.conf"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a># at the end</span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>moonpie soft memlock unlimited</span>
-<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>moonpie hard memlock unlimited</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8" data-filename="/etc/security/limits.conf"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a># at the end</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>moonpie soft memlock unlimited</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>moonpie hard memlock unlimited</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>This makes it possible to use fastflowlm, which was whining before this.</p>
 

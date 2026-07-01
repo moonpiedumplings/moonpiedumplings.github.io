@@ -10,29 +10,597 @@
 <atom:link href="https://moonpiedumplings.github.io/feed.xml" rel="self" type="application/rss+xml"/>
 <description>All posts, intended to be used in an RSS feed. Can be found at feed.xml</description>
 <generator>quarto-1.9.38</generator>
-<lastBuildDate>Mon, 08 Jun 2026 07:00:00 GMT</lastBuildDate>
+<lastBuildDate>Mon, 15 Jun 2026 07:00:00 GMT</lastBuildDate>
 <item>
-  <title>Installing every LLM agent at once</title>
-  <link>https://moonpiedumplings.github.io/playground/llm-royale/</link>
+  <title>Build server 7 — Out of the dorms</title>
+  <link>https://moonpiedumplings.github.io/projects/build-server-7/</link>
   <description><![CDATA[ 
 
 
 
 
 
+<section id="the-current-previous-setup" class="level1">
+<h1>The current (previous) setup</h1>
+<ul>
+<li>Plugging the server into the wall at the dorms to get a public ipv4 addres</li>
+<li>Debian Base
+<ul>
+<li>Incus installed from Zabbly repos</li>
+</ul></li>
+<li>Kubernetes (K3s) on top, with all other services running inside K8s.</li>
+</ul>
+</section>
+<section id="summer-revamp" class="level1">
+<h1>Summer Revamp</h1>
+<p>This won’t work over the summer, since the ports in my house are not public. So I was evaluating solutions for safely exposing the server.</p>
+<ul>
+<li><a href="https://github.com/rathole-org/rathole" class="uri">https://github.com/rathole-org/rathole</a> (what I previously used)
+<ul>
+<li>Is currently unmaintained</li>
+<li>Many of the rust libraries have accrued CVE’s</li>
+</ul></li>
+<li>Reverse proxy + wireguard
+<ul>
+<li>The problem is that I want to reverse proxy SSL all the way through, but I also want to send packets to different locations</li>
+</ul></li>
+<li><a href="https://erwanleboucher.dev/blog/towonel/" class="uri">https://erwanleboucher.dev/blog/towonel/</a>
+<ul>
+<li>New solution</li>
+<li>Is nice, but also multi tenant, and a bit more than my liking</li>
+</ul></li>
+<li><a href="https://github.com/fyralabs/chisel-operator" class="uri">https://github.com/fyralabs/chisel-operator</a>
+<ul>
+<li>This is what I will be using. Since kubernetes is already reverse proxy, this makes things simple.</li>
+</ul></li>
+</ul>
+<p>I still will have to wireguard the server/router to the VPS though. By forcing all traffic to be wireguarded to the VPS, this is a simple way to “firewall” off my home network from my public server, that also has other benefits.</p>
+<p>Also, I will probably use iptables + wireguard to expose the management services, like ssh or the kubernetes api.</p>
+</section>
+<section id="router" class="level1">
+<h1>Router</h1>
+<p>I upgraded the version of freshtomato on my router. The updated version of freshtomato now gives options for configuring wireguard via the GUI:</p>
+<p>Current iptables rules:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb1-1">root@unknown:/tmp/home/root# iptables -L -v -n</span>
+<span id="cb1-2">Chain INPUT (policy DROP 188 packets, 33611 bytes)</span>
+<span id="cb1-3"> pkts bytes target     prot opt in     out     source               destination         </span>
+<span id="cb1-4">    1    84 ACCEPT     all  --  wg0    *       0.0.0.0/0            0.0.0.0/0            state NEW</span>
+<span id="cb1-5">    6   240 DROP       all  --  *      *       0.0.0.0/0            0.0.0.0/0            state INVALID</span>
+<span id="cb1-6"> 6776  943K ACCEPT     all  --  *      *       0.0.0.0/0            0.0.0.0/0            state RELATED,ESTABLISHED</span>
+<span id="cb1-7">    1    60 shlimit    tcp  --  *      *       0.0.0.0/0            0.0.0.0/0            tcp dpt:22 state NEW</span>
+<span id="cb1-8">    0     0 ACCEPT     all  --  lo     *       0.0.0.0/0            0.0.0.0/0           </span>
+<span id="cb1-9">  791 62247 ACCEPT     all  --  br0    *       0.0.0.0/0            0.0.0.0/0           </span>
+<span id="cb1-10"></span>
+<span id="cb1-11">Chain FORWARD (policy DROP 0 packets, 0 bytes)</span>
+<span id="cb1-12"> pkts bytes target     prot opt in     out     source               destination         </span>
+<span id="cb1-13">    0     0 ACCEPT     all  --  *      wg0     0.0.0.0/0            0.0.0.0/0           </span>
+<span id="cb1-14">    0     0 ACCEPT     all  --  wg0    *       0.0.0.0/0            0.0.0.0/0            state NEW</span>
+<span id="cb1-15">    0     0 ACCEPT     all  --  br0    br0     0.0.0.0/0            0.0.0.0/0           </span>
+<span id="cb1-16">   32  1280 DROP       all  --  *      *       0.0.0.0/0            0.0.0.0/0            state INVALID</span>
+<span id="cb1-17">91590   90M ACCEPT     all  --  *      *       0.0.0.0/0            0.0.0.0/0            state RELATED,ESTABLISHED</span>
+<span id="cb1-18">    0     0 ACCEPT     esp  --  vlan2  *       0.0.0.0/0            0.0.0.0/0           </span>
+<span id="cb1-19">    0     0 ACCEPT     ah   --  vlan2  *       0.0.0.0/0            0.0.0.0/0           </span>
+<span id="cb1-20">    0     0 ACCEPT     udp  --  vlan2  *       0.0.0.0/0            0.0.0.0/0            udp dpt:500</span>
+<span id="cb1-21">    0     0 ACCEPT     udp  --  vlan2  *       0.0.0.0/0            0.0.0.0/0            udp dpt:4500</span>
+<span id="cb1-22">    0     0 wanin      all  --  vlan2  *       0.0.0.0/0            0.0.0.0/0           </span>
+<span id="cb1-23">  368  171K wanout     all  --  *      vlan2   0.0.0.0/0            0.0.0.0/0           </span>
+<span id="cb1-24">  368  171K ACCEPT     all  --  br0    *       0.0.0.0/0            0.0.0.0/0           </span>
+<span id="cb1-25"></span>
+<span id="cb1-26">Chain OUTPUT (policy ACCEPT 8865 packets, 23M bytes)</span>
+<span id="cb1-27"> pkts bytes target     prot opt in     out     source               destination         </span>
+<span id="cb1-28"></span>
+<span id="cb1-29">Chain shlimit (1 references)</span>
+<span id="cb1-30"> pkts bytes target     prot opt in     out     source               destination         </span>
+<span id="cb1-31">    1    60            all  --  *      *       0.0.0.0/0            0.0.0.0/0            recent: SET name: shlimit side: source mask: 255.255.255.255</span>
+<span id="cb1-32">    0     0 DROP       all  --  *      *       0.0.0.0/0            0.0.0.0/0            recent: UPDATE seconds: 60 hit_count: 4 name: shlimit side: source mask: 255.255.255.255</span>
+<span id="cb1-33"></span>
+<span id="cb1-34">Chain wanin (1 references)</span>
+<span id="cb1-35"> pkts bytes target     prot opt in     out     source               destination         </span>
+<span id="cb1-36"></span>
+<span id="cb1-37">Chain wanout (1 references)</span>
+<span id="cb1-38"> pkts bytes target     prot opt in     out     source               destination         </span></code></pre></div></div>
+<p>Current interfaces:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb2-1">root@unknown:/tmp/home/root# ip a</span>
+<span id="cb2-2">1: lo: &lt;LOOPBACK,MULTICAST,UP,LOWER_UP&gt; mtu 65536 qdisc noqueue state UNKNOWN </span>
+<span id="cb2-3">    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00</span>
+<span id="cb2-4">    inet 127.0.0.1/8 brd 127.255.255.255 scope host lo</span>
+<span id="cb2-5">2: ifb0: &lt;BROADCAST,NOARP&gt; mtu 1500 qdisc noop state DOWN qlen 32</span>
+<span id="cb2-6">    link/ether 26:97:bb:c9:3d:82 brd ff:ff:ff:ff:ff:ff</span>
+<span id="cb2-7">3: ifb1: &lt;BROADCAST,NOARP&gt; mtu 1500 qdisc noop state DOWN qlen 32</span>
+<span id="cb2-8">    link/ether e2:7a:2a:9a:3e:d4 brd ff:ff:ff:ff:ff:ff</span>
+<span id="cb2-9">4: ifb2: &lt;BROADCAST,NOARP&gt; mtu 1500 qdisc noop state DOWN qlen 32</span>
+<span id="cb2-10">    link/ether c6:a0:20:dd:c8:e3 brd ff:ff:ff:ff:ff:ff</span>
+<span id="cb2-11">5: ifb3: &lt;BROADCAST,NOARP&gt; mtu 1500 qdisc noop state DOWN qlen 32</span>
+<span id="cb2-12">    link/ether 42:a5:30:79:e6:cd brd ff:ff:ff:ff:ff:ff</span>
+<span id="cb2-13">6: eth0: &lt;BROADCAST,MULTICAST,UP,LOWER_UP&gt; mtu 1500 qdisc pfifo_fast state UNKNOWN qlen 1000</span>
+<span id="cb2-14">    link/ether cc:40:d0:17:e7:65 brd ff:ff:ff:ff:ff:ff</span>
+<span id="cb2-15">9: dpsta: &lt;BROADCAST,MULTICAST&gt; mtu 1500 qdisc noop state DOWN </span>
+<span id="cb2-16">    link/ether 00:00:00:00:00:00 brd ff:ff:ff:ff:ff:ff</span>
+<span id="cb2-17">10: eth1: &lt;BROADCAST,MULTICAST,ALLMULTI,UP,LOWER_UP&gt; mtu 1500 qdisc pfifo_fast state UNKNOWN qlen 1000</span>
+<span id="cb2-18">    link/ether cc:40:d0:17:e7:67 brd ff:ff:ff:ff:ff:ff</span>
+<span id="cb2-19">11: eth2: &lt;BROADCAST,MULTICAST,ALLMULTI,UP,LOWER_UP&gt; mtu 1500 qdisc pfifo_fast state UNKNOWN qlen 1000</span>
+<span id="cb2-20">    link/ether cc:40:d0:17:e7:6b brd ff:ff:ff:ff:ff:ff</span>
+<span id="cb2-21">13: vlan1@eth0: &lt;BROADCAST,MULTICAST,ALLMULTI,UP,LOWER_UP&gt; mtu 1500 qdisc noqueue state UP </span>
+<span id="cb2-22">    link/ether cc:40:d0:17:e7:65 brd ff:ff:ff:ff:ff:ff</span>
+<span id="cb2-23">14: vlan2@eth0: &lt;BROADCAST,MULTICAST,UP,LOWER_UP&gt; mtu 1500 qdisc noqueue state UP </span>
+<span id="cb2-24">    link/ether cc:40:d0:17:e7:75 brd ff:ff:ff:ff:ff:ff</span>
+<span id="cb2-25">    inet 192.168.4.56/22 brd 192.168.7.255 scope global vlan2</span>
+<span id="cb2-26">15: br0: &lt;BROADCAST,MULTICAST,ALLMULTI,UP,LOWER_UP&gt; mtu 1500 qdisc noqueue state UNKNOWN </span>
+<span id="cb2-27">    link/ether cc:40:d0:17:e7:65 brd ff:ff:ff:ff:ff:ff</span>
+<span id="cb2-28">    inet 192.168.1.1/24 brd 192.168.1.255 scope global br0</span>
+<span id="cb2-29">27: wg0: &lt;POINTOPOINT,NOARP,UP,LOWER_UP&gt; mtu 1420 qdisc noqueue state UNKNOWN </span>
+<span id="cb2-30">    link/none </span>
+<span id="cb2-31">    inet 10.0.0.2/24 scope global wg0</span></code></pre></div></div>
+<p>It looks like, by disabling the “firewall” option in the wireguard options, traffic is allowed to be forwarded. In addition to this, I can make pre and post routing scripts on both sides.</p>
+<p>With this, I have the VPN setup I want. All traffic from the router goes through the VPN, and the VPS is also able to access the routers internal subnet.</p>
+<div class="code-with-filename">
+<div class="code-with-filename-file">
+<pre><strong>/etc/wireguard/wg0.conf</strong></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3" data-filename="/etc/wireguard/wg0.conf" style="background: #f1f3f5;"><pre class="sourceCode ini code-with-copy"><code class="sourceCode ini"><span id="cb3-1"><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">[Interface]</span></span>
+<span id="cb3-2"><span class="dt" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">PreUp </span><span class="ot" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;"> sysctl net.ipv4.ip_forward=1</span></span>
+<span id="cb3-3"><span class="dt" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">PreUp </span><span class="ot" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;"> iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE</span></span>
+<span id="cb3-4"><span class="dt" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">PreUp </span><span class="ot" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;"> iptables -A FORWARD -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT</span></span>
+<span id="cb3-5"><span class="dt" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">Postup </span><span class="ot" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;"> iptables -A FORWARD -i %i -o eth0 -j ACCEPT</span></span>
+<span id="cb3-6"><span class="dt" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">ListenPort </span><span class="ot" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;"> </span><span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">51871</span></span>
+<span id="cb3-7"><span class="dt" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">PrivateKey </span><span class="ot" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;"> lmao</span></span>
+<span id="cb3-8"><span class="dt" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">Address </span><span class="ot" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;"> 10.0.0.1/24, fdc9:281f:04d7:9ee9::1/64</span></span>
+<span id="cb3-9"><span class="dt" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">MTU </span><span class="ot" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;"> </span><span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1340</span></span>
+<span id="cb3-10"></span>
+<span id="cb3-11"><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">[Peer]</span></span>
+<span id="cb3-12"><span class="dt" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">PublicKey </span><span class="ot" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;"> eDvHJOeB8RoP+4VnJGCdFJFJ+naRzG2z0N9pnFop/zY=</span></span>
+<span id="cb3-13"><span class="dt" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">AllowedIPs </span><span class="ot" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;"> 10.0.0.0/24, 192.168.1.0/24, fdc9:281f:4d7:9ee9::2/128</span></span></code></pre></div></div>
+</div>
+<p>And then the router has something similar, but these configs are set via the GUI:</p>
+<p>However, I am having connections be dropped for TLS traffic. After further testing, to confirm that it is an MTU related issue, I begin lowering it to experiment with what works. Unfornately, the common values of 1420, and 1380 don’t work, although 1280 does. I test, raising numbers up and down and land on 1340.</p>
+<p>After further investigation, it looks like <a href="https://www.t-mobile.com/community/discussions/gateways-devices/way-to-change-mtu-on-router/66287/replies/66293">T Mobile recommends an MTU of 1340 for their VPN solution</a>.</p>
+<p>I also make sure to change the MTU of the router networking itself to 1420, in order to preemptively avoid issues.</p>
+<p>The next thing I try to do is to prevent the web interface from being accessed remotely. In routers or similar types of devices (network appliances, etc), the web ui is a lot of attack surface, and a common cause of vulnerabilities. By making it only accessible over the much more secure and well tested ssh, I don’t have to worry about that attack surface.</p>
+<p>Unfortunately, there does not appear to be an option in the UI to make it only accessible over localhost.</p>
+<section id="finding-another-vps-provider" class="level2">
+<h2 class="anchored" data-anchor-id="finding-another-vps-provider">Finding another VPS Provider:</h2>
+<p>Even though I got everything connected:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb4-1">[nix-shell:~]# speedtest</span>
+<span id="cb4-2">Retrieving speedtest.net configuration...</span>
+<span id="cb4-3">Testing from Unknown (193.181.213.37)...</span>
+<span id="cb4-4">Retrieving speedtest.net server list...</span>
+<span id="cb4-5">Selecting best server based on ping...</span>
+<span id="cb4-6">Hosted by wilhelm.tel (Norderstedt) [795.04 km]: 241.714 ms</span>
+<span id="cb4-7">Testing download speed................................................................................</span>
+<span id="cb4-8">Download: 25.54 Mbit/s</span>
+<span id="cb4-9">Testing upload speed......................................................................................................</span>
+<span id="cb4-10">Upload: 13.55 Mbit/s</span></code></pre></div></div>
+<p>Okay, I get a little better after tinkering with the MTU and increasing it from 1340 to 1360:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb5-1">[nix-shell:~/.ssh]$ speedtest</span>
+<span id="cb5-2">Retrieving speedtest.net configuration...</span>
+<span id="cb5-3">Testing from Unknown (193.181.213.37)...</span>
+<span id="cb5-4">Retrieving speedtest.net server list...</span>
+<span id="cb5-5">Selecting best server based on ping...</span>
+<span id="cb5-6">Hosted by wilhelm.tel (Norderstedt) [795.04 km]: 238.535 ms</span>
+<span id="cb5-7">Testing download speed................................................................................</span>
+<span id="cb5-8">Download: 53.36 Mbit/s</span>
+<span id="cb5-9">Testing upload speed......................................................................................................</span>
+<span id="cb5-10">Upload: 14.06 Mbit/s</span></code></pre></div></div>
+<p>Unfortunately. I suspect this is because I am VPNing to Denmark and back. I am going to hunt for a closer VPS provider.</p>
+<p>Or, this could also be because the VPS is very small, with only 1 vCPU. Wireguard isn’t usually CPU limited, but it is worth running a additional tests in order to verify that this is the case.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb6-1">root@ingress:/etc/wireguard# speedtest</span>
+<span id="cb6-2">Retrieving speedtest.net configuration...</span>
+<span id="cb6-3">Testing from Unknown (193.181.213.37)...</span>
+<span id="cb6-4">Retrieving speedtest.net server list...</span>
+<span id="cb6-5">Selecting best server based on ping...</span>
+<span id="cb6-6">Hosted by wilhelm.tel (Norderstedt) [795.04 km]: 18.767 ms</span>
+<span id="cb6-7">Testing download speed................................................................................</span>
+<span id="cb6-8">Download: 753.10 Mbit/s</span>
+<span id="cb6-9">Testing upload speed......................................................................................................</span>
+<span id="cb6-10">Upload: 780.29 Mbit/s</span>
+<span id="cb6-11">root@ingress:/etc/wireguard#</span></code></pre></div></div>
+<p>So it’s not the VPS either. It has gigabit speeds, and this confirms it.</p>
+<p>Next up is to test the home lab server without the VPN:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb7-1">[nix-shell:~]# speedtest</span>
+<span id="cb7-2">Retrieving speedtest.net configuration...</span>
+<span id="cb7-3">Testing from T-Mobile USA (172.56.241.36)...</span>
+<span id="cb7-4">Retrieving speedtest.net server list...</span>
+<span id="cb7-5">Selecting best server based on ping...</span>
+<span id="cb7-6">Hosted by KamaTera, Inc. (Los Angeles, CA) [8.67 km]: 45.191 ms</span>
+<span id="cb7-7">Testing download speed................................................................................</span>
+<span id="cb7-8">Download: 143.94 Mbit/s</span>
+<span id="cb7-9">Testing upload speed......................................................................................................</span>
+<span id="cb7-10">Upload: 26.44 Mbit/s</span></code></pre></div></div>
+<p>Looks plenty fast, no issues here as well.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb8-1">[nix-shell:~]# iperf3 -c 193.181.213.37</span>
+<span id="cb8-2">Connecting to host 193.181.213.37, port 5201</span>
+<span id="cb8-3">[  7] local 192.168.1.33 port 49012 connected to 193.181.213.37 port 5201</span>
+<span id="cb8-4">[ ID] Interval           Transfer     Bitrate         Retr  Cwnd</span>
+<span id="cb8-5">[  7]   0.00-1.00   sec  1.12 MBytes  9.43 Mbits/sec    0    384 KBytes</span>
+<span id="cb8-6">[  7]   1.00-2.00   sec  2.25 MBytes  18.9 Mbits/sec    1    523 KBytes</span>
+<span id="cb8-7">[  7]   2.00-3.00   sec  2.38 MBytes  19.9 Mbits/sec    1    405 KBytes</span>
+<span id="cb8-8">[  7]   3.00-4.00   sec   768 KBytes  6.29 Mbits/sec    0    317 KBytes</span>
+<span id="cb8-9">[  7]   4.00-5.00   sec  1.88 MBytes  15.7 Mbits/sec    0    350 KBytes</span>
+<span id="cb8-10">[  7]   5.00-6.00   sec  1.88 MBytes  15.7 Mbits/sec    0    364 KBytes</span>
+<span id="cb8-11">[  7]   6.00-7.00   sec  1.88 MBytes  15.7 Mbits/sec    0    368 KBytes</span>
+<span id="cb8-12">[  7]   7.00-8.00   sec  1.88 MBytes  15.7 Mbits/sec    1    258 KBytes</span>
+<span id="cb8-13">[  7]   8.00-9.00   sec   640 KBytes  5.24 Mbits/sec    0    302 KBytes</span>
+<span id="cb8-14">[  7]   9.00-10.00  sec   640 KBytes  5.24 Mbits/sec    0    329 KBytes</span>
+<span id="cb8-15">- - - - - - - - - - - - - - - - - - - - - - - - -</span>
+<span id="cb8-16">[ ID] Interval           Transfer     Bitrate         Retr</span>
+<span id="cb8-17">[  7]   0.00-10.00  sec  15.2 MBytes  12.8 Mbits/sec    3            sender</span>
+<span id="cb8-18">[  7]   0.00-10.37  sec  14.5 MBytes  11.7 Mbits/sec                  receiver</span>
+<span id="cb8-19"></span>
+<span id="cb8-20">iperf Done.</span></code></pre></div></div>
+<p>Yup. Looks like crossing the world is hard. Oh well.</p>
+<p>So. Now, I’m going to select another provider. Ideally, it should be a cheap VPS provider, from a site that is well reputed. There is <a href="https://lowendbox.com/">lowendbox</a>, and the related forums <a href="https://lowendtalk.com/">lowendtalk</a> which cover this. Unfortunately, when I click on some of them, they 404. The business model many of these low end providers start with, struggles to be sustainable, and they often die, which sucks.</p>
+<p>So, I have a simple idea: I am going to look at the older posts for discounts, and see if they are still active. Interestingly, some of the best “one time discounts” are still active, despite the links being two years old. By cross referencing this with forum posts about those providers, I can confirm their reliability.</p>
+<p>I’m not naming them this time, unlike my previous blog post where I just picked a popular provider.</p>
+<p>Also, I am going to see if I can create a virtual credit.</p>
+</section>
+</section>
+<section id="kubernetes" class="level1">
+<h1>Kubernetes</h1>
+<p>I have decided to keep k3s, for simplicity. For the record, I did investigate other solutions, to avoid the distasteful <code>curl | bash</code> in order to install k3s on debian.</p>
+<ul>
+<li><a href="https://flatcar.github.io/sysext-bakery/k3s/">k3’s sysext</a> and then using <a href="https://github.com/travier/sysexts-manager">sysext manager</a>
+<ul>
+<li>Very cool, and promising, but unfortunately too alpha for this case</li>
+<li>Doesn’t really give me the snap like experience I would want</li>
+<li>Not clear how I would configure k3s after installation, like where files go and if they are mutable</li>
+</ul></li>
+<li>NixOS based k3s… maybe installed not on NixOS:
+<ul>
+<li><a href="https://docs.hercules-ci.com/arion/">arion</a>, or <a href="https://github.com/erikarvstedt/extra-container">extra-container</a> or <a href="https://github.com/adfaure/flake-containers">flake-containers</a> offer solutions to run NixOS services/modules on non Nix systems.</li>
+<li>Unfortunately, Nix is a pain to use, and doesn’t offer enough benefits that k8s don’t give me.</li>
+</ul></li>
+</ul>
+<p>So yeah. <code>curl | bash</code> it is.</p>
+<p>I am mostly keeping everything from the previous installation. There are some things I want to change and expand on,</p>
+<section id="monitoring" class="level2">
+<h2 class="anchored" data-anchor-id="monitoring">Monitoring</h2>
+<p>Prometheus, Loki, Grafana.</p>
+</section>
+<section id="wazuh" class="level2">
+<h2 class="anchored" data-anchor-id="wazuh">Wazuh</h2>
+<p>Wazuh is an Endpoint Detection and Response system, which is essentially</p>
+
+
+</section>
+</section>
+
+ ]]></description>
+  <category>projects</category>
+  <guid>https://moonpiedumplings.github.io/projects/build-server-7/</guid>
+  <pubDate>Mon, 15 Jun 2026 07:00:00 GMT</pubDate>
+</item>
+<item>
+  <title>Local AI experiments</title>
+  <link>https://moonpiedumplings.github.io/playground/local-llm/</link>
+  <description><![CDATA[ 
+
+
+
+
+
+<section id="inference" class="level1">
+<h1>Inference</h1>
+<p>Recently, I got a Framework 16 with the Ryzen AI. It has 32 gb of ram, which is more than enough to run local models, either on the GPU or the NPU. I am also experimenting with agents, in order to see if I can at the very least, get them to explain undocumented codebases or the like.</p>
+<section id="npu-fastflowlm" class="level2">
+<h2 class="anchored" data-anchor-id="npu-fastflowlm">NPU: FastFlowLM</h2>
+<p><a href="https://fastflowlm.com/">FastFlowLM</a> or FLM for short, is a software similar to Ollama that runs models on the Neural Processing Unit (NPU), instead of the GPU.</p>
+<p>One thing that makes it different is that the models must be converted to run on FLM in advance. It can’t download GGUF from hugging face, it uses a different format. They do have their own <a href="https://fastflowlm.com/docs/models/">repository of downloadable models</a>, but its nowhere near as large as Ollama’s repositories, or HuggingFace’s selection of GGUF models.</p>
+<p>It is possible to convert certain families of models manually: <a href="https://github.com/FastFlowLM/FLM_Q4NX_Converter" class="uri">https://github.com/FastFlowLM/FLM_Q4NX_Converter</a>, although it didn’t work to much for me. Right now I have just been playing with the available models.</p>
+<p>Okay. Upon further investigation, it looks like the process of converting a model is special, and has to be done per model.</p>
+<p>FastflowLM is useful, but it seems to be more for cases where you want smaller (older) models, running with less power consumption. I really want a powerful, active model, and I am okay with my computer getting warm. So, I looked to solutions that can run the current orthodox GGUF format.</p>
+</section>
+<section id="ollama" class="level2">
+<h2 class="anchored" data-anchor-id="ollama">Ollama</h2>
+<p>I first started with ollama-vulkan (packaged in Arch Linux), since Vulkan is officially supported on this hardware. However, I encountered a bug: <a href="https://github.com/ollama/ollama/issues/15261" class="uri">https://github.com/ollama/ollama/issues/15261</a></p>
+<p>Apparently Vulkan is broken with the Gemma4 models, which is frustrating.</p>
+<p>I switched to ollama-rocm (also packaged in Arch Linux). I was avoidant of this at first, because ROCM is technically only supported on datacenter AMD GPU’s, but it works fine on consumer GPU’s with some configuration, or in my case, no configuration. The downloaded gemma4 models now worked.</p>
+<p>Ollama worked, for the most part. Unfortunately, Llama.cpp is more performant, so that is why I tried below.</p>
+</section>
+<section id="llama.cpp" class="level2">
+<h2 class="anchored" data-anchor-id="llama.cpp">Llama.cpp</h2>
+<p>Llama.cpp is the first thing I tried in order to run LLM’s. Unfortunately, it would just segfault and core dump for me, no matter what I tried.</p>
+<p>Okay, I finally isolated it. The problem was that I need to explicitly specify the rocm device compilation should target. Also, I am using the Nixpkgs version not on Nixos. When I used the AUR version, it worked fine, although I am trying to avoid the AUR.</p>
+<p>Here is what I ended up doing to make Llama.cpp work:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1" style="background: #f1f3f5;"><pre class="sourceCode nix code-with-copy"><code class="sourceCode nix"><span id="cb1-1">llama<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">-</span>cpp = pkgs<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">.</span>llama<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">-</span>cpp<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">.</span>override <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">{</span></span>
+<span id="cb1-2">      <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">vulkanSupport</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="cn" style="color: #8f5902;
+background-color: null;
+font-style: inherit;">true</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">;</span></span>
+<span id="cb1-3">      <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">cudaSupport</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="cn" style="color: #8f5902;
+background-color: null;
+font-style: inherit;">false</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">;</span></span>
+<span id="cb1-4">      <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">rocmSupport</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="cn" style="color: #8f5902;
+background-color: null;
+font-style: inherit;">true</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">;</span></span>
+<span id="cb1-5">      <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">rocmGpuTargets</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">[</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"gfx1152"</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">];</span></span>
+<span id="cb1-6">    <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">}</span>;</span>
+<span id="cb1-7"></span>
+<span id="cb1-8">  llamacpp = llama<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">-</span>cpp<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">.</span>overrideAttrs <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">(</span><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">oldAttrs</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">:</span> <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">rec</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">{</span></span>
+<span id="cb1-9"></span>
+<span id="cb1-10">    <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">version</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"9684"</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">;</span></span>
+<span id="cb1-11">    <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">src</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> pkgs<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">.</span>fetchFromGitHub <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">{</span></span>
+<span id="cb1-12">    <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">owner</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"ggml-org"</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">;</span></span>
+<span id="cb1-13">    <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">repo</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"llama.cpp"</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">;</span></span>
+<span id="cb1-14">    <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">tag</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"b</span><span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">${</span>version<span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">}</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">;</span></span>
+<span id="cb1-15">    <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">hash</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"sha256-BQrdTEXUarGZcXU/g1w0BTx6FFDbuy738mcGINmwnGE="</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">;</span></span>
+<span id="cb1-16">    <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">leaveDotGit</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="cn" style="color: #8f5902;
+background-color: null;
+font-style: inherit;">true</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">;</span></span>
+<span id="cb1-17">    <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">postFetch</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">''</span></span>
+<span id="cb1-18"><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">      git -C "$out" rev-parse --short HEAD &gt; $out/COMMIT</span></span>
+<span id="cb1-19"><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">      find "$out" -name .git -print0 | xargs -0 rm -rf</span></span>
+<span id="cb1-20"><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">    ''</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">;</span></span>
+<span id="cb1-21">    <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">};</span></span>
+<span id="cb1-22">    <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">npmDepsHash</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"sha256-0dctM/apI3ysMIEVBaBXO9hZMWskpJpNpOws1gwiOYc="</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">;</span></span>
+<span id="cb1-23">  <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">})</span>; </span></code></pre></div></div>
+<p>This updates llama.cpp, and also enables GPU support via HIP/ROCM.</p>
+<p>Except this crashes after an update. And I haven’t been able to fix it. It just dies. Worse, the process is “defunct” and can’t be killed properly, without having to reboot the whole machine.</p>
+<p>At first I thought that this was an issue with a mismatched ROCm version, between Nix and the host. But I tried the version of llama.cpp-rocm that CachyOS/Arch (now, they didn’t previously) ship, and it crashes too.</p>
+<p>I tried vulkan, which worked, but…s</p>
+<pre><code>[moonpie@nefertem home-manager]$ llama-cli --list-devices
+Warning, nixVulkanIntel overwriting existing LD_LIBRARY_PATH
+Available devices:
+  ROCm0: AMD Radeon 860M Graphics (15683 MiB, 26437 MiB free)
+  Vulkan0: AMD Radeon 860M Graphics (RADV KRACKAN1) (16195 MiB, 14880 MiB free)</code></pre>
+<p>Vulkan has much less vram than ROCm avaialable. Models that will load in ROCm, won’t load in Vulkan. I tried <a href="https://www.jeffgeerling.com/blog/2025/increasing-vram-allocation-on-amd-ai-apus-under-linux/">increasing the vram</a>, and llama-cli</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb3-1">[moonpie@nefertem ~]$ llama-cli --list-devices</span>
+<span id="cb3-2">Available devices:</span>
+<span id="cb3-3">  Vulkan0: AMD Radeon 860M Graphics (RADV KRACKAN1) (25088 MiB, 21714 MiB free)</span></code></pre></div></div>
+<p>Unfortunately, it still doesn’t work, and many of the larger models which would load with ROCm, error:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb4-1">[moonpie@nefertem ~]$ llama-cli -hf unsloth/Qwen3.6-35B-A3B-GGUF:Q4_K_M</span>
+<span id="cb4-2"></span>
+<span id="cb4-3">Loading model... -ggml_vulkan: Device memory allocation of size 1056622080 failed.</span>
+<span id="cb4-4">ggml_vulkan: vk::Device::allocateMemory: ErrorOutOfDeviceMemory</span>
+<span id="cb4-5">0.22.480.740 E alloc_tensor_range: failed to allocate Vulkan0 buffer of size 1056622080</span>
+<span id="cb4-6">/0.22.832.396 E llama_model_load: error loading model: unable to allocate Vulkan0 buffer</span>
+<span id="cb4-7">0.22.832.401 E llama_model_load_from_file_impl: failed to load model</span>
+<span id="cb4-8">0.22.832.435 E cmn  common_init_: failed to load model '/home/moonpie/.cache/huggingface/hub/models--unsloth--Qwen3.6-35B-A3B-GGUF/snapshots/a483e9e6cbd595906af30beda3187c2663a1118c/Qwen3.6-35B-A3B-UD-Q4_K_M.gguf'</span>
+<span id="cb4-9">-0.22.835.534 E srv    load_model: failed to load model, '/home/moonpie/.cache/huggingface/hub/models--unsloth--Qwen3.6-35B-A3B-GGUF/snapshots/a483e9e6cbd595906af30beda3187c2663a1118c/Qwen3.6-35B-A3B-UD-Q4_K_M.gguf'</span>
+<span id="cb4-10"> </span>
+<span id="cb4-11">Failed to load the model</span></code></pre></div></div>
+<p>Which is frustrating.</p>
+</section>
+<section id="open-webui" class="level2">
+<h2 class="anchored" data-anchor-id="open-webui">Open WebUI</h2>
+<p>Open Web UI seems to be the easiest way to have a fully features local AI chat client. I tried searching for local apps, but they didn’t have web search which was unsatisfying.</p>
+<p>Installing it was pretty easy, I installed it using nix and <a href="https://github.com/nix-community/home-manager">home-manager</a>.</p>
+<p>Starting the server was a bit of a pain though, it tries to write to the nix store, which is immutable. I had to specificy that is should be trying to write somewhere else:</p>
+<pre><code>export DATA_DIR="$HOME/.local/share/open-webui"
+mkdir -p "$DATA_DIR"
+open-webui serve</code></pre>
+<p>Once it works, one thing I like is that it autodetected Ollama, and let me run models via that with no configuration.</p>
+<p>Similarly, if I run FastFlowLM on port 11434, instead of it’s default of 5-something, then it will automaticlly find it and connect to it. But FastFlowLM gives me a core dumped error when I attempt to run any models.</p>
+</section>
+</section>
+<section id="models" class="level1">
+<h1>Models</h1>
+<p>I have mostly been playing with the qwen3.5/6 and gemma4 family of models. Unfortunately, I have been encountering many frustrations. On</p>
+</section>
+<section id="agents-and-interfaces" class="level1">
+<h1>Agents and Interfaces</h1>
 <p>Recently, I have begun to play with local LLM’s for various purposes. The runtime doesn’t matter too much, I am mostly bouncing between ollama-vulkan (seems to be bugged for gemini), ollama-rocm and fastflowlm (uses the NPU but doesn’t have as many models).</p>
 <p>But, what I have been playing witha lot is the harnesses/agents. I have tried out hermes, forgecode, nanocode, and a few others.</p>
 <p>I mostly use nix for packages, so I found out about this cool project: <a href="https://github.com/numtide/llm-agents.nix" class="uri">https://github.com/numtide/llm-agents.nix</a></p>
-<section id="installation" class="level1">
-<h1>Installation</h1>
+<section id="installation" class="level2">
+<h2 class="anchored" data-anchor-id="installation">Installation</h2>
 <p>It is essentially, nix packaging of a ton of agents and similar software. I was trying many out one by one here, but I got tired of that, so I decided to see if I could install all of them at once.</p>
 <p>I’m using home-manager to install packages on non-nixos systems: <a href="https://github.com/moonpiedumplings/home-manager/" class="uri">https://github.com/moonpiedumplings/home-manager/</a></p>
 <p>It was fairly simple actually. Because nix is a programming language, it is possible to convert it to a list, filter out broken agents, and then add them all fo</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1" style="background: #f1f3f5;"><pre class="sourceCode nix code-with-copy"><code class="sourceCode nix"><span id="cb1-1"><span class="kw" style="color: #003B4F;
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6" style="background: #f1f3f5;"><pre class="sourceCode nix code-with-copy"><code class="sourceCode nix"><span id="cb6-1"><span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">let</span> </span>
-<span id="cb1-2">  <span class="va" style="color: #111111;
+<span id="cb6-2">  <span class="va" style="color: #111111;
 background-color: null;
 font-style: inherit;">hermes</span> <span class="op" style="color: #5E5E5E;
 background-color: null;
@@ -49,7 +617,7 @@ background-color: null;
 font-style: inherit;">}</span><span class="op" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;">;</span></span>
-<span id="cb1-3">  <span class="va" style="color: #111111;
+<span id="cb6-3">  <span class="va" style="color: #111111;
 background-color: null;
 font-style: inherit;">llm-agents</span> <span class="op" style="color: #5E5E5E;
 background-color: null;
@@ -68,7 +636,7 @@ background-color: null;
 font-style: inherit;">}</span><span class="op" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;">;</span></span>
-<span id="cb1-4">  <span class="va" style="color: #111111;
+<span id="cb6-4">  <span class="va" style="color: #111111;
 background-color: null;
 font-style: inherit;">every-agent</span> <span class="op" style="color: #5E5E5E;
 background-color: null;
@@ -81,84 +649,84 @@ background-color: null;
 font-style: inherit;">-</span>agents<span class="op" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;">;</span></span>
-<span id="cb1-5">  <span class="co" style="color: #5E5E5E;
+<span id="cb6-5">  <span class="co" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;"># list of broken agents for filtering</span></span>
-<span id="cb1-6">  <span class="va" style="color: #111111;
+<span id="cb6-6">  <span class="va" style="color: #111111;
 background-color: null;
 font-style: inherit;">broken-agents</span> <span class="op" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;">=</span> <span class="op" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;">[</span></span>
-<span id="cb1-7">    <span class="st" style="color: #20794D;
+<span id="cb6-7">    <span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">"aionui"</span></span>
-<span id="cb1-8">    <span class="st" style="color: #20794D;
+<span id="cb6-8">    <span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">"hermes-desktop"</span></span>
-<span id="cb1-9">    <span class="st" style="color: #20794D;
+<span id="cb6-9">    <span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">"showboat"</span></span>
-<span id="cb1-10">    <span class="st" style="color: #20794D;
+<span id="cb6-10">    <span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">"backlog-md"</span></span>
-<span id="cb1-11">    <span class="st" style="color: #20794D;
+<span id="cb6-11">    <span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">"mistral-vibe"</span></span>
-<span id="cb1-12">    <span class="st" style="color: #20794D;
+<span id="cb6-12">    <span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">"codex"</span></span>
-<span id="cb1-13">    <span class="co" style="color: #5E5E5E;
+<span id="cb6-13">    <span class="co" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;">#"openclaw"</span></span>
-<span id="cb1-14">    <span class="co" style="color: #5E5E5E;
+<span id="cb6-14">    <span class="co" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;"># Not an agent</span></span>
-<span id="cb1-15">    <span class="st" style="color: #20794D;
+<span id="cb6-15">    <span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">"flake-inputs"</span></span>
-<span id="cb1-16">    <span class="co" style="color: #5E5E5E;
+<span id="cb6-16">    <span class="co" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;">#"oh-my-opencode"</span></span>
-<span id="cb1-17">    <span class="co" style="color: #5E5E5E;
+<span id="cb6-17">    <span class="co" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;">#"omp"</span></span>
-<span id="cb1-18">    <span class="co" style="color: #5E5E5E;
+<span id="cb6-18">    <span class="co" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;">#"gno"</span></span>
-<span id="cb1-19">    <span class="co" style="color: #5E5E5E;
+<span id="cb6-19">    <span class="co" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;"># This stuff seems to be failing due to npm network issues. </span></span>
-<span id="cb1-20">    <span class="co" style="color: #5E5E5E;
+<span id="cb6-20">    <span class="co" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;"># It's probably my home internet rather than broken packages</span></span>
-<span id="cb1-21">    <span class="st" style="color: #20794D;
+<span id="cb6-21">    <span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">"reasonix"</span></span>
-<span id="cb1-22">    <span class="st" style="color: #20794D;
+<span id="cb6-22">    <span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">"paseo-desktop"</span></span>
-<span id="cb1-23">    <span class="st" style="color: #20794D;
+<span id="cb6-23">    <span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">"codegraph"</span></span>
-<span id="cb1-24">    <span class="st" style="color: #20794D;
+<span id="cb6-24">    <span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">"gitbutler"</span></span>
-<span id="cb1-25">    <span class="st" style="color: #20794D;
+<span id="cb6-25">    <span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">"but"</span></span>
-<span id="cb1-26">    <span class="st" style="color: #20794D;
+<span id="cb6-26">    <span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">"openclaw"</span></span>
-<span id="cb1-27">    <span class="st" style="color: #20794D;
+<span id="cb6-27">    <span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">"code"</span></span>
-<span id="cb1-28">  <span class="op" style="color: #5E5E5E;
+<span id="cb6-28">  <span class="op" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;">];</span></span>
-<span id="cb1-29"></span>
-<span id="cb1-30">  <span class="va" style="color: #111111;
+<span id="cb6-29"></span>
+<span id="cb6-30">  <span class="va" style="color: #111111;
 background-color: null;
 font-style: inherit;">working-agents</span> <span class="op" style="color: #5E5E5E;
 background-color: null;
@@ -167,10 +735,10 @@ background-color: null;
 font-style: inherit;">builtins</span><span class="op" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;">.</span>attrValues</span>
-<span id="cb1-31">    <span class="co" style="color: #5E5E5E;
+<span id="cb6-31">    <span class="co" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;">#(builtins.removeAttrs llm-agents [ "aionui" "hermes-desktop" "showboat" ]);</span></span>
-<span id="cb1-32">    <span class="op" style="color: #5E5E5E;
+<span id="cb6-32">    <span class="op" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;">(</span><span class="bu" style="color: null;
 background-color: null;
@@ -183,8 +751,8 @@ background-color: null;
 font-style: inherit;">-</span>agents<span class="op" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;">);</span></span>
-<span id="cb1-33"></span>
-<span id="cb1-34">  <span class="va" style="color: #111111;
+<span id="cb6-33"></span>
+<span id="cb6-34">  <span class="va" style="color: #111111;
 background-color: null;
 font-style: inherit;">gpu-wrapped-agents</span> <span class="op" style="color: #5E5E5E;
 background-color: null;
@@ -208,16 +776,26 @@ font-style: inherit;">;</span></span></code></pre></div></div>
 <p>After I have almost everything that that project packages, available.</p>
 <p>Next up, was to sandbox them. Part of why I select the nix programming, is becasue it is possible to mount the immutable nix store into virtual machines or containers, saving space.</p>
 </section>
-<section id="incus-containers" class="level1">
-<h1>Incus Containers</h1>
+<section id="incus-containers" class="level2">
+<h2 class="anchored" data-anchor-id="incus-containers">Incus Containers</h2>
 <p>So, I created an incus container:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2" style="background: #f1f3f5;"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb2-1"><span class="fu" style="color: #4758AB;
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7" style="background: #f1f3f5;"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb7-1"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">user.ui_terminal_default_payload</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> </span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'{"command":"bash -l","environment":[{"key":"TERM","value":"xterm-256color"},{"key":"HOME","value":"/root"},{"key":"PATH","value":"/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/snap/bin:/run/current-system/sw/bin"},{"key":"LANG","value":"C.UTF-8"},{"key":"USER","value":"root"},{"key":"NIX_REMOTE","value":"daemon"}],"user":0,"group":0}'</span></span>
+<span id="cb7-2"><span class="fu" style="color: #4758AB;
 background-color: null;
 font-style: inherit;">config</span><span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">:</span></span>
-<span id="cb2-2"><span class="at" style="color: #657422;
+<span id="cb7-3"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -227,7 +805,7 @@ font-weight: bold;
 font-style: inherit;">:</span><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;"> Debian trixie amd64 (20260608_05:24)</span></span>
-<span id="cb2-3"><span class="at" style="color: #657422;
+<span id="cb7-4"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -237,7 +815,7 @@ font-weight: bold;
 font-style: inherit;">:</span><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;"> Debian</span></span>
-<span id="cb2-4"><span class="at" style="color: #657422;
+<span id="cb7-5"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -247,13 +825,13 @@ font-weight: bold;
 font-style: inherit;">:</span><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;"> trixie</span></span>
-<span id="cb2-5"><span class="fu" style="color: #4758AB;
+<span id="cb7-6"><span class="fu" style="color: #4758AB;
 background-color: null;
 font-style: inherit;">devices</span><span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">:</span></span>
-<span id="cb2-6"><span class="at" style="color: #657422;
+<span id="cb7-7"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -261,7 +839,7 @@ font-style: inherit;">disk-device-1</span><span class="kw" style="color: #003B4F
 background-color: null;
 font-weight: bold;
 font-style: inherit;">:</span></span>
-<span id="cb2-7"><span class="at" style="color: #657422;
+<span id="cb7-8"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -271,7 +849,7 @@ font-weight: bold;
 font-style: inherit;">:</span><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;"> /nix/store</span></span>
-<span id="cb2-8"><span class="at" style="color: #657422;
+<span id="cb7-9"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -283,7 +861,7 @@ background-color: null;
 font-style: inherit;"> </span><span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">"true"</span></span>
-<span id="cb2-9"><span class="at" style="color: #657422;
+<span id="cb7-10"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -293,7 +871,7 @@ font-weight: bold;
 font-style: inherit;">:</span><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;"> /nix/store</span></span>
-<span id="cb2-10"><span class="at" style="color: #657422;
+<span id="cb7-11"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -303,7 +881,7 @@ font-weight: bold;
 font-style: inherit;">:</span><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;"> disk</span></span>
-<span id="cb2-11"><span class="at" style="color: #657422;
+<span id="cb7-12"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -311,7 +889,7 @@ font-style: inherit;">disk-device-2</span><span class="kw" style="color: #003B4F
 background-color: null;
 font-weight: bold;
 font-style: inherit;">:</span></span>
-<span id="cb2-12"><span class="at" style="color: #657422;
+<span id="cb7-13"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -321,7 +899,7 @@ font-weight: bold;
 font-style: inherit;">:</span><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;"> /nix/var/nix/daemon-socket</span></span>
-<span id="cb2-13"><span class="at" style="color: #657422;
+<span id="cb7-14"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -333,7 +911,7 @@ background-color: null;
 font-style: inherit;"> </span><span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">"true"</span></span>
-<span id="cb2-14"><span class="at" style="color: #657422;
+<span id="cb7-15"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -343,7 +921,7 @@ font-weight: bold;
 font-style: inherit;">:</span><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;"> /nix/var/nix/daemon-socket</span></span>
-<span id="cb2-15"><span class="at" style="color: #657422;
+<span id="cb7-16"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -353,7 +931,7 @@ font-weight: bold;
 font-style: inherit;">:</span><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;"> disk</span></span>
-<span id="cb2-16"><span class="fu" style="color: #4758AB;
+<span id="cb7-17"><span class="fu" style="color: #4758AB;
 background-color: null;
 font-style: inherit;">type</span><span class="kw" style="color: #003B4F;
 background-color: null;
@@ -361,7 +939,7 @@ font-weight: bold;
 font-style: inherit;">:</span><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;"> container</span></span>
-<span id="cb2-17"><span class="fu" style="color: #4758AB;
+<span id="cb7-18"><span class="fu" style="color: #4758AB;
 background-color: null;
 font-style: inherit;">project</span><span class="kw" style="color: #003B4F;
 background-color: null;
@@ -369,14 +947,14 @@ font-weight: bold;
 font-style: inherit;">:</span><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;"> default</span></span></code></pre></div></div>
-<p>Th ebig things to note are the way I mount the nix daemon, and the nix store into the container read only.</p>
+<p>Th big things to note are the way I mount the nix daemon, and the nix store into the container read only. Another thing to note is the custom termianl payload. I use the command <code>bash -l</code> so that it loads an interactive bash shell, which is needed for nix to be present in the shell. The other thing I do is set the environment variable <code>NIX_REMOTE=daemon</code>, which makes it so that Nix understands that it itself isn’t supposed to run the builds, it’s supposed to communicate through the container to the host.</p>
 <p>Inside the virtual machine, I can install nix by running <code>apt install nix-bin</code>.</p>
 <p>Then, I have to set up the profiles so they are used properly:</p>
 <div class="code-with-filename">
 <div class="code-with-filename-file">
 <pre><strong>/etc/profile.d/nix.sh</strong></pre>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3" data-filename="/etc/profile.d/nix.sh" style="background: #f1f3f5;"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb3-1"><span class="bu" style="color: null;
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8" data-filename="/etc/profile.d/nix.sh" style="background: #f1f3f5;"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb8-1"><span class="bu" style="color: null;
 background-color: null;
 font-style: inherit;">export</span> <span class="va" style="color: #111111;
 background-color: null;
@@ -385,15 +963,15 @@ background-color: null;
 font-style: inherit;">=</span>daemon <span class="co" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;"># Ensures that nix tries to talk to the socket</span></span>
-<span id="cb3-2"><span class="bu" style="color: null;
+<span id="cb8-2"><span class="bu" style="color: null;
 background-color: null;
 font-style: inherit;">export</span> <span class="va" style="color: #111111;
 background-color: null;
 font-style: inherit;">NIX_SSL_CERT_FILE</span><span class="op" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;">=</span>/etc/ssl/certs/ca-certificates.crt</span>
-<span id="cb3-3"></span>
-<span id="cb3-4"><span class="cf" style="color: #003B4F;
+<span id="cb8-3"></span>
+<span id="cb8-4"><span class="cf" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">if</span> <span class="bu" style="color: null;
@@ -415,7 +993,7 @@ font-style: inherit;">;</span> <span class="cf" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">then</span></span>
-<span id="cb3-5">  <span class="bu" style="color: null;
+<span id="cb8-5">  <span class="bu" style="color: null;
 background-color: null;
 font-style: inherit;">.</span> <span class="st" style="color: #20794D;
 background-color: null;
@@ -424,12 +1002,12 @@ background-color: null;
 font-style: inherit;">$HOME</span><span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">/.nix-profile/etc/profile.d/hm-session-vars.sh"</span></span>
-<span id="cb3-6"><span class="cf" style="color: #003B4F;
+<span id="cb8-6"><span class="cf" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">fi</span></span>
-<span id="cb3-7"></span>
-<span id="cb3-8"><span class="bu" style="color: null;
+<span id="cb8-7"></span>
+<span id="cb8-8"><span class="bu" style="color: null;
 background-color: null;
 font-style: inherit;">export</span> <span class="va" style="color: #111111;
 background-color: null;
@@ -450,53 +1028,114 @@ font-style: inherit;">"</span></span></code></pre></div></div>
 <p>I also have to add channels, and enable flakes and the new nix command.</p>
 <p>Once these are configured, when I run nix operations, like installing home manager and pointing home manager at the same config my host is using, it works, saving space becuase it is using the same binaries and libraries from the host. And every</p>
 </section>
-<section id="git-environments" class="level1">
-<h1>Git Environments</h1>
+<section id="git-environments" class="level2">
+<h2 class="anchored" data-anchor-id="git-environments">Git Environments</h2>
 <p>Next, is safely giving the Incus container access to the git environment. I created another directory, <code>agent-sandbox</code>, and shared that to the Incus container with read and write permissions.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9" style="background: #f1f3f5;"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb9-1"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">devices</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span></span>
+<span id="cb9-2"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">disk-device-3</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span></span>
+<span id="cb9-3"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">path</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> /root/agent-sandbox</span></span>
+<span id="cb9-4"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">    # Shift true makes it so that the container can actually read and write the host path</span></span>
+<span id="cb9-5"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">shift</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> </span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'true'</span></span>
+<span id="cb9-6"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">source</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> /home/moonpie/Projects/agent-sandbox</span></span>
+<span id="cb9-7"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">type</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> disk</span></span></code></pre></div></div>
 <p>With git, you can actually git clone/push from a local repository. So if I run this on my host:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb4-1">[moonpie@nefertem Projects]$ cd agent-sandbox/</span>
-<span id="cb4-2">[moonpie@nefertem agent-sandbox]$ git clone ../coder-templates/</span>
-<span id="cb4-3">Cloning into 'coder-templates'...</span>
-<span id="cb4-4">remote: Enumerating objects: 171, done.</span>
-<span id="cb4-5">remote: Counting objects: 100% (171/171), done.</span>
-<span id="cb4-6">remote: Compressing objects: 100% (119/119), done.</span>
-<span id="cb4-7">remote: Total 171 (delta 44), reused 171 (delta 44), pack-reused 0 (from 0)</span>
-<span id="cb4-8">Receiving objects: 100% (171/171), 19.81 MiB | 2.02 MiB/s, done.</span>
-<span id="cb4-9">Resolving deltas: 100% (44/44), done.</span>
-<span id="cb4-10">[moonpie@nefertem agent-sandbox]$ cd coder-templates/</span>
-<span id="cb4-11">[moonpie@nefertem coder-templates]$ touch test.txt</span>
-<span id="cb4-12">[moonpie@nefertem coder-templates]$ echo test &gt; test.txt </span>
-<span id="cb4-13">[moonpie@nefertem coder-templates]$ git add .</span>
-<span id="cb4-14">[moonpie@nefertem coder-templates]$ git commit -m "test commit"</span>
-<span id="cb4-15">[main a31feff] test commit</span>
-<span id="cb4-16"> 1 file changed, 1 insertion(+)</span>
-<span id="cb4-17"> create mode 100644 test.txt</span>
-<span id="cb4-18">[moonpie@nefertem coder-templates]$ cd ..</span>
-<span id="cb4-19">[moonpie@nefertem agent-sandbox]$ cd ..</span>
-<span id="cb4-20">[moonpie@nefertem Projects]$ cd coder-templates/</span>
-<span id="cb4-21">[moonpie@nefertem coder-templates]$ git pull ../agent-sandbox/coder-templates/ main</span>
-<span id="cb4-22">From ../agent-sandbox/coder-templates</span>
-<span id="cb4-23"> * branch            main       -&gt; FETCH_HEAD</span>
-<span id="cb4-24">Updating 99ed112..a31feff</span>
-<span id="cb4-25">Fast-forward</span>
-<span id="cb4-26"> test.txt | 1 +</span>
-<span id="cb4-27"> 1 file changed, 1 insertion(+)</span>
-<span id="cb4-28"> create mode 100644 test.txt</span>
-<span id="cb4-29">[moonpie@nefertem coder-templates]$ </span></code></pre></div></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10" style="background: #f1f3f5;"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb10-1">[moonpie@nefertem Projects]$ cd agent-sandbox/</span>
+<span id="cb10-2">[moonpie@nefertem agent-sandbox]$ git clone ../coder-templates/</span>
+<span id="cb10-3">Cloning into 'coder-templates'...</span>
+<span id="cb10-4">remote: Enumerating objects: 171, done.</span>
+<span id="cb10-5">remote: Counting objects: 100% (171/171), done.</span>
+<span id="cb10-6">remote: Compressing objects: 100% (119/119), done.</span>
+<span id="cb10-7">remote: Total 171 (delta 44), reused 171 (delta 44), pack-reused 0 (from 0)</span>
+<span id="cb10-8">Receiving objects: 100% (171/171), 19.81 MiB | 2.02 MiB/s, done.</span>
+<span id="cb10-9">Resolving deltas: 100% (44/44), done.</span>
+<span id="cb10-10">[moonpie@nefertem agent-sandbox]$ cd coder-templates/</span>
+<span id="cb10-11">[moonpie@nefertem coder-templates]$ touch test.txt</span>
+<span id="cb10-12">[moonpie@nefertem coder-templates]$ echo test &gt; test.txt </span>
+<span id="cb10-13">[moonpie@nefertem coder-templates]$ git add .</span>
+<span id="cb10-14">[moonpie@nefertem coder-templates]$ git commit -m "test commit"</span>
+<span id="cb10-15">[main a31feff] test commit</span>
+<span id="cb10-16"> 1 file changed, 1 insertion(+)</span>
+<span id="cb10-17"> create mode 100644 test.txt</span>
+<span id="cb10-18">[moonpie@nefertem coder-templates]$ cd ..</span>
+<span id="cb10-19">[moonpie@nefertem agent-sandbox]$ cd ..</span>
+<span id="cb10-20">[moonpie@nefertem Projects]$ cd coder-templates/</span>
+<span id="cb10-21">[moonpie@nefertem coder-templates]$ git pull ../agent-sandbox/coder-templates/ main</span>
+<span id="cb10-22">From ../agent-sandbox/coder-templates</span>
+<span id="cb10-23"> * branch            main       -&gt; FETCH_HEAD</span>
+<span id="cb10-24">Updating 99ed112..a31feff</span>
+<span id="cb10-25">Fast-forward</span>
+<span id="cb10-26"> test.txt | 1 +</span>
+<span id="cb10-27"> 1 file changed, 1 insertion(+)</span>
+<span id="cb10-28"> create mode 100644 test.txt</span>
+<span id="cb10-29">[moonpie@nefertem coder-templates]$ </span></code></pre></div></div>
 <p>The agent now has a copy of the repo, they can do git operations on, but they can’t touch the original repo becasue that is outside of the sandbox.</p>
 <p>What this does, is it prevents agents from screwing up git history, or incorrectly pushing when they shouldn’t. By making them do all git operations in another repo, I can inspect the history before pulling it over.</p>
-</section>
-<section id="yolo" class="level1">
-<h1>YOLO</h1>
+<p>Not everything is git, so this has to be transferred over. The easiest way to do it, is run <code>git diff</code> and <code>git apply</code> to create an apply a patch.</p>
+<p>Because I’m on Linux/Wayland, I can use <code>wl-copy</code> and <code>wl-paste</code> to save the patch to my clipboard.</p>
+<p>In the normal repo, I run: <code>git diff | wl-copy</code></p>
+<p>In the sandboxed repo, I can then just run: <code>wl-paste | git apply</code></p>
 <p>The idea behind this whole setup is that I should be able to run the agents in always confirm (YOLO) or similar modes, safely in a sandboxed environment.</p>
 
 
 </section>
+</section>
 
  ]]></description>
   <category>playground</category>
-  <guid>https://moonpiedumplings.github.io/playground/llm-royale/</guid>
-  <pubDate>Mon, 08 Jun 2026 07:00:00 GMT</pubDate>
+  <guid>https://moonpiedumplings.github.io/playground/local-llm/</guid>
+  <pubDate>Sun, 07 Jun 2026 07:00:00 GMT</pubDate>
 </item>
 <item>
   <title>Installing Cisco Packet Tracer in Distrobox</title>
@@ -14691,345 +15330,6 @@ rook-ceph-operator   66s   False   Helm install failed for release openstack/roo
   <category>projects</category>
   <guid>https://moonpiedumplings.github.io/projects/build-server-5/</guid>
   <pubDate>Thu, 12 Sep 2024 07:00:00 GMT</pubDate>
-</item>
-<item>
-  <title>Software Projects I follow</title>
-  <link>https://moonpiedumplings.github.io/blog/watched-software/</link>
-  <description><![CDATA[ 
-
-
-
-
-
-<section id="why" class="level1">
-<h1>Why?</h1>
-<p>For some software, there are 10 billion alternatives. There are many great ebook readers, file browsers, terminals, and so on.</p>
-<p>But for some types of software, it’s rarer. There aren’t as many options, and the options are less known. This is my page to keep track of softwares like that.</p>
-</section>
-<section id="vulnerability-scanning-greenbone" class="level1">
-<h1>Vulnerability Scanning (Greenbone)</h1>
-<p>External:</p>
-<p>(<a href="https://programming.dev/post/17335421" class="uri">https://programming.dev/post/17335421</a>)</p>
-<p>(Web) GUI:</p>
-<ul>
-<li>GreenBone/OpenVas</li>
-<li><a href="https://sirius.opensecurity.com/" class="uri">https://sirius.opensecurity.com/</a></li>
-<li><a href="https://docs.enginsight.com/docs/master/operation/platform/penetration-testing" class="uri">https://docs.enginsight.com/docs/master/operation/platform/penetration-testing</a></li>
-</ul>
-<p>Cli:</p>
-<ul>
-<li><p><a href="https://github.com/future-architect/vuls" class="uri">https://github.com/future-architect/vuls</a> <a href="https://h0bbl3s.port0.org/vulnerability-scanning-with-vuls/" class="uri">https://h0bbl3s.port0.org/vulnerability-scanning-with-vuls/</a></p></li>
-<li><p><a href="https://github.com/vulsio/vulsctl" class="uri">https://github.com/vulsio/vulsctl</a></p></li>
-<li><p>https://github.com/therandomsecurityguy/flan-go-scan — Cloudfare’s updated flan</p></li>
-<li><p><a href="https://github.com/projectdiscovery/nuclei" class="uri">https://github.com/projectdiscovery/nuclei</a></p>
-<ul>
-<li>Tested it, it’s quick and detects CVE’s. Pretty nice!</li>
-</ul></li>
-<li><p><a href="https://doc.ivre.rocks/en/latest/" class="uri">https://doc.ivre.rocks/en/latest/</a></p></li>
-<li><p><a href="https://github.com/tlkh/prowler" class="uri">https://github.com/tlkh/prowler</a> — last update 6 years ago</p></li>
-<li><p>Nmap scripts</p>
-<ul>
-<li><a href="https://github.com/scipag/vulscan" class="uri">https://github.com/scipag/vulscan</a> — vulnerability scanning project for nmap</li>
-<li><a href="https://github.com/vulnersCom/nmap-vulners" class="uri">https://github.com/vulnersCom/nmap-vulners</a></li>
-<li><a href="https://github.com/cloudflare/flan" class="uri">https://github.com/cloudflare/flan</a> — last update 2 years ago, based on vulners for nmap (has since been replaced, see above)</li>
-</ul></li>
-</ul>
-<p>Web scanning:</p>
-<ul>
-<li><a href="https://www.zaproxy.org/" class="uri">https://www.zaproxy.org/</a></li>
-</ul>
-</section>
-<section id="sast-tools" class="level1">
-<h1>SAST Tools</h1>
-<p>Since they have been useful in dealing with custom, homemade apps during the cyber competitions, I will note a few down.</p>
-<ul>
-<li><a href="https://github.com/Bearer/bearer" class="uri">https://github.com/Bearer/bearer</a>
-<ul>
-<li>Not actually open source</li>
-<li>Works great though</li>
-</ul></li>
-<li>https://github.com/opengrep/opengrep</li>
-</ul>
-</section>
-<section id="browser-based-desktop-kasmwebvnc" class="level1">
-<h1>Browser based Desktop (Kasmweb/VNC)</h1>
-<p>Full featured:</p>
-<p>Multi user Full Featured:</p>
-<ul>
-<li><a href="https://games-on-whales.github.io/" class="uri">https://games-on-whales.github.io/</a> — <a href="https://github.com/games-on-whales" class="uri">https://github.com/games-on-whales</a></li>
-<li><a href="https://github.com/spaceness/stardust" class="uri">https://github.com/spaceness/stardust</a></li>
-<li>kasmweb — not open source</li>
-<li><a href="https://github.com/pwncollege/dojo" class="uri">https://github.com/pwncollege/dojo</a>
-<ul>
-<li>Is an addon to <a href="https://docs.ctfd.io/docs/overview/" class="uri">https://docs.ctfd.io/docs/overview/</a>, but adds web workspaces and more.</li>
-<li><a href="https://docs.ctfd.io/docs/settings/single-sign-on/#oauth">ctfd has SSO support</a></li>
-</ul></li>
-<li><a href="https://coder.com/" class="uri">https://coder.com/</a>
-<ul>
-<li>Open source, self hostable</li>
-</ul></li>
-<li><a href="https://github.com/opencloudplay" class="uri">https://github.com/opencloudplay</a></li>
-<li>FastX — offers student discounts, according to the person at the booth at the So Cal Linux Expo.</li>
-<li><a href="https://github.com/giongto35/cloud-morph" class="uri">https://github.com/giongto35/cloud-morph</a></li>
-</ul>
-<p>Single User full featured:</p>
-<ul>
-<li><a href="https://docs.linuxserver.io/images/docker-kasm/" class="uri">https://docs.linuxserver.io/images/docker-kasm/</a></li>
-<li><a href="https://github.com/Fmstrat/webbian" class="uri">https://github.com/Fmstrat/webbian</a> — <a href="https://nowsci.com/webbian/">Docs</a></li>
-<li><a href="https://github.com/m1k1o/neko" class="uri">https://github.com/m1k1o/neko</a>
-<ul>
-<li>Notable because this one supports password auth, and viewer/controller style setups. It’s explicitly designed for multi-user web browsing activities.</li>
-</ul></li>
-<li><a href="https://github.com/accetto/ubuntu-vnc-xfce-g3" class="uri">https://github.com/accetto/ubuntu-vnc-xfce-g3</a></li>
-<li><a href="https://github.com/gezp/docker-ubuntu-desktop" class="uri">https://github.com/gezp/docker-ubuntu-desktop</a></li>
-<li><a href="https://github.com/selkies-project/docker-nvidia-egl-desktop" class="uri">https://github.com/selkies-project/docker-nvidia-egl-desktop</a>
-<ul>
-<li>Also has nvidia-glx-desktop</li>
-<li>Although the docker containers seem to be maintained, the overall product seems to be dead. It looks like they were working towards a full web UI before it died.</li>
-</ul></li>
-<li><a href="https://github.com/vital987/vubuntu" class="uri">https://github.com/vital987/vubuntu</a> — last updated 2 years ago</li>
-</ul>
-<p>Web apps:</p>
-<ul>
-<li><a href="https://github.com/DustinBrett/daedalOS" class="uri">https://github.com/DustinBrett/daedalOS</a></li>
-<li><a href="https://docs.fullstacked.org/#/" class="uri">https://docs.fullstacked.org/#/</a></li>
-<li><a href="https://github.com/MercuryWorkshop/anuraOS" class="uri">https://github.com/MercuryWorkshop/anuraOS</a>
-<ul>
-<li>This one is special because it uses a javascript linux emulator combined with a proxy, to have a full linux environment running in your browser.</li>
-</ul></li>
-<li><a href="https://copy.sh/v86/" class="uri">https://copy.sh/v86/</a>
-<ul>
-<li>No networking</li>
-</ul></li>
-<li><a href="https://bellard.org/jslinux/" class="uri">https://bellard.org/jslinux/</a> — linux emulator</li>
-<li><a href="https://github.com/shmuelhizmi/web-desktop-environment" class="uri">https://github.com/shmuelhizmi/web-desktop-environment</a> — web app, but has xpra support</li>
-</ul>
-<p>Somewhat related: <a href="https://github.com/udevbe/greenfield" class="uri">https://github.com/udevbe/greenfield</a> — it’s an html5 wayland compositor.</p>
-<p>Also related: <a href="https://github.com/giongto35/cloud-morph">cloud-morph</a> and <a href="https://github.com/giongto35/cloud-game">cloud-game</a></p>
-<p><a href="https://eclipse.dev/che/" class="uri">https://eclipse.dev/che/</a> — seems to be a promising alternative to Coder.</p>
-<section id="browser-based-ide-javascriptwasm" class="level2">
-<h2 class="anchored" data-anchor-id="browser-based-ide-javascriptwasm">Browser Based IDE (javascript/wasm)</h2>
-<ul>
-<li><a href="https://github.com/styfle/awesome-online-ide" class="uri">https://github.com/styfle/awesome-online-ide</a></li>
-</ul>
-<p><a href="https://github.com/live-codes/livecodes">Livecodes</a> from this list is pretty cool.</p>
-<p>There is also this one project: <a href="https://github.com/lucademenego99/icp-bundle">Interactive Code Playgrounds</a>. This one is the best thing I have found so far for generally embedding code snippets into blogposts or slides I might make. <a href="https://lucademenego99.github.io/icp-slides/editors.html#/">Example slides here</a>.</p>
-</section>
-</section>
-<section id="intrustion-detection-system-wazuh" class="level1">
-<h1>Intrustion Detection System (Wazuh)</h1>
-<ul>
-<li>Wazuh</li>
-<li><a href="https://www.la-samhna.de/samhain/">Samhain</a></li>
-<li><a href="https://www.nongnu.org/tiger/">Tiger</a></li>
-<li><a href="https://en.wikipedia.org/wiki/Open_Source_Tripwire">Tripwire</a> (last update 6 years ago)</li>
-<li><a href="https://github.com/falcosecurity/falco">Falco</a></li>
-</ul>
-</section>
-<section id="automated-red-teaming" class="level1">
-<h1>Automated Red Teaming</h1>
-<ul>
-<li>Atomic Red Team</li>
-<li>OpenAEV</li>
-</ul>
-</section>
-<section id="domainad" class="level1">
-<h1>Domain/AD</h1>
-<ul>
-<li><a href="https://cid-doc.github.io/" class="uri">https://cid-doc.github.io/</a></li>
-</ul>
-</section>
-<section id="cicd-security" class="level1">
-<h1>CI/CD Security</h1>
-<p>There was an interesting project, but I don’t remember it’s name.</p>
-</section>
-<section id="staticrypt" class="level1">
-<h1>Staticrypt:</h1>
-<p>Software that encrypts contents of a static site, to be unlocked by a password. Staticrypt was were I first saw this idea.</p>
-<ul>
-<li><a href="https://github.com/robinmoisson/staticrypt">Staticrypt</a></li>
-<li><a href="https://github.com/mprimi/portable-secret" class="uri">https://github.com/mprimi/portable-secret</a></li>
-<li><a href="https://github.com/sowbug/quaid" class="uri">https://github.com/sowbug/quaid</a></li>
-</ul>
-<p><a href="https://news.ycombinator.com/item?id=41404064">Hacker News Discussion</a></p>
-<p><a href="https://programming.dev/post/18818724">Lemmy Discussion</a></p>
-<p>Lots of similar software mentioned there.</p>
-</section>
-<section id="ai" class="level1">
-<h1>AI</h1>
-<section id="speech-to-text-and-text-to-speech" class="level2">
-<h2 class="anchored" data-anchor-id="speech-to-text-and-text-to-speech">Speech-To-Text and Text-To-Speech</h2>
-<ul>
-<li><a href="https://github.com/k2-fsa/sherpa-onnx" class="uri">https://github.com/k2-fsa/sherpa-onnx</a></li>
-<li></li>
-</ul>
-</section>
-<section id="llms" class="level2">
-<h2 class="anchored" data-anchor-id="llms">LLM’s</h2>
-<ul>
-<li><a href="https://github.com/Mozilla-Ocho/llamafile" class="uri">https://github.com/Mozilla-Ocho/llamafile</a></li>
-</ul>
-</section>
-</section>
-<section id="misc" class="level1">
-<h1>Misc:</h1>
-<ul>
-<li><a href="https://github.com/jvoisin/php-malware-finder" class="uri">https://github.com/jvoisin/php-malware-finder</a> — Uses yara rules to find PHP webshells and other malware.</li>
-<li><a href="https://github.com/lakinduakash/linux-wifi-hotspot" class="uri">https://github.com/lakinduakash/linux-wifi-hotspot</a></li>
-<li><a href="https://github.com/pieroproietti/penguins-eggs" class="uri">https://github.com/pieroproietti/penguins-eggs</a> — create custom arch isos</li>
-<li><a href="https://github.com/sickcodes/Docker-OSX" class="uri">https://github.com/sickcodes/Docker-OSX</a></li>
-<li><a href="https://github.com/wavemakercards/wavemaker-cards-v4" class="uri">https://github.com/wavemakercards/wavemaker-cards-v4</a></li>
-<li><a href="https://github.com/Kron4ek/Conty" class="uri">https://github.com/Kron4ek/Conty</a></li>
-<li><a href="https://github.com/jordansissel/fpm" class="uri">https://github.com/jordansissel/fpm</a> — Can convert packages from one type to another.</li>
-<li><a href="https://github.com/Fmstrat/winapps" class="uri">https://github.com/Fmstrat/winapps</a> and <a href="https://github.com/Fmstrat/loffice-365" class="uri">https://github.com/Fmstrat/loffice-365</a></li>
-</ul>
-</section>
-<section id="kubernetes" class="level1">
-<h1>Kubernetes</h1>
-<ul>
-<li><a href="https://github.com/freelensapp" class="uri">https://github.com/freelensapp</a></li>
-<li><a href="https://github.com/wiredoor/wiredoor" class="uri">https://github.com/wiredoor/wiredoor</a></li>
-<li><a href="https://github.com/werf/nelm" class="uri">https://github.com/werf/nelm</a> — I want a helm alternative, helm has certain issues
-<ul>
-<li><a href="https://www.reddit.com/r/kubernetes/comments/1jqd4pb/werfnelm_nelm_is_a_helm_3_alternative/">Reddit post</a></li>
-</ul></li>
-<li><a href="https://yokecd.github.io/docs/" class="uri">https://yokecd.github.io/docs/</a></li>
-<li><a href="https://github.com/ctrox/zeropod" class="uri">https://github.com/ctrox/zeropod</a> — container pause and save to memory, then resume. Comes with an experimental in memory</li>
-</ul>
-</section>
-<section id="cloud-suites" class="level1">
-<h1>Cloud Suites</h1>
-<p>By cloud suites, I mean like Google drive, or Microsoft workspace alternatives. And these alternatives are more complete, coming with IDP and mesaging software as well, in addition to just file storage and collaborative document editing.</p>
-<ul>
-<li>Opendesk
-<ul>
-<li>Opencloud, Nubus, Matrix/Element, and the rest</li>
-</ul></li>
-<li><a href="https://sandstorm.org/" class="uri">https://sandstorm.org/</a></li>
-<li><a href="https://docs.libre-workspace.org/setup/introduction.html" class="uri">https://docs.libre-workspace.org/setup/introduction.html</a></li>
-</ul>
-</section>
-<section id="authidp" class="level1">
-<h1>Auth/IDP</h1>
-<ul>
-<li>Midpoint by Evoleum (layer on top of Active Directory that adds invites and other nice things)</li>
-<li>Authentik</li>
-<li>Kanidm</li>
-<li>Void Auth</li>
-<li><a href="https://gitlab.com/yaal/canaille" class="uri">https://gitlab.com/yaal/canaille</a></li>
-<li>LLdap</li>
-<li>Nubus</li>
-</ul>
-</section>
-<section id="virtualization-platforms" class="level1">
-<h1>Virtualization Platforms</h1>
-<ul>
-<li>Openstack (see distros below)</li>
-<li>SUSe Harvester</li>
-<li>Incus</li>
-<li>Proxmox</li>
-<li>XCP-NG/Xen Orchestra</li>
-<li><a href="https://sylve.io/docs/" class="uri">https://sylve.io/docs/</a> (new one for bhyve)</li>
-<li></li>
-</ul>
-</section>
-<section id="openstack" class="level1">
-<h1>Openstack</h1>
-<ul>
-<li><a href="https://substation.cloud/">Substation TUI</a>
-<ul>
-<li>Code: <a href="https://github.com/cloudnull/substation" class="uri">https://github.com/cloudnull/substation</a></li>
-</ul></li>
-</ul>
-<p>Known deployment solutions:</p>
-<p>Kubernetes:</p>
-<ul>
-<li>Openstack-helm
-<ul>
-<li>Genestack</li>
-<li>Understack</li>
-<li>Atmosphere</li>
-<li>Starlingx</li>
-</ul></li>
-<li>Yaook</li>
-<li>Openstack k8s operators</li>
-<li>Mirantis Rockoon</li>
-<li>Canonical Sunbeam
-<ul>
-<li>Although this one is different because it’s somewhat opaque and I cannot see any easy docs about installing it to an existing k8s cluster.</li>
-</ul></li>
-</ul>
-<p>Not kubernetes:</p>
-<ul>
-<li><a href="https://salsa.debian.org/openstack-team/debian/openstack-cluster-installer">Debian</a></li>
-<li>Kolla-ansible
-<ul>
-<li><a href="https://osism.tech/">OSISM</a>/<a href="docs.scs.community/docs/iaas/guides/concept-guide/components/openstack">SCS</a></li>
-</ul></li>
-<li>Openstack-ansible</li>
-</ul>
-<p>Configuration:</p>
-<ul>
-<li><a href="https://k-orc.cloud/" class="uri">https://k-orc.cloud/</a> — Gives you a k8s operators for managing openstack</li>
-</ul>
-</section>
-<section id="nix" class="level1">
-<h1>Nix</h1>
-<p>Sandboxing solutions:</p>
-<ul>
-<li><a href="https://github.com/Naxdy/nix-bwrapper" class="uri">https://github.com/Naxdy/nix-bwrapper</a></li>
-<li><a href="https://github.com/nixpak/nixpak" class="uri">https://github.com/nixpak/nixpak</a></li>
-<li><a href="https://todo.sr.ht/~alexdavid/jail.nix" class="uri">https://todo.sr.ht/~alexdavid/jail.nix</a></li>
-</ul>
-<p>These are similar solutions, although they have slightly different goals.</p>
-</section>
-<section id="openbsd" class="level1">
-<h1>OpenBSD</h1>
-<p><a href="https://learnbchs.org/" class="uri">https://learnbchs.org/</a></p>
-<p>Unique web development framework using C and openbsd.</p>
-</section>
-<section id="cyber-ranges" class="level1">
-<h1>Cyber Ranges</h1>
-<p>A cyber range is a set of virtual machines for you to hack into and around.</p>
-<p><a href="https://github.com/Orange-Cyberdefense/GOAD" class="uri">https://github.com/Orange-Cyberdefense/GOAD</a></p>
-<p><a href="https://orange-cyberdefense.github.io/GOAD/" class="uri">https://orange-cyberdefense.github.io/GOAD/</a></p>
-<p><a href="https://mayfly277.github.io/posts/GOADv2/#installation" class="uri">https://mayfly277.github.io/posts/GOADv2/#installation</a></p>
-<p><a href="https://docs.ludus.cloud/" class="uri">https://docs.ludus.cloud/</a></p>
-<p><a href="https://docs.platform.cyberrange.cz/" class="uri">https://docs.platform.cyberrange.cz/</a></p>
-<p><a href="https://github.com/stratosphereips/stratocyberlab" class="uri">https://github.com/stratosphereips/stratocyberlab</a></p>
-<p><a href="https://github.com/GSI-Fing-Udelar/tectonic" class="uri">https://github.com/GSI-Fing-Udelar/tectonic</a></p>
-<p>Just a single virtual machine:</p>
-<p><a href="https://www.vulnhub.com/" class="uri">https://www.vulnhub.com/</a></p>
-<p><a href="https://github.com/cliffe/SecGen">Secgen</a> — randomly generate vulnerable VM’s.</p>
-<p>Related: Scoring engine/inject software:</p>
-<p><a href="https://github.com/dbaseqp/Quotient" class="uri">https://github.com/dbaseqp/Quotient</a></p>
-<p><a href="https://docs.openbas.io/latest/deployment/ecosystem/executors/" class="uri">https://docs.openbas.io/latest/deployment/ecosystem/executors/</a></p>
-</section>
-<section id="music" class="level1">
-<h1>Music</h1>
-<p><a href="https://en.wikipedia.org/wiki/TidalCycles">Tidalcycles</a> — haskell based language for generating music.</p>
-<p><a href="Strudel">https://patterns.slab.org</a> — Javascript based runtime for the above.</p>
-</section>
-<section id="hardware" class="level1">
-<h1>Hardware</h1>
-<p><a href="https://www.raptorcs.com/">Raptor Computing Systems</a>.</p>
-<p><a href="https://us.starlabs.systems/?shpxid=e8451cdf-7b0a-4505-967f-f75f00144a4a">Starlabs</a> — Arm laptops</p>
-<p>Thinkpad X13s</p>
-</section>
-<section id="funny" class="level1">
-<h1>Funny</h1>
-<ul>
-<li><a href="https://github.com/Daniel-Liu-c0deb0t/uwu" class="uri">https://github.com/Daniel-Liu-c0deb0t/uwu</a></li>
-<li><a href="https://github.com/sudofox/shell-mommy" class="uri">https://github.com/sudofox/shell-mommy</a></li>
-</ul>
-
-
-</section>
-
- ]]></description>
-  <category>blog</category>
-  <guid>https://moonpiedumplings.github.io/blog/watched-software/</guid>
-  <pubDate>Sat, 07 Sep 2024 07:00:00 GMT</pubDate>
 </item>
 </channel>
 </rss>
