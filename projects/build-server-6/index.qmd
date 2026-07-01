@@ -833,7 +833,24 @@ Then, this gives creates a project via an authentik expression policy:
 
 In order to prevent any weird things with the openfga authorization as part of this, I have decided to create (and then disable/make inactive) two Authentik users: `default`, and `layer8`. This will prevent users from creating more users with default or layer8 as their username, which would give them access to those projects even if they are not part of the group. 
 
+Okay, I screwed up. I created those networks, but users don't have access to them. I have to batch delete them, so I use several commands to do so:
 
+```{.default}
+incus network list | grep -v -- .--------------------------- | grep vlab | awk '{print $2}' | xargs -- incus network delete
+
+
+incus network list | grep -v -- .--------------------------- | grep cloudnet | awk '{print $2}' | xargs -- incus network delete
+
+incus project list | grep -v layer8 | grep -v default | grep -v -- .------------------- | grep -v NAME | awk '{print $2}' | xargs -- incus project delete
+```
+
+The first two commands delete all networks with `vlab` or `cloudnet` in their name. Then the third command deletes all the user projeccts. 
+
+What you are actually supposed to do, is set `features.networks` to be true. This isolates networks. And then you set `restricted.networks.uplinks` to some networks you want to allow as OVN uplink networks. Do NOT set `restricted.networks.access`. But then, users can create as many networks as they want and manage their own networks, inside a project. Perfect!
+
+Except it's not perfect. OVN networks seem to be closer to Layer 3 then Layer 2, and they don't allow for the L2 switching tricks I was doing. I cannot create a router VM, with private VM's, and proxy arp setup on it. 
+
+I could auto create a linux bridge network for everybody. It would be in the default project, and users would have view access to it. This would enable them to have a layer 2 bridge to play with.
 
 
 ## Bugs
@@ -3809,3 +3826,65 @@ It seems like when there is a limit on the maximum number of file descriptors, s
 ```
 
 
+### Outage 3: The Re-Up
+
+So my server went down again. Great. I force powered it off and then rebooted and it went up again (Great!), but all the kubernetes services are down. Not so great. 
+
+When I log in and see why they are down, I see this issue:
+
+```
+Events:
+  Type     Reason              Age                   From                     Message
+  ----     ------              ----                  ----                     -------
+  Warning  FailedAttachVolume  2m44s (x246 over 8h)  attachdetach-controller  AttachVolume.Attach failed for volume "pvc-31e
+c4c7c-45d1-4328-a347-ace8c43a887a" : rpc error: code = Aborted desc = volume pvc-31ec4c7c-45d1-4328-a347-ace8c43a887a is not
+ ready for workloads
+```
+
+I see something similar in the `kubectl describe` for all pods that use a pvc. When I go to the logs for `longhorn-manager`, I see this:
+
+```
+time="2026-04-16T21:43:44.281051325Z" level=info msg="All replicas are failed, set engine salvageRequested to true" func="co
+time="2026-04-16T21:43:44.281132605Z" level=info msg="All replicas are failed, auto-salvaging volume" func="controller.(*Vol
+time="2026-04-16T21:43:44.281184673Z" level=info msg="Bringing up 0 replicas for auto-salvage" func="controller.(*VolumeCont
+time="2026-04-16T21:43:44.282575199Z" level=info msg="All replicas are failed, set engine salvageRequested to true" func="co
+time="2026-04-16T21:43:44.282655965Z" level=info msg="All replicas are failed, auto-salvaging volume" func="controller.(*Vol
+time="2026-04-16T21:43:44.282708484Z" level=info msg="Bringing up 0 replicas for auto-salvage" func="controller.(*VolumeCont
+time="2026-04-16T21:43:44.284606008Z" level=info msg="All replicas are failed, set engine salvageRequested to true" func="co
+time="2026-04-16T21:43:44.284684114Z" level=info msg="All replicas are failed, auto-salvaging volume" func="controller.(*Vol
+time="2026-04-16T21:43:44.284734689Z" level=info msg="Bringing up 0 replicas for auto-salvage" func="controller.(*VolumeCont
+time="2026-04-16T21:43:44.287244064Z" level=info msg="All replicas are failed, set engine salvageRequested to true" func="co
+time="2026-04-16T21:43:44.287313383Z" level=info msg="All replicas are failed, auto-salvaging volume" func="controller.(*Vol
+time="2026-04-16T21:43:44.287362314Z" level=info msg="Bringing up 0 replicas for auto-salvage" func="controller.(*VolumeCont
+```
+
+So, I think I have two options:
+
+* Figure out how to salvage volumes
+* Restore postgres instances from the daily snapshots I was taking
+
+Okay, it looks like the issue is that, since longhorn is not running replicated, it doesn't have anything healthy to compare to after a hard shutdown. I am going to just nuke all volumes (thank gitops) and restore postgres databases from snapshots.
+
+After attempting to restore from a snapshot:
+
+```{.default}
+Events:
+  Type     Reason            Age   From               Message
+  ----     ------            ----  ----               -------
+  Warning  FailedScheduling  72s   default-scheduler  0/1 nodes are available: pod has unbound immediate PersistentVolumeClaims. preemption: 0/1 nodes are available: 1 Preemption is not helpful for scheduling.
+```
+
+The volume says:
+
+```{.default}
+Events:
+  Type     Reason                Age                From                                                                                      Message
+  ----     ------                ----               ----                                                                                      -------
+  Warning  ProvisioningFailed    12s (x2 over 16s)  driver.longhorn.io_csi-provisioner-5d498c6944-z7g7w_09917d37-ccc4-4eeb-8b86-70de939621a7  failed to provision volume with StorageClass "longhorn-databases": rpc error: code = Internal desc = Bad response statusCode [404]. Status [404 Not Found]. Body: [message=failed to create volume: unable to create volume pvc-035e1b7a-446e-471e-98ba-55af0079b218: failed to verify data source: volume.longhorn.io "pvc-d622ae84-04c5-4877-82c5-14ea76ea0d23" not found, code=Not Found, detail=] from [http://longhorn-backend:9500/v1/volumes]
+  Normal   ExternalProvisioning  4s (x2 over 16s)   persistentvolume-controller                                                               Waiting for a volume to be created either by the external provisioner 'driver.longhorn.io' or manually by the system administrator. If volume creation is delayed, please verify that the provisioner is running and correctly registered.
+  Normal   Provisioning          0s (x5 over 16s)   driver.longhorn.io_csi-provisioner-5d498c6944-z7g7w_09917d37-ccc4-4eeb-8b86-70de939621a7  External provisioner is provisioning volume for claim "openfga/openfga-postgres-1"
+  Warning  ProvisioningFailed    0s (x3 over 15s)   driver.longhorn.io_csi-provisioner-5d498c6944-z7g7w_09917d37-ccc4-4eeb-8b86-70de939621a7  failed to provision volume with StorageClass "longhorn-databases": rpc error: code = Internal desc = Bad response statusCode [404]. Status [404 Not Found]. Body: [code=Not Found, detail=, message=failed to create volume: unable to create volume pvc-035e1b7a-446e-471e-98ba-55af0079b218: failed to verify data source: volume.longhorn.io "pvc-d622ae84-04c5-4877-82c5-14ea76ea0d23" not found] from [http://longhorn-backend:9500/v1/volumes]
+  ```
+
+
+  Okay, it's back up again. I just had to wait. It took a while, I think it was due to having a single node.

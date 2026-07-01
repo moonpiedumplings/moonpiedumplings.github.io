@@ -43,7 +43,7 @@ This starts a simple, lan only meshcentral server. However, I neeed to set it up
 
 Alpine Linux uses OpenRC instead, meaning I need to have to create a service file for that instead. 
 
-```{filename='/etc/init.d/meshcentral}
+```{.default filename='/etc/init.d/meshcentral}
 #!/sbin/openrc-run
 
 command="/usr/bin/node"

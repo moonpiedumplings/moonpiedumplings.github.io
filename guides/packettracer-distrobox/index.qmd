@@ -1,0 +1,44 @@
+---
+title: "Installing Cisco Packet Tracer in Distrobox"
+date: "2026-4-6"
+categories: [guides]
+draft: false
+format:
+  html:
+    code-fold: true
+    code-summary: "Show the code"
+    code-block-background: true
+execute:
+  freeze: false
+---
+
+# Preamble
+
+I recently wanted to install Cisco Packet Tracer on Linux. I decided to use Distrobox because it works across a variety of distros without much fuss. 
+
+Firstly, you may have to install podman and distrobox. This process may vary depending on your distro, so I will not go into detail here. Once those are installed, you can follow the instructions below:
+
+# Main Steps
+
+
+`distrobox create -n packettracer --image docker.io/ubuntu`
+
+`distrobox enter packettracer`
+
+
+These are the commands I ran, from `history`
+
+```
+sudo apt update
+
+sudo apt install ./CiscoPacketTracer_900_Ubuntu_64bit.deb 
+
+sudo apt install fuse libopengl0 libnss3-dev libnss3-tools pipewire-pulse qtwayland5 -y
+
+```
+
+Once you do this, packettracer can launch. But, you'll need to login. 
+
+Logging in did not work for me, as the browser would not open. I had to open "advanced options", and then select "Internal Browser". Then, I could log in inside the cisco packet tracer ui itself. 
+
+Once complete, I had packet tracer though. I wrote up this guide for other Linux users.

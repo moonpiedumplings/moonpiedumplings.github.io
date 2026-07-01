@@ -13,6 +13,13 @@ execute:
   freeze: false
 ---
 
+# The Re-Up
+
+I am reinstalling CachyOS on my new framework, so I am updating this post to note what has changed and what hasn't. 
+
+
+# Main Post
+
 I've decided to reinstall [cachyos](https://cachyos.org/), the Arch Linux fork I use on my laptop's, because the config of my smaller laptop is getting crusty. In addition to not having any swap setup, `/nix` is part of the main btrfs subvolume, meaning it is included in snapshots, and my snapshots are far, far larger than they should be.
 
 # Installation
@@ -114,12 +121,13 @@ With this, my setup is complete. But I still don't understand the benefits of no
 I backed up my entire home directory to a tar archive using ark, the archiver tool on KDE. However, since I was backing it up to a usb thumb drive, I used [gocryptfs](https://wiki.archlinux.org/title/Gocryptfs) to encrypt the folder where the archive was stored. I encrypt sensitive data I put on my usb drives, that way, even if I lose the drive, nothing gets compromised. 
 
 
-# Misc config changes
-
-I also enabled the [Magic sysrq key](https://wiki.archlinux.org/title/Keyboard_shortcuts#Kernel_(SysRq)) via a kernel parameter in my grub config file. 
-
 
 # Nix not starting on boot.
+
+
+::: {.callout-note}
+This fix doesn't seem to be needed anymore. I didn't encounter any issues, at least.
+:::
 
 I encountered another issue where nix does not start on boot. The problem is probably that, because /nix is a seperate btrfs subvolume, and the systemd service is a symlink to the nix service on /nix, systemd cannot locate the proper service. I need to either move the nix service so it is located on the root subvolume, or adjust the nix daemon service so it requires /nix to be mounted.
 
@@ -153,3 +161,92 @@ WantedBy=sysinit.target
 ```
 
 And with this, the nix socket starts properly on boot. 
+
+
+# Ripping out CachyOS BS
+
+CachyOS makes a lot of optimizations for gamers. I am not a gamer, so they annoy me.
+
+For example, ananicy-cpp is used to control resource usage of things on the system. But, I have found that it can severely slow, or even prevent the Lichess local browser analysis from running, so I disable it. 
+
+```{.default}
+root@nefertem ~]# systemctl disable --now ananicy-cpp.service 
+Removed '/etc/systemd/system/multi-user.target.wants/ananicy-cpp.service'.
+systemctl ma[root@nefertem ~]# systemctl mask ananicy-cpp.service 
+Created symlink '/etc/systemd/system/ananicy-cpp.service' → '/dev/null'.
+```
+
+Another thing I do is switch to the zen kernel, which is more optimized for desktop usage:
+
+`sudo pacman -S linux-zen linux-zen-headers`
+
+Another thing I find annoying is the `cachy-update` script. This script is well intentioned, designed to inform users of when their system updated and needs a reboot for all changes to take effect. The problem I have with it is that it informs users that they need to reboot **before** the update is actually finished (it seems to happen right before kernel initramfs generates), and during a particularly dangerous step to interrupt. 
+
+`sudo pacman -Rncs cachy-update`
+
+`sudo pacman -S archlinux-contrib`
+
+Whoops, the update notifier is still there. It looks like it's actually a pacman hook.
+
+## Pacman hoooks
+
+I need to remove some of these pacman hooks. The auto snapper snapshots on every update are somewhat annoying. 
+
+They exist at `/usr/share/libalpm/hooks/`
+
+The first one I want to remove are the hooks installed by `snap-pac`, which cause automatic btrfs snapshots on package installation, removal, or updates.
+
+I also need to remove the "please reboot hook". This one is a bit more complicated, as it is owned by a `cachyos-hooks`, which has many more tools... including one to update the initramfs:
+
+```{.default}
+[moonpie@nefertem hooks]$ pacman -Ql cachyos-hooks 
+cachyos-hooks /usr/
+cachyos-hooks /usr/bin/
+cachyos-hooks /usr/bin/update-initramfs
+cachyos-hooks /usr/share/
+cachyos-hooks /usr/share/libalpm/
+cachyos-hooks /usr/share/libalpm/hooks/
+cachyos-hooks /usr/share/libalpm/hooks/cachyos-branding.hook
+cachyos-hooks /usr/share/libalpm/hooks/cachyos-plymouth-initramfs.hook
+cachyos-hooks /usr/share/libalpm/hooks/cachyos-reboot-required.hook
+cachyos-hooks /usr/share/libalpm/hooks/lsb-release.hook
+cachyos-hooks /usr/share/libalpm/hooks/os-release.hook
+cachyos-hooks /usr/share/libalpm/scripts/
+cachyos-hooks /usr/share/libalpm/scripts/cachyos-branding
+cachyos-hooks /usr/share/libalpm/scripts/cachyos-reboot-required
+```
+
+Hmmm. Unfortunately, that `update-initramfs` script is actually somewhat important, as it rebuilds the kernel initramfs, which is needed to boot. 
+
+
+# Misc config changes
+
+I also enabled the [Magic sysrq key](https://wiki.archlinux.org/title/Keyboard_shortcuts#Kernel_(SysRq)) via a kernel parameter in my grub config file. 
+
+Enabling the [chaotic aur](https://aur.chaotic.cx/), which prebuilds many aur packages.
+
+Installing update-grub from the chaotic aur, which is a convinience script to update grub config.
+
+`sudo pacman -S update-grub`
+
+By default, firefox opens a random profile when I have it open a link. By right clicking on the application in the menu, and adding `-P` to arguments.
+
+Installing java:
+
+`sudo pacman -S java-runtime-common jre-openjdk`
+
+File picker woes:
+
+https://askubuntu.com/questions/1150404/kubuntu-18-10-how-do-i-change-this-file-picker
+
+Removing ulimits:
+
+```{.default filename='/etc/security/limits.conf'}
+# at the end
+moonpie soft memlock unlimited
+moonpie hard memlock unlimited
+```
+
+This makes it possible to use fastflowlm, which was whining before this.
+
+

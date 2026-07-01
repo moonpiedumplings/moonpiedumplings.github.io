@@ -24,6 +24,17 @@ I try to avoid video or audio resources, because of unclear copyright, and becau
 The idea behind this list is that I should be able to pull it up on my phone, and show specific things to people.f
 
 
+# Roadmaps
+
+Since I have come across a few cool one's, I will save them there.
+
+<https://roadmap.sh/> — Meta roadmap site, with many of them.
+
+Cybersecurity certification roadmaps:
+
+* <https://dragkob.com/security-certification-roadmap/>
+* <https://ebcertmap.com>
+
 # Linux
 
 [Linux Up Skill Challenge](https://linuxupskillchallenge.org/)
@@ -268,7 +279,6 @@ https://github.com/git-game/git-game
 
 * https://github.com/ossu/computer-science
 * https://github.com/ForrestKnight/open-source-cs
-* 
 
 
 # Nix
@@ -353,8 +363,6 @@ https://www.youtube.com/watch?v=iqSMRO78UD0&list=PLUl4u3cNGP61EZllk7zwgvPbI4kbnK
 # Cert Preparation
 
 * <https://github.com/connectans/awesome-CISSP-CCSP/blob/main/asset/The%20sunflower%20CISSP%20Summary%20Version%202.0.pdf>
-
-* 
 
 # Chess
 

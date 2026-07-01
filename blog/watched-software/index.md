@@ -190,6 +190,15 @@ Lots of similar software mentioned there.
 * <https://yokecd.github.io/docs/>
 * <https://github.com/ctrox/zeropod> — container pause and save to memory, then resume. Comes with an experimental in memory
 
+# Cloud Suites
+
+By cloud suites, I mean like Google drive, or Microsoft workspace alternatives. And these alternatives are more complete, coming with IDP and mesaging software as well, in addition to just file storage and collaborative document editing.
+
+* Opendesk
+  * Opencloud, Nubus, Matrix/Element, and the rest
+* <https://sandstorm.org/>
+* <https://docs.libre-workspace.org/setup/introduction.html>
+
 # Auth/IDP
 
 * Midpoint by Evoleum (layer on top of Active Directory that adds invites and other nice things)
@@ -198,6 +207,7 @@ Lots of similar software mentioned there.
 * Void Auth
 * <https://gitlab.com/yaal/canaille>
 * LLdap
+* Nubus
 
 # Virtualization Platforms
 
@@ -206,7 +216,7 @@ Lots of similar software mentioned there.
 * Incus
 * Proxmox
 * XCP-NG/Xen Orchestra
-* Sylvie.io (new one for bhyve)
+* <https://sylve.io/docs/> (new one for bhyve)
 * 
 
 # Openstack
@@ -247,6 +257,7 @@ Sandboxing solutions:
 
 * <https://github.com/Naxdy/nix-bwrapper>
 * <https://github.com/nixpak/nixpak>
+* <https://todo.sr.ht/~alexdavid/jail.nix>
 
 These are similar solutions, although they have slightly different goals.
 
@@ -269,7 +280,6 @@ A cyber range is a set of virtual machines for you to hack into and around.
 <https://docs.ludus.cloud/>
 
 <https://docs.platform.cyberrange.cz/>
-
 
 <https://github.com/stratosphereips/stratocyberlab>
 
