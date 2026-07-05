@@ -590,7 +590,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb8-20"><a href="#cb8-20" aria-hidden="true" tabindex="-1"></a>iperf Done.</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Yup. Looks like crossing the world is hard. Oh well.</p>
-<p>So. Now, I’m going to select another provider. Ideally, it should be a cheap VPS provider, from a site that is well reputed. There is <a href="https://lowendbox.com/">lowendbox</a>, and the related forums <a href="https://lowendtalk.com/">lowendtalk</a> which cover this. Unfortunately, when I click on some of them, they 404. The business model many of these low end providers start with, struggles to be sustainable, and they often die, which sucks.</p>
+<p>So. Now, I’m going to select another provider. Ideally, it should be a cheap VPS provider, from a site that is well reputed. There is <a href="https://lowendbox.com/">lowendbox</a>, and the related forums <a href="https://lowendtalk.com/">lowendtalk</a> which cover this. Unfortunately, when I click on some of them, they 404. The business model many of these low end providers start with, struggles to be sustainable, and they often die, which sucks. They like to offer more resources than your money’s worth, or things like unlimited bandwidth, which is a risky proposition.</p>
 <p>So, I have a simple idea: I am going to look at the older posts for discounts, and see if they are still active. Interestingly, some of the best “one time discounts” are still active, despite the links being two years old. By cross referencing this with forum posts about those providers, I can confirm their reliability.</p>
 <p>I’m not naming them this time, unlike my previous blog post where I just picked a popular provider.</p>
 <p>Also, I am going to see if I can create a virtual credit card.</p>
@@ -642,6 +642,29 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb11-20"><a href="#cb11-20" aria-hidden="true" tabindex="-1"></a>iperf Done.</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Okay, I investigated further as to why this happens. It turns out, this VPS isn’t actually in Los Angeles, and it’s actually in Chicago. I’m like 99% sure I selected a Los Angeles VPS, so this is just lowendbox shenanigans it looks like.</p>
 <p>I attempted to buy a Los Angeles one… and the page for buying it is gone. Prices have doubled. The discount code no longer works. I guess that’s what I get for trying to be clever.</p>
+<p>But wait. It could be that the VPN connection is actually slow because wireguard is the bottleneck. For example, perhaps the CPU does not have enough power to encrypt packets. According to some <a href="https://forum.openwrt.org/t/a-wireguard-comparison-db/187586">benchmarks of wireguard on OpenWRT routers</a>, dual core, 1ghz CPU’s actually do get less than 1 gbps of speed. Some of the routers got less than 300 mbp/s. So I decided to test without the VPN, just in case:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>[nix-shell:~/.ssh]$  iperf3 -c [IP REDACTED]</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>Connecting to host [IP REDACTED], port 5201</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>[  5] local 192.168.4.80 port 47882 connected to [IP REDACTED] port 5201</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>[ ID] Interval           Transfer     Bitrate         Retr  Cwnd</span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>[  5]   0.00-1.00   sec  4.12 MBytes  34.6 Mbits/sec    0    944 KBytes       </span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>[  5]   1.00-2.00   sec  2.25 MBytes  18.9 Mbits/sec    0   1.05 MBytes       </span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>[  5]   2.00-3.00   sec  3.88 MBytes  32.5 Mbits/sec    0   1.21 MBytes       </span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>[  5]   3.00-4.00   sec  2.75 MBytes  23.1 Mbits/sec    0   1.35 MBytes       </span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>[  5]   4.00-5.00   sec  2.62 MBytes  22.0 Mbits/sec    0   1.47 MBytes       </span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>[  5]   5.00-6.00   sec  2.75 MBytes  23.1 Mbits/sec    0   1.62 MBytes       </span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a>[  5]   6.00-7.00   sec  2.62 MBytes  22.0 Mbits/sec    0   1.74 MBytes       </span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a>[  5]   7.00-8.00   sec  2.75 MBytes  23.1 Mbits/sec    1   1.72 MBytes       </span>
+<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a>[  5]   8.00-9.00   sec  3.62 MBytes  30.4 Mbits/sec    3   1.30 MBytes       </span>
+<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a>[  5]   9.00-10.00  sec  1.38 MBytes  11.5 Mbits/sec    0   1.40 MBytes       </span>
+<span id="cb12-15"><a href="#cb12-15" aria-hidden="true" tabindex="-1"></a>- - - - - - - - - - - - - - - - - - - - - - - - -</span>
+<span id="cb12-16"><a href="#cb12-16" aria-hidden="true" tabindex="-1"></a>[ ID] Interval           Transfer     Bitrate         Retr</span>
+<span id="cb12-17"><a href="#cb12-17" aria-hidden="true" tabindex="-1"></a>[  5]   0.00-10.00  sec  28.8 MBytes  24.1 Mbits/sec    4            sender</span>
+<span id="cb12-18"><a href="#cb12-18" aria-hidden="true" tabindex="-1"></a>[  5]   0.00-10.60  sec  27.5 MBytes  21.8 Mbits/sec                  receiver</span>
+<span id="cb12-19"><a href="#cb12-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-20"><a href="#cb12-20" aria-hidden="true" tabindex="-1"></a>iperf Done.</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>I tested from my server, and my computer, from my home wifi, to check if the router/double nat setup was causing issues. Then, I also tested from my phone, on cellular, and I saw similar numbers. Unfortunate.</p>
+<p>I don’t really want to “waste” this VPS, since it’s actaully a really good deal… but at the same time, it doesn’t meet my primary goal of having west coast VPS. In addition to that, this deal included unlimited bandwidth…</p>
 </section>
 </section>
 <section id="kubernetes" class="level1">
