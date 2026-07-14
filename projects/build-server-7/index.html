@@ -521,6 +521,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>Unfortunately, there does not appear to be an option in the UI to make it only accessible over localhost.</p>
 <section id="finding-another-vps-provider" class="level2">
 <h2 class="anchored" data-anchor-id="finding-another-vps-provider">Finding another VPS Provider:</h2>
+<details>
+<summary>
+Lots of bad science
+</summary>
 <p>Even though I got everything connected:</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>[nix-shell:~]# speedtest</span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>Retrieving speedtest.net configuration...</span>
@@ -665,6 +669,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb12-20"><a href="#cb12-20" aria-hidden="true" tabindex="-1"></a>iperf Done.</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>I tested from my server, and my computer, from my home wifi, to check if the router/double nat setup was causing issues. Then, I also tested from my phone, on cellular, and I saw similar numbers. Unfortunate.</p>
 <p>I don’t really want to “waste” this VPS, since it’s actaully a really good deal… but at the same time, it doesn’t meet my primary goal of having west coast VPS. In addition to that, this deal included unlimited bandwidth…</p>
+<p>I did put in a ticket, asking if they could move it to Los Angeles. They did reply within the next day, and said no, that Los Angeles was out of capacity <code>:(</code>.</p>
+<p>Basically, I have to do all of the above all over again. And I did, it wasn’t that bad. Same thing, I found another good deal. No unlimited bandwidth, unfortunately. But, the server is actually located in Los Angeles this time. Also, it hits 800 mbit/s up and down, which is pretty good. I will need to test to see if I get better speeds to it, later however.</p>
+</details>
+<p>So basically, I went through multiple VPS providers in search of more bandwidth. My testing was done with <code>iperf</code>, which by default, pushes data from an iperf client to an iperf server. This means that the bandwidth tests were actually testing the <em>upload</em> speed of my residential network. When I finally run <code>iperf3 -c ipaddress -P 4 -R</code>, with the <code>-R</code> being the critical thing that downloads from the remote server instead, I see vastly different results.</p>
+<p>Instead, all 4 servers hit at least 150+ mb/s of bandwidth, although the closer one’s are faster.</p>
+<p>Unfortunatley, 30 mbit/s upload is miserable, and pretty difficult to work with if I am using Coder + Selkies for browser based Kali containers. Selkies defaults to an 8 mb/s bandwidth for upload, which is tiny… if your network has anywhere near fast upload.</p>
+<p>However, this is enough for me to expose it for personal use, and hosting my own AI again, I guess. But I still do want to measure out, which VPN is fastest…</p>
 </section>
 </section>
 <section id="kubernetes" class="level1">
