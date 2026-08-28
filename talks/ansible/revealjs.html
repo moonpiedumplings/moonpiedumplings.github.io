@@ -6,9 +6,9 @@
 <script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
 <link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
 <link href="../../site_libs/quarto-html/light-border.css" rel="stylesheet">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-0a6b7249c26820e032cb0bd839ff02b1.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-b85bc7c33db8c58e0ec93c3465666fed.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="../../site_libs/quarto-contrib/qrcodejs-v1.0.0/qrcode.js"></script><meta charset="utf-8">
-  <meta name="generator" content="quarto-1.9.38">
+  <meta name="generator" content="quarto-1.10.18">
 
   <meta name="author" content="Jeffrey Fonseca">
   <title>Jeffrey Fonseca – How to Ansible</title>
@@ -21,10 +21,13 @@
     /* Default styles provided by pandoc.
     ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
     */
-    code{white-space: pre-wrap;}
     span.smallcaps{font-variant: small-caps;}
-    div.columns{display: flex; gap: min(4vw, 1.5em);}
-    div.column{flex: auto; overflow-x: auto;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
     div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
     ul.task-list{list-style: none;}
     ul.task-list li input[type="checkbox"] {
@@ -99,7 +102,7 @@
     code span.vs { color: #abe338; } /* VerbatimString */
     code span.wa { color: #dcc6e0; } /* Warning */
   </style>
-  <link rel="stylesheet" href="../../site_libs/revealjs/dist/theme/quarto-4df01d85d5cf19cc6202400f4f043f84.css">
+  <link rel="stylesheet" href="../../site_libs/revealjs/dist/theme/quarto-900effe09ab331159c077adc4a7d4116.css">
   <link href="../../site_libs/revealjs/plugin/quarto-line-highlight/line-highlight.css" rel="stylesheet">
   <link href="../../site_libs/revealjs/plugin/reveal-menu/menu.css" rel="stylesheet">
   <link href="../../site_libs/revealjs/plugin/reveal-menu/quarto-menu.css" rel="stylesheet">
@@ -202,7 +205,7 @@
 <div class="quarto-title-authors">
 <div class="quarto-title-author">
 <div class="quarto-title-author-name">
-Jeffrey Fonseca 
+Jeffrey Fonseca
 </div>
 </div>
 </div>
@@ -230,18 +233,18 @@ Jeffrey Fonseca
 <ul>
 <li>Uses Yet-Another-Markup-Language (yaml)</li>
 </ul>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode numberSource yaml number-lines code-with-copy"><code class="sourceCode yaml"><span id="cb1-1"><a></a><span class="pp">---</span></span>
-<span id="cb1-2"><a></a><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> Sample ansible playbook (playbook name here)</span></span>
-<span id="cb1-3"><a></a><span class="at">  </span><span class="fu">hosts</span><span class="kw">:</span><span class="at"> all</span></span>
-<span id="cb1-4"><a></a><span class="at">  </span><span class="fu">gather_facts</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span><span class="co"> # Gather facts about managed node</span></span>
-<span id="cb1-5"><a></a></span>
-<span id="cb1-6"><a></a><span class="at">  </span><span class="fu">tasks</span><span class="kw">:</span></span>
-<span id="cb1-7"><a></a><span class="at">    </span><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> Install the latest version of Apache and MariaDB</span></span>
-<span id="cb1-8"><a></a><span class="at">      </span><span class="fu">ansible.builtin.package</span><span class="kw">:</span></span>
-<span id="cb1-9"><a></a><span class="at">        </span><span class="fu">name</span><span class="kw">:</span></span>
-<span id="cb1-10"><a></a><span class="at">          </span><span class="kw">-</span><span class="at"> httpd</span></span>
-<span id="cb1-11"><a></a><span class="at">          </span><span class="kw">-</span><span class="at"> mariadb-server</span></span>
-<span id="cb1-12"><a></a><span class="at">        </span><span class="fu">state</span><span class="kw">:</span><span class="at"> latest</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode numberSource yaml number-lines code-with-copy"><code class="sourceCode yaml"><span id="cb1-1"><a aria-label="1"></a><span class="pp">---</span></span>
+<span id="cb1-2"><a aria-label="2"></a><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> Sample ansible playbook (playbook name here)</span></span>
+<span id="cb1-3"><a aria-label="3"></a><span class="at">  </span><span class="fu">hosts</span><span class="kw">:</span><span class="at"> all</span></span>
+<span id="cb1-4"><a aria-label="4"></a><span class="at">  </span><span class="fu">gather_facts</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span><span class="co"> # Gather facts about managed node</span></span>
+<span id="cb1-5"><a aria-label="5"></a></span>
+<span id="cb1-6"><a aria-label="6"></a><span class="at">  </span><span class="fu">tasks</span><span class="kw">:</span></span>
+<span id="cb1-7"><a aria-label="7"></a><span class="at">    </span><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> Install the latest version of Apache and MariaDB</span></span>
+<span id="cb1-8"><a aria-label="8"></a><span class="at">      </span><span class="fu">ansible.builtin.package</span><span class="kw">:</span></span>
+<span id="cb1-9"><a aria-label="9"></a><span class="at">        </span><span class="fu">name</span><span class="kw">:</span></span>
+<span id="cb1-10"><a aria-label="10"></a><span class="at">          </span><span class="kw">-</span><span class="at"> httpd</span></span>
+<span id="cb1-11"><a aria-label="11"></a><span class="at">          </span><span class="kw">-</span><span class="at"> mariadb-server</span></span>
+<span id="cb1-12"><a aria-label="12"></a><span class="at">        </span><span class="fu">state</span><span class="kw">:</span><span class="at"> latest</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 
 <section id="what-is-ansible-cont.-1" class="title-slide slide level1 center">
@@ -256,12 +259,12 @@ Jeffrey Fonseca
 <ul>
 <li>In practice, packages have different names</li>
 </ul>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode numberSource yaml number-lines code-with-copy"><code class="sourceCode yaml"><span id="cb2-1"><a></a><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> Install the latest version of Apache and MariaDB</span></span>
-<span id="cb2-2"><a></a><span class="at">  </span><span class="fu">ansible.builtin.package</span><span class="kw">:</span></span>
-<span id="cb2-3"><a></a><span class="at">    </span><span class="fu">name</span><span class="kw">:</span></span>
-<span id="cb2-4"><a></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="st">"{{ 'apache2' if ansible_os_family == 'Debian' else 'httpd' }}"</span></span>
-<span id="cb2-5"><a></a><span class="at">      </span><span class="kw">-</span><span class="at"> mariadb-server</span></span>
-<span id="cb2-6"><a></a><span class="at">    </span><span class="fu">state</span><span class="kw">:</span><span class="at"> latest</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode numberSource yaml number-lines code-with-copy"><code class="sourceCode yaml"><span id="cb2-1"><a aria-label="1"></a><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> Install the latest version of Apache and MariaDB</span></span>
+<span id="cb2-2"><a aria-label="2"></a><span class="at">  </span><span class="fu">ansible.builtin.package</span><span class="kw">:</span></span>
+<span id="cb2-3"><a aria-label="3"></a><span class="at">    </span><span class="fu">name</span><span class="kw">:</span></span>
+<span id="cb2-4"><a aria-label="4"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="st">"{{ 'apache2' if ansible_os_family == 'Debian' else 'httpd' }}"</span></span>
+<span id="cb2-5"><a aria-label="5"></a><span class="at">      </span><span class="kw">-</span><span class="at"> mariadb-server</span></span>
+<span id="cb2-6"><a aria-label="6"></a><span class="at">    </span><span class="fu">state</span><span class="kw">:</span><span class="at"> latest</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>It looks like python, but squished into one line… that’s because it is!</p>
 </div>
 </section>
@@ -331,19 +334,19 @@ var qrcode = new QRCode("qrcode", {"colorDark":"#000000","colorLight":"#ffffff",
 </ul></li>
 <li>Create virtual machines from code, by downloading “boxes” from the main repository, vagrant cloud</li>
 </ul>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode numberSource ruby number-lines code-with-copy"><code class="sourceCode ruby"><span id="cb3-1"><a></a><span class="dt">Vagrant</span><span class="at">.configure</span>(<span class="st">"2"</span>) <span class="cf">do</span> <span class="op">|</span>config<span class="op">|</span></span>
-<span id="cb3-2"><a></a>    config<span class="at">.vm.provision</span> <span class="st">"shell"</span>, <span class="wa">path:</span> <span class="st">"scripts/packages.sh"</span></span>
-<span id="cb3-3"><a></a>    config<span class="at">.vm.define</span> <span class="st">"318"</span> <span class="cf">do</span> <span class="op">|</span>vmconfig<span class="op">|</span> <span class="co"># 318 is the virtual machine name</span></span>
-<span id="cb3-4"><a></a>        vmconfig<span class="at">.vm.provision</span> <span class="st">"ansible"</span> <span class="cf">do</span> <span class="op">|</span>ansible<span class="op">|</span></span>
-<span id="cb3-5"><a></a>            ansible<span class="at">.playbook</span> <span class="op">=</span> <span class="st">"ansible/inventory.yml"</span></span>
-<span id="cb3-6"><a></a>        <span class="cf">end</span></span>
-<span id="cb3-7"><a></a>        vmconfig<span class="at">.vm.box</span> <span class="op">=</span> <span class="st">"generic/alpine318"</span></span>
-<span id="cb3-8"><a></a>        vmconfig<span class="at">.vm.provider</span> <span class="st">"libvirt"</span> <span class="cf">do</span> <span class="op">|</span>libvirt<span class="op">|</span></span>
-<span id="cb3-9"><a></a>            libvirt<span class="at">.memory</span> <span class="op">=</span> <span class="dv">1024</span></span>
-<span id="cb3-10"><a></a>            libvirt<span class="at">.cpus</span> <span class="op">=</span> <span class="dv">2</span></span>
-<span id="cb3-11"><a></a>        <span class="cf">end</span></span>
-<span id="cb3-12"><a></a>    <span class="cf">end</span></span>
-<span id="cb3-13"><a></a><span class="cf">end</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode numberSource ruby number-lines code-with-copy"><code class="sourceCode ruby"><span id="cb3-1"><a aria-label="1"></a><span class="dt">Vagrant</span><span class="at">.configure</span>(<span class="st">"2"</span>) <span class="cf">do</span> <span class="op">|</span>config<span class="op">|</span></span>
+<span id="cb3-2"><a aria-label="2"></a>    config<span class="at">.vm.provision</span> <span class="st">"shell"</span>, <span class="wa">path:</span> <span class="st">"scripts/packages.sh"</span></span>
+<span id="cb3-3"><a aria-label="3"></a>    config<span class="at">.vm.define</span> <span class="st">"318"</span> <span class="cf">do</span> <span class="op">|</span>vmconfig<span class="op">|</span> <span class="co"># 318 is the virtual machine name</span></span>
+<span id="cb3-4"><a aria-label="4"></a>        vmconfig<span class="at">.vm.provision</span> <span class="st">"ansible"</span> <span class="cf">do</span> <span class="op">|</span>ansible<span class="op">|</span></span>
+<span id="cb3-5"><a aria-label="5"></a>            ansible<span class="at">.playbook</span> <span class="op">=</span> <span class="st">"ansible/inventory.yml"</span></span>
+<span id="cb3-6"><a aria-label="6"></a>        <span class="cf">end</span></span>
+<span id="cb3-7"><a aria-label="7"></a>        vmconfig<span class="at">.vm.box</span> <span class="op">=</span> <span class="st">"generic/alpine318"</span></span>
+<span id="cb3-8"><a aria-label="8"></a>        vmconfig<span class="at">.vm.provider</span> <span class="st">"libvirt"</span> <span class="cf">do</span> <span class="op">|</span>libvirt<span class="op">|</span></span>
+<span id="cb3-9"><a aria-label="9"></a>            libvirt<span class="at">.memory</span> <span class="op">=</span> <span class="dv">1024</span></span>
+<span id="cb3-10"><a aria-label="10"></a>            libvirt<span class="at">.cpus</span> <span class="op">=</span> <span class="dv">2</span></span>
+<span id="cb3-11"><a aria-label="11"></a>        <span class="cf">end</span></span>
+<span id="cb3-12"><a aria-label="12"></a>    <span class="cf">end</span></span>
+<span id="cb3-13"><a aria-label="13"></a><span class="cf">end</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 
 <section id="vagrant-cont." class="title-slide slide level1 center">
@@ -362,43 +365,43 @@ var qrcode = new QRCode("qrcode", {"colorDark":"#000000","colorLight":"#ffffff",
 <div class="code-with-filename-file">
 <pre><strong>inventory.yml</strong></pre>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4" data-filename="inventory.yml"><pre class="sourceCode numberSource yaml number-lines code-with-copy"><code class="sourceCode yaml"><span id="cb4-1"><a></a><span class="pp">---</span></span>
-<span id="cb4-2"><a></a><span class="fu">all</span><span class="kw">:</span></span>
-<span id="cb4-3"><a></a><span class="at">  </span><span class="fu">hosts</span><span class="kw">:</span></span>
-<span id="cb4-4"><a></a><span class="at">    </span><span class="fu">test_host</span><span class="kw">:</span></span>
-<span id="cb4-5"><a></a><span class="at">      </span><span class="fu">ansible_host</span><span class="kw">:</span><span class="co"> # Defaults to host alias, in this case test_host </span></span>
-<span id="cb4-6"><a></a><span class="at">      </span><span class="fu">ansible_user</span><span class="kw">:</span><span class="at"> </span></span>
-<span id="cb4-7"><a></a><span class="at">      </span><span class="fu">ansible_password</span><span class="kw">:</span></span>
-<span id="cb4-8"><a></a><span class="at">      </span><span class="fu">ansible_become_pass</span><span class="kw">:</span><span class="co"> # Password ansible uses to authenticate with sudo</span></span>
-<span id="cb4-9"><a></a><span class="at">      </span><span class="fu">ansible_ssh_private_key_file</span><span class="kw">:</span><span class="at"> </span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4" data-filename="inventory.yml"><pre class="sourceCode numberSource yaml number-lines code-with-copy"><code class="sourceCode yaml"><span id="cb4-1"><a aria-label="1"></a><span class="pp">---</span></span>
+<span id="cb4-2"><a aria-label="2"></a><span class="fu">all</span><span class="kw">:</span></span>
+<span id="cb4-3"><a aria-label="3"></a><span class="at">  </span><span class="fu">hosts</span><span class="kw">:</span></span>
+<span id="cb4-4"><a aria-label="4"></a><span class="at">    </span><span class="fu">test_host</span><span class="kw">:</span></span>
+<span id="cb4-5"><a aria-label="5"></a><span class="at">      </span><span class="fu">ansible_host</span><span class="kw">:</span><span class="co"> # Defaults to host alias, in this case test_host </span></span>
+<span id="cb4-6"><a aria-label="6"></a><span class="at">      </span><span class="fu">ansible_user</span><span class="kw">:</span><span class="at"> </span></span>
+<span id="cb4-7"><a aria-label="7"></a><span class="at">      </span><span class="fu">ansible_password</span><span class="kw">:</span></span>
+<span id="cb4-8"><a aria-label="8"></a><span class="at">      </span><span class="fu">ansible_become_pass</span><span class="kw">:</span><span class="co"> # Password ansible uses to authenticate with sudo</span></span>
+<span id="cb4-9"><a aria-label="9"></a><span class="at">      </span><span class="fu">ansible_ssh_private_key_file</span><span class="kw">:</span><span class="at"> </span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
 
 <section id="ansible-ping" class="title-slide slide level1 center">
 <h1>Ansible ping</h1>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode numberSource default number-lines code-with-copy"><code class="sourceCode default"><span id="cb5-1"><a></a>[nix-shell:~/]$ ansible all -i inventory/ -m ping</span>
-<span id="cb5-2"><a></a>test_host | SUCCESS =&gt; {</span>
-<span id="cb5-3"><a></a>    "ansible_facts": {</span>
-<span id="cb5-4"><a></a>        "discovered_interpreter_python": "/usr/bin/python3"</span>
-<span id="cb5-5"><a></a>    },</span>
-<span id="cb5-6"><a></a>    "changed": false,</span>
-<span id="cb5-7"><a></a>    "ping": "pong"</span>
-<span id="cb5-8"><a></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode numberSource default number-lines code-with-copy"><code class="sourceCode default"><span id="cb5-1"><a aria-label="1"></a>[nix-shell:~/]$ ansible all -i inventory/ -m ping</span>
+<span id="cb5-2"><a aria-label="2"></a>test_host | SUCCESS =&gt; {</span>
+<span id="cb5-3"><a aria-label="3"></a>    "ansible_facts": {</span>
+<span id="cb5-4"><a aria-label="4"></a>        "discovered_interpreter_python": "/usr/bin/python3"</span>
+<span id="cb5-5"><a aria-label="5"></a>    },</span>
+<span id="cb5-6"><a aria-label="6"></a>    "changed": false,</span>
+<span id="cb5-7"><a aria-label="7"></a>    "ping": "pong"</span>
+<span id="cb5-8"><a aria-label="8"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p><code>pong</code> means you can configure a machine</p>
 </section>
 
 <section id="your-first-playbook" class="title-slide slide level1 center">
 <h1>Your first playbook!</h1>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode numberSource yaml number-lines code-with-copy"><code class="sourceCode yaml"><span id="cb6-1"><a></a><span class="pp">---</span></span>
-<span id="cb6-2"><a></a><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> Example playbook</span></span>
-<span id="cb6-3"><a></a><span class="at">  </span><span class="fu">hosts</span><span class="kw">:</span><span class="at"> all</span></span>
-<span id="cb6-4"><a></a><span class="at">  </span><span class="fu">gather_facts</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
-<span id="cb6-5"><a></a></span>
-<span id="cb6-6"><a></a><span class="at">  </span><span class="fu">tasks</span><span class="kw">:</span></span>
-<span id="cb6-7"><a></a><span class="at">    </span><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> Test privilege escalation</span></span>
-<span id="cb6-8"><a></a><span class="at">      </span><span class="fu">become</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
-<span id="cb6-9"><a></a><span class="at">      </span><span class="fu">ansible.builtin.debug</span><span class="kw">:</span></span>
-<span id="cb6-10"><a></a><span class="at">        </span><span class="fu">msg</span><span class="kw">:</span><span class="at"> </span><span class="st">"Hello World!"</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode numberSource yaml number-lines code-with-copy"><code class="sourceCode yaml"><span id="cb6-1"><a aria-label="1"></a><span class="pp">---</span></span>
+<span id="cb6-2"><a aria-label="2"></a><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> Example playbook</span></span>
+<span id="cb6-3"><a aria-label="3"></a><span class="at">  </span><span class="fu">hosts</span><span class="kw">:</span><span class="at"> all</span></span>
+<span id="cb6-4"><a aria-label="4"></a><span class="at">  </span><span class="fu">gather_facts</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb6-5"><a aria-label="5"></a></span>
+<span id="cb6-6"><a aria-label="6"></a><span class="at">  </span><span class="fu">tasks</span><span class="kw">:</span></span>
+<span id="cb6-7"><a aria-label="7"></a><span class="at">    </span><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> Test privilege escalation</span></span>
+<span id="cb6-8"><a aria-label="8"></a><span class="at">      </span><span class="fu">become</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb6-9"><a aria-label="9"></a><span class="at">      </span><span class="fu">ansible.builtin.debug</span><span class="kw">:</span></span>
+<span id="cb6-10"><a aria-label="10"></a><span class="at">        </span><span class="fu">msg</span><span class="kw">:</span><span class="at"> </span><span class="st">"Hello World!"</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 
 <section id="roles" class="title-slide slide level1 center">
@@ -407,17 +410,17 @@ var qrcode = new QRCode("qrcode", {"colorDark":"#000000","colorLight":"#ffffff",
 <li>Ansible roles are akin to functions in other programming langauges</li>
 <li>Special folder structure</li>
 </ul>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode numberSource default number-lines code-with-copy"><code class="sourceCode default"><span id="cb7-1"><a></a>.</span>
-<span id="cb7-2"><a></a>|-- users</span>
-<span id="cb7-3"><a></a>    |-- tasks</span>
-<span id="cb7-4"><a></a>    |   |-- add_good_admins.yml</span>
-<span id="cb7-5"><a></a>    |   |-- change_passwords.yml</span>
-<span id="cb7-6"><a></a>    |   |-- main.yml</span>
-<span id="cb7-7"><a></a>    |   `-- remove_bad_admins.yml</span>
-<span id="cb7-8"><a></a>    |-- templates</span>
-<span id="cb7-9"><a></a>    |   `-- gitignore.j2</span>
-<span id="cb7-10"><a></a>    `-- vars</span>
-<span id="cb7-11"><a></a>        `-- main.yml</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode numberSource default number-lines code-with-copy"><code class="sourceCode default"><span id="cb7-1"><a aria-label="1"></a>.</span>
+<span id="cb7-2"><a aria-label="2"></a>|-- users</span>
+<span id="cb7-3"><a aria-label="3"></a>    |-- tasks</span>
+<span id="cb7-4"><a aria-label="4"></a>    |   |-- add_good_admins.yml</span>
+<span id="cb7-5"><a aria-label="5"></a>    |   |-- change_passwords.yml</span>
+<span id="cb7-6"><a aria-label="6"></a>    |   |-- main.yml</span>
+<span id="cb7-7"><a aria-label="7"></a>    |   `-- remove_bad_admins.yml</span>
+<span id="cb7-8"><a aria-label="8"></a>    |-- templates</span>
+<span id="cb7-9"><a aria-label="9"></a>    |   `-- gitignore.j2</span>
+<span id="cb7-10"><a aria-label="10"></a>    `-- vars</span>
+<span id="cb7-11"><a aria-label="11"></a>        `-- main.yml</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 
 <section id="roles-cont." class="title-slide slide level1 center">
@@ -429,15 +432,15 @@ var qrcode = new QRCode("qrcode", {"colorDark":"#000000","colorLight":"#ffffff",
 <li>roles almost always come with defaults</li>
 </ul></li>
 </ul>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode numberSource yaml number-lines code-with-copy"><code class="sourceCode yaml"><span id="cb8-1"><a></a><span class="pp">---</span></span>
-<span id="cb8-2"><a></a><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> Example playbook</span></span>
-<span id="cb8-3"><a></a><span class="at">  </span><span class="fu">hosts</span><span class="kw">:</span><span class="at"> all</span></span>
-<span id="cb8-4"><a></a><span class="at">  </span><span class="fu">gather_facts</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
-<span id="cb8-5"><a></a><span class="at">  </span><span class="fu">roles</span><span class="kw">:</span></span>
-<span id="cb8-6"><a></a><span class="co">    # Or publisher.role, if installed via ansible-galaxy would be moonpie.ufw</span></span>
-<span id="cb8-7"><a></a><span class="at">    </span><span class="kw">-</span><span class="at"> </span><span class="fu">role</span><span class="kw">:</span><span class="at"> </span><span class="st">"../roles/ufw"</span><span class="at"> </span></span>
-<span id="cb8-8"><a></a><span class="at">      </span><span class="fu">vars</span><span class="kw">:</span></span>
-<span id="cb8-9"><a></a><span class="at">        </span><span class="fu">ufw_lockdown</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode numberSource yaml number-lines code-with-copy"><code class="sourceCode yaml"><span id="cb8-1"><a aria-label="1"></a><span class="pp">---</span></span>
+<span id="cb8-2"><a aria-label="2"></a><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> Example playbook</span></span>
+<span id="cb8-3"><a aria-label="3"></a><span class="at">  </span><span class="fu">hosts</span><span class="kw">:</span><span class="at"> all</span></span>
+<span id="cb8-4"><a aria-label="4"></a><span class="at">  </span><span class="fu">gather_facts</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb8-5"><a aria-label="5"></a><span class="at">  </span><span class="fu">roles</span><span class="kw">:</span></span>
+<span id="cb8-6"><a aria-label="6"></a><span class="co">    # Or publisher.role, if installed via ansible-galaxy would be moonpie.ufw</span></span>
+<span id="cb8-7"><a aria-label="7"></a><span class="at">    </span><span class="kw">-</span><span class="at"> </span><span class="fu">role</span><span class="kw">:</span><span class="at"> </span><span class="st">"../roles/ufw"</span><span class="at"> </span></span>
+<span id="cb8-8"><a aria-label="8"></a><span class="at">      </span><span class="fu">vars</span><span class="kw">:</span></span>
+<span id="cb8-9"><a aria-label="9"></a><span class="at">        </span><span class="fu">ufw_lockdown</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 
 <section id="our-roles" class="title-slide slide level1 center">
@@ -475,22 +478,22 @@ var qrcode = new QRCode("qrcode", {"colorDark":"#000000","colorLight":"#ffffff",
 
 <section id="examples" class="title-slide slide level1 center">
 <h1>Examples</h1>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode numberSource yaml number-lines code-with-copy"><code class="sourceCode yaml"><span id="cb9-1"><a></a><span class="pp">---</span></span>
-<span id="cb9-2"><a></a><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> Example playbook</span></span>
-<span id="cb9-3"><a></a><span class="at">  </span><span class="fu">hosts</span><span class="kw">:</span><span class="at"> all</span></span>
-<span id="cb9-4"><a></a><span class="at">  </span><span class="fu">vars</span><span class="kw">:</span></span>
-<span id="cb9-5"><a></a><span class="at">        </span><span class="fu">podman_backup_version</span><span class="kw">:</span><span class="at"> initial</span></span>
-<span id="cb9-6"><a></a><span class="at">        </span><span class="fu">podman_backup_containers</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="st">"alpine"</span><span class="kw">]</span></span>
-<span id="cb9-7"><a></a><span class="at">        </span><span class="fu">backup_version</span><span class="kw">:</span><span class="at"> initial</span></span>
-<span id="cb9-8"><a></a><span class="at">        </span><span class="fu">backup_restore_directories</span><span class="kw">:</span></span>
-<span id="cb9-9"><a></a><span class="at">          </span><span class="kw">-</span><span class="at"> </span><span class="st">"/var/lib/www/"</span></span>
-<span id="cb9-10"><a></a><span class="at">        </span><span class="fu">ufw_lockdown</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
-<span id="cb9-11"><a></a><span class="at">        </span><span class="fu">ufw_open_ports</span><span class="kw">:</span><span class="at"> </span><span class="dv">80</span></span>
-<span id="cb9-12"><a></a><span class="at">  </span><span class="fu">roles</span><span class="kw">:</span></span>
-<span id="cb9-13"><a></a><span class="at">    </span><span class="kw">-</span><span class="at"> </span><span class="fu">role</span><span class="kw">:</span><span class="at"> </span><span class="st">"../roles/facts"</span></span>
-<span id="cb9-14"><a></a><span class="at">    </span><span class="kw">-</span><span class="at"> </span><span class="fu">role</span><span class="kw">:</span><span class="at"> </span><span class="st">"../roles/ufw"</span></span>
-<span id="cb9-15"><a></a><span class="at">    </span><span class="kw">-</span><span class="at"> </span><span class="fu">role</span><span class="kw">:</span><span class="at"> </span><span class="st">"../roles/podman"</span></span>
-<span id="cb9-16"><a></a><span class="at">    </span><span class="kw">-</span><span class="at"> </span><span class="fu">role</span><span class="kw">:</span><span class="at"> </span><span class="st">"../roles/backup"</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode numberSource yaml number-lines code-with-copy"><code class="sourceCode yaml"><span id="cb9-1"><a aria-label="1"></a><span class="pp">---</span></span>
+<span id="cb9-2"><a aria-label="2"></a><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> Example playbook</span></span>
+<span id="cb9-3"><a aria-label="3"></a><span class="at">  </span><span class="fu">hosts</span><span class="kw">:</span><span class="at"> all</span></span>
+<span id="cb9-4"><a aria-label="4"></a><span class="at">  </span><span class="fu">vars</span><span class="kw">:</span></span>
+<span id="cb9-5"><a aria-label="5"></a><span class="at">        </span><span class="fu">podman_backup_version</span><span class="kw">:</span><span class="at"> initial</span></span>
+<span id="cb9-6"><a aria-label="6"></a><span class="at">        </span><span class="fu">podman_backup_containers</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="st">"alpine"</span><span class="kw">]</span></span>
+<span id="cb9-7"><a aria-label="7"></a><span class="at">        </span><span class="fu">backup_version</span><span class="kw">:</span><span class="at"> initial</span></span>
+<span id="cb9-8"><a aria-label="8"></a><span class="at">        </span><span class="fu">backup_restore_directories</span><span class="kw">:</span></span>
+<span id="cb9-9"><a aria-label="9"></a><span class="at">          </span><span class="kw">-</span><span class="at"> </span><span class="st">"/var/lib/www/"</span></span>
+<span id="cb9-10"><a aria-label="10"></a><span class="at">        </span><span class="fu">ufw_lockdown</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb9-11"><a aria-label="11"></a><span class="at">        </span><span class="fu">ufw_open_ports</span><span class="kw">:</span><span class="at"> </span><span class="dv">80</span></span>
+<span id="cb9-12"><a aria-label="12"></a><span class="at">  </span><span class="fu">roles</span><span class="kw">:</span></span>
+<span id="cb9-13"><a aria-label="13"></a><span class="at">    </span><span class="kw">-</span><span class="at"> </span><span class="fu">role</span><span class="kw">:</span><span class="at"> </span><span class="st">"../roles/facts"</span></span>
+<span id="cb9-14"><a aria-label="14"></a><span class="at">    </span><span class="kw">-</span><span class="at"> </span><span class="fu">role</span><span class="kw">:</span><span class="at"> </span><span class="st">"../roles/ufw"</span></span>
+<span id="cb9-15"><a aria-label="15"></a><span class="at">    </span><span class="kw">-</span><span class="at"> </span><span class="fu">role</span><span class="kw">:</span><span class="at"> </span><span class="st">"../roles/podman"</span></span>
+<span id="cb9-16"><a aria-label="16"></a><span class="at">    </span><span class="kw">-</span><span class="at"> </span><span class="fu">role</span><span class="kw">:</span><span class="at"> </span><span class="st">"../roles/backup"</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 
 <section id="best-practice" class="title-slide slide level1 center">
