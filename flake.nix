@@ -1,8 +1,6 @@
 {
   nixConfig = {
-    # This sets the flake to use the IOG nix cache.
-    # Nix should ask for permission before using it,
-    # but remove it here if you do not want it to.
+    # IOG cache to prevent rebuilding GHC when getting newer pandoc
     extra-substituters = [ "https://cache.iog.io" ];
     extra-trusted-public-keys = [ "hydra.iohk.io:f/Ea+s+dFdN+3Y/G+FDgSq+a5NEWhJGzdjvKNGv0/EQ=" ];
     allow-import-from-derivation = "true";
@@ -10,12 +8,15 @@
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
-    flake-compat.url = "https://flakehub.com/f/edolstra/flake-compat/1.tar.gz";
+    flake-compat = {
+      url = "github:NixOS/flake-compat";
+      flake = false;
+    };
+    pandoc-flake.url = "github:moonpiedumplings/pandoc-flake/c60895a198d85bd936e7cd117afc876605b873f3";
   };
   outputs =
-    inputs@{
-      nixpkgs,
-      ...
+    inputs@{ nixpkgs
+    , ...
     }:
     let
       forAllSystems =
@@ -38,7 +39,7 @@
     in
     {
       devShells = forAllSystems (pkgs: {
-        default = import ./devshell.nix { inherit pkgs; };
+        default = import ./devshell.nix { inherit pkgs inputs; };
       });
       packages = forAllSystems (pkgs: {
         default = pkgs.buildEnv {

@@ -15,7 +15,9 @@ execute:
 
 # Status: Dropped
 
-There is a [working patch](https://github.com/NixOS/nixpkgs/issues/519484#issuecomment-4825420112), that makes the latest version of quarto work with older versions of pandoc. This was fun, but I don't care about a newer pandoc, just a newer quarto.
+There is a [working patch](https://github.com/NixOS/nixpkgs/issues/519484#issuecomment-4825420112), that makes the latest version of quarto work with older versions of pandoc. This was fun, but I don't care about a newer pandoc, just a newer quarto. I have implemented this into my development shell, and I will be using that for the forseeable future. 
+
+This was a fun journey though.
 
 # Main
 

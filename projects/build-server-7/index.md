@@ -164,6 +164,8 @@ Unfortunately, there does not appear to be an option in the UI to make it only a
 
 ## Finding another VPS Provider:
 
+<details><summary>Lots of bad science</summary>
+
 Even though I got everything connected:
 
 ```{.default}
@@ -256,7 +258,7 @@ iperf Done.
 
 Yup. Looks like crossing the world is hard. Oh well.
 
-So. Now, I'm going to select another provider. Ideally, it should be a cheap VPS provider, from a site that is well reputed. There is [lowendbox](https://lowendbox.com/), and the related forums [lowendtalk](https://lowendtalk.com/) which cover this. Unfortunately, when I click on some of them, they 404. The business model many of these low end providers start with, struggles to be sustainable, and they often die, which sucks.
+So. Now, I'm going to select another provider. Ideally, it should be a cheap VPS provider, from a site that is well reputed. There is [lowendbox](https://lowendbox.com/), and the related forums [lowendtalk](https://lowendtalk.com/) which cover this. Unfortunately, when I click on some of them, they 404. The business model many of these low end providers start with, struggles to be sustainable, and they often die, which sucks. They like to offer more resources than your money's worth, or things like unlimited bandwidth, which is a risky proposition.
 
 So, I have a simple idea: I am going to look at the older posts for discounts, and see if they are still active. Interestingly, some of the best "one time discounts" are still active, despite the links being two years old. By cross referencing this with forum posts about those providers, I can confirm their reliability.
 
@@ -267,6 +269,116 @@ Also, I am going to see if I can create a virtual credit card.
 Okay. It was a hassle. It took me a while to get "verified", on <privacy.com>, the virtual credit card provider I am using. And then even after that, it took a few days for the VPS to go from "pending" to created. I did bug both providers with tickets a few times, so maybe that sped things along?
 
 Regardless, I have US west coast VPS now. 
+
+Here is a speedest:
+
+```{.default}
+user@vps:~# speedtest
+Retrieving speedtest.net configuration...
+Testing from [REDACTED]...
+Retrieving speedtest.net server list...
+Selecting best server based on ping...
+Hosted by [REDACTED] [29.58 km]: 8.079 ms
+Testing download speed................................................................................
+Download: 474.23 Mbit/s
+Testing upload speed......................................................................................................
+Upload: 371.87 Mbit/s
+```
+
+Pretty good speedtest from the VPS. 
+
+But my server hits nowhere near those speeds:
+
+```{.default}
+[nix-shell:~]$ speedtest
+Retrieving speedtest.net configuration...
+Testing from [REDACTED]...
+Retrieving speedtest.net server list...
+Selecting best server based on ping...
+Hosted by Uniti [REDACTED]: 112.609 ms
+Testing download speed................................................................................
+Download: 71.23 Mbit/s
+Testing upload speed......................................................................................................
+Upload: 21.13 Mbit/s
+```
+
+Okay, this is dissapointing. 
+
+```{.default}
+[nix-shell:~]$ iperf3 -c 10.0.0.1
+Connecting to host 10.0.0.1, port 5201
+[  5] local 192.168.1.33 port 38970 connected to 10.0.0.1 port 5201
+[ ID] Interval           Transfer     Bitrate         Retr  Cwnd
+[  5]   0.00-1.00   sec   640 KBytes  5.24 Mbits/sec    0   63.9 KBytes       
+[  5]   1.00-2.00   sec   896 KBytes  7.35 Mbits/sec    0    109 KBytes       
+[  5]   2.00-3.00   sec  1.62 MBytes  13.6 Mbits/sec    0    183 KBytes       
+[  5]   3.00-4.00   sec  2.50 MBytes  21.0 Mbits/sec    0    286 KBytes       
+[  5]   4.00-5.00   sec  2.50 MBytes  21.0 Mbits/sec    0    399 KBytes       
+[  5]   5.00-6.00   sec  3.00 MBytes  25.2 Mbits/sec    0    547 KBytes       
+[  5]   6.00-7.00   sec  2.88 MBytes  24.1 Mbits/sec    0    673 KBytes       
+[  5]   7.00-8.00   sec  3.62 MBytes  30.4 Mbits/sec    0    823 KBytes       
+[  5]   8.00-9.00   sec  2.00 MBytes  16.8 Mbits/sec    0    948 KBytes       
+[  5]   9.00-10.00  sec  3.50 MBytes  29.3 Mbits/sec    0   1.05 MBytes       
+- - - - - - - - - - - - - - - - - - - - - - - - -
+[ ID] Interval           Transfer     Bitrate         Retr
+[  5]   0.00-10.00  sec  23.1 MBytes  19.4 Mbits/sec    0            sender
+[  5]   0.00-10.30  sec  21.2 MBytes  17.3 Mbits/sec                  receiver
+
+iperf Done.
+```
+
+Okay, I investigated further as to why this happens. It turns out, this VPS isn't actually in Los Angeles, and it's actually in Chicago. I'm like 99% sure I selected a Los Angeles VPS, so this is just lowendbox shenanigans it looks like.
+
+I attempted to buy a Los Angeles one... and the page for buying it is gone. Prices have doubled. The discount code no longer works. I guess that's what I get for trying to be clever. 
+
+
+But wait. It could be that the VPN connection is actually slow because wireguard is the bottleneck. For example, perhaps the CPU does not have enough power to encrypt packets. According to some [benchmarks of wireguard on OpenWRT routers](https://forum.openwrt.org/t/a-wireguard-comparison-db/187586), dual core, 1ghz CPU's actually do get less than 1 gbps of speed. Some of the routers got less than 300 mbp/s. So I decided to test without the VPN, just in case:
+
+```{.default}
+[nix-shell:~/.ssh]$  iperf3 -c [IP REDACTED]
+Connecting to host [IP REDACTED], port 5201
+[  5] local 192.168.4.80 port 47882 connected to [IP REDACTED] port 5201
+[ ID] Interval           Transfer     Bitrate         Retr  Cwnd
+[  5]   0.00-1.00   sec  4.12 MBytes  34.6 Mbits/sec    0    944 KBytes       
+[  5]   1.00-2.00   sec  2.25 MBytes  18.9 Mbits/sec    0   1.05 MBytes       
+[  5]   2.00-3.00   sec  3.88 MBytes  32.5 Mbits/sec    0   1.21 MBytes       
+[  5]   3.00-4.00   sec  2.75 MBytes  23.1 Mbits/sec    0   1.35 MBytes       
+[  5]   4.00-5.00   sec  2.62 MBytes  22.0 Mbits/sec    0   1.47 MBytes       
+[  5]   5.00-6.00   sec  2.75 MBytes  23.1 Mbits/sec    0   1.62 MBytes       
+[  5]   6.00-7.00   sec  2.62 MBytes  22.0 Mbits/sec    0   1.74 MBytes       
+[  5]   7.00-8.00   sec  2.75 MBytes  23.1 Mbits/sec    1   1.72 MBytes       
+[  5]   8.00-9.00   sec  3.62 MBytes  30.4 Mbits/sec    3   1.30 MBytes       
+[  5]   9.00-10.00  sec  1.38 MBytes  11.5 Mbits/sec    0   1.40 MBytes       
+- - - - - - - - - - - - - - - - - - - - - - - - -
+[ ID] Interval           Transfer     Bitrate         Retr
+[  5]   0.00-10.00  sec  28.8 MBytes  24.1 Mbits/sec    4            sender
+[  5]   0.00-10.60  sec  27.5 MBytes  21.8 Mbits/sec                  receiver
+
+iperf Done.
+```
+
+I tested from my server, and my computer, from my home wifi, to check if the router/double nat setup was causing issues. Then, I also tested from my phone, on cellular, and I saw similar numbers. Unfortunate.
+
+I don't really want to "waste" this VPS, since it's actaully a really good deal... but at the same time, it doesn't meet my primary goal of having west coast VPS. In addition to that, this deal included unlimited bandwidth...
+
+I did put in a ticket, asking if they could move it to Los Angeles. They did reply within the next day, and said no, that Los Angeles was out of capacity `:(`.
+
+Basically, I have to do all of the above all over again. And I did, it wasn't that bad. Same thing, I found another good deal. No unlimited bandwidth, unfortunately. But, the server is actually located in Los Angeles this time. Also, it hits 800 mbit/s up and down, which is pretty good. I will need to test to see if I get better speeds to it, later however.
+
+</details>
+
+
+So basically, I went through multiple VPS providers in search of more bandwidth. My testing was done with `iperf`, which by default, pushes data from an iperf client to an iperf server. This means that the bandwidth tests were actually testing the *upload* speed of my residential network. When I finally run `iperf3 -c ipaddress -P 4 -R`, with the `-R` being the critical thing that downloads from the remote server instead, I see vastly different results. 
+
+Instead, all 4 servers hit at least 150+ mb/s of bandwidth, although the closer one's are faster. 
+
+Unfortunatley, 30 mbit/s upload is miserable, and pretty difficult to work with if I am using Coder + Selkies for browser based Kali containers. Selkies defaults to an 8 mb/s bandwidth for upload, which is tiny... if your network has anywhere near fast upload.
+
+However, this is enough for me to expose it for personal use, and hosting my own AI again, I guess. But I still do want to measure out, which VPN is fastest...
+
+
+
+
 
 # Kubernetes
 
@@ -282,7 +394,7 @@ I have decided to keep k3s, for simplicity. For the record, I did investigate ot
 
 So yeah. `curl | bash` it is. 
 
-I am mostly keeping everything from the previous installation. There are some things I want to change and expand on, 
+I am mostly keeping everything from the previous installation. There are some things I want to change and expand on. The most notable of course, is the chisel operator.
 
 
 ## Monitoring

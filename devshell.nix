@@ -1,8 +1,11 @@
-{
-  pkgs ? import <nixpkgs> { },
+{ pkgs ? import <nixpkgs> { },
+  inputs
 }:
 
 let
+
+  pandoc = inputs.pandoc-flake.packages.x86_64-linux."pandoc-cli:exe:pandoc";
+
   python3 = pkgs.python314;
   pythonDeps =
     ps: with ps; [
@@ -14,51 +17,45 @@ let
       requests
     ];
 
-  #pkgs.pandoc = pandoc-flake.packages.x86_64-linux."pandoc-cli\:exe\:pandoc";
+  texPackages = pkgs.texliveInfraOnly.withPackages (ps: with ps; [
+    collection-latex
+    collection-latexrecommended
+    lualatex-math
+    luatex
+    framed
+    xetex
+    # Stuff needed for Jake's resume template
+    preprint
+    titlesec
+    marvosym
+    enumitem
+    fancyhdr
+    # Not strictly needed for jakes, but makes things easier via a script
+    latexmk
+  ]);
 
-  texEnv = (
-    pkgs.texlive.combine {
-      inherit (pkgs.texlive)
-        scheme-infraonly
-        collection-latex
-        collection-latexrecommended
-        # fontawesome6
-        lualatex-math
-        luatex
-        framed
-        xetex
-        # Stuff needed for Jake's resume template
-        preprint
-        titlesec
-        marvosym
-        enumitem
-        fancyhdr
-        # Not strictly needed for jakes, but makes things easier via a script
-        latexmk
-        ;
-    }
-  );
+  quartoOverridenPandoc = pkgs.quarto.override { pandoc = inputs.pandoc-flake.packages.x86_64-linux."pandoc-cli:exe:pandoc";};
 
-  quarto = pkgs.quarto.overrideAttrs (oldAttrs: rec {
+  quarto = quartoOverridenPandoc.overrideAttrs (oldAttrs: rec {
 
     pname = "quarto";
-    version = "1.9.38";
+    #version = "1.9.38";
 
-    src = pkgs.fetchurl {
-      url = "https://github.com/quarto-dev/quarto-cli/releases/download/v${version}/quarto-${version}-linux-amd64.tar.gz";
-      hash = "sha256-6oyJc2h5GtnyAAEMCH6jERsuVWsSqWBIfdTiFpAqoQI=";
-    };
+    # src = pkgs.fetchurl {
+    #   url = "https://github.com/quarto-dev/quarto-cli/releases/download/v${version}/quarto-${version}-linux-amd64.tar.gz";
+    #   hash = "sha256-6oyJc2h5GtnyAAEMCH6jERsuVWsSqWBIfdTiFpAqoQI=";
+    # };
 
-    postFixup = ''
-           substituteInPlace $out/bin/quarto.js \
-             --replace-fail 'kSyntaxHighlighting = "syntax-highlighting"' 'kSyntaxHighlighting = "highlight-style"' \
-             --replace-fail '"--syntax-highlighting"' '"--highlight-style"'
-           substituteInPlace $out/share/filters/modules/jog.lua \
-             --replace-fail "elseif tp == 'pandoc TableHead' or tp == 'pandoc TableFoot' or" "elseif tp == 'pandoc TableBody' or tp == 'TableBody' then
-        element.head = jogger(element.head)
-        element.body = jogger(element.body)
-      elseif tp == 'pandoc TableHead' or tp == 'pandoc TableFoot' or"
-    '';
+    # postFixup = ''
+    #        substituteInPlace $out/bin/quarto.js \
+    #          --replace-fail 'kSyntaxHighlighting = "syntax-highlighting"' 'kSyntaxHighlighting = "highlight-style"' \
+    #          --replace-fail '"--syntax-highlighting"' '"--highlight-style"'
+    #        substituteInPlace $out/share/filters/modules/jog.lua \
+    #          --replace-fail "elseif tp == 'pandoc TableHead' or tp == 'pandoc TableFoot' or" "elseif tp == 'pandoc TableBody' or tp == 'TableBody' then
+    #     element.head = jogger(element.head)
+    #     element.body = jogger(element.body)
+    #   elseif tp == 'pandoc TableHead' or tp == 'pandoc TableFoot' or"
+    # '';
 
     installPhase = ''
       runHook preInstall
@@ -87,15 +84,14 @@ pkgs.mkShellNoCC {
   QUARTO_PYTHON = "${pkgs.python3.withPackages pythonDeps}/bin/python3";
 
   packages = with pkgs; [
-    bashInteractive
+    #bashInteractive
     (python3.withPackages pythonDeps)
     quarto
     pandoc
-    texEnv
-    font-awesome
+    texPackages
   ];
 
-  shellHook = ''
-    export SHELL='${pkgs.bashInteractive}/bin/bash'
-  '';
+  # shellHook = ''
+  #   export SHELL='${pkgs.bashInteractive}/bin/bash'
+  # '';
 }

@@ -42,6 +42,10 @@ I switched to ollama-rocm (also packaged in Arch Linux). I was avoidant of this 
 
 Ollama worked, for the most part. Unfortunately, Llama.cpp is more performant, so that is why I tried below. 
 
+I have since given up on Llama.cpp (see below), and I am currently trying Ollama again.
+
+The 
+
 
 ## Llama.cpp
 
@@ -119,7 +123,7 @@ Failed to load the model
 
 I attempted to increase  the GPU vram.. although it looks like the GPU vram isn't shared, meaning that anything I allocate to Vulkan can't use normally. 
 
-```
+```{.default}
 [moonpie@nefertem ~]$ free -m
                total        used        free      shared  buff/cache   available
 Mem:            7714        2372        3354          42        2428        5342
@@ -140,11 +144,263 @@ Failed to load the model
 
 I sacrificed 24 gb, but the model still fails to load. Very frustrating. 
 
+Okay, I suspect my rocm issue is this Github issue: https://github.com/ggml-org/llama.cpp/issues/19482 . Some things don't fit, for example, mine crashes even when loading very small (<1B) models. But, I did try the `--direct-io` solution mentioned in the last comment, since it did explicitly mention AMD Strix Halo. It did work, but then it stopped working?
+
+Also, it appears to crash all system monitoring tools. `ps` just sits there loading forever, KDE System Monitor's page for processes doesn't load, htop doesn't load and so on. This is even stranger and more frustrating. I usually have to use [magic sysrq](https://wiki.archlinux.org/title/Keyboard_shortcuts#Rebooting) keys to reboot my system, or kill all processes by manually activating the OOM killer.
+
+
+
+
+#### Docker
+
+I'm going to try the docker image now:
+
+```{.default}
+podman run --rm -it \
+    --privileged \
+    --network=host \
+    --device=/dev/kfd \
+    --device=/dev/dri \
+    --group-add video \
+    --cap-add=SYS_PTRACE \
+    --security-opt seccomp=unconfined \
+    --ipc=host \
+    -v ".:/data" \
+    --entrypoint /bin/bash \
+    ghcr.io/ggml-org/llama.cpp:full-rocm
+```
+
+Unfortunately, this just abruptly dies, becoming "defunct". 
+
+I also tried rebooting into the Linux LTS kernel, still no dice.
+
+I also tried with the older image tag, `full-rocm-b7801`. But that crashes when attempting to run Qwen3.6. It looks like the older images, even though they don't hang and die, they don't support the latest models. 
+
+
+
+## Lemonade
+
+Lemonade server is AMD's solution, and apparently has better support. 
+
+```{.default}
+podman run -d \
+  --name lemonade-server \
+  -p 13305:13305 \
+  -v $HOME/.cache/huggingface:/root/.cache/huggingface \
+  -v lemonade-llama:/opt/lemonade/llama \
+  -v lemonade-recipe:/root/.cache/lemonade \
+  --privileged \
+  --device=/dev/kfd \
+  --device=/dev/dri \
+  ghcr.io/lemonade-sdk/lemonade-server:latest
+```
+
+They also provide a [customized buid of llama.cpp](https://github.com/lemonade-sdk/llamacpp-rocm), which appears to explicitly support AMD Strix Halo devices. Okay Vulkan gives me out of memory, and ROCm gives me the same kernel issues mentioned above `:(`.
+
 ## vllm
 
 I began to investigate vLLM, which is a more "enterprise" solution for LLM deployment. They don't even support Vulkan, it only supports ROCm. They have a [docker container](https://docs.vllm.ai/en/stable/deployment/docker/). 
 
+However, I decided to start with the python venv install instead: <https://docs.vllm.ai/en/stable/getting_started/installation/gpu/#set-up-using-python>
 
+However, I needed to install some system libraries to my arch system:
+
+```{.default}
+(test) [moonpie@nefertem test]$ vllm --help
+(content abbreviated)
+OSError: libmpi_cxx.so.40: cannot open shared object file: No such file or directory
+```
+
+I spent about 30 seconds trying to figure out which Arch Linux package would offer this library, before giving up and realizing this is the kind of problems that docker solve. 
+
+Here is a podman command that does what I want:
+
+```{.default}
+podman run --rm -it \
+    --group-add=video \
+    --cap-add=SYS_PTRACE \
+    --security-opt seccomp=unconfined \
+    --device /dev/kfd \
+    --device /dev/dri \
+    -v ".:/models" \
+    -p 8000:8000 \
+    --entrypoint /usr/bin/bash \
+    --ipc=host \
+    mirror.gcr.io/vllm/vllm-openai-rocm:latest
+```
+
+Once this is done, I can go into my downloads folder, run it, and run the model that is stored there:
+
+Oh. vLLM can't run gguf's natively. It's currently [experimental](https://docs.vllm.ai/en/latest/features/quantization/gguf/?utm_source=chatgpt.com).
+
+Regardless, since I am a docker container, I can do this:
+
+`pip install --break-system-packages vllm-gguf-plugin`
+
+Which makes it work.
+
+And then: 
+
+```{.default}
+root@2867ca43d78e:/models# vllm serve gemma-4-12B-it-qat-UD-Q4_K_XL.gguf --tokenizer unsloth/gemma-4-12B-it-qat-GGUF --dtype float16
+INFO 07-05 00:02:38 [__init__.py:112] Registered model loader `<class 'vllm_gguf_plugin.loader.GGUFModelLoader'>` with load format `gguf`
+INFO 07-05 00:02:38 [config.py:420] Registered config parser `<class 'vllm_gguf_plugin.config_parser.GGUFConfigParser'>` with config format `gguf`
+(APIServer pid=653) INFO 07-05 00:02:38 [api_utils.py:339] 
+(APIServer pid=653) INFO 07-05 00:02:38 [api_utils.py:339]        █     █     █▄   ▄█
+(APIServer pid=653) INFO 07-05 00:02:38 [api_utils.py:339]  ▄▄ ▄█ █     █     █ ▀▄▀ █  version 0.24.0
+(APIServer pid=653) INFO 07-05 00:02:38 [api_utils.py:339]   █▄█▀ █     █     █     █  model   gemma-4-12B-it-qat-UD-Q4_K_XL.gguf
+```
+
+No crash... but the server's port returns an empty response. Annoying, and worse than an error in some ways.
+
+
+## Troubleshooting ROCm
+
+Okay, it looks like I have to actually troubleshoot ROCm. I started by finding some relevant resources:
+
+https://community.frame.work/t/experiments-with-using-rocm-on-the-fw16-amd/62189/8
+
+https://strixhalo-homelab.d7.wtf/AI/llamacpp-with-ROCm
+
+https://github.com/ROCm/ROCm/issues/5151
+
+https://bbs.archlinux.org/viewtopic.php?id=310497 (downgrading firmware did not work for me but I'm going to keep it for now in case there are multiple issues). 
+
+https://community.frame.work/t/amd-rocm-for-local-training-and-inferencing/58377
+
+https://community.frame.work/t/amd-strix-halo-llama-cpp-installation-guide-for-fedora-42/75856
+
+https://llm-tracker.info/_TOORG/Strix-Halo
+
+https://dev.webonomic.nl/how-to-use-amd-rocm-on-krackan-point-ryzen-ai-300-series
+
+
+I get this error in dmesg:
+
+```{.default}
+[   36.902241] Oops: general protection fault, probably for non-canonical address 0x3160244c8d480144: 0000 [#1] SMP NOPTI
+1397 │ [   36.902249] CPU: 6 UID: 1000 PID: 2523 Comm: llama-cli Tainted: G           OE       7.1.3-zen1-2-zen #1 PREEMPT(full)  b184153fbcadbb0788a38e1b09442059e30aeb16
+1398 │ [   36.902253] Tainted: [O]=OOT_MODULE, [E]=UNSIGNED_MODULE
+1399 │ [   36.902254] Hardware name: Framework Laptop 16 (AMD Ryzen AI 300 Series)/FRANMHCP07, BIOS 03.04 11/06/2025
+1400 │ [   36.902255] RIP: 0010:amdgpu_vm_cpu_update+0x27/0x120 [amdgpu]
+1401 │ [   36.902420] Code: 90 90 90 f3 0f 1e fa 0f 1f 44 00 00 41 57 49 89 f7 41 56 45 89 ce 41 55 45 89 c5 41 54 49 89 d4 ba 01 00 00 00 55 48 89 fd 53 <48> 8b be 40 01 00 00 48 89 cb 31 f6 48 b9 ff ff ff ff ff ff ff 7f
+1402 │ [   36.902421] RSP: 0018:ffffca3c60103760 EFLAGS: 00010246
+1403 │ [   36.902423] RAX: ffffffffc0a74b90 RBX: 00400000000004f7 RCX: 0000000170800000
+1404 │ [   36.902424] RDX: 0000000000000001 RSI: 3160244c8d480004 RDI: ffffca3c601038d0
+1405 │ [   36.902425] RBP: ffffca3c601038d0 R08: 0000000000000001 R09: 0000000000200000
+1406 │ [   36.902426] R10: 00000007ff520400 R11: ffff89349d500000 R12: 0000000000000810
+1407 │ [   36.902426] R13: 0000000000000001 R14: 0000000000200000 R15: 3160244c8d480004
+1408 │ [   36.902427] FS:  00007ff53abfe6c0(0000) GS:ffff893bd0e94000(0000) knlGS:0000000000000000
+1409 │ [   36.902428] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+1410 │ [   36.902429] CR2: 00007ff520400010 CR3: 00000001434a3000 CR4: 0000000000f50ef0
+1411 │ [   36.902430] PKRU: 55555554
+1412 │ [   36.902431] Call Trace:
+1413 │ [   36.902433]  <TASK>
+1414 │ [   36.902435]  amdgpu_vm_ptes_update+0x497/0x17e0 [amdgpu 45cfcfeb2399679ed2b5db4f50da5b7ed4bb62a2]
+1415 │ [   36.902572]  ? __kmalloc_cache_noprof+0x135/0x480
+1416 │ [   36.902576]  amdgpu_vm_update_range+0x2a3/0x7a0 [amdgpu 45cfcfeb2399679ed2b5db4f50da5b7ed4bb62a2]
+1417 │ [   36.902704]  svm_range_validate_and_map+0xeb7/0x1dd0 [amdgpu 45cfcfeb2399679ed2b5db4f50da5b7ed4bb62a2]
+1418 │ [   36.902881]  svm_range_set_attr+0x1155/0x1840 [amdgpu 45cfcfeb2399679ed2b5db4f50da5b7ed4bb62a2]
+1419 │ [   36.903021]  kfd_ioctl+0x2ea/0x5c0 [amdgpu 45cfcfeb2399679ed2b5db4f50da5b7ed4bb62a2]
+1420 │ [   36.903166]  ? __pfx_kfd_ioctl_svm+0x10/0x10 [amdgpu 45cfcfeb2399679ed2b5db4f50da5b7ed4bb62a2]
+1421 │ [   36.903299]  ? try_charge_memcg+0x1a1/0x7c0
+1422 │ [   36.903302]  __x64_sys_ioctl+0xb9/0xf0
+1423 │ [   36.903305]  do_syscall_64+0xaa/0x660
+1424 │ [   36.903308]  ? map_anon_folio_pmd_pf+0x75/0x90
+1425 │ [   36.903310]  ? do_huge_pmd_anonymous_page+0x1b0/0x550
+1426 │ [   36.903312]  ? count_memcg_events+0xd1/0x190
+1427 │ [   36.903314]  ? handle_mm_fault+0x57f/0x14d0
+1428 │ [   36.903317]  ? do_user_addr_fault+0x357/0xbd0
+1429 │ [   36.903320]  ? do_syscall_64+0x5f/0x660
+1430 │ [   36.903321]  ? exc_page_fault+0x90/0x1d0
+1431 │ [   36.903323]  entry_SYSCALL_64_after_hwframe+0x76/0x7e
+1432 │ [   36.903325] RIP: 0033:0x7ff5ce541d8f
+1433 │ [   36.903352] Code: 00 48 89 44 24 18 31 c0 48 8d 44 24 60 c7 04 24 10 00 00 00 48 89 44 24 08 48 8d 44 24 20 48 89 44 24 10 b8 10 00 00 00 0f 05 <89> c2 3d 00 f0 ff ff 77 18 48 8b 44 24 18 64 48 2b 04 25 28 00 00
+1434 │ [   36.903353] RSP: 002b:00007ff53abdc4e0 EFLAGS: 00000246 ORIG_RAX: 0000000000000010
+1435 │ [   36.903354] RAX: ffffffffffffffda RBX: 00007ff53abdc5cc RCX: 00007ff5ce541d8f
+1436 │ [   36.903355] RDX: 00007ff53abdc580 RSI: 00000000c0484b20 RDI: 0000000000000003
+1437 │ [   36.903356] RBP: 00000000c0484b20 R08: 0000000000000000 R09: 00000000002ab000
+1438 │ [   36.903356] R10: 00007ff53abdc720 R11: 0000000000000246 R12: 00007ff53abdc580
+1439 │ [   36.903357] R13: 0000000000000003 R14: 0000000000000030 R15: 00007ff549e4fc40
+1440 │ [   36.903358]  </TASK>
+```
+
+The address at the top does seem to change every run.
+
+It does look only Ubuntu 22 + specific rocm versions are supported. It's mentioned [explicitly here](https://github.com/ROCm/ROCm/issues/6143#issuecomment-4369362515), that the Ubuntu kernel seems to have custom fixes included that mainline Linux doesn't have yet. 
+
+OEM kernel info:
+
+https://ubuntu.com/kernel/docs/reference/oem-kernels/
+
+Mirror: https://github.com/anthonywong/ubuntu-oem-kernel-mirror
+
+Sure enough, when I go through the [commits](https://github.com/search?q=repo%3Aanthonywong%2Fubuntu-oem-kernel-mirror+amd&type=commits) of that repo, I see  [Mario Limonciollo](https://community.frame.work/t/ollama-model-runner-unexpectedly-stopped-gpu-hang/76220/6), who was also on the framework forums discussing the way that 
+
+AUR packages to potentially adapt: https://aur.archlinux.org/packages/linux-git-headers , https://aur.archlinux.org/packages/linux-git
+
+ I want to find a recipe or similar, that way I can copy over and adapt the config for the package to the above AUR packages. But for now, I just replaced the "src" part the AUR package with the github ubuntu repo, and it's currently compiling.
+
+ Nope, even with compiling the Ubuntu OEM kernel I still get the same kernel crash, using Arch Linux's llama.cpp package and ROCM. Also breaks with Lemonade's docker container. Also Lemonade's llama-server with `--direct-io` fails to work as well.
+
+ Next up, I downgraded the amdgpu firmware to Ubuntu's exact version.
+
+ Okay, `llama-cli --direct-io --no-mmap --fit off -m Qwen3-0.6B-IQ4_NL.gguf` worked!
+
+ Once. It proceeded to crash next time `:(`
+
+ Okay, it appears that [support for my GPU is just not done yet](https://github.com/ROCm/TheRock/issues/2310). New hardware. Though, many people mention it working, this explains somewhat why it's not stable.
+
+Someone mentioned [downgrading](https://github.com/ROCm/ROCm/issues/5844#issuecomment-4108668995) to specific versions of the kernel and firmware, but given that I just tried  that, I'm not optimistic. More resourcesL
+
+https://gitlab.freedesktop.org/drm/amd/-/work_items/4765 — only when running 3d workloads. Maybe I need to test with no desktop? No, it also fails with no desktop. In addition to that, this issue is closed.
+
+`llama-cli -fa off -dio --no-mmap --fit off -m `
+
+Okay I give up. I 'm just going to install Ubuntu 24.04.4 LTS, which is officially supported according to the ROCm compatibility matrixes:
+
+<https://rocm.docs.amd.com/en/latest/compatibility/compatibility-matrix.html>
+
+<https://rocm.docs.amd.com/projects/radeon-ryzen/en/latest/docs/compatibility/compatibilityryz/native_linux/native_linux_compatibility.html>
+
+But before I try that, I'm going to try this AUR package: <https://aur.archlinux.org/packages/rocm-gfx1152-bin>, which is the latest ROCm preview, which apparently explicitly supports my hardware. 
+
+Nope. Still crashes, even when I use Ubuntu's kernel, and  Ubuntu's firmware. 
+
+## Vulkan
+
+Okay, now I'm getting issues with llama.cpp and Vulkan. I am going to pull my hair out. 
+
+The main idea I had with Vulkan is that maybe it is possible to get unified memory, which apparently it is: <https://github.com/ggml-org/llama.cpp/discussions/12770>
+
+Indeed, llama.cpp does seem to see the whole TTM/GTT memory size from Vulkan:
+
+```{.default}
+[moonpie@nefertem moonpiedumplings.github.io]$ llama-cli --list-devices
+Available devices:
+  ROCm0: AMD Radeon 860M Graphics (24576 MiB, 26082 MiB free)
+  Vulkan0: AMD Radeon 860M Graphics (RADV KRACKAN1) (25088 MiB, 23876 MiB free)
+```
+
+But when I actually try to run it, it just crashes: 
+
+```{.default}
+[moonpie@nefertem Downloads]$ llama-cli --device Vulkan0 -nkvo -m Huihui-gemma-4-12B-it-qat-q4_0-unquantized-abliterated-Q4_K.gguf 
+Loading model... /ggml_vulkan: Device memory allocation of size 1070764064 failed.
+ggml_vulkan: vk::Device::allocateMemory: ErrorOutOfDeviceMemory
+0.03.527.707 E alloc_tensor_range: failed to allocate Vulkan0 buffer of size 1070764064
+\0.03.641.017 E llama_model_load: error loading model: unable to allocate Vulkan0 buffer
+0.03.641.021 E llama_model_load_from_file_impl: failed to load model
+0.03.641.026 E cmn  common_init_: failed to load model 'Huihui-gemma-4-12B-it-qat-q4_0-unquantized-abliterated-Q4_K.gguf'
+0.03.641.029 E srv    load_model: failed to load model, 'Huihui-gemma-4-12B-it-qat-q4_0-unquantized-abliterated-Q4_K.gguf'
+0.03.641.425 E srv  llama_server: exiting due to model loading error
+llama_server exited with code 1
+Error: the server exited before becoming ready
+```
+
+1070764064 bytes is only 1 GB, a tiny amount. I have more than enough space, so why does it fail?
+
+No wait, this is probably becuase the above option doesn't do anything, so the Vulkan backend only has 512 mb of vram. 
 
 ## UMR
 
@@ -443,7 +699,8 @@ I also tried, and may elaborate on:
 * Forgecode
 * Goose-cli
 * Nanocoder
-* Opencode (kept running out of context)
+* Opencode: kept running out of context
+* Zed: "Explore this repo" didn't go anywhere. Either zed issues, or it was issues with the models I was trying.
 
 I plan to try (only mentioning some of the less popular (underrated?) options):
 
